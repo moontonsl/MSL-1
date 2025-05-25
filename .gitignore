@@ -12,7 +12,6 @@
 /storage/framework
 /storage/framework/cache/*
 /vendor
-.env
 .env.backup
 .env.production
 .phpactor.json
