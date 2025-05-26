@@ -1,4 +1,8 @@
 import '../css/app.css';
+import '../css/global.scss';
+import '../css/embla.css';
+import '../css/index.css';
+import '../css/MPLWatchFestS15.css';
 
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
