@@ -4,13 +4,13 @@
 /public/build
 /public/hot
 /public/storage
-/storage/*.key
-/storage/pail
-/storage
-/storage/app
-/storage/logs
-/storage/framework
-/storage/framework/cache/*
+# /storage/*.key
+# /storage/pail
+# /storage
+# /storage/app
+# /storage/logs
+# /storage/framework
+# /storage/framework/cache/*
 /vendor
 .env.backup
 .env.production
