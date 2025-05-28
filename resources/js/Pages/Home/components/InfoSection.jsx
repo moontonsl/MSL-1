@@ -1,5 +1,6 @@
 import styles from "./InfoSection.module.scss";
 import infoImage from "../assets/info.jpg";
+import sunImage from "../assets/Effect-copy-3.png";
 
 const stats = [
     {value: "8,000", label: "STUDENT PLAYERS"},
@@ -10,24 +11,42 @@ const stats = [
 
 const HeroSection = () => {
     return (
-        <section className={`${styles.infoSection} pt-16 md:pt-24`}>
+        <section className={`${styles.infoSection}`}>
 
-            <div className="container mx-auto px-4 gap-16 grid mb-20 scale">
-                <h1 className="text-4xl md:text-6xl font-bold text-center w-full">
-                    MOONTON STUDENT LEADER PHILIPPINES
-                </h1>
+            <div className="relative overflow-hidden pt-16 md:pt-60">
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 w-full gap-6 sm:gap-8">
-                    {stats.map(({value, label}, index) => (
-                        <div key={index} className="text-center grid gap-2 sm:gap-4">
-                            <div className={`text-4xl sm:text-5xl md:text-6xl font-bold ${styles.infoHead}`}>
-                                {value}
-                            </div>
-                            <div className="text-lg sm:text-xl font-semibold scale">{label}</div>
-                        </div>
-                    ))}
+                {/* Top gradient overlay */}
+                <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#0a0a0a] to-transparent z-0 pointer-events-none" />
+
+                {/* Bottom gradient overlay */}
+                <div className="absolute bottom-0 left-0 w-full h-[40rem] bg-gradient-to-t from-[#0a0a0a] to-transparent z-0 pointer-events-none" />
+
+
+                <div className="absolute opacity-20 bottom-0 lg:top-0 w-full">
+                    <img src={sunImage} alt="Sun Image" className="w-full object-contain scale-150 md:scale-125 lg:scale-100" />
                 </div>
+
+
+                <div className="container mx-auto px-4 gap-16 grid mb-20 scale">
+                    <h1 className="text-4xl md:text-6xl font-bold text-center w-full z-10">
+                        MOONTON STUDENT LEADER <br className="hidden lg:block" />PHILIPPINES
+                    </h1>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 w-full gap-6 sm:gap-8 z-10">
+                        {stats.map(({value, label}, index) => (
+                            <div key={index} className="text-center grid gap-2 sm:gap-4">
+                                <div className={`text-4xl sm:text-5xl md:text-6xl font-bold ${styles.infoHead}`}>
+                                    {value}
+                                </div>
+                                <div className="text-lg sm:text-xl font-semibold scale">{label}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
             </div>
+
+
 
             <div className={`${styles.infoAbout}`}>
                 <div className="grid xl:grid-cols-2 mx-auto min-h-[564px]">
