@@ -3,8 +3,8 @@ const NewsSection = () => {
         {
             category: "Food",
             title: "Finger-Lickin' Chicken Wings That Will Leave You Craving More",
-            // author: "Lan",
-            // date: "April 26, 2025",
+            author: "Lan",
+            date: "April 26, 2025",
             image: "https://images.unsplash.com/photo-1624726175512-19b9baf9fbd1?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
             size: "large",
         },

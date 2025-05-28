@@ -13,9 +13,8 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                // sans: ['Figtree', ...defaultTheme.fontFamily.sans],
                 sans: ['"Noto Sans"', ...defaultTheme.fontFamily.sans],
-                grotesk: ['"Space Grotesk"', ...defaultTheme.fontFamily.sans],
+                montserrat: ['"Montserrat"', ...defaultTheme.fontFamily.sans],
             },
         },
     },
