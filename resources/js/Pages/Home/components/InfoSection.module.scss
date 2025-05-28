@@ -1,0 +1,44 @@
+.infoSection {
+  //background-image: url('../assets/');
+
+
+  .infoHead {
+    color: var(--background-brand-default);
+  }
+
+  .infoAbout {
+    background: var(--background-default-tertiary);
+    //min-height: 564px;
+
+    .infoImageWrapper {
+      position: relative;
+      overflow: hidden;
+      min-height: 300px;
+
+      @media (min-width: 768px) {
+        min-height: 400px;
+      }
+    }
+
+    .infoHighlight {
+      color: var(--background-brand-default);
+    }
+
+    .infoImage {
+      position: absolute;
+      top: 0;
+      left: 0;
+      object-fit: cover;
+      width: 100%;
+      height: 100%;
+    }
+
+    p {
+      //color: var(--background-default-default);
+    }
+
+    span {
+      color: var(--background-default-default);
+    }
+  }
+}
