@@ -33,7 +33,7 @@ const Header = () => {
                 </div>
 
                 <nav className={`${styles.nav} ${isMenuOpen ? styles.open : ''}`}>
-                    <ul className={styles.navList}>
+                    <ul className={`${styles.navList} uppercase sm:text-sm`}>
                         {navLinks.map(({ name, href }) => (
                             <li key={name}>
                                 <Link href={href} onClick={() => setIsMenuOpen(false)}>

@@ -49,7 +49,7 @@ const HeroSection = () => {
                                 onClick={() => handleClick(box.path)}
                                 className={`${styles.box} group relative flex items-center lg:items-end overflow-hidden cursor-pointer`}
                             >
-                                <div className="absolute p-4 lg:p-8 uppercase text-md md:text-2xl lg:text-5xl font-bold italic z-10 text-white">
+                                <div className="grotesk absolute p-4 lg:p-8 uppercase text-md md:text-2xl lg:text-5xl font-bold italic z-10 text-white">
                                     {box.title}
                                 </div>
                                 <div className="h-full w-full relative z-0">
