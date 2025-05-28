@@ -21,6 +21,30 @@ Route::get('/', function () {
     ]);
 });
 
+// MCC Routes
+Route::get('/mcc', function () {
+    return Inertia::render('MCC/Main Page/index');
+})->name('mcc.main');
+
+Route::get('/mcc/calendar', function () {
+    return Inertia::render('MCC/Calendar/index');
+})->name('mcc.calendar');
+
+// MCC Voting Routes
+Route::prefix('mcc/voting')->name('mcc.voting.')->group(function () {
+    Route::get('/', function () {
+        return Inertia::render('MCC/Voting/Voting Sign In/Index');
+    })->name('signin');
+
+    Route::get('/vote', function () {
+        return Inertia::render('MCC/Voting/Vote/Index');
+    })->name('vote');
+
+    Route::get('/winners', function () {
+        return Inertia::render('MCC/Voting/Winners/Index');
+    })->name('winners');
+});
+
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
