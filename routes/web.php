@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\NewsController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -37,7 +38,10 @@ Route::prefix('mcc/voting')->name('mcc.voting.')->group(function () {
         return Inertia::render('MCC/Voting/Winners/Index');
     })->name('winners');
 });
-
+// News Routes
+Route::get('/news', [NewsController::class, 'index'])->name('news.index');
+Route::get('/news-articles', [NewsController::class, 'getArticles'])->name('news.articles');
+ 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
