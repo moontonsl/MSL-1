@@ -15,6 +15,19 @@ Route::get('/', function () {
     ]);
 });
 
+
+//LOGIN ROUTES
+Route::get('/login', function () {
+    return Inertia::render('Login/Login');
+})->name('login');
+
+
+//ACCOUNT ROUTES
+Route::get('/register', function () {
+    return Inertia::render('Account Creation/Register');
+})->name('register');
+
+
 // MCC Routes
 Route::get('/mcc', function () {
     return Inertia::render('MCC/Main Page/index');
@@ -52,4 +65,3 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
