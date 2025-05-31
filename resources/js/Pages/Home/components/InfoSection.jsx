@@ -51,7 +51,7 @@ const HeroSection = () => {
             <div className={`${styles.infoAbout}`}>
                 <div className="grid xl:grid-cols-2 mx-auto min-h-[564px]">
 
-                    <div className={`${styles.infoImageWrapper} aspect-video lg:aspect-auto`}>
+                    <div className={`${styles.infoImageWrapper} aspect-[16/9] xl:aspect-auto`}>
                         <img src={infoImage} alt="Moonton Student Leader"
                              className={`${styles.infoImage}`}/>{/* gawing slide*/}
                     </div>
