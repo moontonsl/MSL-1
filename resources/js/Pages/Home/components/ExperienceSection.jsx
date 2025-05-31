@@ -38,6 +38,7 @@ const experienceItems = [
     },
 ];
 
+
 const ExperienceSection = () => {
     return (
         <section className="py-10 bg-[#FFBD30] text-black">
