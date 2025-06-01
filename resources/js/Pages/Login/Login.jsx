@@ -39,83 +39,106 @@ const Login = () => {
 
   return (
     <>
-    <Head title="Login MSL Account" />
+    <Head title="Log in MSL Account" />
     <Header />
       <main>
-        <div className="login-main-bg">
-          <div className={`login-container-login ${error ? 'has-error' : ''}`}>
-            <div className="form-container-login">
-              <h1 className="title-login">LOGIN MSL ACCOUNT</h1>
-              <div className="image-container-login">
-                <img
-                  src="msl-logo.png"
-                  alt="MSL Account Logo"
-                  className="image-logo-login"
-                />
-              </div>
-              
-              <form className="form-login" onSubmit={handleSubmit}>
-                <div className="input-group-login">
-                  <label htmlFor="username" className="label-login">
-                    Username
-                  </label>
-                  <input
-                    type="text"
-                    id="username"
-                    name="username"
-                    placeholder="eg. Simeon"
-                    value={formData.username}
-                    onChange={handleInputChange}
-                    className="input-field-login"
+          <div className="login-main-bg">
+            <div className="login-wrapper">
+            <div className={`login-container-login ${error ? 'has-error' : ''}`} style={{ flex: 1 }}>
+              <div className="form-container-login">
+                <h1 className="title-login">LOG IN MSL ACCOUNT</h1>
+                <div className="image-container-login">
+                  <img
+                    src="msl-logo.png"
+                    alt="MSL Account Logo"
+                    className="image-logo-login"
                   />
                 </div>
-                <div className="input-group-login">
-                  <label htmlFor="password" className="label-login">
-                    Password
-                  </label>
-                  <div className="password-container-login">
+                
+                <form className="form-login" onSubmit={handleSubmit}>
+                  <div className="input-group-login">
+                    <label htmlFor="username" className="label-login">
+                      Username
+                    </label>
                     <input
-                      type={passwordVisible ? 'text' : 'password'}
-                      id="password"
-                      name="password"
-                      placeholder="********"
-                      value={formData.password}
+                      type="text"
+                      id="username"
+                      name="username"
+                      placeholder="eg. Simeon"
+                      value={formData.username}
                       onChange={handleInputChange}
                       className="input-field-login"
                     />
-                    <button
-                      type="button"
-                      className="eye-icon-login"
-                      onClick={() => setPasswordVisible((v) => !v)}
-                      aria-label={passwordVisible ? 'Hide password' : 'Show password'}
-                    >
-                      {passwordVisible ? <EyeOff size={24} /> : <Eye size={24} />}
-                    </button>
                   </div>
-                </div>
-                
-                {error && (
-                          <div className="error-message-login">
-                              <p>{error}</p>
-                          </div>
-                      )}
+                  <div className="input-group-login">
+                    <label htmlFor="password" className="label-login">
+                      Password
+                    </label>
+                    <div className="password-container-login">
+                      <input
+                        type={passwordVisible ? 'text' : 'password'}
+                        id="password"
+                        name="password"
+                        placeholder="********"
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        className="input-field-login"
+                      />
+                      <button
+                        type="button"
+                        className="eye-icon-login"
+                        onClick={() => setPasswordVisible((v) => !v)}
+                        aria-label={passwordVisible ? 'Hide password' : 'Show password'}
+                      >
+                        {passwordVisible ? <EyeOff size={24} /> : <Eye size={24} />}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {error && (
+                            <div className="error-message-login">
+                                <p>{error}</p>
+                            </div>
+                        )}
 
-                <div className="footer-container-login">
-                  <button type="submit" className="login-btn-login">
-                    Login
-                  </button>
-                  <p className="footer-text-login">
-                    <a href="/forgot-password" className="forgot-password-link-login">
-                      Forgot Password
-                    </a>
-                    <br />
-                    Already have an account?{' '}
-                    <a href="/register" className="sign-in-link-login">
-                      Sign Up
-                    </a>
-                  </p>
-                </div>
-              </form>
+                  <div className="footer-container-login">
+                    <button type="submit" className="login-btn-login">
+                      Login
+                    </button>
+                    <p className="footer-text-login">
+                      <a href="/forgot-password" className="forgot-password-link-login">
+                        Forgot Password
+                      </a>
+                      <br />
+                      Already have an account?{' '}
+                      <a href="/register" className="sign-in-link-login">
+                        Sign Up
+                      </a>
+                    </p>
+                  </div>
+                </form>
+              </div>
+            </div>
+            <div className="video-container-login">
+              <video
+                    className="video-bg-blur"
+                    src="/loginvideo.mp4"
+                    type="video/mp4"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                  >
+                  </video>
+                  <div className="video-foreground">
+                    <iframe
+                      src="https://www.youtube.com/embed/b6A3EToebqE?autoplay=1&loop=1&playlist=b6A3EToebqE&mute=1&controls=0&rel=0&modestbranding=1"
+                      title="MSL Video"
+                      frameBorder="0"
+                      allow="autoplay; encrypted-media"
+                      allowFullScreen
+                    ></iframe>
+                  </div>
             </div>
           </div>
         </div>
