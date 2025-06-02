@@ -346,3 +346,166 @@ header, footer {
 }
 
 
+@media (max-width: 768px) {
+  .portal-container {
+    width: 100%;
+    max-width: 100%;
+    padding: 20px 16px;
+    margin: 0 auto;
+    overflow-x: hidden;
+  }
+
+  .portal-bottom-right {
+  order: 0; 
+}
+
+.portal-bottom-left {
+  order: 1; 
+}
+
+  .portal-top {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: auto;
+    padding: 20px;
+    gap: 20px;
+    text-align: center;
+  }
+
+  .portal-top-left,
+  .portal-top-middle{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .portal-top-right {
+  display: flex;
+  flex-direction: row;       
+  align-items: flex-start;   
+  gap: 12px;                
+  width: 100%;
+    flex-direction: row;
+  align-items: center;
+}
+
+
+  .avatar-border {
+    width: 150px;
+    height: 150px;
+  }
+
+  .avatar-img {
+    width: 130px;
+    height: 130px;
+  }
+
+  .profile-name {
+    font-size: 32px;
+    line-height: 36px;
+    margin-top: 10px;
+  }
+
+  .profile-username {
+    font-size: 1rem;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+  }
+
+  .profile-details {
+    display: flex;
+    justify-content: flex-start; 
+    align-items: flex-start;
+    flex-wrap: wrap;
+    text-align: left;
+    gap: 0; 
+  }
+
+
+  .profile-icons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+.profile-rank-img {
+  width: 150px;
+  height: 150px;
+  flex-shrink: 0;
+}
+
+.profile-tournament-stats {
+    display: flex;
+    justify-content: flex-start; 
+    align-items: flex-start;
+    flex-wrap: wrap;
+    text-align: left;
+    gap: 0;
+}
+
+  .portal-bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: auto;
+    gap: 20px;
+  }
+
+  .portal-bottom-left {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .portal-bottom-right {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+  }
+
+  .hero-highlight-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  }
+
+  .portal-bottom-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+    background: linear-gradient(90deg, rgba(20, 20, 20, 0.00) 0%, #141414 50%, rgba(20, 20, 20, 0.00) 100%);
+}
+
+  .hero-highlight-img {
+    width: 400px;
+    height: 250px;
+    border-radius: 8px;
+    object-fit: cover;
+    object-position: top top; 
+    transform: scale(2) translateY(30%);
+  }
+
+  .hero-highlight-name {
+    font-size: 1.5rem;
+  }
+
+  .portal-tabs {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
