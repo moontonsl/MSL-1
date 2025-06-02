@@ -22,10 +22,17 @@ Route::get('/login', function () {
 })->name('login');
 
 
-//ACCOUNT ROUTES
+//ACCOUNT REGISTRATION ROUTES
 Route::get('/register', function () {
     return Inertia::render('Account Creation/Register');
 })->name('register');
+
+
+//STUDENT PORTAL
+Route::get('/studentportal', function () {
+    return Inertia::render('Student Portal/Profile');
+})->name('profile');
+
 
 
 // MCC Routes

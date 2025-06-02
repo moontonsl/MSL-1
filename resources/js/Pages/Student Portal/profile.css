@@ -1,0 +1,511 @@
+/* --- Portal Container Background --- */
+.portal-main-bg {
+  min-height: 100vh;
+  width: 100vw;
+  background-image: url('webbg2025.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.portal-container {
+  height: 100vh;
+  width: 80%;
+  padding: 30px;
+  box-sizing: border-box;
+  margin: 10px 0;
+}
+
+/* --- Top Panel --- */
+.portal-top {
+    height: 40%;
+    padding: 32px 36px;
+    gap: 32px;
+    display: flex;
+    border-radius: 16px;
+    border: 1px solid var(--Glass-Effect, rgba(0, 0, 0, 0.40));
+
+    background: var(--Glass-Effect, linear-gradient(270deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 100%));
+    /* Glass Effect */
+    box-shadow: 0px 4px 24px -1px rgba(0, 0, 0, 0.20);
+    backdrop-filter: blur(20px);
+;
+}
+
+/* --- Left Avatar --- */
+.portal-top-left {
+  width: 25%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-border {
+    background: linear-gradient(135deg, #FFFFFF, #F3C718C6 77.49%, #FFFFFF);
+    border-radius: 50%;
+    padding: 5px;
+    width: 230px;
+    height: 230px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    
+
+}
+
+.avatar-img {
+  width: 210px;
+  height: 210px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #111;
+}
+
+/* --- Middle Section --- */
+.portal-top-middle {
+  flex: 2;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+.profile-main-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-name {
+    color: #FFF;
+    font-feature-settings: 'dlig' on;
+    font-family: "Space Grotesk";
+    font-size: 64px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 64px;
+    align-self: stretch;
+}
+
+.profile-username {
+    color: #FFF;
+    font-feature-settings: 'dlig' on;
+    font-family: "Space Grotesk";
+    font-size: var(--subtitle-size-base);
+    font-style: normal;
+    font-weight: 400;
+    line-height: 32px;
+}
+
+.verified-badge {
+  color: #ffe082;
+  font-size: 1.1rem;
+}
+
+.profile-details {
+  margin-top: 10px;
+  font-size: 1rem;
+  color: #ccc;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 32px;
+}
+
+.profile-label {
+    color: rgba(255, 255, 255, 0.50);
+    font-weight: 600;
+    margin-right: 4px;
+}
+
+.profile-label-white{
+    color: #ffffff;
+}
+
+.profile-id-extra {
+  color: #ffffff;
+  font-size: 0.95em;
+}
+
+/* --- Icons Row --- */
+.profile-icons {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-slot {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border-radius: 8px;
+    border: 1px solid var(--Glass-Effect, rgba(0, 0, 0, 0.40));
+    background: var(--Glass-Effect, linear-gradient(270deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 100%));
+
+    /* Glass Effect */
+    box-shadow: 0px 4px 24px -1px rgba(0, 0, 0, 0.20);
+    backdrop-filter: blur(20px);;
+}
+
+.profile-slot:first-child {
+  margin-right: 24px; /* More space before the others */
+}
+
+.profile-gender {
+  font-size: 1.3rem;
+  color: #ffe082;
+}
+
+.profile-slot-filled {
+  background: #ffe082;
+  border-color: #ffe082;
+}
+
+/* --- Right Side --- */
+.portal-top-right {
+  flex: 2;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 10px;
+}
+
+.profile-rank-img {
+  width: 250px;
+  height: 250px;
+  object-fit: contain;
+}
+
+.profile-tournament-stats {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+
+.profile-tournament-label {
+  font-size: 0.95rem;
+  color: #fff;
+  font-weight: 500;
+}
+
+.profile-tournament-value {
+  font-size: 2rem;
+  color: #fff;
+  font-weight: 700;
+  margin: 2px 0;
+}
+
+.profile-tournament-sub {
+  font-size: 0.9rem;
+  color: #fff;
+  font-weight: 500;
+}
+
+/* --- Bottom Panel --- */
+.portal-bottom {
+  padding-top: 30px;
+  height: 60%;
+  display: flex;
+  gap: 30px;
+}
+
+.portal-bottom-left {
+    flex: 1;
+    border-radius: 20px;
+    padding: 20px 20px 20px 20px;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    border: 1px solid rgba(191, 191, 191, 0.10);
+    background: var(--Glass-Effect, linear-gradient(270deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 100%));
+
+    /* Glass Effect */
+    box-shadow: 0px 4px 24px -1px rgba(0, 0, 0, 0.20);
+    backdrop-filter: blur(20px);
+}
+
+.portal-tabs {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 16px;
+  font-size: 1rem;
+  font-weight: 500;
+  background: linear-gradient(90deg, rgba(20, 20, 20, 0.00) 0%, #141414 50%, rgba(20, 20, 20, 0.00) 100%);
+}
+
+.portal-tab {
+  color: #fff;
+  opacity: 0.7;
+  padding-bottom: 6px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.portal-tab.active {
+  color: #ffe082;
+  opacity: 1;
+  border-bottom: 2.5px solid #ffe082;
+}
+
+.portal-bottom-content {
+  flex: 1;
+  background: rgba(0,0,0,0.15);
+  border-radius: 12px;
+  min-height: 260px;
+  margin-top: 8px;
+}
+
+/* --- Right: Hero Highlights --- */
+.portal-bottom-right {
+    width: 35%;
+    min-width: 320px;
+    border-radius: 8px;
+    border: 1px solid rgba(191, 191, 191, 0.20);
+    background: var(--Glass-Effect, linear-gradient(270deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 100%));
+
+    /* Glass Effect */
+    box-shadow: 0px 4px 24px -1px rgba(0, 0, 0, 0.20);
+    backdrop-filter: blur(20px);    border: 1px solid #333;
+    border-radius: 20px;
+    padding: 20px;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.portal-bottom-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+    background: linear-gradient(90deg, rgba(20, 20, 20, 0.00) 0%, #141414 50%, rgba(20, 20, 20, 0.00) 100%);
+
+}
+
+.hero-highlight-card {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    background: rgba(255,255,255,0.07);
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    gap: 16px;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.10);
+    overflow: hidden; 
+    height: 150px; 
+    }
+
+.hero-highlight-img {
+    width: 400px;
+    height: 250px;
+    border-radius: 8px;
+    object-fit: cover;
+    object-position: top top; 
+    transform: scale(2) translateY(30%);
+}
+
+.hero-highlight-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.hero-highlight-name {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+.hero-highlight-role {
+  font-size: 1rem;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+header, footer {
+  color: white !important;
+}
+
+
+@media (max-width: 768px) {
+  .portal-container {
+    width: 100%;
+    max-width: 100%;
+    padding: 20px 16px;
+    margin: 0 auto;
+    overflow-x: hidden;
+  }
+
+  .portal-bottom-right {
+  order: 0; 
+}
+
+.portal-bottom-left {
+  order: 1; 
+}
+
+  .portal-top {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: auto;
+    padding: 20px;
+    gap: 20px;
+    text-align: center;
+  }
+
+  .portal-top-left,
+  .portal-top-middle{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .portal-top-right {
+  display: flex;
+  flex-direction: row;       
+  align-items: flex-start;   
+  gap: 12px;                
+  width: 100%;
+    flex-direction: row;
+  align-items: center;
+}
+
+
+  .avatar-border {
+    width: 150px;
+    height: 150px;
+  }
+
+  .avatar-img {
+    width: 130px;
+    height: 130px;
+  }
+
+  .profile-name {
+    font-size: 32px;
+    line-height: 36px;
+    margin-top: 10px;
+  }
+
+  .profile-username {
+    font-size: 1rem;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+  }
+
+  .profile-details {
+    display: flex;
+    justify-content: flex-start; 
+    align-items: flex-start;
+    flex-wrap: wrap;
+    text-align: left;
+    gap: 0; 
+  }
+
+
+  .profile-icons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+.profile-rank-img {
+  width: 150px;
+  height: 150px;
+  flex-shrink: 0;
+}
+
+.profile-tournament-stats {
+    display: flex;
+    justify-content: flex-start; 
+    align-items: flex-start;
+    flex-wrap: wrap;
+    text-align: left;
+    gap: 0;
+}
+
+  .portal-bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: auto;
+    gap: 20px;
+  }
+
+  .portal-bottom-left {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .portal-bottom-right {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+  }
+
+  .hero-highlight-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  }
+
+  .portal-bottom-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+    background: linear-gradient(90deg, rgba(20, 20, 20, 0.00) 0%, #141414 50%, rgba(20, 20, 20, 0.00) 100%);
+}
+
+  .hero-highlight-img {
+    width: 400px;
+    height: 250px;
+    border-radius: 8px;
+    object-fit: cover;
+    object-position: top top; 
+    transform: scale(2) translateY(30%);
+  }
+
+  .hero-highlight-name {
+    font-size: 1.5rem;
+  }
+
+  .portal-tabs {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
