@@ -43,6 +43,10 @@ Route::get('/mcc/calendar', function () {
     return Inertia::render('MCC/Calendar/index');
 })->name('mcc.calendar');
 
+Route::get('/mcc/predictions', function () {
+    return Inertia::render('MCC/Predictions/index');
+})->name('mcc.predictions');
+
 // MCC Voting Routes
 Route::prefix('mcc/voting')->name('mcc.voting.')->group(function () {
     Route::get('/', function () {
@@ -67,4 +71,6 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+require __DIR__.'/auth.php';
 
