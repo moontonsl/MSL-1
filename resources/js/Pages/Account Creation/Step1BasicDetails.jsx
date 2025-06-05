@@ -54,7 +54,7 @@ const Step1BasicDetails = ({
 
     if (inputDate > today) {
       setErrorMessage('⚠️ Selected dates are not allowed. Please select a valid birthday.');
-      handleInputChange({ target: { name: 'age', value: '' } });
+      handleInputChange({ target: { name: 'age', value: "test3" } });
       return;
     }
 
@@ -67,7 +67,7 @@ const Step1BasicDetails = ({
     if (age < 16) {
       setErrorMessage('⚠️ Age not allowed. Must be 16 or above.');
       handleInputChange(e);
-      handleInputChange({ target: { name: 'age', value: '' } });
+      handleInputChange({ target: { name: 'age', value: "test2" } });
       return;
     }
 
@@ -81,7 +81,10 @@ const Step1BasicDetails = ({
     // If valid, clear error
     setErrorMessage('');
     handleInputChange(e);
+    
     handleInputChange({ target: { name: 'age', value: age } });
+    handleInputChange({ target: { name: 'birthday', value: e.target.value } });
+    console.log(formData);
     validateForm();
   };
 

@@ -139,7 +139,8 @@ const Step3GameDetails = ({
               type="text"
               id="ign"
               name="ign"
-              value="THISISMYAUTOMATEDIGN"
+              value={formData.ign || "THISISMYAUTOMATEDIGN"}
+              onChange={handleInputChange}
               className="input-field-register"
               readOnly
             />

@@ -26,6 +26,7 @@ const Step2EducationDetails = ({
       handleInputChange({ target: { name: "island", value: "" } });
       handleInputChange({ target: { name: "region", value: "" } });
     }
+    handleInputChange({ target: { name: "university", value: value } });
   };
 
   const handleAnyInputChange = (e) => {
@@ -190,6 +191,8 @@ const Step2EducationDetails = ({
               id="island"
               name="island"
               value={formData.island}
+              onChange={handleAnyInputChange}
+              onBlur={handleAnyInputBlur}
               className="input-field-register"
               readOnly
             />

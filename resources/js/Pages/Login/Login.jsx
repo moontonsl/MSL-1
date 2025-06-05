@@ -1,23 +1,32 @@
 import { useState } from 'react';
+import { useForm } from '@inertiajs/react';
 import { Header, Footer } from '@/Components';
 import './login.css';
 import { Head } from '@inertiajs/react';
 import { Eye, EyeOff } from 'react-feather';
-
+import axios from 'axios';
 const Login = () => {
+  const { post, data, setData } = useForm({
+    username: '',
+    password: '',
+    remember: false,
+});
   const [formData, setFormData] = useState({
     username: '',
     password: '',
   });
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [error, setError] = useState('');
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+    setData({
+      ...data,
+      [name]: value,
+    });
     setError(''); // Clear error on input change
   };
 
@@ -27,11 +36,26 @@ const Login = () => {
       setError('⚠️Please enter account details.');
       return;
     }
+    post(route('login'), {
+        onFinish: () => reset('password'),
+        onError: (errors) => {
+          // errors is an object with validation or custom error messages from the backend
+          // For example: { username: "The username field is required." }
+          // Or: { message: "The provided credentials do not match our records." }
+          if (errors.message) {
+              setError(errors.message); // Show custom error
+          } else if (errors.username || errors.password) {
+              setError(errors.username || errors.password); // Show validation error
+          } else {
+              setError('⚠️ Wrong username or password.');
+          }
+      },
+    });
     // Simulate login error for demonstration
-    if (formData.username !== 'admin' || formData.password !== 'admin') {
-      setError('⚠️Wrong username or password.');
-      return;
-    }
+    // if (formData.username !== 'admin' || formData.password !== 'admin') {
+    //   setError('⚠️Wrong username or password.');
+    //   return;
+    // }
     setError('');
     // Proceed with login logic here
     console.log(formData);
@@ -56,6 +80,7 @@ const Login = () => {
                 </div>
                 
                 <form className="form-login" onSubmit={handleSubmit}>
+                  
                   <div className="input-group-login">
                     <label htmlFor="username" className="label-login">
                       Username

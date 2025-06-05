@@ -40,7 +40,7 @@ const EmblaCarousel = (props) => {
     } = usePrevNextButtons(emblaApi, onNavButtonClick)
 
     return (
-        <section className="embla z-50">
+        <section className="embla z-20">
             <div className="embla__viewport" ref={emblaRef}>
                 <div className="embla__container">
                     {slides.map((src, index) => (

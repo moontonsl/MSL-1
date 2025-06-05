@@ -5,6 +5,11 @@ use App\Http\Controllers\NewsController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+//jabu
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\AuthController;
+use App\Models\User;
+use App\Http\Controllers\Auth\VerifyEmailController;
 
 Route::get('/', function () {
     return Inertia::render('Home/Home', [
@@ -20,7 +25,7 @@ Route::get('/', function () {
 Route::get('/login', function () {
     return Inertia::render('Login/Login');
 })->name('login');
-
+// Route::post('/login2', [AuthController::class, 'login'])->name('login2');
 
 //ACCOUNT REGISTRATION ROUTES
 Route::get('/register', function () {
@@ -31,9 +36,7 @@ Route::get('/register', function () {
 //STUDENT PORTAL
 Route::get('/studentportal', function () {
     return Inertia::render('Student Portal/Profile');
-})->name('profile');
-
-
+})->middleware(['auth', 'verified'])->name('profile');
 
 // MCC Routes
 Route::get('/mcc', function () {
@@ -61,7 +64,19 @@ Route::prefix('mcc/voting')->name('mcc.voting.')->group(function () {
 // News Routes
 Route::get('/news', [NewsController::class, 'index'])->name('news.index');
 Route::get('/news-articles', [NewsController::class, 'getArticles'])->name('news.articles');
- 
+
+// data count routes
+Route::get('/stats', function () {
+    return [
+        'student_players' => DB::table('users')->count(),
+        'student_leaders' => DB::table('users')->where('user_type', 'SL')->count(),
+        'university_communities' => DB::table('msl_schools')->count(),
+        'school_partners' => DB::table('msl_school_partner')->count(),
+     
+    ];
+});
+Route::post('/send-verification-code', [VerifyEmailController::class, 'sendCode']);
+
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -72,3 +87,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+require __DIR__.'/auth.php';

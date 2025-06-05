@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import { Header, Footer } from '@/Components';
 import Step1BasicDetails from './Step1BasicDetails';
 import Step2EducationDetails from './Step2EducationDetails';
@@ -9,7 +9,7 @@ import './register.css';
 
 const initialFormData = {
     // Step 1
-    firstName: '', lastName: '', suffix: '', birthday: '', age: '', gender: '', contactNo: '', facebookLink: '',
+    firstName: '', lastName: '', suffix: '', birthday: '', age: 0, gender: '', contactNo: '', facebookLink: '',
     // Step 2
     yearLevel: '', university: '', island: '', region: '', studentId: '', course: '', proofOfEnrollment: null,
     // Step 3
@@ -22,6 +22,8 @@ const fileTypeIsValid = (file, allowedTypes) =>
     file && allowedTypes.includes(file.type);
 
 const Register = () => {
+    const { data, setData, post, processing, errors, reset } = useForm({
+    });
     const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState(initialFormData);
     const [errorMessage, setErrorMessage] = useState("");
@@ -32,6 +34,12 @@ const Register = () => {
             ...prev,
             [name]: type === 'file' ? files[0] : value
         }));
+        
+        setData(prev => ({
+            ...prev,
+            [name]: type === 'file' ? files[0] : value
+        }));
+        console.log(data);
     };
 
     const handleNext = () => {
@@ -49,7 +57,11 @@ const Register = () => {
         e.preventDefault();
         if (!isFormValid(currentStep)) return;
         setErrorMessage("");
+        // console.log(data);
         window.alert("Account created successfully");
+        post(route('register'), {
+            onFinish: () => reset('password', 'password_confirmation'),
+        });
         // Optionally reset form or redirect here
     };
 
