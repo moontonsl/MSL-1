@@ -63,6 +63,12 @@ const Register = () => {
             onFinish: () => reset('password', 'password_confirmation'),
         });
         // Optionally reset form or redirect here
+        
+        // Reset form data to initial state
+        setFormData(initialFormData);
+        
+        // Reset to first step
+        setCurrentStep(1);
     };
 
     function isFormValid(step) {
