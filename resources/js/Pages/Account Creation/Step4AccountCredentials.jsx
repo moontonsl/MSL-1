@@ -12,6 +12,22 @@ const Step4AccountCredentials = ({
   const [timer, setTimer] = useState(0);
   const timerRef = useRef(null);
 
+  // Username validation: only alphanumeric, max 15 chars, no special/foreign chars
+const validateUsername = (username) => {
+  // Allow any ASCII character except whitespace, max 15 chars, disallow any non-ASCII (foreign) character
+  return /^[\x20-\x7E]{1,15}$/.test(username);
+};
+  // Custom input handler for username
+  const handleUsernameChange = (e) => {
+    const value = e.target.value;
+    if (value === "" || validateUsername(value)) {
+      handleInputChange(e);
+      setErrorMessage && setErrorMessage(""); // Clear error if valid
+    } else {
+      setErrorMessage && setErrorMessage("⚠️ Username not allowed or exceeds limits of characters.");
+    }
+  };
+
   // Validation function for enabling Send Code button
   const isFormValidForSendCode = () => {
     // Username must not be empty
@@ -131,10 +147,12 @@ const Step4AccountCredentials = ({
             id="username"
             name="username"
             value={formData.username}
-            onChange={handleInputChange}
+            onChange={handleUsernameChange}
             className="input-field-register"
             placeholder="e.g. Simoun"
             required
+            maxLength={15}
+            autoComplete="off"
           />
         </div>
       </div>

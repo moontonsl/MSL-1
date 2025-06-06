@@ -46,14 +46,14 @@ const Login = () => {
             <div className="login-wrapper">
             <div className={`login-container-login ${error ? 'has-error' : ''}`} style={{ flex: 1 }}>
               <div className="form-container-login">
-                <h1 className="title-login">LOG IN MSL ACCOUNT</h1>
-                <div className="image-container-login">
+                <h1 className="title-login">LOG IN</h1>
+                {/* <div className="image-container-login">
                   <img
                     src="msl-logo.png"
                     alt="MSL Account Logo"
                     className="image-logo-login"
                   />
-                </div>
+                </div> */}
                 
                 <form className="form-login" onSubmit={handleSubmit}>
                   <div className="input-group-login">
@@ -105,6 +105,11 @@ const Login = () => {
                     <button type="submit" className="login-btn-login">
                       Login
                     </button>
+                    <div className="mlbb-login-options">
+                      <button className="mlbb-btn mlbb-quick-login">
+                        <img src="/images/Student Portal/mlbbiconlogin.png" alt="Quick Login" className="mlbb-btn-icon" />or Log in with MLBB
+                      </button>
+                    </div>
                     <p className="footer-text-login">
                       <a href="/forgot-password" className="forgot-password-link-login">
                         Forgot Password
