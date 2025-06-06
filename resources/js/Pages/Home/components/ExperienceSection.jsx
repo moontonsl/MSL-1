@@ -1,3 +1,9 @@
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+
 import image1 from "../assets/experience/1.png"
 import image2 from "../assets/experience/2.png"
 import image3 from "../assets/experience/3.png"
@@ -51,37 +57,67 @@ const ExperienceSection = () => {
                     </p>
                 </div>
 
-                <div className="overflow-x-auto scrollbar-hide xl:overflow-visible">
-                    <div className="grid grid-cols-6 gap-4">
-                        {experienceItems.map((item, index) => (
-                            <div
-                                key={index}
-                                className=""
-                            >
-                                <article className="bg-black text-white rounded-xl flex flex-col min-h-[300px] h-full overflow-hidden">
-                                    <div className={`bg-white`}>
-                                        <img
-                                            src={item.img}
-                                            alt={item.title}
-                                            className="w-full aspect-[1/1] object-cover"
-                                            loading="lazy"
-                                        />
-                                    </div>
-                                    <div className="p-4 flex-1 flex flex-col justify-between">
-                                        <header className="text-center">
-                                            <h3 className="font-bold text-md uppercase leading-tight pb-2">
-                                                {item.title}
-                                            </h3>
-                                            {item.subtitle && (
-                                                <p className="text-xs font-semibold">{item.subtitle}</p>
-                                            )}
-                                        </header>
-                                    </div>
-                                </article>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                <Swiper
+                    modules={[Navigation, Pagination]}
+                    navigation
+                    pagination={{ clickable: true }}
+                    spaceBetween={16}
+                    breakpoints={{
+                        // Mobile
+                        320: {
+                            slidesPerView: 2,
+                            spaceBetween: 10
+                        },
+                        // Tablet
+                        768: {
+                            slidesPerView: 3,
+                            spaceBetween: 15
+                        },
+                        // Desktop
+                        1024: {
+                            slidesPerView: 4,
+                            spaceBetween: 16
+                        },
+                        // Large Desktop
+                        1280: {
+                            slidesPerView: 5,
+                            spaceBetween: 20
+                        },
+                        // Extra Large Desktop
+                        1536: {
+                            slidesPerView: 6,
+                            spaceBetween: 24
+                        }
+
+                    }}
+                    className="w-full"
+                >
+                    {experienceItems.map((item, index) => (
+                        <SwiperSlide key={index}>
+                            <article className="bg-black text-white rounded-xl flex flex-col min-h-[420px] h-full overflow-hidden">
+                                <div className="bg-white">
+                                    <img
+                                        src={item.img}
+                                        alt={item.title}
+                                        className="w-full aspect-[1/1] object-cover"
+                                        loading="lazy"
+                                    />
+
+                                </div>
+                                <div className="p-4 flex-1 flex flex-col justify-between">
+                                    <header className="">
+                                        <h3 className="font-bold text-base uppercase leading-tight pb-2">
+                                            {item.title}
+                                        </h3>
+                                        {item.subtitle && (
+                                            <p className="text-xs">{item.subtitle}</p>
+                                        )}
+                                    </header>
+                                </div>
+                            </article>
+                        </SwiperSlide>
+                    ))}
+                </Swiper>
             </div>
         </section>
     )
