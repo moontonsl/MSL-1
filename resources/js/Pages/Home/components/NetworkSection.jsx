@@ -25,13 +25,13 @@ const NetworkSection = () => {
             <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#0a0a0a] to-transparent z-0 pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#0a0a0a] to-transparent z-0 pointer-events-none" />
 
-            <div className={`px-4 mx-auto grid gap-10 md:gap-14 z-10`}>
+            <div className={`sm:px-4 mx-auto grid gap-10 md:gap-14 z-10`}>
                 <h2 className="text-4xl text-center font-bold z-10">MSL NETWORK ORGANIZATIONS</h2>
 
                 <div className={styles.logoSlider} ref={logoSliderRef}>
                     <div className={styles.logosSlide} ref={logoSlideRef}>
                         {logos.map((src, index) => (
-                            <div key={index} className={styles.networkLogos}>
+                            <div key={index} className={`${styles.networkLogos} mx-4 xl:mx-10`}>
                                 <img src={src} alt={`Logo ${index + 1}`} />
                             </div>
                         ))}

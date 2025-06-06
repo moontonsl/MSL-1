@@ -22,8 +22,13 @@
 
     .networkLogos {
         display: inline-block;
-        height: 120px;
-        margin: 0 40px;
+        height: 100px;
+        width: 100px;
+
+        @media (min-width: 1280px) {
+            height: 120px;
+            width: 120px;
+        }
 
         img {
             object-fit: cover;
