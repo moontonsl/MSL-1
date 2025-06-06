@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import { Menu } from 'lucide-react';
 import styles from './Header.module.scss';
+import { MdAccountCircle } from "react-icons/md";
 
 // Navigation links array (only main nav links)
 const navLinks = [
@@ -48,7 +49,7 @@ const Header = () => {
                             className={styles.signInBtn}
                             onClick={() => setIsMenuOpen(false)}
                         >
-                            Login
+                            <MdAccountCircle size={40} />
                         </Link>
                         {/*<Link*/}
                         {/*    href="/register"*/}
