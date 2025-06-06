@@ -1,45 +1,95 @@
 .infoSection {
     background-image: url('../assets/network/webbg2025.png');
 
-  .infoHead {
-    color: var(--background-brand-default);
-  }
 
-  .infoAbout {
-    background: var(--background-default-tertiary);
-    //min-height: 564px;
+    .infoSun {
+        position: absolute;
+        top: 0;
 
-    .infoImageWrapper {
-      position: relative;
-      overflow: hidden;
-      //min-height: 300px;
+        left: 50%;
+        transform: translateX(-50%);
 
-      @media (min-width: 768px) {
-        //min-height: 400px;
-      }
+
+        width: 1500px;
+        height: 1500px;
+
+        //background-color: pink;
+
+
+
+        @media (min-width: 640px) {
+            //background-color: greenyellow;
+
+            top: 80px;
+        }
+
+        @media (min-width: 768px) {
+            //background-color: blue;
+            top: 120px;
+
+        }
+
+        @media (min-width: 1024px) {
+            //background-color: red;
+
+            top: 120px;
+
+        }
+
+        @media (min-width: 1280px) {
+            //background-color: yellow;
+
+        }
+
+        @media (min-width: 1536px) {
+            //background-color: orangered;
+            top: 63px;
+            width: 100%;
+            height: 100%;
+        }
     }
 
-    .infoHighlight {
-      color: var(--background-brand-default);
-      transition: all 0.5s ease-in-out;
+
+
+    .infoHead {
+        color: var(--background-brand-default);
     }
 
-    .infoImage {
-      position: absolute;
-      top: 0;
-      left: 0;
-      object-fit: cover;
-      width: 100%;
-      height: 100%;
-          transition: all 0.5s ease-in-out;
-    }
+    .infoAbout {
+        background: var(--background-default-tertiary);
+        //min-height: 564px;
 
-    p {
-      //color: var(--background-default-default);
-    }
+        .infoImageWrapper {
+            position: relative;
+            overflow: hidden;
+            //min-height: 300px;
 
-    span {
-      color: var(--background-default-default);
+            @media (min-width: 768px) {
+                //min-height: 400px;
+            }
+        }
+
+        .infoHighlight {
+            color: var(--background-brand-default);
+            transition: all 0.5s ease-in-out;
+        }
+
+        .infoImage {
+            position: absolute;
+            top: 0;
+            left: 0;
+            object-fit: cover;
+            width: 100%;
+            height: 100%;
+            transition: all 0.5s ease-in-out;
+        }
+
+        p {
+            //color: var(--background-default-default);
+        }
+
+        span {
+            color: var(--background-default-default);
+        }
     }
-  }
 }

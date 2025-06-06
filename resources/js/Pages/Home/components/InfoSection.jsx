@@ -34,25 +34,20 @@ const HeroSection = () => {
     return (
         <section className={`${styles.infoSection}`}>
 
-            <div className="relative overflow-hidden pt-16 md:pt-60">
+            <div className="relative overflow-hidden pt-16 lg:pt-40">
 
                 {/* Top gradient overlay */}
-                <div
-                    className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#0a0a0a] to-transparent z-0 pointer-events-none" />
-
+                <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#0a0a0a] to-transparent z-0 pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-full h-[40rem] bg-gradient-to-t from-[#0a0a0a] to-transparent z-0 pointer-events-none" />
                 {/* Bottom gradient overlay */}
-                <div
-                    className="absolute bottom-0 left-0 w-full h-[40rem] bg-gradient-to-t from-[#0a0a0a] to-transparent z-0 pointer-events-none" />
 
-
-                <div className="absolute opacity-20 bottom-0 lg:top-0 w-full">
-                    <img src={sunImage} alt="Sun Image"
-                         className="w-full object-contain scale-150 md:scale-125 lg:scale-100" />
+                <div className={`${styles.infoSun} absolute opacity-10 w-full`}>
+                    <img src={sunImage} alt="Sun Image" className="w-full object-contain" />
                 </div>
 
 
                 <div className="container mx-auto px-4 gap-16 grid mb-20 scale">
-                    <h1 className="text-4xl md:text-6xl font-bold text-center w-full z-10">
+                    <h1 className="text-[clamp(2.25rem,5vw,3.75rem)] font-bold text-center w-full z-10 leading-tight">
                         MOONTON STUDENT LEADER <br className="hidden lg:block" />PHILIPPINES
                     </h1>
 

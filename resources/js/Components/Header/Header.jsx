@@ -6,9 +6,9 @@ import styles from './Header.module.scss';
 // Navigation links array (only main nav links)
 const navLinks = [
     { name: 'Events', href: '/events' },
-    { name: 'News', href: '/news' },
     { name: 'Program', href: '/program' },
     { name: 'Resources', href: '/resources' },
+    { name: 'News', href: '/news' },
 ];
 
 const Header = () => {
@@ -48,15 +48,15 @@ const Header = () => {
                             className={styles.signInBtn}
                             onClick={() => setIsMenuOpen(false)}
                         >
-                            Sign In
+                            Login
                         </Link>
-                        <Link
-                            href="/register"
-                            className={styles.registerBtn}
-                            onClick={() => setIsMenuOpen(false)}
-                        >
-                            Register
-                        </Link>
+                        {/*<Link*/}
+                        {/*    href="/register"*/}
+                        {/*    className={styles.registerBtn}*/}
+                        {/*    onClick={() => setIsMenuOpen(false)}*/}
+                        {/*>*/}
+                        {/*    Register*/}
+                        {/*</Link>*/}
                     </div>
                 </nav>
             </div>
