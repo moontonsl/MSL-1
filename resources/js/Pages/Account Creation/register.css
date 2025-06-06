@@ -21,7 +21,7 @@
   max-width: 758px;
   height: 820px;
   margin: 20px; 
-  padding: 1rem;
+  padding: 2rem;
   background-color: #0A0A0A;
   border-radius: 8px;
   border: 1px solid #242424; 
@@ -45,6 +45,11 @@
     padding: 40px;
 }
 
+
+.form-container-register,
+.form-container-register-step4 {
+  padding: 2rem !important;
+}
 
 /* Image Container */
 .image-container-register {
@@ -464,7 +469,7 @@
 
 @media (max-width: 639px) {
   .register-main-bg {
-    padding: 30px 0; 
+    padding: 30px 30px; 
     width: 100%;
   }
 
@@ -472,9 +477,7 @@
   .form-container-register-step4 {
     width: 100%;
     max-width: 100%;
-    margin: 0; /* Remove margins */
-    padding: 15px 10px; /* Reduce horizontal padding */
-    border-radius: 0; /* Remove border radius for full-width look */
+    border-radius: 5px; /* Remove border radius for full-width look */
     height: auto;
     min-height: 700px;
   }
