@@ -7,7 +7,23 @@ import Logo3 from "../assets/network/DESIGN 1 PNG.png";
 import Logo4 from "../assets/network/FINAL.png";
 import Logo5 from "../assets/network/WA Logo Official (ESPORTS USE).png";
 
-const logos = [Logo1, Logo2, Logo3, Logo4, Logo5];
+const logos = [
+    Logo1,
+    Logo2,
+    Logo3,
+    Logo4,
+    Logo5,
+    Logo1,
+    Logo2,
+    Logo3,
+    Logo4,
+    Logo5,
+    Logo1,
+    Logo2,
+    Logo3,
+    Logo4,
+    Logo5,
+];
 
 const NetworkSection = () => {
     const logoSliderRef = useRef(null);
