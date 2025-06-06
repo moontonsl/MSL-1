@@ -58,7 +58,7 @@ const ExperienceSection = () => {
                 </div>
 
                 <Swiper
-                    modules={[Navigation, Pagination]}
+                    modules={[Navigation]}
                     navigation
                     pagination={{ clickable: true }}
                     spaceBetween={16}
