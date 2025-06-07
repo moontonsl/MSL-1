@@ -1,29 +1,29 @@
 const NewsSection = () => {
     const articles = [
         {
-            category: "Food",
-            title: "Finger-Lickin' Chicken Wings That Will Leave You Craving More",
-            author: "Lan",
+            category: "Gaming",
+            title: "Starfield's Latest DLC Promises Revolutionary Space Exploration",
+            author: "Alex Chen",
             date: "April 26, 2025",
-            image: "https://images.unsplash.com/photo-1624726175512-19b9baf9fbd1?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+            image: "https://picsum.photos/1920/1080?random=1",
             size: "large",
         },
         {
-            category: "Food",
-            title: "This Cheesy Pepperoni Pizza Is Everything You’ve Been Dreaming Of",
-            image: "https://images.unsplash.com/photo-1506354666786-959d6d497f1a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+            category: "Esports",
+            title: "Team Liquid Dominates International Championship Finals",
+            image: "https://picsum.photos/1920/1080?random=2",
             size: "medium",
         },
         {
-            category: "Breakfast",
-            title: "Stacked with Flavor: The Ultimate Pancake Experience",
-            image: "https://images.unsplash.com/photo-1628815756608-c8ac0cacf20b?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+            category: "Reviews",
+            title: "Next-Gen Console War: PS6 vs Xbox Series Z Analysis",
+            image: "https://picsum.photos/1920/1080?random=3",
             size: "small",
         },
         {
-            category: "Grilling",
-            title: "Master the Grill: Juicy Kebabs and Fire-Roasted Veggies",
-            image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+            category: "Tech",
+            title: "Revolutionary Gaming AI Sets New Benchmarks in NPCs",
+            image: "https://picsum.photos/1920/1080?random=4",
             size: "small",
         },
     ];

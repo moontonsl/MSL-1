@@ -1,42 +1,42 @@
 import styles from './Footer.module.scss';
 import { Link } from '@inertiajs/react';
 import { Facebook, Instagram } from 'lucide-react';
-import ThemeToggleButton from "../ThemeToggleButton.jsx";
+import ThemeToggleButton from '../ThemeToggleButton.jsx';
 
 const navSections = [
     {
         title: 'Explore',
         links: [
-            {label: 'Events', href: '/events'},
-            {label: 'News', href: '/news'},
-            {label: 'Program', href: '/program'},
-            {label: 'Resources', href: '/resources'},
-        ],
+            { label: 'Events', href: '/events' },
+            { label: 'News', href: '/news' },
+            { label: 'Program', href: '/program' },
+            { label: 'Resources', href: '/resources' }
+        ]
     },
-    {
-        title: 'About Us',
-        links: [
-            {label: 'Our Story', href: '/our-story'},
-            {label: 'Team', href: '/team'},
-            {label: 'Partnerships', href: '/partnerships'},
-            {label: 'News & Updates', href: '/updates'},
-        ],
-    },
-    {
-        title: 'Join Us',
-        links: [
-            {label: 'SL Apply', href: '/apply'},
-            {label: 'MCC Registration', href: '/mcc-registration'},
-            {label: 'Network', href: '/network'},
-        ],
-    },
+    // {
+    //     title: 'About Us',
+    //     links: [
+    //         { label: 'Our Story', href: '/our-story' },
+    //         { label: 'Team', href: '/team' },
+    //         { label: 'Partnerships', href: '/partnerships' },
+    //         { label: 'News & Updates', href: '/updates' }
+    //     ]
+    // },
+    // {
+    //     title: 'Join Us',
+    //     links: [
+    //         { label: 'SL Apply', href: '/apply' },
+    //         { label: 'MCC Registration', href: '/mcc-registration' },
+    //         { label: 'Network', href: '/network' }
+    //     ]
+    // },
     {
         title: 'Legal',
         links: [
-            {label: 'Privacy Policy', href: '/privacy-policy'},
-            {label: 'Terms of Use', href: '/terms'},
-        ],
-    },
+            { label: 'Privacy Policy', href: '/privacy-policy' },
+            { label: 'Terms of Use', href: '/terms' }
+        ]
+    }
 ];
 
 const Footer = () => {
@@ -46,14 +46,13 @@ const Footer = () => {
                 <div className={styles.footerInfo}>
                     <div className={styles.logo}>
                         <Link href="/">
-                            <img src="/msl-logo.png" alt="MSL Logo"/>
+                            <img src="/msl-logo.png" alt="MSL Logo" />
                         </Link>
                     </div>
                     <p>
                         This website is under the use of Moonton Student Leaders Philippines supervised and monitored by
-                        the SERP Department.
-                        For inquiries and website concerns, send it to us using this link or you may contact us through
-                        contact@moontonslph.org
+                        the SERP Department. For inquiries and website concerns, send it to us using this link or you
+                        may contact us through contact@moontonslph.org
                     </p>
                 </div>
                 <div className={styles.navGrid}>
@@ -80,12 +79,12 @@ const Footer = () => {
             <div className={styles.partnered}>
                 <div className={styles.partneredLogo}>
                     <Link href="/">
-                        <img src="/mlbb-logo.png" alt="MSL Logo"/>
+                        <img src="/mlbb-logo.png" alt="MSL Logo" />
                     </Link>
                 </div>
                 <div className={styles.partneredLogo}>
                     <Link href="/">
-                        <img src="/moonton-logo.png" alt="MSL Logo"/>
+                        <img src="/moonton-logo.png" alt="MSL Logo" />
                     </Link>
                 </div>
             </div>
@@ -95,10 +94,10 @@ const Footer = () => {
                 <div className={styles.socials}>
                     <ThemeToggleButton />
                     <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-                        <Instagram size={20}/>
+                        <Instagram size={20} />
                     </a>
                     <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-                        <Facebook size={20}/>
+                        <Facebook size={20} />
                     </a>
                 </div>
             </div>
