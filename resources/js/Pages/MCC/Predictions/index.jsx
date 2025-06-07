@@ -84,14 +84,14 @@ const BracketSection = ({ title, status = 'open' }) => {
         <div className="w-full max-w-[1640px] relative mb-24 px-4 md:px-8">
             {/* Section Title */}
             <div className="text-center mb-4">
-                <h2 className="text-4xl md:text-6xl font-bold font-['Space_Grotesk'] leading-tight">
+                <h2 className="text-4xl md:text-6xl font-bold font-space leading-tight">
                     {title}
                 </h2>
             </div>
 
             {/* Subtitle */}
             <div className="flex justify-center items-center mb-6">
-                <p className="text-base font-medium font-['Poppins'] leading-snug">
+                <p className="text-base font-medium font-poppins leading-snug">
                     Choose at least 2 Teams
                 </p>
             </div>
@@ -103,7 +103,7 @@ const BracketSection = ({ title, status = 'open' }) => {
                         {/* Cover Overlay */}
                         {status !== 'open' && (
                             <div className={`absolute inset-0 z-20 flex items-center justify-center ${getOverlayStyle()}`}>
-                                <h3 className="text-4xl md:text-6xl font-bold text-white text-center">
+                                <h3 className="text-4xl md:text-6xl font-bold font-space text-white text-center">
                                     {getCoverMessage()}
                                 </h3>
                             </div>
@@ -206,12 +206,12 @@ export default function PredictionsPage() {
                             alt="MCC Logo"
                         />
                         <div className="text-center mt-6">
-                            <h1 className="text-4xl md:text-6xl font-bold font-['Space_Grotesk'] leading-tight">
+                            <h1 className="text-4xl md:text-6xl font-bold font-space leading-tight">
                                 GROUP STAGE PREDICTION
                             </h1>
                         </div>
                         <div className="mt-4 text-center">
-                            <p className="text-xl font-['Poppins']">
+                            <p className="text-xl font-poppins">
                                 <span className="font-medium">Predict who will make it to the Finals? </span>
                                 <span className="font-bold">Choose at least 2 Teams!</span>
                             </p>
