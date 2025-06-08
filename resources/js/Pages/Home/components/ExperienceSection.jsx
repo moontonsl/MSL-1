@@ -3,6 +3,7 @@ import { Navigation, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
+import styles from "./ExperienceSection.module.scss"
 
 import image1 from '../assets/experience/1.png';
 import image2 from '../assets/experience/2.png';
@@ -46,9 +47,11 @@ const experienceItems = [
 
 const ExperienceSection = () => {
     return (
-        <section className="py-10 bg-[#FFBD30] text-black">
-            <div className="container mx-auto w-[90vw] md:px-4">
-                <div className="text-center mb-10">
+        <section className={`py-10 bg-[#FFBD30] text-black ${styles.experienceSection}`}>
+            <div className={styles.expBackground}/>
+            <div className="container mx-auto w-[90vw] md:px-4 relative z-10">
+
+                <div className="text-center mb-10 text-white">
                     <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
                         LEAD TO EXPERIENCE!
                     </h2>
@@ -100,8 +103,8 @@ const ExperienceSection = () => {
                                     />
 
                                 </div>
-                                <div className="p-2 justify-between text-center">
-                                    <h3 className="font-bold text-base leading-tight uppercase">{item.title}</h3>
+                                <div className="p-2 justify-between text-center bg-white">
+                                    <h3 className="font-bold text-base leading-tight uppercase text-black">{item.title}</h3>
                                     {/*<p className="text-xs text-gray-300">{item.subtitle}</p>*/}
                                 </div>
                             </article>
