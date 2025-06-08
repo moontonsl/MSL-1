@@ -76,9 +76,9 @@ const HeroSection = () => {
                         />
                     </div>
                     <div className="p-4 lg:p-10 xl:p-24 flex flex-col gap-4 justify-center">
-                        <h2 className={`text-[clamp(2rem,6vw,3rem)] font-bold leading-tight`}>
-                            HERE AT <br className={`hidden xl:block`} />
-                            MOONTON STUDENT LEADER <br className={`hidden md:block`} />
+                        <h2 className={`text-[clamp(2rem,6vw,3rem)] font-bold leading-none`}>
+                            HERE AT
+                            MOONTON STUDENT LEADER
                             PHILIPPINES we <span
                             className={`${styles.infoHighlight} text-brand`}>
                                 {imageTextPairs[currentIndex].text}
