@@ -4,7 +4,7 @@ import InfoSection from './components/InfoSection.jsx';
 import NewsSection from './components/NewsSection.jsx';
 import NetworkSection from './components/NetworkSection.jsx';
 import MainLayout from '@/Layouts/MainLayout.jsx';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 
 const Home = () => {
     return (
