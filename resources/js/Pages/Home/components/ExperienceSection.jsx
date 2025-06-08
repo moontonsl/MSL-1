@@ -25,7 +25,7 @@ const experienceItems = [
     },
     {
         img: image3,
-        title: 'Academic activities (training and seminars)',
+        title: 'Academic activities (training & seminars)',
         subtitle: 'Don\'t just strive to improve your gamer\'s sense—academic activities await for you to be taught and trained to soar in your studies.'
     },
     {
@@ -65,27 +65,27 @@ const ExperienceSection = () => {
                     modules={[Navigation]}
                     navigation
                     pagination={{ clickable: true }}
-                    spaceBetween={16}
+                    spaceBetween={8}
                     breakpoints={{
                         320: {
                             slidesPerView: 2,
-                            spaceBetween: 10
+                            spaceBetween: 8
                         },
                         768: {
                             slidesPerView: 3,
-                            spaceBetween: 15
+                            spaceBetween: 8
                         },
                         1024: {
                             slidesPerView: 4,
-                            spaceBetween: 16
+                            spaceBetween: 8
                         },
                         1280: {
                             slidesPerView: 5,
-                            spaceBetween: 20
+                            spaceBetween: 16
                         },
                         1536: {
                             slidesPerView: 6,
-                            spaceBetween: 24
+                            spaceBetween: 16
                         }
 
                     }}
@@ -93,21 +93,22 @@ const ExperienceSection = () => {
                 >
                     {experienceItems.map((item, index) => (
                         <SwiperSlide key={index}>
-                            <article className="bg-black text-white rounded-xl overflow-hidden">
-                                <div className="">
-                                    <img
-                                        src={item.img}
-                                        alt={item.title}
-                                        className="w-full aspect-[1/1] object-cover"
-                                        loading="lazy"
-                                    />
+                            <div className={`p-1 rounded-xl bg-[#FFBD30]`}>
+                                <article className="text-white rounded-lg overflow-hidden">
+                                    <div className="bg-black">
+                                        <img
+                                            src={item.img}
+                                            alt={item.title}
+                                            className="w-full aspect-[1/1] object-cover"
+                                            loading="lazy"
+                                        />
 
-                                </div>
-                                <div className="p-2 justify-between text-center bg-white">
-                                    <h3 className="font-bold text-base leading-tight uppercase text-black">{item.title}</h3>
-                                    {/*<p className="text-xs text-gray-300">{item.subtitle}</p>*/}
-                                </div>
-                            </article>
+                                    </div>
+                                    <div className="p-2 text-center bg-[#FFBD30] h-20 flex items-center">
+                                        <h3 className="font-bold text-base leading-tight uppercase text-black line-clamp-3">{item.title}</h3>
+                                    </div>
+                                </article>
+                            </div>
                         </SwiperSlide>
                     ))}
                 </Swiper>

@@ -34,7 +34,7 @@ const HeroSection = () => {
     return (
         <section className={`${styles.infoSection}`}>
 
-            <div className="relative overflow-hidden pt-16 lg:pt-40">
+            <div className="relative overflow-hidden pt-16 md:pt-20 lg:pt-30 xl:pt-40">
 
                 {/* Top gradient overlay */}
                 <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#0a0a0a] to-transparent z-0 pointer-events-none" />
