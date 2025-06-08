@@ -21,16 +21,17 @@
   flex-wrap: nowrap;
   gap: 0;
   width: 100%;
+  max-width: 100%;   /* Ensure full width */
+  margin: 0;         /* Remove side margin */
+  padding: 0;        /* Remove side padding */
   height: auto;
-  max-width: 1200px;
-  margin: -30px 0;
 }
 
 /* Login Container: stick to the left */
 .login-container-login {
   width: 500px;
   height: 100%;
-  padding: 2rem;
+  padding: 3rem;
   background-color: rgba(10, 10, 10, 0.5);
   border-radius: 15px 0 0 15px;
   border: 1px solid #242424;
@@ -45,39 +46,27 @@
 .video-container-login {
   position: relative;
   display: flex;
-  align-items: stretch; /* changed from center to stretch */
+  align-items: stretch; 
   justify-content: center;
-  width: 800px;
+  width: 690px;  
   background: #000;
   border-radius: 0 15px 15px 0;
   overflow: hidden;
 }
 
-.video-bg-blur {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: blur(10px) brightness(0.3);
-  z-index: 1;
-}
-
 .video-foreground {
   position: relative;
-  z-index: 2;
   width: 100%;
-  height: 100%; /* changed from 70% to 100% */
+  height: 100%; 
   display: flex;
-  align-items: stretch; /* changed from center to stretch */
+  align-items: stretch; 
   justify-content: center;
 }
 
 .video-foreground iframe {
   width: 100%;
   height: 100%;
-  aspect-ratio: unset; /* remove aspect-ratio to allow full fill */
+  aspect-ratio: unset; 
   border: none;
   background: #000;
   display: block;
@@ -92,7 +81,7 @@
   font-size: 30px;
   font-style: normal;
   font-weight: var(--weight-bold);
-  line-height: 140%;
+  line-height: 1.1;
   align-self: stretch;
   margin-bottom: 20px;
 }
@@ -231,6 +220,62 @@
   animation: fadeIn 0.3s ease-in-out;
 }
 
+.choose-login-container {
+  background: rgba(10,10,10,0.7);
+  border-radius: 16px;
+  padding: 2rem 2rem 2.5rem 2rem;
+  box-shadow: 0 4px 24px #0008;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 340px;
+  max-width: 400px;
+  margin: 0 auto;
+  }
+  
+.choose-login-title {
+  color: #fff;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  line-height: 1.1;
+}
+
+.choose-login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background: linear-gradient(90deg, #232323 60%, #232323cc 100%);
+  border: 1px solid #444;
+  border-radius: 10px;
+  color: #fff;
+  width: 100%; 
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0.9rem 1.2rem;
+  margin-bottom: 1.1rem;
+  cursor: pointer;
+  transition: background 0.2s, border 0.2s;
+  box-shadow: 0 2px 8px #0003;
+  textAlign: 'center',
+}
+
+.choose-login-btn:last-child {
+  margin-bottom: 0;
+}
+
+.choose-login-btn:hover {
+  background: linear-gradient(90deg, #1e90ff 60%, #00c6ff 100%);
+  border: 1px solid #1e90ff;
+  color: #fff;
+}
+
+.choose-login-btn-icon {
+  display: flex;
+  align-items: center;
+  margin-right: 20px;
+}
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-5px); }
@@ -243,11 +288,10 @@
   .login-wrapper {
     flex-direction: column;
     align-items: center;
-    gap: 0;
+
   }
   .login-container-login {
-    margin: 30px 0;
-    padding: 0.5rem;
+    padding: 2rem;
     max-width: 100vw;
     min-width: 0;
     height: auto;
@@ -288,6 +332,40 @@
   .login-container-login.has-error {
     height: auto; 
   }
+
+  .choose-login-btn-icon {
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+  }
+
+  .choose-login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background: linear-gradient(90deg, #232323 60%, #232323cc 100%);
+  border: 1px solid #444;
+  border-radius: 10px;
+  color: #fff;
+  width: 100%; 
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.9rem 1.2rem;
+  margin-bottom: 1.1rem;
+  cursor: pointer;
+  transition: background 0.2s, border 0.2s;
+  box-shadow: 0 2px 8px #0003;
+  textAlign: 'center',
+  }
+
+  .choose-login-title {
+  color: #fff;
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  line-height: 1.1;
+  }
 }
 
 @media (max-width: 480px) {
@@ -308,10 +386,6 @@
   .video-container-login {
     height: 350px;
     min-height: 100px;
-  }
-
-  .login-wrapper {
-    margin: 30px 0;
   }
 }
 
@@ -361,13 +435,12 @@
   .login-wrapper {
     max-width: 100%; 
     margin: 0;   
-    padding: 20px;
+    padding: 30px;
   }
   
   .login-container-login {
     width: 100%;
     max-width: 100%;
-    margin: 0;
   }
 
   .video-container-login {
