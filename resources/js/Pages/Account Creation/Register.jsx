@@ -22,12 +22,11 @@ const fileTypeIsValid = (file, allowedTypes) =>
     file && allowedTypes.includes(file.type);
 
 const Register = () => {
-    const { data, setData, post, processing, errors, reset } = useForm({
-    });
+    const { data, setData, post, processing, errors, reset } = useForm(initialFormData);
     const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState(initialFormData);
     const [errorMessage, setErrorMessage] = useState("");
-
+    const [verificationCode, setVerificationCode] = useState("");
     const handleInputChange = (e) => {
         const { name, value, type, files } = e.target;
         setFormData(prev => ({
@@ -35,11 +34,13 @@ const Register = () => {
             [name]: type === 'file' ? files[0] : value
         }));
         
-        setData(prev => ({
-            ...prev,
-            [name]: type === 'file' ? files[0] : value
-        }));
+        // setData(prev => ({
+        //     ...prev,
+        //     [name]: type === 'file' ? files[0] : value
+        // }));
+        setData(formData);
         console.log(data);
+        console.log(formData);
     };
 
     const handleNext = () => {
@@ -58,9 +59,50 @@ const Register = () => {
         if (!isFormValid(currentStep)) return;
         setErrorMessage("");
         // console.log(data);
-        window.alert("Account created successfully");
+        // setData(formData);
+        
         post(route('register'), {
-            onFinish: () => reset('password', 'password_confirmation'),
+            onStart: () => {
+                console.log("Starting registration...");
+                setErrorMessage(""); // Clear any previous errors
+            },
+            onSuccess: (response) => {
+                console.log("Registration successful:", response);
+                setErrorMessage("");
+                // Reset form data to initial state
+                reset();
+                // Reset to first step
+                setCurrentStep(1);
+                // Optional: Show success message
+                alert("Account created successfully!");
+                // Optional: Redirect
+                // window.location.href = '/login';
+            },
+            onError: (errors) => {
+                console.error("Registration failed:", errors);
+                
+                // Handle validation errors
+                if (errors) {
+                    // If there are specific field errors
+                    const errorMessages = Object.values(errors).flat();
+                    setErrorMessage(`⚠️ ${errorMessages.join(', ')}`);
+                    
+                    // Or handle specific errors
+                    if (errors.email) {
+                        setErrorMessage(`⚠️ Email: ${errors.email[0]}`);
+                    } else if (errors.username) {
+                        setErrorMessage(`⚠️ Username: ${errors.username[0]}`);
+                    } else {
+                        setErrorMessage("⚠️ Please check your information and try again.");
+                    }
+                }
+            },
+            onFinish: () => {
+                console.log("Request finished (success or error)");
+                // reset('password', 'confirmPassword'); // Clear sensitive fields
+            },
+            preserveScroll: true, // Keep scroll position
+            preserveState: true,  // Keep form state on errors
         });
         // Optionally reset form or redirect here
         
@@ -118,7 +160,8 @@ const Register = () => {
                     setErrorMessage("⚠️ Passwords do not match.");
                     return false;
                 }
-                if (captcha !== "1234") {
+                if (captcha != verificationCode) {
+                    console.log(verificationCode);
                     setErrorMessage("⚠️ Incorrect code.");
                     return false;
                 }
@@ -137,7 +180,9 @@ const Register = () => {
         handleInputChange,
         errorMessage,
         setErrorMessage,
-        handleSubmit
+        handleSubmit,
+        verificationCode,
+        setVerificationCode
     };
 
     const stepComponents = {

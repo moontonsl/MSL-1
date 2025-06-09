@@ -37,16 +37,16 @@ class RegisteredUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password_confirmation' => ['required', 'same:password'],
             'proofOfEnrollment' => 'required|file|mimes:jpeg,png,jpg,pdf,doc,docx|max:5120'
         ]);
-
+        // dd($request);
         $user = User::create([
             'name' => $request->firstName,
             "surname" => $request->lastName,
             'email' => $request->email,
             "username" => $request->username,
             'password' => Hash::make($request->password),
-            "password_confirmation" => $request->confirmPassword,
             "suffix" => $request->suffix,
             "gender" => $request->gender,
             "age" => $request->age,

@@ -12,27 +12,53 @@ const Step3GameDetails = ({
   const [localError, setLocalError] = useState("");
   const [isBlurred, setIsBlurred] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
   const [userInfo, setUserInfo] = useState(null);
 
   const loginRef = useRef();
-
+  
   const handleLoginInfo = (info) => {
     console.log('Received Login Info:', info);
     setUserInfo(info); 
     info ? setIsBlurred(false) : setIsBlurred(true);
     if (info?.code === 0) {
       const data = info.data;
-      
+     
       formData.ign = data.name || '';
       formData.level = data.level || '';
       formData.country = data.reg_country || '';
       formData.userId = data.roleId || '';
       formData.serverId = data.zoneId || '';
       formData.avatar = data.avatar || '';
+    
       
-      setIsBlurred(true);
-      setIsLoading(false);
+      const checkMlIdExists = async (ml_id) => {
+        const response = await fetch(`/check-ml-id?ml_id=${encodeURIComponent(ml_id)}`);
+        const data = await response.json();
+        console.log(data.exists);
+        return data.exists; // true if exists, false if not
+      };
+
+      const mlIdExists = checkMlIdExists(formData.userId);
+      if (mlIdExists === true) {
+        setLocalError("⚠️ MLID already exists. Please use a different MLID.");formData.ign = '';
+        formData.level = '';
+        formData.country = '';
+        formData.userId = '';
+        formData.serverId = '';
+        formData.avatar = '';
+        setTimeout(() => {
+          
+          setIsBlurred(false);
+        }, 1000);
+       
+      }else{
+        setErrorMessage("");
+        console.log("1");
+        console.log(formData);
+        setIsBlurred(true);
+        setIsLoading(false);
+      }
+      
     }else{
       setIsLoading(false);
     }
@@ -223,8 +249,9 @@ const Step3GameDetails = ({
                 id="ign"
                 name="ign"
                 value={formData.ign}
+                onChange={handleInputChange}
                 className="input-field-register"
-                readOnly
+                
               />
             </div>
             <div className="input-group-register right-side-register">

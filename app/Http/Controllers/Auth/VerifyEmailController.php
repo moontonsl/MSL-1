@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
+use App\Models\User;
 
 class VerifyEmailController extends Controller
 {
@@ -43,9 +44,16 @@ class VerifyEmailController extends Controller
                         ->subject('Your Verification Code');
             });
     
-            return response()->json(['message' => 'Verification code sent!']);
+            return response()->json(['message' => 'Verification code sent!', 'code' => $code]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
+    }
+    public function checkMlId(Request $request)
+    {
+        $mlId = $request->query('ml_id');
+        $exists = User::where('ml_id', $mlId)->exists();
+
+        return response()->json(['exists' => $exists]);
     }
 }

@@ -6,6 +6,8 @@ const Step4AccountCredentials = ({
   handleInputChange,
   errorMessage,
   setErrorMessage, // <-- Make sure this is passed as a prop from parent!
+  verificationCode,
+  setVerificationCode
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -79,6 +81,8 @@ const Step4AccountCredentials = ({
         if (data.message) {
           // Optionally show a success message
           setErrorMessage && setErrorMessage("✅ " + data.message);
+          setVerificationCode && setVerificationCode(data.code);
+          console.log(data.code);
         }
       })
       .catch(error => {

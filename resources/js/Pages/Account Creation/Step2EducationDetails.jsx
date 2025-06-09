@@ -89,14 +89,18 @@ const Step2EducationDetails = ({
     const { value } = e.target;
     handleInputChange(e); // update university
 
-    if (universityData[value]) {
-      const { island, region } = universityData[value];
-      handleInputChange({ target: { name: "island", value: island } });
-      handleInputChange({ target: { name: "region", value: region } });
-    } else {
-      handleInputChange({ target: { name: "island", value: "" } });
-      handleInputChange({ target: { name: "region", value: "" } });
-    }
+    const filtered = courses.filter(
+      (course) =>
+        course.program &&
+        course.program.toLowerCase().includes(value.toLowerCase())
+    ).sort((a, b) => a.program.localeCompare(b.program));
+
+    setFilteredCourses(filtered);
+
+  };
+  const handleCourseSelect = (course) => {
+    handleInputChange({ target: { name: "course", value: course.program } });
+    setFilteredCourses([]);
   };
 
   const handleAnyInputChange = (e) => {
