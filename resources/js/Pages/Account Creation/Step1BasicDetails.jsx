@@ -26,7 +26,6 @@ const Step1BasicDetails = ({
    return true;
   };
 
-  // This will validate and clear error on every change
   const handleAnyInputChange = (e) => {
     handleInputChange(e);
     validateForm();

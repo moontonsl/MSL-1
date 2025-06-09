@@ -13,23 +13,23 @@ const navSections = [
             { label: 'Resources', href: '/resources' }
         ]
     },
-    {
-        title: 'About Us',
-        links: [
-            { label: 'Our Story', href: '/our-story' },
-            { label: 'Team', href: '/team' },
-            { label: 'Partnerships', href: '/partnerships' },
-            { label: 'News & Updates', href: '/updates' }
-        ]
-    },
-    {
-        title: 'Join Us',
-        links: [
-            { label: 'SL Apply', href: '/apply' },
-            { label: 'MCC Registration', href: '/mcc-registration' },
-            { label: 'Network', href: '/network' }
-        ]
-    },
+    // {
+    //     title: 'About Us',
+    //     links: [
+    //         { label: 'Our Story', href: '/our-story' },
+    //         { label: 'Team', href: '/team' },
+    //         { label: 'Partnerships', href: '/partnerships' },
+    //         { label: 'News & Updates', href: '/updates' }
+    //     ]
+    // },
+    // {
+    //     title: 'Join Us',
+    //     links: [
+    //         { label: 'SL Apply', href: '/apply' },
+    //         { label: 'MCC Registration', href: '/mcc-registration' },
+    //         { label: 'Network', href: '/network' }
+    //     ]
+    // },
     {
         title: 'Legal',
         links: [
