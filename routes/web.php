@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SchoolUploadController;
+use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\NewsController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -20,6 +22,9 @@ Route::get('/', function () {
     ]);
 });
 
+Route::inertia('/upload', 'SchoolUploader');
+Route::post('/upload-schools', [SchoolUploadController::class, 'store'])->name('upload-schools');
+Route::get('/schools/search', [SchoolController::class, 'search']);
 
 //LOGIN ROUTES
 Route::get('/login', function () {
