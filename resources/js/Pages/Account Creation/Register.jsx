@@ -41,7 +41,7 @@ const Register = () => {
     };
 
     const handlePrev = () => {
-        setErrorMessage(""); // Clear error when going to previous step
+        setErrorMessage("");
         setCurrentStep(prev => Math.max(prev - 1, 1));
     };
 
@@ -51,15 +51,12 @@ const Register = () => {
         setErrorMessage("");
         window.alert("Account created successfully");
         
-        // Reset form data to initial state
         setFormData(initialFormData);
         
-        // Reset to first step
         setCurrentStep(1);
     };
 
     function isFormValid(step) {
-        // Helper for required fields
         const requireFields = (fields) =>
             fields.every(f => (formData[f] && formData[f].toString().trim() !== ""));
 
@@ -140,20 +137,14 @@ const Register = () => {
         <Header />
             <main>
                 <div className="register-main-bg">
-                    <div className={
-                        currentStep === 4
-                            ? `form-container-register-step4${errorMessage ? ' has-error' : ''}`
-                            : `form-container-register${errorMessage ? ' has-error' : ''}`
-                    }>
+                    <div className={currentStep === 4? `form-container-register-step4${errorMessage ? ' has-error' : ''}`: `form-container-register${errorMessage ? ' has-error' : ''}`}>
                         <form onSubmit={handleSubmit} className="form-register">
-                            {stepComponents[currentStep]}
-
-                            {errorMessage && (
-                                <div className="error-message">
-                                    <p>{errorMessage}</p>
-                                </div>
-                            )}
-
+                            {stepComponents[currentStep]} 
+                                {errorMessage && (
+                                    <div className="error-message">
+                                        <p>{errorMessage}</p>
+                                    </div>
+                                )}
                             <div className="navigation-buttons">
                                 {currentStep > 1 && (
                                     <button type="button" onClick={handlePrev} className="register-btn">
@@ -170,7 +161,6 @@ const Register = () => {
                                     </button>
                                 )}
                             </div>
-
                             <div className="footer-container-register">
                                 <p className="footer-text-register">
                                     Already have an account?&nbsp;<a href="/login" className="sign-in-link-register">Login here</a>
@@ -181,7 +171,7 @@ const Register = () => {
                 </div>
             </main>
         <Footer />
-        </>
+    </>
     );
 };
 

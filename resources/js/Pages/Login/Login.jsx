@@ -20,7 +20,7 @@ const Login = () => {
       ...prev,
       [name]: value,
     }));
-    setError(''); // Clear error on input change
+    setError('');
   };
 
   const handleSubmit = (e) => {
@@ -29,13 +29,12 @@ const Login = () => {
       setError('⚠️Please enter account details.');
       return;
     }
-    // Simulate login error for demonstration
+
     if (formData.username !== 'admin' || formData.password !== 'admin') {
       setError('⚠️Wrong username or password.');
       return;
     }
     setError('');
-    // Proceed with login logic here
     console.log(formData);
   };
 
@@ -88,9 +87,6 @@ const Login = () => {
           </div>
         </main>
         <Footer />
-        <style>{`
-          
-        `}</style>
       </>
     );
   }
@@ -111,9 +107,10 @@ const Login = () => {
                 </div>
                 <button
                   className="choose-login-btn"
-                  onClick={() => setShowMLBBModal(false)}
-                >
-                  <span>Back</span>
+                  onClick={() => setShowMLBBModal(false)}>
+                  <span>
+                    Back
+                  </span>
                 </button>
               </div>
             </div>
@@ -140,47 +137,20 @@ const Login = () => {
                     <label htmlFor="username" className="label-login">
                       Username
                     </label>
-                    <input
-                      type="text"
-                      id="username"
-                      name="username"
-                      placeholder="eg. Simeon"
-                      value={formData.username}
-                      onChange={handleInputChange}
-                      className="input-field-login"
-                    />
+                    <input type="text" id="username" name="username" placeholder="eg. Simeon" value={formData.username} onChange={handleInputChange} className="input-field-login"/>
                   </div>
                   <div className="input-group-login">
                     <label htmlFor="password" className="label-login">
                       Password
                     </label>
                     <div className="password-container-login">
-                      <input
-                        type={passwordVisible ? 'text' : 'password'}
-                        id="password"
-                        name="password"
-                        placeholder="********"
-                        value={formData.password}
-                        onChange={handleInputChange}
-                        className="input-field-login"
-                      />
-                      <button
-                        type="button"
-                        className="eye-icon-login"
-                        onClick={() => setPasswordVisible((v) => !v)}
-                        aria-label={passwordVisible ? 'Hide password' : 'Show password'}
-                      >
-                        {passwordVisible ? <EyeOff size={24} /> : <Eye size={24} />}
+                      <input type={passwordVisible ? 'text' : 'password'} id="password" name="password" placeholder="********" value={formData.password} onChange={handleInputChange} className="input-field-login"/>
+                      <button type="button" className="eye-icon-login" onClick={() => setPasswordVisible((v) => !v)} aria-label={passwordVisible ? 'Hide password' : 'Show password'}>{passwordVisible ? 
+                        <EyeOff size={24} /> : <Eye size={24} />}
                       </button>
                     </div>
                   </div>
-                  
-                  {error && (
-                            <div className="error-message-login">
-                                <p>{error}</p>
-                            </div>
-                        )}
-
+                  {error && ( <div className="error-message-login"> <p>{error}</p></div>)}
                   <div className="footer-container-login">
                     <button type="submit" className="login-btn-login">
                       Login
@@ -200,27 +170,12 @@ const Login = () => {
               </div>
             </div>
             <div className="video-container-login">
-              <video
-                    className="video-bg-blur"
-                    src="/loginvideo.mp4"
-                    type="video/mp4"
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                  >
-                  </video>
-                  <div className="video-foreground">
-                    
-                    <iframe
-                      src="https://www.youtube.com/embed/b6A3EToebqE?autoplay=1&loop=1&playlist=b6A3EToebqE&mute=1&controls=0&rel=0&modestbranding=1"
-                      title="MSL Video"
-                      frameBorder="0"
-                      allow="autoplay; encrypted-media"
-                      allowFullScreen
-                    ></iframe>
-                   
-                  </div>
+              <video className="video-bg-blur" src="/loginvideo.mp4" type="video/mp4" autoPlay muted loop playsInline>
+              </video>
+              <div className="video-foreground">
+                <iframe src="https://www.youtube.com/embed/b6A3EToebqE?autoplay=1&loop=1&playlist=b6A3EToebqE&mute=1&controls=0&rel=0&modestbranding=1" title="MSL Video" frameBorder="0" allow="autoplay; encrypted-media" allowFullScreen
+                ></iframe>
+              </div>
             </div>
           </div>
         </div>

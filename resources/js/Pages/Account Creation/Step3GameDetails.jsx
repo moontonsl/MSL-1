@@ -6,7 +6,7 @@ const Step3GameDetails = ({
   handleInputChange,
   handleSubmit,
   errorMessage,
-  setErrorMessage // <-- make sure this is passed as a prop
+  setErrorMessage
 }) => {
   const [localError, setLocalError] = useState("");
 
@@ -51,24 +51,12 @@ const Step3GameDetails = ({
         const filled = requiredFields.filter(
           (field) => formData[field] && formData[field].toString().trim() !== ""
         ).length;
-        // Progress goes from 51% to 75% as fields are filled
         const percent = 51 + Math.round((filled / requiredFields.length) * (75 - 51));
 
         return (
           <div style={{ margin: "16px 0" }}>
-            <div style={{
-              height: "12px",
-              background: "#eee",
-              borderRadius: "6px",
-              overflow: "hidden",
-              marginBottom: "4px"
-            }}>
-              <div style={{
-                width: `${percent}%`,
-                height: "100%",
-                background: "#f1c40f",
-                transition: "width 0.3s"
-              }} />
+            <div style={{ height: "12px", background: "#eee", borderRadius: "6px", overflow: "hidden", marginBottom: "4px" }}>
+              <div style={{ width: `${percent}%`, height: "100%", background: "#f1c40f", transition: "width 0.3s" }} />
             </div>
             <div style={{ fontSize: "12px", color: "#555" }}>
               Step 3 of 4 &mdash; {percent}% of this step complete
@@ -83,51 +71,13 @@ const Step3GameDetails = ({
             <label htmlFor="userId" className="label-register">
               User ID<span className="required"> *</span>
             </label>
-            <input
-              type="text"
-              id="userId"
-              name="userId"
-              inputMode="numeric"
-              pattern="\d*"
-              value={formData.userId}
-              onChange={handleInputChange}
-              className="input-field-register"
-              placeholder="e.g. 7373793739"
-              required
-              onKeyPress={e => {
-                if (!/[0-9]/.test(e.key)) e.preventDefault();
-              }}
-              onPaste={e => {
-                const pasted = e.clipboardData.getData('Text');
-                if (!/^\d+$/.test(pasted)) e.preventDefault();
-              }}
-              onBlur={handleAnyInputBlur}
-            />
+            <input type="text" id="userId" name="userId" inputMode="numeric" pattern="\d*" value={formData.userId} onChange={handleInputChange} className="input-field-register" placeholder="e.g. 7373793739" required onKeyPress={e => { if (!/[0-9]/.test(e.key)) e.preventDefault(); }} onPaste={e => { const pasted = e.clipboardData.getData('Text'); if (!/^\d+$/.test(pasted)) e.preventDefault(); }} onBlur={handleAnyInputBlur} />
           </div>
           <div className="input-group-register right-side-register">
             <label htmlFor="serverId" className="label-register">
               MLBB Server ID<span className="required"> *</span>
             </label>
-            <input
-              type="text"
-              id="serverId"
-              name="serverId"
-              inputMode="numeric"
-              pattern="\d*"
-              value={formData.serverId}
-              onChange={handleInputChange}
-              className="input-field-register"
-              placeholder="e.g. 12345"
-              required
-              onKeyPress={e => {
-                if (!/[0-9]/.test(e.key)) e.preventDefault();
-              }}
-              onPaste={e => {
-                const pasted = e.clipboardData.getData('Text');
-                if (!/^\d+$/.test(pasted)) e.preventDefault();
-              }}
-              onBlur={handleAnyInputBlur}
-            />
+            <input type="text" id="serverId" name="serverId" inputMode="numeric" pattern="\d*" value={formData.serverId} onChange={handleInputChange} className="input-field-register" placeholder="e.g. 12345" required onKeyPress={e => { if (!/[0-9]/.test(e.key)) e.preventDefault(); }} onPaste={e => { const pasted = e.clipboardData.getData('Text'); if (!/^\d+$/.test(pasted)) e.preventDefault(); }} onBlur={handleAnyInputBlur} />
           </div>
         </div>
         <div className="form-row-register">
@@ -135,28 +85,13 @@ const Step3GameDetails = ({
             <label htmlFor="ign" className="label-register">
               IGN (Automated)
             </label>
-            <input
-              type="text"
-              id="ign"
-              name="ign"
-              value="THISISMYAUTOMATEDIGN"
-              className="input-field-register"
-              readOnly
-            />
+            <input type="text" id="ign" name="ign" value="THISISMYAUTOMATEDIGN" className="input-field-register" readOnly />
           </div>
           <div className="input-group-register right-side-register">
             <label htmlFor="squadName" className="label-register">
               MLBB Squad Name
             </label>
-            <input
-              type="text"
-              id="squadName"
-              name="squadName"
-              value={formData.squadName}
-              onChange={handleInputChange}
-              className="input-field-register"
-              placeholder="e.g. Legends Squad"
-            />
+            <input type="text" id="squadName" name="squadName" value={formData.squadName} onChange={handleInputChange} className="input-field-register" placeholder="e.g. Legends Squad" />
           </div>
         </div>
         <div className="form-row-register">
@@ -164,29 +99,13 @@ const Step3GameDetails = ({
             <label htmlFor="squadAbbreviation" className="label-register">
               Squad Abbreviation
             </label>
-            <input
-              type="text"
-              id="squadAbbreviation"
-              name="squadAbbreviation"
-              value={formData.squadAbbreviation}
-              onChange={handleInputChange}
-              className="input-field-register"
-              placeholder="e.g. El Fili Esports"
-            />
+            <input type="text" id="squadAbbreviation" name="squadAbbreviation" value={formData.squadAbbreviation} onChange={handleInputChange} className="input-field-register" placeholder="e.g. El Fili Esports" />
           </div>
           <div className="input-group-register right-side-register">
             <label htmlFor="rank" className="label-register">
               Current Rank<span className="required"> *</span>
             </label>
-            <select
-              id="rank"
-              name="rank"
-              value={formData.rank}
-              onChange={handleInputChange}
-              className="input-field-register current-rank-select"
-              required
-              onBlur={handleAnyInputBlur}
-            >
+            <select id="rank" name="rank" value={formData.rank} onChange={handleInputChange} className="input-field-register current-rank-select" required onBlur={handleAnyInputBlur} >
               <option value="" disabled>Select Ranking</option>
               <option value="Warrior">Warrior</option>
               <option value="Elite">Elite</option>
@@ -206,15 +125,7 @@ const Step3GameDetails = ({
             <label htmlFor="inGameRole" className="label-register">
               In-Game Role<span className="required"> *</span>
             </label>
-            <select
-              id="inGameRole"
-              name="inGameRole"
-              value={formData.inGameRole}
-              onChange={handleInputChange}
-              className="input-field-register in-game-role-select"
-              required
-              onBlur={handleAnyInputBlur}
-            >
+            <select id="inGameRole" name="inGameRole" value={formData.inGameRole} onChange={handleInputChange} className="input-field-register in-game-role-select" required onBlur={handleAnyInputBlur} >
               <option value="" disabled>Select Role</option>
               <option value="Tank">Tank</option>
               <option value="Support">Support</option>
@@ -228,15 +139,7 @@ const Step3GameDetails = ({
             <label htmlFor="mainHero" className="label-register">
               Main Hero<span className="required"> *</span>
             </label>
-            <select
-              id="mainHero"
-              name="mainHero"
-              value={formData.mainHero}
-              onChange={handleInputChange}
-              className="input-field-register main-hero-select"
-              required
-              onBlur={handleAnyInputBlur}
-            >
+            <select id="mainHero" name="mainHero" value={formData.mainHero} onChange={handleInputChange} className="input-field-register main-hero-select" required onBlur={handleAnyInputBlur} >
               <option value="" disabled>Select Hero</option>
               <option value="Aamon">Aamon</option>
               <option value="Akai">Akai</option>
