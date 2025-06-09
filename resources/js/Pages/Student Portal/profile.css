@@ -1,3 +1,6 @@
+
+
+/* Laptop/Desktop: @media (min-width: 1024px) and (max-width: 1439px) and @media (min-width: 1025px) and (max-width: 1366px) */
 .portal-main-bg {
   min-height: 100vh;
   width: 100%;
@@ -14,7 +17,7 @@
 
 .portal-container {
   height: 100vh;
-  width: 80%;
+  width: 95%;
   padding: 30px;
   box-sizing: border-box;
   margin: 10px 0;
@@ -37,7 +40,7 @@
 
 .portal-top-container {
   height: 100%;
-  padding: 32px;
+  padding: 20px;
   width: 100%;
   gap: 24px;
   display: flex;
@@ -46,7 +49,7 @@
 }
 
 .portal-top-left {
-  flex: 0 0 10%;
+  flex: 0 0 15%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -57,16 +60,16 @@
   background: linear-gradient(135deg, #fff, #f3c718c6 77.49%, #fff);
   border-radius: 50%;
   padding: 5px;
-  width: 190px;
-  height: 190px;
+  width: 150px;
+  height: 150px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .avatar-img {
-  width: 170px;
-  height: 170px;
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
   object-fit: cover;
   background: #111;
@@ -75,7 +78,7 @@
 .divider::after {
   content: '';
   position: absolute;
-  right: -46px;
+  right: -36px;
   top: 50%;
   transform: translateY(-50%);
   width: 1px;
@@ -94,8 +97,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 12px;
-  margin-left: 46px;
+  margin-left: 36px;
   position: relative;
 }
 
@@ -103,7 +105,7 @@
 .divider-middle::after {
   content: '';
   position: absolute;
-  right: -14px;
+  right: -2px;
   top: 50%;
   transform: translateY(-50%);
   width: 1px;
@@ -121,14 +123,13 @@
 .profile-main-info {
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 
 .profile-name {
   font-family: "Space Grotesk";
-  font-size: 50px;
+  font-size: 40px;
   font-weight: 700;
-  line-height: 64px;
+  line-height: 44px;
 }
 
 .profile-username-container {
@@ -141,7 +142,7 @@
   font-family: "Space Grotesk";
   font-size: var(--subtitle-size-base);
   font-weight: 400;
-  line-height: 32px;
+  line-height: 22px;
 }
 
 .verify-icon {
@@ -213,11 +214,12 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  margin-top: -25px;
 }
 
 .profile-rank-img {
-  width: 250px;
-  height: 250px;
+  width: 170px;
+  height: 170px;
   object-fit: contain;
 }
 
@@ -403,193 +405,32 @@
   font-weight: 500;
 }
 
-header, footer {
-  color: white !important;
-}
 
-/* Responsive Design Breakpoints */
-/* Desktop Large (1980px and above) */
-@media (min-width: 1921px) { }
-
-/* Desktop */
-@media (min-width: 1367px) and (max-width: 1920px) { 
-  
+/* Extra Large Desktop (1440px and above) */
+@media (min-width: 1440px) {
   .portal-container {
     width: 85%;
-    height: 95vh;
-  }
-
-  .avatar-border {
-    width: 170px;
-    height: 170px;
-  }
-
-  .avatar-img {
-    width: 160px;
-    height: 160px;
   }
 
   .profile-name {
-    font-size: 45px;
-    line-height: 56px;
+    font-size: 64px;
   }
 
-  .profile-rank-img {
-    width: 220px;
-    height: 220px;
-  }
-
-  .portal-top-middle {
-  flex: 0 0 53%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 12px;
-  margin-left: 46px;
-  position: relative;
-}
-}
-
-/* Laptop/Desktop (1024px - 1439px) */
-@media (min-width: 1024px) and (max-width: 1439px) {
-  
-  .portal-top {
-    height: 40%;
-    padding: 32px;
-    gap: 32px;
-    display: flex;
-    border-radius: 16px;
-    border: 1px solid rgba(0, 0, 0, 0.4);
-    background: linear-gradient(270deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03));
-    box-shadow: 0px 4px 24px -1px rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(20px);
-    position: relative;
-    color: #fff;
-    align-items: center;
-  }
-
-  .portal-top-left {
-    flex: 0 0 10%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-  }
-
-  .avatar-border {
-    background: linear-gradient(135deg, #fff, #f3c718c6 77.49%, #fff);
-    border-radius: 50%;
-    padding: 5px;
-    width: 190px;
-    height: 190px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .avatar-img {
-    width: 170px;
-    height: 170px;
-    border-radius: 50%;
-    object-fit: cover;
-    background: #111;
-  }
-
-  .portal-top-middle {
-    flex: 0 0 44%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 12px;
-    margin-left: 46px;
-    position: relative;
-  }
-
-  .portal-top-right {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    margin-top: -37px;
-  }
-
-  .profile-rank-img {
-    width: 150px;
-    height: 150px;
-    object-fit: contain;
-  }
-
-  .profile-tournament-stats {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    min-width: 120px;
-  }
-
-  .profile-tournament-label {
-    font-size: 0.8rem;
-    color: #fff;
-    font-weight: 500;
-  }
-
-  .profile-tournament-value {
-    font-size: 2.2rem;
-    color: #fff;
-    font-weight: 700;
-    margin: 2px 0;
-  }
-
-}
-
-/* Laptop / Small Desktop */
-@media (min-width: 1025px) and (max-width: 1366px) {  
-  .portal-top {
-    height: 45%;
-    padding: 24px;
-  }
-
-  .avatar-border {
-    width: 150px;
-    height: 150px;
-  }
-
-  .avatar-img {
-    width: 140px;
-    height: 140px;
-  }
-
-  .profile-name {
-    font-size: 40px;
-    line-height: 48px;
-  }
-
-  .profile-rank-img {
-    width: 200px;
-    height: 200px;
-  }
-
-  .portal-bottom {
-    height: 55%;
-  }
-
-  .portal-top-middle {
-  flex: 0 0 52.5%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 12px;
-  margin-left: 46px;
-  position: relative;
+  .hero-highlight-img {
+    width: 450px;
+    height: 280px;
   }
 }
 
-/* Tablet (Portrait & Landscape) */
-@media (max-width: 1024px) { 
-  
+
+/* Medium Desktop (1024px to 1366px) - base code */
+
+/* Tablet / iPad (768px to 1024px) - landscape*/
+@media (max-width: 1024px) and (min-width: 768px) {
   .portal-container {
     min-height: 100vh;
     height: auto;
-    width: 80%;
+    width: 100%;
     padding: 30px;
     box-sizing: border-box;
     margin: 10px 0;
@@ -600,7 +441,7 @@ header, footer {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    padding: 24px;
+    padding: 5px;
     height: auto;
     min-height: 350px;
   }
@@ -608,7 +449,7 @@ header, footer {
   .portal-top-left {
   flex: 0 0 10%;
   display: flex;
-  margin-left: 90px;
+  margin-left: 150px;
   align-items: center;
   justify-content: center;
   position: relative;
@@ -646,9 +487,9 @@ header, footer {
   content: '';
   position: absolute;
   left: 0;
-  margin-left: -150px;    
+  margin-left: -220px;    
   bottom: -12px;
-  width: 120%;
+  width: 130%;
   height: 1px;
   background: linear-gradient(
     to right,
@@ -667,7 +508,7 @@ header, footer {
   .portal-top-right {
     margin-top: 10px ;
     display: flex;
-    margin-left: -60px;
+    margin-left: 10px;
     gap: 24px;
     align-items: center;
   }
@@ -694,7 +535,7 @@ header, footer {
 
   .profile-tournament-stats {
     display: flex;
-    margin-right: 220px;
+    margin-right: 470px;
     flex-direction: column;
     gap: 12px;
     min-width: 120px;
@@ -726,72 +567,151 @@ header, footer {
     .divider-middle::after {
   display: none !important;
   }
+
 }
 
-/* Mobile (Smartphones) */
-@media (max-width: 639px) {
-  
-  .portal-container {
-    width: 95%;
-    height: auto;
-    min-height: 100vh;
-    padding: 20px;
-  }
+/* Tablet / iPad (768px to 1024px) - portrait*/
+@media (max-width: 768px) and (min-width: 600px) {
+  .portal-top-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 5px;
+  height: auto;
+  min-height: 350px;
+}
 
-  .portal-top {
-    height: auto;
-    min-height: 350px;
-    flex-direction: column;
-    padding: 20px;
-    gap: 24px;
-  }
+.portal-top-left {
+  margin: 0;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-  .portal-top-left {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-  }
+.profile-name {
+  font-family: "Space Grotesk";
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 34px;
+}
 
-  .avatar-border {
-    width: 140px;
-    height: 140px;
-  }
+.username-text {
+  font-family: "Space Grotesk";
+  font-size: var(--subtitle-size-base);
+  font-weight: 400;
+  line-height: 22px;
+}
 
-  .avatar-img {
-    width: 130px;
-    height: 130px;
-  }
 
-  .portal-top-middle {
-    width: 100%;
-    margin-left: 0;
-    align-items: center;
-    text-align: left;
-  }
+.profile-username-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap; /* Allow wrapping to next line */
+}
 
-  .profile-name {
-    font-size: 36px;
-    line-height: 44px;
-    text-align: center;
-  }
 
-  .profile-details {
-    justify-content: center;
-  }
+.portal-top-middle {
+  align-items: center;
+  margin-left: 0;
+  text-align: center;
+  position: relative;
+}
 
-  .portal-top-right {
-    width: 100%;
-    justify-content: center;
-    margin-top: 20px;
-    margin-left: 45px;
-  }
 
-  .profile-rank-img {
-    width: 180px;
-    height: 180px;
-  }
+.verify-icon {
+  position: relative; /* make sure parent is relative */
+  display: inline-block; /* needed for block children */
+  width: fit-content; /* shrink-wrap to content */
+}
 
-  .portal-bottom {
+.verify-icon::after {
+  content: '';
+  display: block;
+  height: 1px;
+  width: 120%; /* wider than parent */
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 255, 255, 0.5) 25%,
+    rgba(255, 255, 255, 0.5) 75%,
+    transparent
+  );
+  margin-top: 12px;
+  margin-left: -10%; /* shift left so it’s centered */
+  margin-bottom: 12px;
+  position: relative;
+}
+
+
+.portal-top-middle::after {
+  content: '';
+  margin-top: 12px;
+  width: 120%;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 255, 255, 0.5) 25%,
+    rgba(255, 255, 255, 0.5) 75%,
+    transparent
+  );
+  position: relative;
+  display: block;
+  margin-left: 10px;
+  margin-bottom: 12px;
+}
+
+.portal-top-right {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  gap: 24px;
+  margin-left: 450px;
+}
+
+.wrapper-center {
+  padding-left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+
+
+.profile-main-info {
+  align-items: center;
+  justify-content: center;
+  text-align: left;
+  margin: 0;
+}
+
+
+.profile-icons {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  padding-bottom: 20px;
+  margin-right: 40px;
+}
+
+.profile-slot {
+  width: 40px;
+  height: 40px;
+  font-size: 1.2rem;
+  border-radius: 8px;
+  background: linear-gradient(270deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: left;
+  justify-content: center;
+  backdrop-filter: blur(20px);
+}
+
+.portal-bottom {
     flex-direction: column;
     gap: 24px;
   }
@@ -817,30 +737,58 @@ header, footer {
   .hero-highlight-name {
     font-size: 1.5rem;
   }
+
+
+
 }
 
-/* Add this new section for dividers */
-.section-divider {
-  display: flex;
-  width: 365px;
-  max-width: 1484.8px;
-  transform: rotate(90deg);
-  align-items: flex-start;
-  align-self: stretch;
-  opacity: 0.3;
-  background: linear-gradient(90deg, 
-    rgba(255, 255, 255, 0.00) 0%, 
-    rgba(255, 255, 255, 0.30) 25%, 
-    rgba(255, 255, 255, 0.30) 75%, 
-    rgba(255, 255, 255, 0.00) 100%
-  );
-  height: 1px;
-  position: relative;
-  margin: 0 -10px;
+/* Mobile (below 768px) */
+@media (max-width: 767px) {
+  .portal-container {
+    width: 95%;
+    padding: 16px;
+  }
+
+  .portal-top {
+    flex-direction: column;
+    gap: 20px;
+    height: auto;
+  }
+
+  .portal-top-container {
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .portal-top-left,
+  .portal-top-middle,
+  .portal-top-right {
+    flex: 1 1 auto;
+    margin: 0;
+  }
+
+  .profile-name {
+    font-size: 36px;
+    line-height: 44px;
+  }
+
+  .portal-bottom {
+    flex-direction: column;
+  }
+
+  .portal-bottom-left,
+  .portal-bottom-right {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .hero-highlight-img {
+    width: 100%;
+    height: auto;
+    transform: scale(1.2) translateY(10%);
+  }
 }
 
-
-/* For desktop and larger screens - hide tablet layout elements */
-.portal-content-row {
-  display: none;
+header, footer {
+  color: white !important;
 }
