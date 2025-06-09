@@ -118,6 +118,24 @@
   flex-direction: column;
 }
 
+.blurred {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.316); 
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px); 
+  border-radius: 8px;
+  padding: 20px;
+}
+.form-register-container {
+  position: relative;
+  align-items: center;
+  justify-content: center;
+}
+
 .form-row-register {
   display: flex;
   justify-content: space-between;
@@ -362,6 +380,144 @@
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
+}
+.button-wrapper {
+  position: relative;
+  display: inline-block;
+}
+.loading svg polyline {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.loading svg polyline#back {
+  stroke: #c14d058c;
+}
+
+.loading svg polyline#front {
+  stroke: #00ffcc;
+  stroke-dasharray: 48, 144;
+  stroke-dashoffset: 192;
+  animation: dash_682 1.4s linear infinite;
+}
+
+@keyframes dash_682 {
+  72.5% {
+    opacity: 0;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* NeonButton.css */
+.neon-button {
+  position: relative;
+  padding: 10px 60px;
+  font-size: 18px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #fff;
+  background: none;
+  border: 2px solid #00ffcc;
+  border-radius: 10px;
+  cursor: pointer;
+  outline: none;
+  transition: 0.5s;
+  overflow: hidden;
+  letter-spacing: 2px;
+  z-index: 1;
+}
+
+
+/* lightning bolt effect */
+.lightning {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  width: 20px;
+  height: 40px;
+  transform: translateX(-50%) rotate(20deg);
+  background: #00ffcc;
+  clip-path: polygon(40% 0%, 60% 0%, 40% 40%, 70% 40%, 30% 100%, 50% 60%, 20% 60%);
+  filter: blur(3px) brightness(1.5);
+  opacity: 0;
+  transition: 0.3s ease;
+  z-index: 0;
+}
+
+.electric-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.neon-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #00ffcc;
+  filter: blur(20px);
+  opacity: 0.7;
+  transition: 0.5s;
+  z-index: -1;
+}
+
+.neon-button:hover {
+  color: #000;
+  background-color: #00ffcc;
+  box-shadow:
+    0 0 5px #00ffcc,
+    0 0 10px #00ffcc,
+    0 0 20px #00ffcc;
+  animation: pulse 1s infinite;
+}
+
+.neon-button:hover::before {
+  filter: blur(20px);
+  opacity: 1;
+}
+.electric-wrapper:hover .neon-button::before,
+.electric-wrapper:hover .neon-button::after {
+  animation: spark 0.4s linear infinite;
+}
+@keyframes spark {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(0) scaleX(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(5px) scaleX(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px) scaleX(0.8);
+  }
+}
+@keyframes pulse {
+  0% {
+    box-shadow:
+      0 0 10px #00ffcc,
+      0 0 20px #00ffcc,
+      0 0 30px #00ffcc;
+  }
+  50% {
+    box-shadow:
+      0 0 20px #00ffcc,
+      0 0 30px #00ffcc,
+      0 0 40px #00ffcc;
+  }
+  100% {
+    box-shadow:
+      0 0 10px #00ffcc,
+      0 0 20px #00ffcc,
+      0 0 30px #00ffcc;
+  }
 }
 
 @media only screen and (max-width: 768px) {
