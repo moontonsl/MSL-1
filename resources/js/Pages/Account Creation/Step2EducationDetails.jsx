@@ -71,6 +71,7 @@ const Step2EducationDetails = ({
   const handleUniversityChange = (e) => {
     const { value } = e.target;
     handleInputChange(e);
+
     setSchoolQuery(value);
     if (value.trim() === "") {
       setFilteredSchools([]);
@@ -105,7 +106,6 @@ const Step2EducationDetails = ({
 
   const handleAnyInputChange = (e) => {
     handleInputChange(e);
-    // Validate after every change, clear error if valid
     if (localError) {
       if (validateForm()) {
         setLocalError('');
@@ -176,24 +176,12 @@ const Step2EducationDetails = ({
         const filled = requiredFields.filter(
           (field) => formData[field] && formData[field].toString().trim() !== ""
         ).length;
-        // Progress goes from 26% to 50% as fields are filled
         const percent = 26 + Math.round((filled / requiredFields.length) * (50 - 26));
 
         return (
           <div style={{ margin: "16px 0" }}>
-            <div style={{
-              height: "12px",
-              background: "#eee",
-              borderRadius: "6px",
-              overflow: "hidden",
-              marginBottom: "4px"
-            }}>
-              <div style={{
-                width: `${percent}%`,
-                height: "100%",
-                background: "#f1c40f",
-                transition: "width 0.3s"
-              }} />
+            <div style={{ height: "12px", background: "#eee", borderRadius: "6px", overflow: "hidden", marginBottom: "4px" }}>
+              <div style={{ width: `${percent}%`, height: "100%", background: "#f1c40f", transition: "width 0.3s" }} />
             </div>
             <div style={{ fontSize: "12px", color: "#555" }}>
               Step 2 of 4 &mdash; {percent}% of this step complete
@@ -208,15 +196,7 @@ const Step2EducationDetails = ({
             <label htmlFor="yearLevel" className="label-register">
               Year Level<span className="required"> *</span>
             </label>
-            <select
-              id="yearLevel"
-              name="yearLevel"
-              value={formData.yearLevel}
-              onChange={handleAnyInputChange}
-              onBlur={handleAnyInputBlur}
-              className="input-field-register year-level-select"
-              required
-            >
+            <select id="yearLevel" name="yearLevel" value={formData.yearLevel} onChange={handleAnyInputChange} onBlur={handleAnyInputBlur} className="input-field-register year-level-select" required >
               <option value="" disabled>Select Year Level</option>
               <option value="Grade 11 SHS">Grade 11 SHS</option>
               <option value="Grade 12 SHS">Grade 12 SHS</option>
@@ -233,6 +213,7 @@ const Step2EducationDetails = ({
             <label htmlFor="university" className="label-register">
               University / College / Institute<span className="required"> *</span>
             </label>
+
             <input
               type="text"
               id="university"
@@ -265,6 +246,7 @@ const Step2EducationDetails = ({
                 ))}
               </ul>
             )}
+
           </div>
         </div>
         <div className="form-row-register">
@@ -272,6 +254,7 @@ const Step2EducationDetails = ({
             <label htmlFor="island" className="label-register">
               Island<span className="required"> *</span>
             </label>
+
             <input
               type="text"
               id="island"
@@ -282,19 +265,13 @@ const Step2EducationDetails = ({
               className="input-field-register"
               readOnly
             />
+
           </div>
           <div className="input-group-register right-side-register">
             <label htmlFor="region" className="label-register">
               Region<span className="required"> *</span>
             </label>
-            <input
-              type="text"
-              id="region"
-              name="region"
-              value={formData.region}
-              className="input-field-register"
-              readOnly
-            />
+            <input type="text" id="region" name="region" value={formData.region} className="input-field-register" readOnly />
           </div>
         </div>
         <div className="form-row-register">
@@ -302,22 +279,13 @@ const Step2EducationDetails = ({
             <label htmlFor="studentId" className="label-register">
               Student ID<span className="required"> *</span>
             </label>
-            <input
-              type="text"
-              id="studentId"
-              name="studentId"
-              value={formData.studentId}
-              onChange={handleAnyInputChange}
-              onBlur={handleAnyInputBlur}
-              className="input-field-register"
-              placeholder="e.g. 12345678"
-              required
-            />
+            <input type="text" id="studentId" name="studentId" value={formData.studentId} onChange={handleAnyInputChange} onBlur={handleAnyInputBlur} className="input-field-register" placeholder="e.g. 12345678" required />
           </div>
           <div className="input-group-register right-side-register">
             <label htmlFor="course" className="label-register">
               Course or Program<span className="required"> *</span>
             </label>
+
             <input
               id="course"
               name="course"
@@ -341,6 +309,7 @@ const Step2EducationDetails = ({
                 ))}
               </ul>
             )}
+
           </div>
         </div>
         <div className="form-row-register">
@@ -348,16 +317,7 @@ const Step2EducationDetails = ({
             <label htmlFor="proofOfEnrollment" className="label-register">
               Proof of Enrolment / School ID with Validation<span className="required"> *</span>
             </label>
-            <input
-              type="file"
-              id="proofOfEnrollment"
-              name="proofOfEnrollment"
-              onChange={handleAnyInputChange}
-              onBlur={handleAnyInputBlur}
-              className="input-field-register file-input"
-              accept=".jpg,.jpeg,.png,.pdf"
-              required
-            />
+            <input type="file" id="proofOfEnrollment" name="proofOfEnrollment" onChange={handleAnyInputChange} onBlur={handleAnyInputBlur} className="input-field-register file-input" accept=".jpg,.jpeg,.png,.pdf" required />
           </div>
         </div>
       </div>

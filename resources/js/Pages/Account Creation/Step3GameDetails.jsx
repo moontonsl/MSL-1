@@ -7,7 +7,7 @@ const Step3GameDetails = ({
   formData,
   handleInputChange,
   errorMessage,
-  setErrorMessage // <-- make sure this is passed as a prop
+  setErrorMessage
 }) => {
   const [localError, setLocalError] = useState("");
   const [isBlurred, setIsBlurred] = useState(false);
@@ -112,24 +112,12 @@ const Step3GameDetails = ({
         const filled = requiredFields.filter(
           (field) => formData[field] && formData[field].toString().trim() !== ""
         ).length;
-        // Progress goes from 51% to 75% as fields are filled
         const percent = 51 + Math.round((filled / requiredFields.length) * (75 - 51));
 
         return (
           <div style={{ margin: "16px 0" }}>
-            <div style={{
-              height: "12px",
-              background: "#eee",
-              borderRadius: "6px",
-              overflow: "hidden",
-              marginBottom: "4px"
-            }}>
-              <div style={{
-                width: `${percent}%`,
-                height: "100%",
-                background: "#f1c40f",
-                transition: "width 0.3s"
-              }} />
+            <div style={{ height: "12px", background: "#eee", borderRadius: "6px", overflow: "hidden", marginBottom: "4px" }}>
+              <div style={{ width: `${percent}%`, height: "100%", background: "#f1c40f", transition: "width 0.3s" }} />
             </div>
             <div style={{ fontSize: "12px", color: "#555" }}>
               Step 3 of 4 &mdash; {percent}% of this step complete

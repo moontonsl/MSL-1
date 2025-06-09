@@ -3,12 +3,14 @@ import { Link, usePage } from '@inertiajs/react';
 import { Menu } from 'lucide-react';
 import styles from './Header.module.scss';
 import Dropdown from '@/Components/Dropdown';
+import { MdAccountCircle } from "react-icons/md";
+
 // Navigation links array (only main nav links)
 const navLinks = [
     { name: 'Events', href: '/events' },
-    { name: 'News', href: '/news' },
     { name: 'Program', href: '/program' },
     { name: 'Resources', href: '/resources' },
+    { name: 'News', href: '/news' },
 ];
 
 const Header = () => {
@@ -45,6 +47,7 @@ const Header = () => {
                         ))}
                     </ul>
                     <div className={styles.authButtons}>
+
                         {user ? (
                             <>
                                 <div className="hidden sm:ms-6 sm:flex sm:items-center">

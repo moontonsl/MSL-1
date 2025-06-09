@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 const NewsSection = () => {
+
     const [articles, setArticles] = useState([]);
     // const articless = [
     //     {
@@ -36,6 +37,7 @@ const NewsSection = () => {
             setArticles(data);
         });
       }, []);
+
     return (
         <section className={`pt-16 md:pt-24`}>
             <div className={`px-4 container mx-auto`}>

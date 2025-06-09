@@ -51,31 +51,26 @@ const HeroSection = () => {
     return (
         <section className={`${styles.infoSection}`}>
 
-            <div className="relative overflow-hidden pt-16 md:pt-60">
+            <div className="relative overflow-hidden pt-16 md:pt-20 lg:pt-30 xl:pt-40">
 
                 {/* Top gradient overlay */}
-                <div
-                    className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#0a0a0a] to-transparent z-0 pointer-events-none" />
-
+                <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#0a0a0a] to-transparent z-0 pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-full h-[40rem] bg-gradient-to-t from-[#0a0a0a] to-transparent z-0 pointer-events-none" />
                 {/* Bottom gradient overlay */}
-                <div
-                    className="absolute bottom-0 left-0 w-full h-[40rem] bg-gradient-to-t from-[#0a0a0a] to-transparent z-0 pointer-events-none" />
 
-
-                <div className="absolute opacity-20 bottom-0 lg:top-0 w-full">
-                    <img src={sunImage} alt="Sun Image"
-                         className="w-full object-contain scale-150 md:scale-125 lg:scale-100" />
+                <div className={`${styles.infoSun} absolute opacity-10 w-full`}>
+                    <img src={sunImage} alt="Sun Image" className="w-full object-contain" />
                 </div>
 
 
-                <div className="container mx-auto px-4 gap-16 grid mb-20 scale">
-                    <h1 className="text-4xl md:text-6xl font-bold text-center w-full z-10">
+                <div className="container mx-auto px-4 gap-6 lg:gap-16 grid mb-20 scale">
+                    <h1 className="text-[clamp(2.25rem,5vw,3.75rem)] font-bold text-center w-full z-10 leading-[1]">
                         MOONTON STUDENT LEADER <br className="hidden lg:block" />PHILIPPINES
                     </h1>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 w-full gap-6 sm:gap-8 z-10">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 w-full gap-4 lg:gap-6 sm:gap-8 z-10">
                         {stats.map(({ value, label }, index) => (
-                            <div key={index} className="text-center grid gap-2 sm:gap-4">
+                            <div key={index} className="text-center grid lg:gap-2 sm:gap-4">
                                 <div className={`text-4xl sm:text-5xl md:text-6xl font-bold ${styles.infoHead}`}>
                                     {value}
                                 </div>
@@ -89,7 +84,7 @@ const HeroSection = () => {
 
 
             <div className={`${styles.infoAbout}`}>
-                <div className="grid xl:grid-cols-2 mx-auto min-h-[564px]">
+                <div className="grid xl:grid-cols-2 mx-auto min-h-auto xl:h-[440px]">
                     <div className={`${styles.infoImageWrapper} aspect-[16/9] xl:aspect-auto`}>
                         <img
                             src={imageTextPairs[currentIndex].image}
@@ -97,17 +92,14 @@ const HeroSection = () => {
                             className={`${styles.infoImage}`}
                         />
                     </div>
-                    <div className="p-4 lg:p-10 xl:p-24 flex flex-col gap-4 justify-center">
-                        <h2 className={`text-[clamp(2rem,6vw,3rem)] font-bold leading-tight`}>
-                            HERE AT <br className={`hidden xl:block`} />
-                            MOONTON STUDENT LEADER <br className={`hidden md:block`} />
-                            PHILIPPINES we <span
-                            className={`${styles.infoHighlight} text-brand`}>
+                    <div className="p-4 lg:p-10 xl:px-24 flex flex-col gap-4 justify-center">
+                        <h2 className={`text-[clamp(2rem,6vw,2.5rem)] font-bold leading-none text-black`}>
+                            HERE AT MOONTON STUDENT LEADER PHILIPPINES we <span className={`${styles.infoHighlight} !text-white`}>
                                 {imageTextPairs[currentIndex].text}
                             </span>
                         </h2>
 
-                        <p className="text-lg">
+                        <p className="text-lg text-black">
                             Moonton Student Leaders (MSL) Philippines is an organization of student-gamers from
                             different colleges and universities all over the country. Under the supervision of Moonton
                             Technologies Philippines, Inc., the program was developed to promote the growth of Mobile
