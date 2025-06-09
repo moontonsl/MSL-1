@@ -5,7 +5,9 @@ const Step4AccountCredentials = ({
   formData,
   handleInputChange,
   errorMessage,
-  setErrorMessage,
+  setErrorMessage, // <-- Make sure this is passed as a prop from parent!
+  verificationCode,
+  setVerificationCode
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -70,12 +72,33 @@ const validateUsername = (username) => {
         return prev - 1;
       });
     }, 1000);
+    // Add code sending logic here
+    fetch('/send-verification-code', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+      },
+      body: JSON.stringify({ email: formData.email })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.message) {
+          // Optionally show a success message
+          setErrorMessage && setErrorMessage("✅ " + data.message);
+          setVerificationCode && setVerificationCode(data.code);
+          console.log(data.code);
+        }
+      })
+      .catch(error => {
+        setErrorMessage && setErrorMessage("❌ Failed to send code. Please try again.");
+    });
   };
 
   useEffect(() => {
     return () => clearInterval(timerRef.current);
   }, []);
-
+  
   return (
     <div className="">
       <h1 className="title-register">CREATE MSL ACCOUNT</h1>

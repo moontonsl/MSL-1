@@ -4,8 +4,9 @@ import picture1 from '../assets/picture1.png';
 import picture2 from '../assets/picture2.png';
 import picture3 from '../assets/picture3.png';
 import sunImage from '../assets/Effect-copy-3.png';
+import axios from 'axios';
 
-const stats = [
+const statss = [
     { value: '8,000', label: 'STUDENT PLAYERS' },
     { value: '201', label: 'STUDENT LEADERS' },
     { value: '74', label: 'UNIVERSITY COMMUNITIES' },
@@ -20,7 +21,23 @@ const imageTextPairs = [
 
 const HeroSection = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
-
+    const [stats, setStats] = useState([
+        { value: '...', label: 'STUDENT PLAYERS' },
+        { value: '...', label: 'STUDENT LEADERS' },
+        { value: '...', label: 'UNIVERSITY COMMUNITIES' },
+        { value: '...', label: 'PARTNERED SCHOOL ORGS' } // Static for now
+    ]);
+    useEffect(() => {
+        axios.get('/stats')
+            .then(response => {
+                setStats([
+                    { value: response.data.student_players, label: 'STUDENT PLAYERS' },
+                    { value: response.data.student_leaders, label: 'STUDENT LEADERS' },
+                    { value: response.data.university_communities, label: 'UNIVERSITY COMMUNITIES' },
+                    { value: response.data.school_partners, label: 'PARTNERED SCHOOL ORGS' } // Still static
+                ]);
+            });
+    }, []);
     useEffect(() => {
         const interval = setInterval(() => {
             setCurrentIndex((prevIndex) =>

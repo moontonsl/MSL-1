@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import { Header, Footer } from '@/Components';
 import Step1BasicDetails from './Step1BasicDetails';
 import Step2EducationDetails from './Step2EducationDetails';
@@ -9,7 +9,7 @@ import './register.css';
 
 const initialFormData = {
     // Step 1
-    firstName: '', lastName: '', suffix: '', birthday: '', age: '', gender: '', contactNo: '', facebookLink: '',
+    firstName: '', lastName: '', suffix: '', birthday: '', age: 0, gender: '', contactNo: '', facebookLink: '',
     // Step 2
     yearLevel: '', university: '', island: '', region: '', studentId: '', course: '', proofOfEnrollment: null,
     // Step 3
@@ -22,16 +22,25 @@ const fileTypeIsValid = (file, allowedTypes) =>
     file && allowedTypes.includes(file.type);
 
 const Register = () => {
+    const { data, setData, post, processing, errors, reset } = useForm(initialFormData);
     const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState(initialFormData);
     const [errorMessage, setErrorMessage] = useState("");
-
+    const [verificationCode, setVerificationCode] = useState("");
     const handleInputChange = (e) => {
         const { name, value, type, files } = e.target;
         setFormData(prev => ({
             ...prev,
             [name]: type === 'file' ? files[0] : value
         }));
+        
+        // setData(prev => ({
+        //     ...prev,
+        //     [name]: type === 'file' ? files[0] : value
+        // }));
+        setData(formData);
+        console.log(data);
+        console.log(formData);
     };
 
     const handleNext = () => {
@@ -49,7 +58,53 @@ const Register = () => {
         e.preventDefault();
         if (!isFormValid(currentStep)) return;
         setErrorMessage("");
-        window.alert("Account created successfully");
+        // console.log(data);
+        // setData(formData);
+        
+        post(route('register'), {
+            onStart: () => {
+                console.log("Starting registration...");
+                setErrorMessage(""); // Clear any previous errors
+            },
+            onSuccess: (response) => {
+                console.log("Registration successful:", response);
+                setErrorMessage("");
+                // Reset form data to initial state
+                reset();
+                // Reset to first step
+                setCurrentStep(1);
+                // Optional: Show success message
+                alert("Account created successfully!");
+                // Optional: Redirect
+                // window.location.href = '/login';
+            },
+            onError: (errors) => {
+                console.error("Registration failed:", errors);
+                
+                // Handle validation errors
+                if (errors) {
+                    // If there are specific field errors
+                    const errorMessages = Object.values(errors).flat();
+                    setErrorMessage(`⚠️ ${errorMessages.join(', ')}`);
+                    
+                    // Or handle specific errors
+                    if (errors.email) {
+                        setErrorMessage(`⚠️ Email: ${errors.email[0]}`);
+                    } else if (errors.username) {
+                        setErrorMessage(`⚠️ Username: ${errors.username[0]}`);
+                    } else {
+                        setErrorMessage("⚠️ Please check your information and try again.");
+                    }
+                }
+            },
+            onFinish: () => {
+                console.log("Request finished (success or error)");
+                // reset('password', 'confirmPassword'); // Clear sensitive fields
+            },
+            preserveScroll: true, // Keep scroll position
+            preserveState: true,  // Keep form state on errors
+        });
+        // Optionally reset form or redirect here
         
         setFormData(initialFormData);
         
@@ -102,7 +157,8 @@ const Register = () => {
                     setErrorMessage("⚠️ Passwords do not match.");
                     return false;
                 }
-                if (captcha !== "1234") {
+                if (captcha != verificationCode) {
+                    console.log(verificationCode);
                     setErrorMessage("⚠️ Incorrect code.");
                     return false;
                 }
@@ -121,7 +177,9 @@ const Register = () => {
         handleInputChange,
         errorMessage,
         setErrorMessage,
-        handleSubmit
+        handleSubmit,
+        verificationCode,
+        setVerificationCode
     };
 
     const stepComponents = {

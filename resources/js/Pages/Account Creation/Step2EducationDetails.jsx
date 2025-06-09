@@ -1,11 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import courses from "../../../../public/json/courses.json";
+import axios from "axios";
 
-const universityData = {
-  "University of the Philippines": { island: "Luzon", region: "NCR" },
-  "University of San Carlos": { island: "Visayas", region: "Region VII" },
-  "Ateneo de Davao University": { island: "Mindanao", region: "Region XI" },
+function debounce(func, delay) {
+  let timer;
+  return (...args) => {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => func(...args), delay);
+  };
+}
+const highlightMatch = (text, query) => {
+  const parts = text.split(new RegExp(`(${query})`, 'gi'));
+  return (
+    <>
+      {parts.map((part, i) => (
+        <span
+          key={i}
+          className={part.toLowerCase() === query.toLowerCase() ? "font-bold text-yellow-600" : ""}
+        >
+          {part}
+        </span>
+      ))}
+    </>
+  );
 };
-
 const Step2EducationDetails = ({
   formData,
   handleInputChange,
@@ -13,19 +31,77 @@ const Step2EducationDetails = ({
   setErrorMessage,
 }) => {
   const [localError, setLocalError] = useState("");
+  const [filteredCourses, setFilteredCourses] = useState([]);
+  const [filteredSchools, setFilteredSchools] = useState([]);
+  const [schoolQuery, setSchoolQuery] = useState("");
+
+  const dropdownRef = useRef(null);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        //setFilteredSchools([]);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const cache = useRef({});
+  const debouncedSearch = useMemo(() =>
+    debounce(async (value) => {
+      if (cache.current[value]) {
+        setFilteredSchools(cache.current[value]);
+        return;
+      }
+      try {
+        const response = await axios.get("/schools/search", {
+          params: { query: value }
+        });
+        cache.current[value] = response.data;
+        setFilteredSchools(response.data);
+      } catch (error) {
+        console.error("Error fetching schools", error);
+      }
+    }, 300), []
+  );
 
   const handleUniversityChange = (e) => {
     const { value } = e.target;
     handleInputChange(e);
 
-    if (universityData[value]) {
-      const { island, region } = universityData[value];
-      handleInputChange({ target: { name: "island", value: island } });
-      handleInputChange({ target: { name: "region", value: region } });
-    } else {
-      handleInputChange({ target: { name: "island", value: "" } });
-      handleInputChange({ target: { name: "region", value: "" } });
+    setSchoolQuery(value);
+    if (value.trim() === "") {
+      setFilteredSchools([]);
+      return;
     }
+    debouncedSearch(value);
+  };
+  const handleUniversitySelect = (school) => {
+    handleInputChange({ target: { name: "university", value: school.name } });
+    handleInputChange({ target: { name: "island", value: school.island } });
+    handleInputChange({ target: { name: "region", value: school.region } });
+    setFilteredSchools([]);
+  };
+  
+  const handleCourseChange = (e) => {
+    const { value } = e.target;
+    handleInputChange(e); // update university
+
+    const filtered = courses.filter(
+      (course) =>
+        course.program &&
+        course.program.toLowerCase().includes(value.toLowerCase())
+    ).sort((a, b) => a.program.localeCompare(b.program));
+
+    setFilteredCourses(filtered);
+
+  };
+  const handleCourseSelect = (course) => {
+    handleInputChange({ target: { name: "course", value: course.program } });
+    setFilteredCourses([]);
   };
 
   const handleAnyInputChange = (e) => {
@@ -77,15 +153,6 @@ const Step2EducationDetails = ({
     return true;
   };
 
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    if (validateForm()) {
-      setLocalError("");
-      if (setErrorMessage) setErrorMessage("");
-      handleSubmit(e);
-    }
-  };
-
   const handleAnyInputBlur = () => {
   validateForm();
 };
@@ -123,7 +190,7 @@ const Step2EducationDetails = ({
         );
       })()}
 
-      <form className="form-register" onSubmit={handleFormSubmit}>
+      <div className="form-register">
         <div className="form-row-register">
           <div className="input-group-register left-side-register">
             <label htmlFor="yearLevel" className="label-register">
@@ -142,11 +209,44 @@ const Step2EducationDetails = ({
               <option value="Doctorate">Doctorate</option>
             </select>
           </div>
-          <div className="input-group-register right-side-register">
+          <div className="input-group-register right-side-register relative">
             <label htmlFor="university" className="label-register">
               University / College / Institute<span className="required"> *</span>
             </label>
-            <input type="text" id="university" name="university" value={formData.university} onChange={handleUniversityChange} onBlur={handleAnyInputBlur} className="input-field-register" placeholder="e.g. University of XYZ" required />
+
+            <input
+              type="text"
+              id="university"
+              name="university"
+              value={formData.university}
+              onChange={handleUniversityChange}
+              onBlur={handleAnyInputBlur}
+              className="input-field-register"
+              placeholder="e.g. University of XYZ"
+              required
+              autoComplete="off"
+            />
+            {/* dito dropdown university */}
+            {filteredSchools.length > 0 && (
+              <ul
+                ref={dropdownRef}
+                className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md mt-1 max-h-60 overflow-y-auto"
+              >
+                {filteredSchools.map((school) => (
+                  <li
+                    key={school.id}
+                    onMouseDown={() => handleUniversitySelect(school)}
+                    className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                  >
+                    <p>{highlightMatch(school.name, schoolQuery)}</p>
+                    <p className="text-sm text-gray-500">
+                      {school.island} • {school.region}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+
           </div>
         </div>
         <div className="form-row-register">
@@ -154,7 +254,18 @@ const Step2EducationDetails = ({
             <label htmlFor="island" className="label-register">
               Island<span className="required"> *</span>
             </label>
-            <input type="text" id="island" name="island" value={formData.island} className="input-field-register" readOnly />
+
+            <input
+              type="text"
+              id="island"
+              name="island"
+              value={formData.island}
+              onChange={handleAnyInputChange}
+              onBlur={handleAnyInputBlur}
+              className="input-field-register"
+              readOnly
+            />
+
           </div>
           <div className="input-group-register right-side-register">
             <label htmlFor="region" className="label-register">
@@ -174,20 +285,31 @@ const Step2EducationDetails = ({
             <label htmlFor="course" className="label-register">
               Course or Program<span className="required"> *</span>
             </label>
-            <select id="course" name="course" value={formData.course} onChange={handleAnyInputChange} onBlur={handleAnyInputBlur} className="input-field-register course-select" required >
-              <option value="" disabled>Select Course or Program</option>
-              <option value="BS Computer Science">BS Computer Science</option>
-              <option value="BS Information Technology">BS Information Technology</option>
-              <option value="BS Accountancy">BS Accountancy</option>
-              <option value="BS Business Administration">BS Business Administration</option>
-              <option value="BS Psychology">BS Psychology</option>
-              <option value="BS Civil Engineering">BS Civil Engineering</option>
-              <option value="BS Nursing">BS Nursing</option>
-              <option value="BS Architecture">BS Architecture</option>
-              <option value="BA Communication">BA Communication</option>
-              <option value="BS Biology">BS Biology</option>
-              <option value="Other">Other</option>
-            </select>
+
+            <input
+              id="course"
+              name="course"
+              value={formData.course}
+              onChange={handleCourseChange}
+              onBlur={handleAnyInputBlur}
+              className="input-field-register course-select"
+              required
+            />
+            {/* dito dropdown */}
+            {filteredCourses.length > 0 && (
+              <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md mt-1 max-h-60 overflow-y-auto">
+                {filteredCourses.map((course, i) => (
+                  <li
+                    key={i}
+                    onMouseDown={() => handleCourseSelect(course)}
+                    className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                  >
+                    <p>{course.program}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
+
           </div>
         </div>
         <div className="form-row-register">
@@ -198,7 +320,7 @@ const Step2EducationDetails = ({
             <input type="file" id="proofOfEnrollment" name="proofOfEnrollment" onChange={handleAnyInputChange} onBlur={handleAnyInputBlur} className="input-field-register file-input" accept=".jpg,.jpeg,.png,.pdf" required />
           </div>
         </div>
-      </form>
+      </div>
     </div>
   );
 };
