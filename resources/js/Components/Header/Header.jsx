@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { Menu } from 'lucide-react';
 import styles from './Header.module.scss';
-import Dropdown from '@/Components/Dropdown';import { MdAccountCircle } from "react-icons/md";
+import Dropdown from '@/Components/Dropdown';
+import { MdAccountCircle } from "react-icons/md";
 
 // Navigation links array (only main nav links)
 const navLinks = [
