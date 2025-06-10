@@ -68,7 +68,7 @@
       right: 0;
       background: var(--background-default-secondary);
       flex-direction: column;
-      //gap: rem;
+      //gap: 1rem;
       padding: 1rem;
       display: none;
 
@@ -84,7 +84,8 @@
     gap: 2rem;
     list-style: none;
     margin: 0;
-    padding: 0;
+    //padding: 0;
+      padding-inline: 2rem;
     flex-grow: 1;
     justify-content: flex-start;
 
