@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 const Step1BasicDetails = ({
   formData,
   handleInputChange,
-  handleSubmit,
   setErrorMessage,
 }) => {
   const [localError, setLocalError] = useState('');
@@ -20,23 +19,13 @@ const Step1BasicDetails = ({
   ];
 
   const validateForm = () => {
-    if (!/^09\d{9}$/.test(formData.contactNo)) {
-      setLocalError('⚠️ Invalid number. Must be 11 digits and start with 09.');
+    if (formData.contactNo && !/^09\d{9}$/.test(formData.contactNo)) {
+      setErrorMessage('⚠️ Invalid number. Must be 11 digits and start with 09.');
       return false;
-   } else {
-    setErrorMessage('');
-  }
-  validateForm();
+   }
+   return true;
   };
 
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    if (validateForm()) {
-      handleSubmit(e);
-    }
-  };
-
-  // This will validate and clear error on every change
   const handleAnyInputChange = (e) => {
     handleInputChange(e);
     validateForm();
@@ -54,7 +43,7 @@ const Step1BasicDetails = ({
 
     if (inputDate > today) {
       setErrorMessage('⚠️ Selected dates are not allowed. Please select a valid birthday.');
-      handleInputChange({ target: { name: 'age', value: '' } });
+      handleInputChange({ target: { name: 'age', value: "test3" } });
       return;
     }
 
@@ -67,7 +56,7 @@ const Step1BasicDetails = ({
     if (age < 16) {
       setErrorMessage('⚠️ Age not allowed. Must be 16 or above.');
       handleInputChange(e);
-      handleInputChange({ target: { name: 'age', value: '' } });
+      handleInputChange({ target: { name: 'age', value: "test2" } });
       return;
     }
 
@@ -78,10 +67,12 @@ const Step1BasicDetails = ({
       return;
     }
 
-    // If valid, clear error
     setErrorMessage('');
     handleInputChange(e);
+    
     handleInputChange({ target: { name: 'age', value: age } });
+    handleInputChange({ target: { name: 'birthday', value: e.target.value } });
+    console.log(formData);
     validateForm();
   };
 
@@ -89,7 +80,6 @@ const Step1BasicDetails = ({
     const contact = e.target.value;
     if (/^\d*$/.test(contact) && contact.length <= 11) {
       handleInputChange(e);
-      // If valid, clear error while typing
       if (/^09\d{9}$/.test(contact)) {
         setErrorMessage('');
       }
@@ -111,7 +101,6 @@ const Step1BasicDetails = ({
     <div className="">
       <h1 className="title-register">CREATE MSL ACCOUNT</h1>
       <h2 className="subtitle-register">BASIC DETAILS</h2>
-
       {/* Dynamic Progress Bar for Step 1 */}
       {(() => {
         const filled = requiredFields.filter(
@@ -121,19 +110,8 @@ const Step1BasicDetails = ({
 
         return (
           <div style={{ margin: "16px 0" }}>
-            <div style={{
-              height: "12px",
-              background: "#eee",
-              borderRadius: "6px",
-              overflow: "hidden",
-              marginBottom: "4px"
-            }}>
-              <div style={{
-                width: `${percent}%`,
-                height: "100%",
-                background: "#f1c40f",
-                transition: "width 0.3s"
-              }} />
+            <div style={{ height: "12px", background: "#eee", borderRadius: "6px", overflow: "hidden", marginBottom: "4px"}}>
+              <div style={{ width: `${percent}%`, height: "100%", background: "#f1c40f", transition: "width 0.3s"}} />
             </div>
             <div style={{ fontSize: "12px", color: "#555" }}>
               Step 1 of 4 &mdash; {percent}% of this step complete
@@ -142,150 +120,149 @@ const Step1BasicDetails = ({
         );
       })()}
 
-      <form className="form-register" onSubmit={handleFormSubmit}>
-        <div className="form-row-register">
-          <div className="input-group-register left-side-register">
-            <label htmlFor="firstName" className="label-register">
-              First Name<span className="required"> *</span>
-            </label>
-            <input
-              type="text"
-              id="firstName"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleAnyInputChange}
-              onBlur={handleAnyInputBlur}
-              className="input-field-register"
-              placeholder="e.g. Crisostomo"
-              required
-            />
-          </div>
-          <div className="input-group-register right-side-register">
-            <label htmlFor="lastName" className="label-register">
-              Last Name<span className="required"> *</span>
-            </label>
-            <input
-              type="text"
-              id="lastName"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleAnyInputChange}
-              onBlur={handleAnyInputBlur}
-              className="input-field-register"
-              placeholder="e.g. Ibarra"
-              required
-            />
-          </div>
+
+      <div className="form-row-register">
+        <div className="input-group-register left-side-register">
+          <label htmlFor="firstName" className="label-register">
+            First Name<span className="required"> *</span>
+          </label>
+          <input
+            type="text"
+            id="firstName"
+            name="firstName"
+            value={formData.firstName}
+            onChange={handleAnyInputChange}
+            onBlur={handleAnyInputBlur}
+            className="input-field-register"
+            placeholder="e.g. Crisostomo"
+            required
+          />
         </div>
-        <div className="form-row-register">
-          <div className="input-group-register left-side-register">
-            <label htmlFor="suffix" className="label-register">
-              Suffix
-            </label>
-            <select
-              id="suffix"
-              name="suffix"
-              value={formData.suffix}
-              onChange={handleAnyInputChange}
-              onBlur={handleAnyInputBlur}
-              className="input-field-register suffix-select"
-            >
-              <option value=""></option>
-              <option value="Jr">Jr</option>
-              <option value="Sr">Sr</option>
-              <option value="II">II</option>
-              <option value="III">III</option>
-              <option value="IV">IV</option>
-            </select>
-          </div>
-          <div className="input-group-register left-side-register">
-            <label htmlFor="gender" className="label-register" >
-              Gender <span className="required"> *</span>
-            </label>
-            <select
-              id="gender"
-              name="gender"
-              value={formData.gender}
-              onChange={handleAnyInputChange}
-              onBlur={handleAnyInputBlur}
-              className="input-field-register gender-select"
-              required
-            >
-              <option value="" disabled>Select Gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Prefer not to say">Prefer not to say</option>
-            </select>
-          </div>
+        <div className="input-group-register right-side-register">
+          <label htmlFor="lastName" className="label-register">
+            Last Name<span className="required"> *</span>
+          </label>
+          <input
+            type="text"
+            id="lastName"
+            name="lastName"
+            value={formData.lastName}
+            onChange={handleAnyInputChange}
+            onBlur={handleAnyInputBlur}
+            className="input-field-register"
+            placeholder="e.g. Ibarra"
+            required
+          />
         </div>
-        <div className="form-row-register">
-          <div className="input-group-register full-width-register">
-            <label htmlFor="birthday" className="label-register">
-              Birthday<span className="required"> *</span>
-            </label>
-            <input
-              type="date"
-              id="birthday"
-              name="birthday"
-              max={new Date().toISOString().split('T')[0]}
-              value={formData.birthday}
-              onChange={handleBirthdayChange}
-              className={`input-field-register birthday ${!formData.birthday ? 'mobile-date-placeholder' : ''}`}
-              required
-            />
-          </div>
+      </div>
+      <div className="form-row-register">
+        <div className="input-group-register left-side-register">
+          <label htmlFor="suffix" className="label-register">
+            Suffix
+          </label>
+          <select
+            id="suffix"
+            name="suffix"
+            value={formData.suffix}
+            onChange={handleAnyInputChange}
+            onBlur={handleAnyInputBlur}
+            className="input-field-register suffix-select"
+          >
+            <option value=""></option>
+            <option value="Jr">Jr</option>
+            <option value="Sr">Sr</option>
+            <option value="II">II</option>
+            <option value="III">III</option>
+            <option value="IV">IV</option>
+          </select>
         </div>
-        <div className="form-row-register">
-          <div className="input-group-register right-side-register">
-            <label htmlFor="age" className="label-register">
-              Age<span className="required"> *</span>
-            </label>
-            <input
-              type="number"
-              id="age"
-              name="age"
-              value={formData.age}
-              onChange={handleAnyInputChange}
-              className="input-field-register"
-              readOnly
-            />
-          </div>
-          <div className="input-group-register right-side-register">
-            <label htmlFor="contactNo" className="label-register">
-              Contact No.<span className="required"> *</span>
-            </label>
-            <input
-              type="text"
-              id="contactNo"
-              name="contactNo"
-              value={formData.contactNo}
-              onChange={handleContactChange}
-              onBlur={handleContactBlur}
-              className="input-field-register"
-              placeholder="e.g. 09123456789"
-              required
-            />
-          </div>
+        <div className="input-group-register left-side-register">
+          <label htmlFor="gender" className="label-register" >
+            Gender <span className="required"> *</span>
+          </label>
+          <select
+            id="gender"
+            name="gender"
+            value={formData.gender}
+            onChange={handleAnyInputChange}
+            onBlur={handleAnyInputBlur}
+            className="input-field-register gender-select"
+            required
+          >
+            <option value="" disabled>Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Prefer not to say">Prefer not to say</option>
+          </select>
         </div>
-        <div className="form-row-register">
-          <div className="input-group-register full-width-register">
-            <label htmlFor="facebookLink" className="label-register">
-              Facebook Profile Link<span className="required"> *</span>
-            </label>
-            <input
-              type="text"
-              id="facebookLink"
-              name="facebookLink"
-              value={formData.facebookLink}
-              onChange={handleAnyInputChange}
-              onBlur={handleAnyInputBlur}
-              className="input-field-register"
-              placeholder="e.g. http://facebook.com/username"
-              required
-            />
-          </div>
+      </div>
+      <div className="form-row-register">
+        <div className="input-group-register full-width-register">
+          <label htmlFor="birthday" className="label-register">
+            Birthday<span className="required"> *</span>
+          </label>
+          <input
+            type="date"
+            id="birthday"
+            name="birthday"
+            max={new Date().toISOString().split('T')[0]}
+            value={formData.birthday}
+            onChange={handleBirthdayChange}
+            className={`input-field-register birthday ${!formData.birthday ? 'mobile-date-placeholder' : ''}`}
+            required
+          />
         </div>
-      </form>
+      </div>
+      <div className="form-row-register">
+        <div className="input-group-register right-side-register">
+          <label htmlFor="age" className="label-register">
+            Age<span className="required"> *</span>
+          </label>
+          <input
+            type="number"
+            id="age"
+            name="age"
+            value={formData.age}
+            onChange={handleAnyInputChange}
+            className="input-field-register"
+            readOnly
+          />
+        </div>
+        <div className="input-group-register right-side-register">
+          <label htmlFor="contactNo" className="label-register">
+            Contact No.<span className="required"> *</span>
+          </label>
+          <input
+            type="text"
+            id="contactNo"
+            name="contactNo"
+            value={formData.contactNo}
+            onChange={handleContactChange}
+            onBlur={handleContactBlur}
+            className="input-field-register"
+            placeholder="e.g. 09123456789"
+            required
+          />
+        </div>
+      </div>
+      <div className="form-row-register">
+        <div className="input-group-register full-width-register">
+          <label htmlFor="facebookLink" className="label-register">
+            Facebook Profile Link<span className="required"> *</span>
+          </label>
+          <input
+            type="text"
+            id="facebookLink"
+            name="facebookLink"
+            value={formData.facebookLink}
+            onChange={handleAnyInputChange}
+            onBlur={handleAnyInputBlur}
+            className="input-field-register"
+            placeholder="e.g. http://facebook.com/username"
+            required
+          />
+        </div>
+      </div>
     </div>
   );
 };

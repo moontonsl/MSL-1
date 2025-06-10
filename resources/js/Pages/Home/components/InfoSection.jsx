@@ -4,8 +4,9 @@ import picture1 from '../assets/picture1.png';
 import picture2 from '../assets/picture2.png';
 import picture3 from '../assets/picture3.png';
 import sunImage from '../assets/Effect-copy-3.png';
+import axios from 'axios';
 
-const stats = [
+const statss = [
     { value: '8,000', label: 'STUDENT PLAYERS' },
     { value: '201', label: 'STUDENT LEADERS' },
     { value: '74', label: 'UNIVERSITY COMMUNITIES' },
@@ -20,7 +21,23 @@ const imageTextPairs = [
 
 const HeroSection = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
-
+    const [stats, setStats] = useState([
+        { value: '...', label: 'STUDENT PLAYERS' },
+        { value: '...', label: 'STUDENT LEADERS' },
+        { value: '...', label: 'UNIVERSITY COMMUNITIES' },
+        { value: '...', label: 'PARTNERED SCHOOL ORGS' } // Static for now
+    ]);
+    useEffect(() => {
+        axios.get('/stats')
+            .then(response => {
+                setStats([
+                    { value: response.data.student_players, label: 'STUDENT PLAYERS' },
+                    { value: response.data.student_leaders, label: 'STUDENT LEADERS' },
+                    { value: response.data.university_communities, label: 'UNIVERSITY COMMUNITIES' },
+                    { value: response.data.school_partners, label: 'PARTNERED SCHOOL ORGS' } // Still static
+                ]);
+            });
+    }, []);
     useEffect(() => {
         const interval = setInterval(() => {
             setCurrentIndex((prevIndex) =>
@@ -34,7 +51,7 @@ const HeroSection = () => {
     return (
         <section className={`${styles.infoSection}`}>
 
-            <div className="relative overflow-hidden pt-16 lg:pt-40">
+            <div className="relative overflow-hidden pt-16 md:pt-20 lg:pt-30 xl:pt-40">
 
                 {/* Top gradient overlay */}
                 <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#0a0a0a] to-transparent z-0 pointer-events-none" />
@@ -46,14 +63,14 @@ const HeroSection = () => {
                 </div>
 
 
-                <div className="container mx-auto px-4 gap-16 grid mb-20 scale">
-                    <h1 className="text-[clamp(2.25rem,5vw,3.75rem)] font-bold text-center w-full z-10 leading-tight">
+                <div className="container mx-auto px-4 gap-6 lg:gap-16 grid mb-20 scale">
+                    <h1 className="text-[clamp(2.25rem,5vw,3.75rem)] font-bold text-center w-full z-10 leading-[1]">
                         MOONTON STUDENT LEADER <br className="hidden lg:block" />PHILIPPINES
                     </h1>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 w-full gap-6 sm:gap-8 z-10">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 w-full gap-4 lg:gap-6 sm:gap-8 z-10">
                         {stats.map(({ value, label }, index) => (
-                            <div key={index} className="text-center grid gap-2 sm:gap-4">
+                            <div key={index} className="text-center grid lg:gap-2 sm:gap-4">
                                 <div className={`text-4xl sm:text-5xl md:text-6xl font-bold ${styles.infoHead}`}>
                                     {value}
                                 </div>
@@ -67,7 +84,7 @@ const HeroSection = () => {
 
 
             <div className={`${styles.infoAbout}`}>
-                <div className="grid xl:grid-cols-2 mx-auto min-h-[564px]">
+                <div className="grid xl:grid-cols-2 mx-auto min-h-auto xl:h-[440px]">
                     <div className={`${styles.infoImageWrapper} aspect-[16/9] xl:aspect-auto`}>
                         <img
                             src={imageTextPairs[currentIndex].image}
@@ -75,17 +92,14 @@ const HeroSection = () => {
                             className={`${styles.infoImage}`}
                         />
                     </div>
-                    <div className="p-4 lg:p-10 xl:p-24 flex flex-col gap-4 justify-center">
-                        <h2 className={`text-[clamp(2rem,6vw,3rem)] font-bold leading-tight`}>
-                            HERE AT <br className={`hidden xl:block`} />
-                            MOONTON STUDENT LEADER <br className={`hidden md:block`} />
-                            PHILIPPINES we <span
-                            className={`${styles.infoHighlight} text-brand`}>
+                    <div className="p-4 lg:p-10 xl:px-24 flex flex-col gap-4 justify-center">
+                        <h2 className={`text-[clamp(2rem,6vw,2.5rem)] font-bold leading-none text-black`}>
+                            HERE AT MOONTON STUDENT LEADER PHILIPPINES we <span className={`${styles.infoHighlight} !text-white`}>
                                 {imageTextPairs[currentIndex].text}
                             </span>
                         </h2>
 
-                        <p className="text-lg">
+                        <p className="text-lg text-black">
                             Moonton Student Leaders (MSL) Philippines is an organization of student-gamers from
                             different colleges and universities all over the country. Under the supervision of Moonton
                             Technologies Philippines, Inc., the program was developed to promote the growth of Mobile
