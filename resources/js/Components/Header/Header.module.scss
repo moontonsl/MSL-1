@@ -17,12 +17,12 @@
         position: relative;
     }
 
-    .menuButtons {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        flex-shrink: 0;
-    }
+  .menuButtons {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-shrink: 0;
+  }
 
     .menuButton {
         display: block;
@@ -36,41 +36,41 @@
         }
     }
 
-    .logo {
-        display: flex;
-        align-items: center;
-        height: 40px;
+  .logo {
+  display: flex;
+  align-items: center;
+  height: 40px;
 
-        a {
-            display: flex;
-            align-items: center;
-            height: 100%;
-        }
+  a {
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }
 
-        img {
-            height: 100%;
-            width: auto;
-            object-fit: contain;
-            display: block;
-        }
-    }
+  img {
+    height: 100%;
+    width: auto;
+    object-fit: contain;
+    display: block;
+  }
+}
 
-    .nav {
-        display: flex;
-        align-items: center;
-        flex-grow: 1;
-        margin-left: 0;
+  .nav {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    margin-left: 0;
 
-        @media (max-width: 768px) {
-            position: absolute;
-            top: 56px;
-            left: 0;
-            right: 0;
-            background: var(--background-default-secondary);
-            flex-direction: column;
-            //gap: rem;
-            padding: 1rem;
-            display: none;
+    @media (max-width: 768px) {
+      position: absolute;
+      top: 56px;
+      left: 0;
+      right: 0;
+      background: var(--background-default-secondary);
+      flex-direction: column;
+      //gap: rem;
+      padding: 1rem;
+      display: none;
 
             &.open {
                 display: flex;
@@ -79,20 +79,20 @@
         }
     }
 
-    .navList {
-        display: flex;
-        gap: 2rem;
-        list-style: none;
-        margin: 0;
-        padding-inline: 2rem;
-        flex-grow: 1;
-        justify-content: flex-start;
+  .navList {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex-grow: 1;
+    justify-content: flex-start;
 
-        @media (max-width: 768px) {
-            flex-direction: column;
-            width: 100%;
-            gap: 0.5rem;
-        }
+    @media (max-width: 768px) {
+      flex-direction: column;
+      width: 100%;
+      gap: 0.5rem;
+    }
 
         li a {
             color: inherit;

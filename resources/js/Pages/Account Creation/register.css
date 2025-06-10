@@ -431,6 +431,7 @@
   z-index: 1;
 }
 
+
 /* lightning bolt effect */
 .lightning {
   position: absolute;
@@ -518,7 +519,6 @@
       0 0 30px #00ffcc;
   }
 }
-
 
 @media only screen and (max-width: 768px) {
   

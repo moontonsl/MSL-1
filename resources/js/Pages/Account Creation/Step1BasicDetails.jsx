@@ -133,6 +133,7 @@ const Step1BasicDetails = ({
         );
       })()}
 
+
       <div className="form-row-register">
         <div className="input-group-register left-side-register">
           <label htmlFor="firstName" className="label-register">

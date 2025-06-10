@@ -47,6 +47,7 @@ const Header = () => {
                         ))}
                     </ul>
                     <div className={styles.authButtons}>
+
                         {user ? (
                             <>
                                 <div className="hidden sm:ms-6 sm:flex sm:items-center">

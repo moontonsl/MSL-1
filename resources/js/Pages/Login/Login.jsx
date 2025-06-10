@@ -17,6 +17,7 @@ const Login = () => {
   });
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [error, setError] = useState('');
+
   const [showLoginForm, setShowLoginForm] = useState(false);
   const [showMLBBModal, setShowMLBBModal] = useState(false);
 
@@ -26,11 +27,13 @@ const Login = () => {
       ...prev,
       [name]: value,
     }));
+
     setData({
       ...data,
       [name]: value,
     });
     setError(''); // Clear error on input change
+
   };
 
   const handleSubmit = (e) => {
@@ -58,7 +61,6 @@ const Login = () => {
     // if (formData.username !== 'admin' || formData.password !== 'admin') {
     //   setError('⚠️Wrong username or password.');
     //   return;
-    // }
     setError('');
     console.log(formData);
   };

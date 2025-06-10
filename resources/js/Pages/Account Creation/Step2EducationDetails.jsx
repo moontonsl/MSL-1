@@ -71,6 +71,7 @@ const Step2EducationDetails = ({
   const handleUniversityChange = (e) => {
     const { value } = e.target;
     handleInputChange(e);
+
     setSchoolQuery(value);
     if (value.trim() === "") {
       setFilteredSchools([]);
@@ -212,6 +213,7 @@ const Step2EducationDetails = ({
             <label htmlFor="university" className="label-register">
               University / College / Institute<span className="required"> *</span>
             </label>
+
             <input
               type="text"
               id="university"
@@ -244,6 +246,7 @@ const Step2EducationDetails = ({
                 ))}
               </ul>
             )}
+
           </div>
         </div>
         <div className="form-row-register">
@@ -251,6 +254,7 @@ const Step2EducationDetails = ({
             <label htmlFor="island" className="label-register">
               Island<span className="required"> *</span>
             </label>
+
             <input
               type="text"
               id="island"
@@ -261,6 +265,7 @@ const Step2EducationDetails = ({
               className="input-field-register"
               readOnly
             />
+
           </div>
           <div className="input-group-register right-side-register">
             <label htmlFor="region" className="label-register">
@@ -280,6 +285,7 @@ const Step2EducationDetails = ({
             <label htmlFor="course" className="label-register">
               Course or Program<span className="required"> *</span>
             </label>
+
             <input
               id="course"
               name="course"
@@ -303,6 +309,7 @@ const Step2EducationDetails = ({
                 ))}
               </ul>
             )}
+
           </div>
         </div>
         <div className="form-row-register">
