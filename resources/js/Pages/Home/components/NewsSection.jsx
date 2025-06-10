@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 const NewsSection = () => {
 
     const [articles, setArticles] = useState([]);
-    // const articless = [
+    // const articles = [
     //     {
     //         category: "Food",
     //         title: "Finger-Lickin' Chicken Wings That Will Leave You Craving More",
