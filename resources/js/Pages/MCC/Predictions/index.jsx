@@ -211,7 +211,7 @@ export default function PredictionsPage() {
             </div>
 
             <main 
-                className="relative z-0 min-h-screen py-16"
+                className="relative z-0 min-h-screen py-8 md:py-16"
                 style={{
                     backgroundImage: "url('/images/MCC/VoteBG.png')",
                     backgroundSize: "cover",
@@ -220,28 +220,30 @@ export default function PredictionsPage() {
                 }}
             >
                 <div className="Main flex flex-col justify-center items-center overflow-hidden">
-                    {/* Header Section */}
-                    <div className="MccHeaderLogo w-full px-4 md:px-20 lg:px-80 py-2.5 flex flex-col justify-center items-center overflow-hidden">
+                    {/* Header Section - Adjusted spacing */}
+                    <div className="MccHeaderLogo w-full px-4 md:px-20 lg:px-80 py-2 md:py-2.5 flex flex-col justify-center items-center overflow-hidden">
                         <img 
-                            className="MccHlogo1 h-28 object-contain" 
+                            className="MccHlogo1 h-20 md:h-28 object-contain" 
                             src="/images/MCC/Pamantasan.png" 
                             alt="MCC Logo"
                         />
-                        <div className="text-center mt-6">
-                            <h1 className="text-4xl md:text-6xl font-bold font-space leading-tight">
+                        <div className="text-center mt-0.8 md:mt-3">
+                            <h1 className="text-[1.75rem] md:text-[3.25rem] lg:text-[3.25rem] font-bold font-space leading-tight">
                                 GROUP STAGE PREDICTION
                             </h1>
                         </div>
-                        <div className="mt-4 text-center">
-                            <p className="text-xl font-poppins">
-                                <span className="font-medium">Predict who will make it to the Finals? </span>
-                                <span className="font-bold">Choose at least 2 Teams!</span>
+                        <div className="mt-0 md:mt-0 text-center flex flex-col gap-0">
+                            <p className="text-lg md:text-xl font-poppins font-medium leading-none">
+                                Predict who will make it to the Finals?
+                            </p>
+                            <p className="text-lg md:text-xl font-poppins font-bold leading-none">
+                                Choose at least 2 Teams!
                             </p>
                         </div>
                     </div>
 
                     {/* Body Section with Brackets */}
-                    <div className="Body w-full flex flex-col items-center gap-8 mt-16">
+                    <div className="Body w-full flex flex-col items-center gap-4 md:gap-8 mt-8 md:mt-16">
                         <BracketSection title="MINDANAO BRACKET" status="closed" />
                         <BracketSection title="VISAYAS BRACKET" status="upcoming" />
                         <BracketSection title="LUZON A BRACKET" />
