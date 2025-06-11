@@ -2,14 +2,37 @@ import React, { useState, useEffect } from "react";
 import { Header, Footer } from "@/Components";
 import { CheckCircle } from "lucide-react";
 
-// Team data structure
-const TEAMS_DATA = [
-    { id: 1, name: "Team 1", image: "/images/MCC/Voting 1.png" },
-    { id: 2, name: "Team 2", image: "/images/MCC/Voting 2.png" },
-    { id: 3, name: "Team 3", image: "/images/MCC/Voting 3.png" },
-    { id: 4, name: "Team 4", image: "/images/MCC/Voting 4.png" },
-    { id: 5, name: "Team 5", image: "/images/MCC/Voting 5.png" },
-];
+// Team data structure for different brackets
+const BRACKET_TEAMS = {
+    "MINDANAO BRACKET": [
+        { id: 1, name: "Team 1", image: "/images/MCC/Voting 1.png" },
+        { id: 2, name: "Team 2", image: "/images/MCC/Voting 2.png" },
+        { id: 3, name: "Team 3", image: "/images/MCC/Voting 3.png" },
+        { id: 4, name: "Team 4", image: "/images/MCC/Voting 4.png" },
+        { id: 5, name: "Team 5", image: "/images/MCC/Voting 5.png" },
+    ],
+    "VISAYAS BRACKET": [
+        { id: 1, name: "Team 1", image: "/images/MCC/Voting 1.png" },
+        { id: 2, name: "Team 2", image: "/images/MCC/Voting 2.png" },
+        { id: 3, name: "Team 3", image: "/images/MCC/Voting 3.png" },
+        { id: 4, name: "Team 4", image: "/images/MCC/Voting 4.png" },
+        { id: 5, name: "Team 5", image: "/images/MCC/Voting 5.png" },
+    ],
+    "LUZON A BRACKET": [
+        { id: 1, name: "UR Team 1", image: "/images/MCC/LUZON A/LA_UR1.png" },
+        { id: 2, name: "MA Team", image: "/images/MCC/LUZON A/LA_MA.png" },
+        { id: 3, name: "WIL Team", image: "/images/MCC/LUZON A/LA_WIL.png" },
+        { id: 4, name: "UR Team 2", image: "/images/MCC/LUZON A/LA_UR2.png" },
+        { id: 5, name: "FEB Team", image: "/images/MCC/LUZON A/LA_FEB.png" },
+    ],
+    "LUZON B BRACKET": [
+        { id: 1, name: "MA Team", image: "/images/MCC/LUZON B/LB_MA.png" },
+        { id: 2, name: "WIL Team", image: "/images/MCC/LUZON B/LB_WIL.png" },
+        { id: 3, name: "UR Team 1", image: "/images/MCC/LUZON B/LB_UR1.png" },
+        { id: 4, name: "UR Team 2", image: "/images/MCC/LUZON B/LB_UR2.png" },
+        { id: 5, name: "FEB Team", image: "/images/MCC/LUZON B/LB_FEB.png" },
+    ]
+};
 
 // Fisher-Yates shuffle algorithm
 const shuffleArray = (array) => {
@@ -27,8 +50,8 @@ const BracketSection = ({ title, status = 'open' }) => {
 
     // Shuffle teams on component mount and when status changes
     useEffect(() => {
-        setShuffledTeams(shuffleArray(TEAMS_DATA));
-    }, [status]);
+        setShuffledTeams(shuffleArray(BRACKET_TEAMS[title] || []));
+    }, [status, title]);
 
     const handleTeamSelect = (teamId) => {
         if (status !== 'open') return;
@@ -46,7 +69,7 @@ const BracketSection = ({ title, status = 'open' }) => {
         console.log(`Submitting votes for ${title}:`, {
             bracket: title,
             selectedTeams: selectedTeams.map(teamId => 
-                TEAMS_DATA.find(team => team.id === teamId)
+                BRACKET_TEAMS[title].find(team => team.id === teamId)
             )
         });
         // Reset selection after submission
@@ -127,7 +150,7 @@ const BracketSection = ({ title, status = 'open' }) => {
                                             className={`relative rounded-[20px] overflow-hidden ${
                                                 isSelected 
                                                     ? 'outline outline-[3px] outline-yellow-400' 
-                                                    : 'bg-neutral-950'
+                                                    : ''
                                             }`}
                                         >
                                             {/* Checkmark */}
@@ -143,11 +166,11 @@ const BracketSection = ({ title, status = 'open' }) => {
                                             </div>
 
                                             {/* Team Image */}
-                                            <div className="aspect-[3/4] relative">
+                                            <div className="aspect-[620/570] relative">
                                                 <img 
                                                     src={team.image}
                                                     alt={team.name}
-                                                    className="w-full h-full object-cover object-center"
+                                                    className="w-full h-full object-contain"
                                                 />
                                                 {/* Overlay for unselected and disabled state */}
                                                 <div 
@@ -190,10 +213,9 @@ export default function PredictionsPage() {
             <main 
                 className="relative z-0 min-h-screen py-16"
                 style={{
-                    backgroundImage: "url('/images/MCC/PredictionsBG.png')",
+                    backgroundImage: "url('/images/MCC/VoteBG.png')",
                     backgroundSize: "cover",
                     backgroundPosition: "center",
-                    backgroundRepeat: "no-repeat",
                     backgroundAttachment: "fixed"
                 }}
             >
