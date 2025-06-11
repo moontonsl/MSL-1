@@ -81,7 +81,7 @@ const Login = () => {
                     </h2>
                     <button className="choose-login-btn" onClick={() => setShowLoginForm(true)}>
                       <span className="choose-login-btn-icon">
-                        <img src="/apple-touch-icon.png" alt="MSL" style={{ width: 35, height: 25, borderRadius: 6 }} />
+                        <img src="/android-chrome-512x512.png" alt="MSL" style={{ width: 35, height: 25, borderRadius: 6 }} />
                       </span>
                       <span>SIGN IN WITH MSL ACCOUNT</span>
                     </button>
@@ -89,7 +89,7 @@ const Login = () => {
                       <span className="choose-login-btn-icon">
                         <img src="/images/Student Portal/mlbbiconlogin.png" alt="MLBB" style={{ width: 35, height: 25, borderRadius: 6 }} />
                       </span>
-                      <span>SIGN IN WITH YOUR MLBB ACCOUNT</span>
+                      <span>SIGN IN WITH MLBB ACCOUNT</span>
                     </button>
                     <button className="choose-login-btn" onClick={() => window.location.href = '/register'}>
                       <span className="choose-login-btn-icon">

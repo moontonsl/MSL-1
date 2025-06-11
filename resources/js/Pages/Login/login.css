@@ -305,8 +305,12 @@
   }
 
   .title-login {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
+    color: #fff;
+    text-align: center;
+    font-size: 1.4rem;
+    font-weight: bold;
+    margin-bottom: 2rem;
+    line-height: 1.1;
   }
 
   .image-logo-login {
@@ -329,11 +333,6 @@
     height: auto;
   }
 
-  .choose-login-btn-icon {
-  display: flex;
-  align-items: center;
-  margin-right: 10px;
-  }
 
   .choose-login-btn {
   display: flex;
@@ -364,31 +363,7 @@
   }
 }
 
-@media (max-width: 480px) {
-  
-  .title-login {
-    font-size: 1.2rem;
-  }
-  
-  .input-field-login {
-    padding: 0.5rem;
-    font-size: 0.85rem;
-  }
 
-  .login-btn-login {
-    width: 90%;
-    padding: 0.6rem;
-  }
-
-  .image-logo-login {
-    max-width: 100px;
-  }
-
-  .video-container-login {
-    height: 350px;
-    min-height: 100px;
-  }
-}
 
 /* Sample Viewport 1920 x 1080 | 2560 x 1440 */
 /* Based Layout */
@@ -500,9 +475,17 @@
   }
   
   .choose-login-btn {
-    font-size: 0.7rem;
-    padding: 0.8rem 1rem;
+    font-size: 0.8rem;
+    padding: 0.8rem;
     margin-bottom: 0.8rem;
+    text-align: center;
+  }
+
+  
+  .choose-login-btn-icon {
+  display: flex;
+  align-items: center;
+  margin-right: 15px;
   }
 
   .form-container-login {
