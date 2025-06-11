@@ -218,7 +218,6 @@
 }
 
 .input-field-register:focus {
-  border: 1px solid #e0b90f;
   outline: none;
 }
 
@@ -702,7 +701,7 @@
 @media (max-width: 639px) {
 
   .register-main-bg {
-    padding: 30px 30px; 
+    padding: 20px 20px; 
     width: 100%;
   }
 
@@ -714,6 +713,8 @@
     height: auto;
     min-height: 700px;
   }
+
+  
 
   .form-register {
     width: 100%;

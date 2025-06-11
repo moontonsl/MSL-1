@@ -101,7 +101,7 @@
 .divider-middle::after {
   content: '';
   position: absolute;
-  right: 1px;
+  right: -5px;
   top: 50%;
   transform: translateY(-50%);
   width: 1px;
@@ -122,10 +122,14 @@
 }
 
 .profile-name {
-  font-family: "Space Grotesk";
-  font-size: 40px;
-  font-weight: 700;
-  line-height: 44px;
+color: #FFF;
+font-feature-settings: 'dlig' on;
+font-family: "Space Grotesk";
+font-size: 64px;
+font-style: normal;
+font-weight: 700;
+line-height: 64px; /* 100% */
+align-self: stretch;
 }
 
 .profile-username-container {
@@ -150,6 +154,8 @@
   flex-wrap: wrap;
   gap: 24px;
   margin-top: 12px;
+  align-items: flex-start;
+  flex: 1 0 0;
 }
 
 .profile-label {
@@ -945,6 +951,7 @@ font-size: 1.5rem;
     transform: translateX(-50%);
     width: 120%;
     height: 1px;
+    margin-left: -5px;
     background: linear-gradient(
       to right,
       transparent,
@@ -970,6 +977,7 @@ font-size: 1.5rem;
     transform: translateX(-50%);
     width: 120%;
     height: 1px;
+    margin-left: -5px;
     background: linear-gradient(
       to right,
       transparent,
@@ -986,8 +994,7 @@ font-size: 1.5rem;
     justify-content: flex-start;
     align-items: center;
     gap: 10px;
-    padding-top: 25px;
-
+    padding-top: 30px;
   }
 
   .profile-rank-img {
