@@ -44,32 +44,40 @@ Route::get('/studentportal', function () {
 })->middleware(['auth', 'verified'])->name('profile');
 
 // MCC Routes
-Route::get('/mcc', function () {
-    return Inertia::render('MCC/Main Page/index');
-})->name('mcc.main');
-
-Route::get('/mcc/calendar', function () {
-    return Inertia::render('MCC/Calendar/index');
-})->name('mcc.calendar');
-
-Route::get('/mcc/predictions', function () {
-    return Inertia::render('MCC/Predictions/index');
-})->name('mcc.predictions');
-
-// MCC Voting Routes
-Route::prefix('mcc/voting')->name('mcc.voting.')->group(function () {
+Route::prefix('mcc')->name('mcc.')->group(function () {
     Route::get('/', function () {
-        return Inertia::render('MCC/Voting/Voting Sign In/Index');
-    })->name('signin');
+        return Inertia::render('MCC/Main Page/index');
+    })->name('main');
 
-    Route::get('/vote', function () {
-        return Inertia::render('MCC/Voting/Vote/Index');
-    })->name('vote');
+    Route::get('/calendar', function () {
+        return Inertia::render('MCC/Calendar/index');
+    })->name('calendar');
 
-    Route::get('/winners', function () {
-        return Inertia::render('MCC/Voting/Winners/Index');
-    })->name('winners');
+    Route::get('/predictions', function () {
+        return Inertia::render('MCC/Predictions/index');
+    })->name('predictions');
+
+    // News Route
+    Route::get('/news', function () {
+        return Inertia::render('MCC/News/Index');
+    })->name('news');
+
+    // Voting Routes
+    Route::prefix('voting')->name('voting.')->group(function () {
+        Route::get('/', function () {
+            return Inertia::render('MCC/Voting/Voting Sign In/Index');
+        })->name('signin');
+
+        Route::get('/vote', function () {
+            return Inertia::render('MCC/Voting/Vote/Index');
+        })->name('vote');
+
+        Route::get('/winners', function () {
+            return Inertia::render('MCC/Voting/Winners/Index');
+        })->name('winners');
+    });
 });
+
 // News Routes
 Route::get('/news', [NewsController::class, 'index'])->name('news.index');
 Route::get('/news-articles', [NewsController::class, 'getArticles'])->name('news.articles');
