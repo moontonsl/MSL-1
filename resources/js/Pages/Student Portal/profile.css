@@ -1,3 +1,5 @@
+@import '../../../css/variables.css';
+
 .portal-main-bg {
   min-height: 100vh;
   width: 100%;
@@ -8,7 +10,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Segoe UI', sans-serif;
   overflow-x: hidden;
 }
 
@@ -27,12 +28,16 @@
   gap: 32px;
   display: flex;
   border-radius: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.4);
-  background: linear-gradient(270deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03));
   box-shadow: 0px 4px 24px -1px rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(20px);
   position: relative;
   color: #fff;
+  border: 1px solid var(--Glass-Effect, rgba(0, 0, 0, 0.40));
+  background: linear-gradient(98deg, rgba(255, 255, 255, 0.03) 9.78%, rgba(243, 199, 24, 0.30) 125.09%);
+
+  /* Glass Effect */
+  box-shadow: 0px 4px 24px -1px rgba(0, 0, 0, 0.20);
+  backdrop-filter: blur(20px);
 }
 
 .portal-top-container {
@@ -57,16 +62,16 @@
   background: linear-gradient(135deg, #fff, #f3c718c6 77.49%, #fff);
   border-radius: 50%;
   padding: 5px;
-  width: 150px;
-  height: 150px;
+  width: 190px;
+  height: 190px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .avatar-img {
-  width: 140px;
-  height: 140px;
+  width: 180px;
+  height: 180px;
   border-radius: 50%;
   object-fit: cover;
   background: #111;
@@ -152,27 +157,27 @@ align-self: stretch;
 .profile-details {
   display: flex;
   flex-wrap: wrap;
-  gap: 24px;
-  margin-top: 12px;
+  gap: 60px;
+  margin-top: 20px;
   align-items: flex-start;
   flex: 1 0 0;
 }
 
 .profile-label {
   color: rgba(255, 255, 255, 0.5);
-  font-size: 14px;
+  font-size: 20px;
   font-weight: 600;
 }
 
 .profile-label-white {
   color: #fff;
-  font-size: 14px;
+  font-size: 20px;
   font-weight: 500;
 }
 
 .profile-id-extra {
   color: #fff;
-  font-size: 13px;
+  font-size: 20px;
   font-weight: 500;
 }
 
@@ -269,6 +274,14 @@ align-self: stretch;
     border: 1px solid rgba(191, 191, 191, 0.10);
     position: relative;
     overflow: hidden;
+
+    border-radius: 8px;
+    border: 1px solid rgba(191, 191, 191, 0.10);
+    background: var(--Glass-Effect, linear-gradient(270deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 100%));
+
+    /* Glass Effect */
+    box-shadow: 0px 4px 24px -1px rgba(0, 0, 0, 0.20);
+    backdrop-filter: blur(20px);
 }
 
 .portal-bottom-left::before {
@@ -335,6 +348,14 @@ align-self: stretch;
   border: 1px solid rgba(191, 191, 191, 0.20);
   position: relative;
   overflow: hidden;
+
+  border-radius: 8px;
+  border: 1px solid rgba(191, 191, 191, 0.20);
+  background: var(--Glass-Effect, linear-gradient(270deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 100%));
+
+  /* Glass Effect */
+  box-shadow: 0px 4px 24px -1px rgba(0, 0, 0, 0.20);
+  backdrop-filter: blur(20px);
 }
 
 .portal-bottom-right::before {
@@ -1039,6 +1060,8 @@ font-size: 1.5rem;
     transform: scale(3) translateY(30%);
     object-fit: cover;
   }
+
+  
 
 }
 
