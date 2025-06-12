@@ -244,8 +244,10 @@ export default function PredictionsPage() {
 
                     {/* Body Section with Brackets */}
                     <div className="Body w-full flex flex-col items-center gap-4 md:gap-8 mt-8 md:mt-16">
-                        <BracketSection title="MINDANAO BRACKET" status="closed" />
-                        <BracketSection title="VISAYAS BRACKET" status="upcoming" />
+                        <BracketSection title="MINDANAO BRACKET"/>
+                        <BracketSection title="VISAYAS BRACKET"/>
+                        {/* <BracketSection title="MINDANAO BRACKET" status="closed" />
+                        <BracketSection title="VISAYAS BRACKET" status="upcoming" /> */}
                         <BracketSection title="LUZON A BRACKET" />
                         <BracketSection title="LUZON B BRACKET" />
                     </div>

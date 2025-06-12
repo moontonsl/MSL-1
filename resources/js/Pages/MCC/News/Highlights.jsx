@@ -1,121 +1,125 @@
 import React, { useState, useEffect } from "react";
-import { Heading } from "@/Components";
 import { useKeenSlider } from "keen-slider/react";
 import "keen-slider/keen-slider.min.css";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
+// Slide Data
 const slides = [
   {
     title: "How MPL Smart Battle Trips Transformed My View of the Gaming Industry - Blog",
-    src: "/images/MCC/News/Carousel/image_1.jpg",
+    src: "https://placehold.co/1200x600?text=Slide+1",
   },
   {
     title: "MSL Community Spotlight",
-    src: "/images/MCC/News/Carousel/image_3.jpg",
+    src: "https://placehold.co/960x480?text=Slide+2",
   },
   {
     title: "MSL Highlights Event",
-    src: "/images/MCC/News/Carousel/image_5.JPG",
+    src: "https://placehold.co/960x480?text=Slide+3",
   },
   {
     title: "MSL Tournament Coverage",
-    src: "/images/MCC/News/Carousel/image_7.png",
+    src: "https://placehold.co/720x384?text=Slide+4",
   },
   {
     title: "MSL Championship Series",
-    src: "/images/MCC/News/Carousel/image_37.jpg",
-  }
+    src: "https://placehold.co/720x384?text=Slide+5",
+  },
 ];
+
+// Get className for each slide based on its relative position
+const getSlideStyle = (index, current, total) => {
+  const rel = ((index - current + total) % total);
+
+  if (rel === 0) {
+    return "w-[1200px] h-[600px] top-0 left-[300px] z-30";
+  } else if (rel === 1) {
+    return "w-[960px] h-[480px] top-[60px] left-[774px] z-20";
+  } else if (rel === 2) {
+    return "w-[720px] h-96 top-[120px] left-[1110px] z-10 opacity-70";
+  } else if (rel === total - 1) {
+    return "w-[960px] h-[480px] top-[60px] left-[96px] z-20";
+  } else if (rel === total - 2) {
+    return "w-[720px] h-96 top-[120px] left-0 z-10 opacity-70";
+  } else {
+    return "hidden"; // hide any out-of-view slides
+  }
+};
 
 export default function Highlights() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loaded, setLoaded] = useState(false);
-
   const [sliderRef, instanceRef] = useKeenSlider({
     initial: 0,
+    loop: true,
     slideChanged(slider) {
       setCurrentSlide(slider.track.details.rel);
-    },
-    slides: {
-      perView: 1.5,
-      spacing: 16,
     },
     created() {
       setLoaded(true);
     },
-    loop: true,
-    mode: "snap",
-    rtl: false,
   });
 
   return (
-    <div className="w-full max-w-[1366px] mx-auto p-4 text-white">
-      <div className="text-center mb-8">
-        <Heading size="heading3xl" className="text-4xl font-bold">
-          MSL HIGHLIGHTS
-        </Heading>
-      </div>
+    <div className="relative w-full max-w-[1900px] h-[731px] px-12 mx-auto overflow-hidden text-white">
+      {/* Title */}
+      <h2 className="text-5xl font-bold text-center mb-10">MSL HIGHLIGHTS</h2>
 
-      {/* Keen Slider Container */}
-      <div className="relative">
+      {/* Carousel Container */}
+      <div className="relative w-full h-[600px]">
+        {/* Slide Layer (absolute layout inside relative box) */}
+        <div className="relative w-full h-full">
+          {slides.map((slide, index) => (
+            <div
+              key={index}
+              className={`absolute rounded-[60px] overflow-hidden transition-all duration-500 ease-in-out ${getSlideStyle(index, currentSlide, slides.length)}`}
+            >
+              <img src={slide.src} alt={slide.title} className="w-full h-full object-cover" />
+            </div>
+          ))}
+        </div>
+
+        {/* Gradient Overlay (optional) */}
+        <div className="pointer-events-none absolute inset-0 flex justify-between z-40">
+          <div className="w-1/4 h-full bg-gradient-to-r from-black to-transparent" />
+          <div className="w-1/4 h-full bg-gradient-to-l from-black to-transparent" />
+        </div>
+
         {/* Navigation Arrows */}
         {loaded && instanceRef.current && (
           <>
             <button
               onClick={() => instanceRef.current?.prev()}
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 p-2 rounded-full hover:bg-black/70 transition-colors"
+              className="absolute left-6 top-1/2 -translate-y-1/2 z-50 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full backdrop-blur"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+              <ChevronLeft size={32} />
             </button>
             <button
               onClick={() => instanceRef.current?.next()}
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 p-2 rounded-full hover:bg-black/70 transition-colors"
+              className="absolute right-6 top-1/2 -translate-y-1/2 z-50 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full backdrop-blur"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              <ChevronRight size={32} />
             </button>
           </>
         )}
+      </div>
 
-        {/* Slider */}
-        <div ref={sliderRef} className="keen-slider">
-          {slides.map((slide, idx) => (
-            <div key={idx} className="keen-slider__slide">
-              <div className="relative aspect-[16/9] rounded-2xl overflow-hidden">
-                <img
-                  src={slide.src}
-                  alt={slide.title}
-                  className="w-full h-full object-cover"
-                />
-                {currentSlide === idx && (
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
-                    <h3 className="text-xl font-semibold text-white">
-                      {slide.title}
-                    </h3>
-                  </div>
-                )}
-              </div>
-            </div>
+      {/* Dots Navigation */}
+      {loaded && instanceRef.current && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex gap-4 bg-black/40 px-4 py-2 rounded-full">
+          {slides.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => instanceRef.current?.moveToIdx(idx)}
+              className={`rounded-full transition-all ${
+                currentSlide === idx
+                  ? "w-6 h-6 bg-yellow-400"
+                  : "w-4 h-4 bg-white/50 hover:bg-white/70"
+              }`}
+            />
           ))}
         </div>
-
-        {/* Navigation Dots */}
-        {loaded && instanceRef.current && (
-          <div className="flex justify-center mt-6 space-x-2">
-            {[...Array(slides.length)].map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => instanceRef.current?.moveToIdx(idx)}
-                className={`w-3 h-3 rounded-full transition-colors ${
-                  currentSlide === idx ? "bg-[#F3C718]" : "bg-gray-400"
-                }`}
-              ></button>
-            ))}
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }
