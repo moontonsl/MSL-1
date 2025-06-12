@@ -17,15 +17,29 @@ class NewsController extends Controller
     {
         $articles = News::orderByDesc('news_published')
         ->select(
+            'id',
+            'news_canonical',
             'news_state as category',
             'news_title as title',
+            'news_subtitle as subtitle',
             'news_writer as author',
             'news_published as date',
             'news_img1 as image',
+            'news_img2',
+            'news_img3',
             'news_content as content'
         )
         ->take(4)
-        ->get();
+        ->get()
+        ->map(function ($article) {
+            // Add size property based on position or other logic
+            static $index = 0;
+            $sizes = ['large', 'medium', 'small', 'small'];
+            $article->size = $sizes[$index % 4];
+            $index++;
+            
+            return $article;
+        });
 
         return response()->json($articles);
     }

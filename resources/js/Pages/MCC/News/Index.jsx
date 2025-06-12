@@ -1,0 +1,45 @@
+import React from "react";
+import { Head } from "@inertiajs/react";
+import { Header, Footer } from "@/Components";
+import Highlights from "./Highlights";
+import Articles from "./Articles";
+
+export default function NewsPage() {
+  return (
+    <div 
+      className="min-h-screen text-white bg-transparent"
+      style={{
+        backgroundImage: "url('/images/MCC/News/NewsBG.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+        backgroundRepeat: "no-repeat"
+      }}
+    >
+      <Head>
+        <title>Mobile Legends: Bang Bang Campus Championship - News</title>
+        <meta name="description" content="Latest news and updates about the Mobile Legends Campus Championship" />
+      </Head>
+
+      <div className="relative z-10">
+        <Header />
+      </div>
+
+      <main className="relative z-0 min-h-screen py-16 bg-transparent">
+        {/* MSL Highlights Section */}
+        <section className="mb-16 bg-transparent">
+          <Highlights />
+        </section>
+
+        {/* News and Articles Section */}
+        <section className="bg-transparent">
+          <Articles />
+        </section>
+      </main>
+
+      <div className="relative z-10">
+        <Footer />
+      </div>
+    </div>
+  );
+}

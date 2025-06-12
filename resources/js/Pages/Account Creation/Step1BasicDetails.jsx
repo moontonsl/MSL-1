@@ -67,6 +67,7 @@ const Step1BasicDetails = ({
       return;
     }
 
+    // If valid, clear error
     setErrorMessage('');
     handleInputChange(e);
     
@@ -80,6 +81,7 @@ const Step1BasicDetails = ({
     const contact = e.target.value;
     if (/^\d*$/.test(contact) && contact.length <= 11) {
       handleInputChange(e);
+      // If valid, clear error while typing
       if (/^09\d{9}$/.test(contact)) {
         setErrorMessage('');
       }
@@ -110,8 +112,19 @@ const Step1BasicDetails = ({
 
         return (
           <div style={{ margin: "16px 0" }}>
-            <div style={{ height: "12px", background: "#eee", borderRadius: "6px", overflow: "hidden", marginBottom: "4px"}}>
-              <div style={{ width: `${percent}%`, height: "100%", background: "#f1c40f", transition: "width 0.3s"}} />
+            <div style={{
+              height: "12px",
+              background: "#eee",
+              borderRadius: "6px",
+              overflow: "hidden",
+              marginBottom: "4px"
+            }}>
+              <div style={{
+                width: `${percent}%`,
+                height: "100%",
+                background: "#f1c40f",
+                transition: "width 0.3s"
+              }} />
             </div>
             <div style={{ fontSize: "12px", color: "#555" }}>
               Step 1 of 4 &mdash; {percent}% of this step complete

@@ -15,6 +15,8 @@ export default {
             fontFamily: {
                 sans: ['"Noto Sans"', ...defaultTheme.fontFamily.sans],
                 montserrat: ['"Montserrat"', ...defaultTheme.fontFamily.sans],
+                spaceGrotesk: ['"Space Grotesk"', ...defaultTheme.fontFamily.sans],
+                poppins: ['"Poppins"', ...defaultTheme.fontFamily.sans],
             },
         },
     },
