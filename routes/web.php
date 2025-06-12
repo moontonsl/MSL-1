@@ -38,10 +38,16 @@ Route::get('/register', function () {
 })->name('register');
 
 
-//STUDENT PORTAL
+// //STUDENT PORTAL
+// Route::get('/studentportal', function () {
+//     return Inertia::render('Student Portal/Profile');
+// })->middleware(['auth', 'verified'])->name('profile');
+
+// TEMPORARY STUDENT PORTAL ACCESS (NO AUTH)
 Route::get('/studentportal', function () {
     return Inertia::render('Student Portal/Profile');
-})->middleware(['auth', 'verified'])->name('profile');
+})->name('profile');
+
 
 // MCC Routes
 Route::prefix('mcc')->name('mcc.')->group(function () {

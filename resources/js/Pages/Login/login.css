@@ -20,7 +20,7 @@
   justify-content: center;
   flex-wrap: nowrap;
   gap: 0;
-  width: 100%;
+  width: auto;
   max-width: 100%; 
   margin: 0;     
   padding: 0;        
@@ -224,7 +224,7 @@
   }
   
 .choose-login-title {
-  color: #fff;
+  color: #ffffff;
   text-align: center;
   font-size: 1.5rem;
   font-weight: bold;
@@ -305,8 +305,12 @@
   }
 
   .title-login {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
+    color: #fff;
+    text-align: center;
+    font-size: 1.4rem;
+    font-weight: bold;
+    margin-bottom: 2rem;
+    line-height: 1.1;
   }
 
   .image-logo-login {
@@ -329,11 +333,6 @@
     height: auto;
   }
 
-  .choose-login-btn-icon {
-  display: flex;
-  align-items: center;
-  margin-right: 10px;
-  }
 
   .choose-login-btn {
   display: flex;
@@ -364,43 +363,15 @@
   }
 }
 
-@media (max-width: 480px) {
-  
-  .title-login {
-    font-size: 1.2rem;
-  }
-  
-  .input-field-login {
-    padding: 0.5rem;
-    font-size: 0.85rem;
-  }
 
-  .login-btn-login {
-    width: 90%;
-    padding: 0.6rem;
-  }
 
-  .image-logo-login {
-    max-width: 100px;
-  }
-
-  .video-container-login {
-    height: 350px;
-    min-height: 100px;
-  }
+/* Sample Viewport 1920 x 1080 | 2560 x 1440 */
+/* Based Layout */
+/* Desktop Large (1920px and above) */
+@media (min-width: 1920px) {
 }
 
-/* Desktop Large (1980px and above) */
-@media (min-width: 1980px) {
-  
-  .login-wrapper {
-    max-width: 1600px;
-    margin: 0;
-    padding-top: 20px;
-    padding-bottom: 20px;
-  }
-}
-
+/* Sample Viewport 1280 x 800 | 1200 x 768 */
 /* Desktop (1440px - 1919px) */
 @media (min-width: 1440px) and (max-width: 1919px) {
   
@@ -412,6 +383,7 @@
   }
 }
 
+/* Sample Viewport 1180 x 820 | 800 x 1280 */
 /* Tablet Landscape (1024px - 1439px) */
 @media (min-width: 1024px) and (max-width: 1439px) {
   
@@ -421,19 +393,52 @@
     padding-top: 20px;
     padding-bottom: 20px;
   }
-}
 
-/* Tablet Portrait (640px - 1023px) */
-@media (min-width: 640px) and (max-width: 1023px) {
-  
-  .login-wrapper {
-    max-width: 90%;
-    margin: 0;
-    padding-top: 10px;
-    padding-bottom: 20px;
+  .choose-login-btn {
+    font-size: 0.8rem;
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.8rem;
   }
 }
 
+/* Sample Viewport 820 x 1180 | 800 x 1280 */
+/* Tablet Portrait (640px - 1023px) */
+@media (min-width: 640px) and (max-width: 1023px) {
+  
+.login-wrapper {
+    max-width: 90%;
+    margin: 0;
+    padding: 20px;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .login-container-login {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 15px 15px 0 0;
+    padding: 2.5rem;
+  }
+
+  .video-container-login{
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0;
+    height: 400px; /* Adjusted height for tablet */
+    min-height: 180px; /* Ensures a minimum height */
+    border-radius: 0 0 15px 15px;
+  }
+
+  .choose-login-btn {
+    font-size: 1.3rem;
+    padding: 0.9rem 1.2rem;
+    margin-bottom: 1rem;
+  }
+
+}
+
+/* Sample Viewport 390 x 844 | 350 x 800 */
 /* Mobile (0px - 639px) */
 @media (max-width: 639px) {
   
@@ -451,8 +456,40 @@
   .video-container-login {
     position: relative;
     display: flex;
+    height: 250px; /* Adjusted height for mobile */
+    min-height: 180px; /* Ensures a minimum height */
+    width: 100%;
     align-items: stretch; /* changed from center to stretch */
     justify-content: center;
+  }
+
+  .choose-login-container {
+    padding: 1rem;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 16px;
+  }
+  .choose-login-title {
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .choose-login-btn {
+    font-size: 0.8rem;
+    padding: 0.8rem;
+    margin-bottom: 0.8rem;
+    text-align: center;
+  }
+
+  
+  .choose-login-btn-icon {
+  display: flex;
+  align-items: center;
+  margin-right: 15px;
+  }
+
+  .form-container-login {
+    padding: 0.1rem;
   }
 }
 

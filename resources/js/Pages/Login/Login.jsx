@@ -81,19 +81,19 @@ const Login = () => {
                     </h2>
                     <button className="choose-login-btn" onClick={() => setShowLoginForm(true)}>
                       <span className="choose-login-btn-icon">
-                        <img src="/apple-touch-icon.png" alt="MSL" style={{ width: 35, height: 25, borderRadius: 6 }} />
+                        <img src="/android-chrome-192x192.png" alt="MSL" style={{ width: 35, height: 35, borderRadius: 6 }} />
                       </span>
                       <span>SIGN IN WITH MSL ACCOUNT</span>
                     </button>
                     <button className="choose-login-btn" onClick={() => setShowMLBBModal(true)}>
                       <span className="choose-login-btn-icon">
-                        <img src="/images/Student Portal/mlbbiconlogin.png" alt="MLBB" style={{ width: 35, height: 25, borderRadius: 6 }} />
+                        <img src="/images/Student Portal/mlbbiconlogin.png" alt="MLBB" style={{ width: 35, height: 35, borderRadius: 6 }} />
                       </span>
-                      <span>SIGN IN WITH YOUR MLBB ACCOUNT</span>
+                      <span>SIGN IN WITH MLBB ACCOUNT</span>
                     </button>
                     <button className="choose-login-btn" onClick={() => window.location.href = '/register'}>
                       <span className="choose-login-btn-icon">
-                        <svg width="35" height="25" fill="none" viewBox="0 0 24 24"><path d="M12 12v6m0 0v-6m0 6H6m6 0h6M6 6h12M6 6v12M6 6H3m3 0h12m0 0v12m0-12h3" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        <svg width="35" height="35" fill="none" viewBox="0 0 24 24"><path d="M12 12v6m0 0v-6m0 6H6m6 0h6M6 6h12M6 6v12M6 6H3m3 0h12m0 0v12m0-12h3" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </span>
                       <span>CREATE AN ACCOUNT</span>
                     </button>

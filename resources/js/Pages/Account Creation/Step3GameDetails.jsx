@@ -199,7 +199,7 @@ const Step3GameDetails = ({
                   if (!/^\d+$/.test(pasted)) e.preventDefault();
                 }}
                 onBlur={handleAnyInputBlur}
-              />
+              disabled/>
             </div>
             <div className="input-group-register right-side-register">
               <label htmlFor="serverId" className="label-register">
@@ -224,7 +224,7 @@ const Step3GameDetails = ({
                   if (!/^\d+$/.test(pasted)) e.preventDefault();
                 }}
                 onBlur={handleAnyInputBlur}
-              />
+              disabled/>
             </div>
           </div>
           <div className="form-row-register">
@@ -240,7 +240,7 @@ const Step3GameDetails = ({
                 onChange={handleInputChange}
                 className="input-field-register"
                 
-              />
+              disabled/>
             </div>
             <div className="input-group-register right-side-register">
               <label htmlFor="squadName" className="label-register">

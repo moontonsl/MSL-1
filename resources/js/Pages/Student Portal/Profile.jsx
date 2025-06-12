@@ -1,5 +1,6 @@
 import { Header, Footer } from '@/Components';
 import './profile.css';
+import '../../../css/variables.css';
 import { Head } from '@inertiajs/react';
 import { Eye, EyeOff } from 'react-feather';
 
@@ -21,7 +22,7 @@ const Profile = () => {
                         </div>
                         <div class="portal-top-middle">
                             <div className="profile-main-info">
-                                <h2 className="profile-name">Account Name</h2>
+                                <div className="profile-name">Account Name</div>
                                 <div className="profile-username-container">
                                     <span className="username-text">username</span>
                                     <svg className="verify-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="25" viewBox="0 0 24 25" fill="none">
