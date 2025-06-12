@@ -5,18 +5,18 @@ import { CheckCircle } from "lucide-react";
 // Team data structure for different brackets
 const BRACKET_TEAMS = {
     "MINDANAO BRACKET": [
-        { id: 1, name: "Team 1", image: "/images/MCC/Voting 1.png" },
-        { id: 2, name: "Team 2", image: "/images/MCC/Voting 2.png" },
-        { id: 3, name: "Team 3", image: "/images/MCC/Voting 3.png" },
-        { id: 4, name: "Team 4", image: "/images/MCC/Voting 4.png" },
-        { id: 5, name: "Team 5", image: "/images/MCC/Voting 5.png" },
+        { id: 1, name: "UR Team 1", image: "/images/MCC/MINDANAO/M_UR1.png" },
+        { id: 2, name: "MA Team", image: "/images/MCC/MINDANAO/M_MA.png" },
+        { id: 3, name: "WIL Team", image: "/images/MCC/MINDANAO/M_WIL.png" },
+        { id: 4, name: "UR Team 2", image: "/images/MCC/MINDANAO/M_UR2.png" },
+        { id: 5, name: "FEB Team", image: "/images/MCC/MINDANAO/M_FEB.png" },
     ],
     "VISAYAS BRACKET": [
-        { id: 1, name: "Team 1", image: "/images/MCC/Voting 1.png" },
-        { id: 2, name: "Team 2", image: "/images/MCC/Voting 2.png" },
-        { id: 3, name: "Team 3", image: "/images/MCC/Voting 3.png" },
-        { id: 4, name: "Team 4", image: "/images/MCC/Voting 4.png" },
-        { id: 5, name: "Team 5", image: "/images/MCC/Voting 5.png" },
+        { id: 1, name: "UR Team 1", image: "/images/MCC/VISAYAS/V_UR1.png" },
+        { id: 2, name: "MA Team", image: "/images/MCC/VISAYAS/V_MA.png" },
+        { id: 3, name: "WIL Team", image: "/images/MCC/VISAYAS/V_WIL.png" },
+        { id: 4, name: "UR Team 2", image: "/images/MCC/VISAYAS/V_UR2.png" },
+        { id: 5, name: "FEB Team", image: "/images/MCC/VISAYAS/V_FEB.png" },
     ],
     "LUZON A BRACKET": [
         { id: 1, name: "UR Team 1", image: "/images/MCC/LUZON A/LA_UR1.png" },

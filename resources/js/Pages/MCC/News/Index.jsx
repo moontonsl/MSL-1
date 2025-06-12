@@ -6,16 +6,7 @@ import Articles from "./Articles";
 
 export default function NewsPage() {
   return (
-    <div 
-      className="min-h-screen text-white bg-transparent"
-      style={{
-        backgroundImage: "url('/images/MCC/News/NewsBG.png')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundAttachment: "fixed",
-        backgroundRepeat: "no-repeat"
-      }}
-    >
+    <div className="min-h-screen">
       <Head>
         <title>Mobile Legends: Bang Bang Campus Championship - News</title>
         <meta name="description" content="Latest news and updates about the Mobile Legends Campus Championship" />
@@ -25,16 +16,26 @@ export default function NewsPage() {
         <Header />
       </div>
 
-      <main className="relative z-0 min-h-screen py-16 bg-transparent">
-        {/* MSL Highlights Section */}
-        <section className="mb-16 bg-transparent">
-          <Highlights />
-        </section>
+      <main className="relative z-0 py-16">
+        <div className="w-full min-h-screen"
+          style={{
+            background: "#000",
+            backgroundImage: "url('/images/MCC/VoteBG.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundAttachment: "fixed"
+          }}
+        >
+          {/* MSL Highlights Section */}
+          <section className="mb-16">
+            <Highlights />
+          </section>
 
-        {/* News and Articles Section */}
-        <section className="bg-transparent">
-          <Articles />
-        </section>
+          {/* News and Articles Section */}
+          <section>
+            <Articles />
+          </section>
+        </div>
       </main>
 
       <div className="relative z-10">
