@@ -2,9 +2,9 @@ import { router } from '@inertiajs/react';
 import styles from "./HeroSection.module.scss";
 import HeroCarousel from "./HeroCarousel.jsx";
 
-import minImg from "@/pages/Home/assets/hero/minsi.png";
-import laylaImg from "@/pages/Home/assets/hero/layla.png";
-import badingImg from "@/pages/Home/assets/hero/bada.png";
+import minImg from "../pages/Home/assets/hero/minsi.png";
+import laylaImg from "../pages/Home/assets/hero/layla.png";
+import badingImg from "../pages/Home/assets/hero/bada.png";
 
 const HeroSection = () => {
     const handleClick = (path) => {
