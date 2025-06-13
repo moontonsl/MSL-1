@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import styles from './InfoSection.module.scss';
-import picture1 from '../assets/picture1.png';
-import picture2 from '../assets/picture2.png';
-import picture3 from '../assets/picture3.png';
+import picture1 from '../assets/Picture1.png';
+import picture2 from '../assets/Picture2.png';
+import picture3 from '../assets/Picture3.png';
 import sunImage from '../assets/Effect-copy-3.png';
 import axios from 'axios';
 
