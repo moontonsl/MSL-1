@@ -13,8 +13,9 @@ export default function NewsPage() {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
 
-      {/* Header (shared, responsive) */}
-      <Header />
+      <div className="relative z-10">
+        <Header />
+      </div>
 
       <main className="flex-grow">
         <div className="w-full min-h-screen bg-black"
@@ -25,12 +26,10 @@ export default function NewsPage() {
             backgroundAttachment: "fixed"
           }}
         >
-          {/* Main Content */}
           <div className="max-w-[1900px] mx-auto px-4 md:px-12">
             <section className="mb-8">
               <Highlights />
             </section>
-
             <section>
               <Articles />
             </section>
@@ -38,8 +37,9 @@ export default function NewsPage() {
         </div>
       </main>
 
-      {/* Footer (shared, responsive) */}
-      <Footer />
+      <div className="relative z-10">
+        <Footer />
+      </div>
     </div>
   );
 }
