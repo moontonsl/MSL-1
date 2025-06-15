@@ -18,7 +18,7 @@ const Header = () => {
     const user = auth.user;
 
     return (
-        <header className={styles.header}>
+        <header className={`${styles.header} text-white`}>
             <div className={styles.container}>
 
                 <div className={styles.menuButtons}>

@@ -45,32 +45,44 @@ export default function Highlights() {
     },
   });
 
-  // Get className for each slide based on its relative position
+  // Responsive slide style
   const getSlideStyle = (index, current, total) => {
     const rel = ((index - current + total) % total);
-    const baseStyle = "absolute rounded-[60px] overflow-hidden transition-all duration-500 ease-in-out";
-
+    const baseStyle = "absolute overflow-hidden transition-all duration-500 ease-in-out";
+    // Desktop
+    if (window.innerWidth >= 1024) {
+      if (rel === 0) {
+        return `${baseStyle} rounded-[60px] w-[1200px] h-[600px] top-0 left-[300px] z-30 opacity-100`;
+      } else if (rel === 1) {
+        return `${baseStyle} rounded-[60px] w-[960px] h-[480px] top-[60px] left-[774px] z-20 opacity-90`;
+      } else if (rel === 2) {
+        return `${baseStyle} rounded-[60px] w-[720px] h-96 top-[120px] left-[1110px] z-10 opacity-70`;
+      } else if (rel === total - 1) {
+        return `${baseStyle} rounded-[60px] w-[960px] h-[480px] top-[60px] left-[96px] z-20 opacity-90`;
+      } else if (rel === total - 2) {
+        return `${baseStyle} rounded-[60px] w-[720px] h-96 top-[120px] left-0 z-10 opacity-70`;
+      } else {
+        return `${baseStyle} opacity-0`;
+      }
+    }
+    // Mobile/tablet
     if (rel === 0) {
-      return `${baseStyle} w-[1200px] h-[600px] top-0 left-[300px] z-30 opacity-100`;
+      return `${baseStyle} rounded-2xl w-[90vw] max-w-[370px] h-[180px] left-1/2 -translate-x-1/2 top-0 z-30 opacity-100`;
     } else if (rel === 1) {
-      return `${baseStyle} w-[960px] h-[480px] top-[60px] left-[774px] z-20 opacity-90`;
-    } else if (rel === 2) {
-      return `${baseStyle} w-[720px] h-96 top-[120px] left-[1110px] z-10 opacity-70`;
+      return `${baseStyle} rounded-2xl w-[70vw] max-w-[280px] h-[140px] left-[70%] top-[24px] z-20 opacity-80`;
     } else if (rel === total - 1) {
-      return `${baseStyle} w-[960px] h-[480px] top-[60px] left-[96px] z-20 opacity-90`;
-    } else if (rel === total - 2) {
-      return `${baseStyle} w-[720px] h-96 top-[120px] left-0 z-10 opacity-70`;
+      return `${baseStyle} rounded-2xl w-[70vw] max-w-[280px] h-[140px] left-[0%] top-[24px] z-20 opacity-80`;
     } else {
-      return `${baseStyle} opacity-0`; // Hide other slides
+      return `${baseStyle} opacity-0`;
     }
   };
 
   return (
-    <div className="w-full max-w-[1900px] h-[731px] px-12 mx-auto">
-      <h2 className="text-5xl font-bold text-center mb-10 text-white">MSL HIGHLIGHTS</h2>
+    <div className="w-full max-w-[1900px] h-auto px-2 md:px-12 mx-auto">
+      <h2 className="text-2xl xs:text-3xl md:text-5xl font-bold text-center mb-4 md:mb-10 text-white">MSL HIGHLIGHTS</h2>
 
       {/* Carousel Container */}
-      <div ref={sliderRef} className="relative w-full h-[600px] keen-slider">
+      <div className="relative w-full h-[220px] md:h-[600px] keen-slider" ref={sliderRef}>
         {/* Slide Layer */}
         <div className="relative w-full h-full">
           {slides.map((slide, index) => (
@@ -85,8 +97,8 @@ export default function Highlights() {
               />
               {/* Title Overlay - Only show for active and adjacent slides */}
               {Math.abs(((index - currentSlide + slides.length) % slides.length)) <= 1 && (
-                <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/60 to-transparent">
-                  <h3 className="text-xl font-semibold text-white">
+                <div className="absolute bottom-0 left-0 right-0 p-2 md:p-6 bg-gradient-to-t from-black/70 to-transparent">
+                  <h3 className="text-xs xs:text-sm md:text-xl font-semibold text-white">
                     {slide.title}
                   </h3>
                 </div>
@@ -94,42 +106,38 @@ export default function Highlights() {
             </div>
           ))}
         </div>
+      </div>
 
-        {/* Navigation Arrows */}
-        {loaded && instanceRef.current && (
-          <>
-            <button
-              onClick={() => instanceRef.current?.prev()}
-              className="absolute left-6 top-1/2 -translate-y-1/2 z-50 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full backdrop-blur-sm transition-colors"
-            >
-              <ChevronLeft size={32} />
-            </button>
-            <button
-              onClick={() => instanceRef.current?.next()}
-              className="absolute right-6 top-1/2 -translate-y-1/2 z-50 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full backdrop-blur-sm transition-colors"
-            >
-              <ChevronRight size={32} />
-            </button>
-          </>
-        )}
-
-        {/* Dots Navigation */}
-        {loaded && instanceRef.current && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex gap-4 px-4 py-2 rounded-full">
+      {/* Navigation Controls Below Carousel */}
+      {loaded && instanceRef.current && (
+        <div className="flex items-center justify-center gap-4 mt-4">
+          <button
+            onClick={() => instanceRef.current?.prev()}
+            className="bg-white/10 hover:bg-white/20 text-white p-2 md:p-3 rounded-full backdrop-blur-sm transition-colors"
+          >
+            <ChevronLeft size={20} className="md:size-8" />
+          </button>
+          <div className="flex gap-2 md:gap-4 px-2 py-1 md:px-4 md:py-2 rounded-full">
             {slides.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => instanceRef.current?.moveToIdx(idx)}
                 className={`rounded-full transition-all ${
                   currentSlide === idx
-                    ? "w-6 h-6 bg-yellow-400"
-                    : "w-4 h-4 bg-white/50 hover:bg-white/70"
+                    ? "w-3 h-3 md:w-6 md:h-6 bg-yellow-400"
+                    : "w-2 h-2 md:w-4 md:h-4 bg-white/50 hover:bg-white/70"
                 }`}
               />
             ))}
           </div>
-        )}
-      </div>
+          <button
+            onClick={() => instanceRef.current?.next()}
+            className="bg-white/10 hover:bg-white/20 text-white p-2 md:p-3 rounded-full backdrop-blur-sm transition-colors"
+          >
+            <ChevronRight size={20} className="md:size-8" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
