@@ -7,31 +7,31 @@ const teams = [
     {
         id: 1,
         name: "Team 1",
-        image: "/images/MCC/Voting/team1.png",
+        image: "/images/MCC/team1.png",
         votes: 0
     },
     {
         id: 2,
         name: "Team 2",
-        image: "/images/MCC/Voting/team2.png",
+        image: "/images/MCC/Voting 1.png",
         votes: 0
     },
     {
         id: 3,
         name: "Team 3",
-        image: "/images/MCC/Voting/team3.png",
+        image: "/images/MCC/Voting 2.png",
         votes: 0
     },
     {
         id: 4,
         name: "Team 4",
-        image: "/images/MCC/Voting/team4.png",
+        image: "/images/MCC/Voting 3.png",
         votes: 0
     },
     {
         id: 5,
         name: "Team 5",
-        image: "/images/MCC/Voting/team5.png",
+        image: "/images/MCC/Voting 4.png",
         votes: 0
     }
 ];
