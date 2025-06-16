@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\VotingController;
 use App\Http\Controllers\BracketTeamController;
+use App\Http\Controllers\MlAuthController;
 
 Route::get('/', function () {
     return Inertia::render('Home/Home', [
@@ -107,12 +108,24 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::get('mcc/predictions', [VotingController::class, 'index'])->name('predictions.index');
-    Route::post('/predictions/vote', [VotingController::class, 'store'])->name('predictions.vote');
 });
 
 Route::get('/api/bracket-teams/{bracketName}', [BracketTeamController::class, 'getTeamsByBracket']);
 Route::get('/api/bracket-teams', [BracketTeamController::class, 'getAllBrackets']);
 Route::patch('/api/bracket-teams/{bracketName}/status', [BracketTeamController::class, 'updateBracketStatus']);
+
+// ML User Authentication Routes
+Route::prefix('ml')->group(function () {
+    Route::get('/login', [MlAuthController::class, 'showLoginForm'])->name('ml.login');
+    Route::post('/login', [MlAuthController::class, 'login'])->name('ml.login.submit');
+    Route::post('/logout', [MlAuthController::class, 'logout'])->name('ml.logout');
+    Route::post('/verify-token', [MlAuthController::class, 'verifyToken'])->name('ml.verify-token');
+});
+
+Route::post('/ml/logout', [MlAuthController::class, 'logout'])->name('ml.logout');
+
+Route::get('/mcc/predictions', [VotingController::class, 'index'])->name('predictions.index');
+Route::post('/mcc/predictions', [VotingController::class, 'store'])->name('predictions.vote');
+
 
 require __DIR__.'/auth.php';
