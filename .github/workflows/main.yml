@@ -49,19 +49,24 @@ jobs:
             set -e
             cd ${{ secrets.VPS_DEPLOY_PATH }}
             
-            # Pull latest changes
+            # Clean up local changes before pulling
+            git reset --hard
+            git clean -fd
             git pull origin main
             
-            # Install/Update Composer dependencies
+            # Clean old node modules and package-lock to avoid npm bugs
+            rm -rf node_modules package-lock.json
+            
+            # Install Composer dependencies
             composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
             
-            # Install/Update NPM dependencies
-            npm ci
+            # Reinstall NPM dependencies
+            npm install
             
             # Build frontend assets
             npm run build
             
-            # Laravel specific commands
+            # Laravel maintenance mode
             php artisan down --message="Deploying new version..."
             php artisan migrate --force
             php artisan config:cache
@@ -77,21 +82,14 @@ jobs:
             chmod -R 775 storage bootstrap/cache
             chown -R www-data:www-data storage bootstrap/cache
             
-            # Bring application back up
+            # Bring app back up
             php artisan up
             
-            # Reload or restart PM2
+            # Restart PM2 process
             if pm2 list | grep -q "my-app"; then
               pm2 reload my-app
             else
               pm2 start npm --name "my-app" -- run start
             fi
             
-            # Verify deployment
-            if [ $? -eq 0 ]; then
-              echo "Deployment completed successfully"
-            else
-              echo "Deployment failed"
-              php artisan up
-              exit 1
-            fi 
+            echo "Deployment completed successfully"
