@@ -41,7 +41,7 @@ const navSections = [
 
 const Footer = () => {
     return (
-        <footer className={styles.footer}>
+        <footer className={styles.footer + ' text-white'}>
             <div className={styles.footerTop}>
                 <div className={styles.footerInfo}>
                     <div className={styles.logo}>
