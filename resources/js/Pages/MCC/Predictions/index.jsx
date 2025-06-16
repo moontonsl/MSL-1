@@ -1,38 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Header, Footer } from "@/Components";
 import { CheckCircle } from "lucide-react";
-
-// Team data structure for different brackets
-const BRACKET_TEAMS = {
-    "MINDANAO BRACKET": [
-        { id: 1, name: "UR Team 1", image: "/images/MCC/MINDANAO/M_UR1.png" },
-        { id: 2, name: "MA Team", image: "/images/MCC/MINDANAO/M_MA.png" },
-        { id: 3, name: "WIL Team", image: "/images/MCC/MINDANAO/M_WIL.png" },
-        { id: 4, name: "UR Team 2", image: "/images/MCC/MINDANAO/M_UR2.png" },
-        { id: 5, name: "FEB Team", image: "/images/MCC/MINDANAO/M_FEB.png" },
-    ],
-    "VISAYAS BRACKET": [
-        { id: 1, name: "UR Team 1", image: "/images/MCC/VISAYAS/V_UR1.png" },
-        { id: 2, name: "MA Team", image: "/images/MCC/VISAYAS/V_MA.png" },
-        { id: 3, name: "WIL Team", image: "/images/MCC/VISAYAS/V_WIL.png" },
-        { id: 4, name: "UR Team 2", image: "/images/MCC/VISAYAS/V_UR2.png" },
-        { id: 5, name: "FEB Team", image: "/images/MCC/VISAYAS/V_FEB.png" },
-    ],
-    "LUZON A BRACKET": [
-        { id: 1, name: "UR Team 1", image: "/images/MCC/LUZON A/LA_UR1.png" },
-        { id: 2, name: "MA Team", image: "/images/MCC/LUZON A/LA_MA.png" },
-        { id: 3, name: "WIL Team", image: "/images/MCC/LUZON A/LA_WIL.png" },
-        { id: 4, name: "UR Team 2", image: "/images/MCC/LUZON A/LA_UR2.png" },
-        { id: 5, name: "FEB Team", image: "/images/MCC/LUZON A/LA_FEB.png" },
-    ],
-    "LUZON B BRACKET": [
-        { id: 1, name: "MA Team", image: "/images/MCC/LUZON B/LB_MA.png" },
-        { id: 2, name: "WIL Team", image: "/images/MCC/LUZON B/LB_WIL.png" },
-        { id: 3, name: "UR Team 1", image: "/images/MCC/LUZON B/LB_UR1.png" },
-        { id: 4, name: "UR Team 2", image: "/images/MCC/LUZON B/LB_UR2.png" },
-        { id: 5, name: "FEB Team", image: "/images/MCC/LUZON B/LB_FEB.png" },
-    ]
-};
+import { router } from '@inertiajs/react';
+import { toast, Toaster } from 'react-hot-toast';
+import axios from 'axios';
 
 // Fisher-Yates shuffle algorithm
 const shuffleArray = (array) => {
@@ -44,17 +15,49 @@ const shuffleArray = (array) => {
     return shuffled;
 };
 
-const BracketSection = ({ title, status = 'open' }) => {
+const BracketSection = ({ title, status = 'open', existingVotes = [], bracketStatus = {} }) => {
     const [selectedTeams, setSelectedTeams] = useState([]);
     const [shuffledTeams, setShuffledTeams] = useState([]);
+    const [teams, setTeams] = useState([]);
+    const hasVoted = bracketStatus[title] || existingVotes.length > 0;
 
-    // Shuffle teams on component mount and when status changes
     useEffect(() => {
-        setShuffledTeams(shuffleArray(BRACKET_TEAMS[title] || []));
-    }, [status, title]);
+        // mga teams para sa mga brackets
+        const fetchTeams = async () => {
+            try {
+                const response = await axios.get(`/api/bracket-teams/${encodeURIComponent(title)}`);
+                const fetchedTeams = response.data;
+                setTeams(fetchedTeams);
+                
+                if (!hasVoted) {
+                    setShuffledTeams(shuffleArray(fetchedTeams));
+                } else {
+                    setShuffledTeams(fetchedTeams);
+                }
+            } catch (error) {
+                console.error('Error fetching teams:', error);
+                toast.error('Failed to load teams. Please refresh the page.');
+            }
+        };
+
+        fetchTeams();
+    }, [title, status]);
+
+    // pag naka vote na ang user
+    useEffect(() => {
+        if (hasVoted) {
+            const votedTeamIds = existingVotes.map(vote => {
+                const team = teams.find(team => team.name === vote.team);
+                return team?.id;
+            }).filter(Boolean);
+            setSelectedTeams(votedTeamIds);
+        }
+    }, [hasVoted, existingVotes, teams]);
 
     const handleTeamSelect = (teamId) => {
-        if (status !== 'open') return;
+        if (status !== 'open' || hasVoted) {
+            return;
+        }
         
         if (selectedTeams.includes(teamId)) {
             setSelectedTeams(selectedTeams.filter(id => id !== teamId));
@@ -63,25 +66,41 @@ const BracketSection = ({ title, status = 'open' }) => {
         }
     };
 
-    const handleSubmit = () => {
-        if (selectedTeams.length === 0) return;
-        // TODO: Implement the submission logic here
-        console.log(`Submitting votes for ${title}:`, {
-            bracket: title,
-            selectedTeams: selectedTeams.map(teamId => 
-                BRACKET_TEAMS[title].find(team => team.id === teamId)
-            )
-        });
-        // Reset selection after submission
-        setSelectedTeams([]);
+    const handleSubmit = async () => {
+        if (selectedTeams.length === 0) {
+            toast.error('Please select at least 1 team');
+            return;
+        }
+        
+        try {
+            await router.post(route('predictions.vote'), {
+                bracket: title,
+                selectedTeams: selectedTeams.map(teamId => 
+                    teams.find(team => team.id === teamId)
+                )
+            }, {
+                onSuccess: () => {
+                    setSelectedTeams([]);
+                    toast.success('Votes submitted successfully!');
+                },
+                onError: (errors) => {
+                    toast.error(errors.message || 'Failed to submit votes. Please try again.');
+                    console.error('Error submitting votes:', errors);
+                }
+            });
+        } catch (error) {
+            console.error('Error submitting votes:', error);
+            toast.error('Failed to submit votes. Please try again.');
+        }
     };
 
     const isTeamSelectable = (teamId) => {
-        if (status !== 'open') return false;
+        if (status !== 'open' || hasVoted) return false;
         return selectedTeams.includes(teamId) || selectedTeams.length < 2;
     };
 
     const getCoverMessage = () => {
+        if (hasVoted) return 'VOTE SUBMITTED';
         switch (status) {
             case 'closed':
                 return 'VOTING CLOSED';
@@ -93,6 +112,7 @@ const BracketSection = ({ title, status = 'open' }) => {
     };
 
     const getOverlayStyle = () => {
+        if (hasVoted) return 'bg-green-900/50';
         switch (status) {
             case 'closed':
                 return 'bg-black/80';
@@ -115,16 +135,38 @@ const BracketSection = ({ title, status = 'open' }) => {
             {/* Subtitle */}
             <div className="flex justify-center items-center mb-6">
                 <p className="text-base font-medium font-poppins leading-snug">
-                    Choose at least 2 Teams
+                    Choose 1 or 2 Teams
                 </p>
             </div>
+
+            {/* pag may votes na ang users */}
+            {hasVoted && (
+                <div className="mb-6 p-4 bg-black/30 rounded-lg border border-[#F3C718]/30">
+                    <h3 className="text-xl font-bold text-[#F3C718] mb-2">Your Votes:</h3>
+                    <div className="flex flex-wrap gap-4 justify-center">
+                        {existingVotes.map((vote, index) => (
+                            <div key={vote.id} className="flex items-center gap-2 bg-black/50 px-4 py-2 rounded-lg">
+                                <img 
+                                    src={vote.image} 
+                                    alt={vote.team}
+                                    className="w-8 h-8 object-contain"
+                                />
+                                <span className="font-medium">{vote.team}</span>
+                                <span className="text-sm text-gray-400">
+                                    {new Date(vote.created_at).toLocaleDateString()}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Teams Container */}
             <div className="relative">
                 <div className="flex flex-col gap-4">
                     <div className="flex justify-between items-center gap-2 md:gap-4 p-4 md:p-8 outline outline-[3px] outline-white">
-                        {/* Cover Overlay */}
-                        {status !== 'open' && (
+                        {/* Cover Overlay - Always show if hasVoted or status is not open */}
+                        {(status !== 'open' || hasVoted) && (
                             <div className={`absolute inset-0 z-20 flex items-center justify-center ${getOverlayStyle()}`}>
                                 <h3 className="text-4xl md:text-6xl font-bold font-space text-white text-center">
                                     {getCoverMessage()}
@@ -135,12 +177,14 @@ const BracketSection = ({ title, status = 'open' }) => {
                         <div className="flex flex-wrap md:flex-nowrap justify-center md:justify-between w-full gap-4">
                             {shuffledTeams.map((team) => {
                                 const isSelected = selectedTeams.includes(team.id);
-                                const isDisabled = !isTeamSelectable(team.id);
+                                const isDisabled = !isTeamSelectable(team.id) || hasVoted;
 
                                 return (
                                     <div
                                         key={team.id}
-                                        className={`w-[45%] md:w-[19%] cursor-pointer transition-all duration-300 ${
+                                        className={`w-[45%] md:w-[19%] ${
+                                            hasVoted ? 'cursor-not-allowed' : 'cursor-pointer'
+                                        } transition-all duration-300 ${
                                             isDisabled && !isSelected ? 'opacity-50' : 'opacity-100'
                                         }`}
                                         onClick={() => !isDisabled && handleTeamSelect(team.id)}
@@ -164,7 +208,6 @@ const BracketSection = ({ title, status = 'open' }) => {
                                                     }`}
                                                 />
                                             </div>
-
                                             {/* Team Image */}
                                             <div className="aspect-[620/570] relative">
                                                 <img 
@@ -175,10 +218,18 @@ const BracketSection = ({ title, status = 'open' }) => {
                                                 {/* Overlay for unselected and disabled state */}
                                                 <div 
                                                     className={`absolute inset-0 bg-black transition-opacity duration-300 ${
-                                                        isDisabled && !isSelected ? 'opacity-50' : 'opacity-0'
-                                                    }`}
+                                                        isDisabled ? 'opacity-50' : 'opacity-0'
+                                                    }
+                                                    ${
+                                                        isDisabled ? 'opacity-50' : 'opacity-0'
+                                                    }
+                                                    `}
                                                 />
                                             </div>
+                                            {/* Team Name */}
+                                            {/* <div className="mt-2 text-center font-bold">
+                                                {team.name}
+                                            </div> */}
                                         </div>
                                     </div>
                                 );
@@ -186,8 +237,8 @@ const BracketSection = ({ title, status = 'open' }) => {
                         </div>
                     </div>
 
-                    {/* Submit Button */}
-                    {status === 'open' && selectedTeams.length > 0 && (
+                    {/* Submit Button - Only show if bracket is open and user hasn't voted */}
+                    {status === 'open' && !hasVoted && selectedTeams.length > 0 && (
                         <div className="flex justify-center">
                             <button
                                 onClick={handleSubmit}
@@ -203,60 +254,110 @@ const BracketSection = ({ title, status = 'open' }) => {
     );
 };
 
-export default function PredictionsPage() {
+export default function PredictionsPage({ userVotes = {}, bracketStatus = {}, users_id, auth }) {
+    
     return (
-        <div className="min-h-screen bg-black text-white">
-            <div className="relative z-10">
-                <Header />
-            </div>
-
-            <main 
-                className="relative z-0 min-h-screen py-8 md:py-16"
-                style={{
-                    backgroundImage: "url('/images/MCC/VoteBG.png')",
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                    backgroundAttachment: "fixed"
+        <>
+            <div 
+                style={{ 
+                    position: 'fixed', 
+                    top: 0, 
+                    left: 0, 
+                    right: 0, 
+                    zIndex: 9999,
+                    pointerEvents: 'none'
                 }}
             >
-                <div className="Main flex flex-col justify-center items-center overflow-hidden">
-                    {/* Header Section - Adjusted spacing */}
-                    <div className="MccHeaderLogo w-full px-4 md:px-20 lg:px-80 py-2 md:py-2.5 flex flex-col justify-center items-center overflow-hidden">
-                        <img 
-                            className="MccHlogo1 h-20 md:h-28 object-contain" 
-                            src="/images/MCC/Pamantasan.png" 
-                            alt="MCC Logo"
-                        />
-                        <div className="text-center mt-0.8 md:mt-3">
-                            <h1 className="text-[1.75rem] md:text-[3.25rem] lg:text-[3.25rem] font-bold font-space leading-tight">
-                                GROUP STAGE PREDICTION
-                            </h1>
-                        </div>
-                        <div className="mt-0 md:mt-0 text-center flex flex-col gap-0">
-                            <p className="text-lg md:text-xl font-poppins font-medium leading-none">
-                                Predict who will make it to the Finals?
-                            </p>
-                            <p className="text-lg md:text-xl font-poppins font-bold leading-none">
-                                Choose at least 2 Teams!
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Body Section with Brackets */}
-                    <div className="Body w-full flex flex-col items-center gap-4 md:gap-8 mt-8 md:mt-16">
-                        <BracketSection title="MINDANAO BRACKET"/>
-                        <BracketSection title="VISAYAS BRACKET"/>
-                        {/* <BracketSection title="MINDANAO BRACKET" status="closed" />
-                        <BracketSection title="VISAYAS BRACKET" status="upcoming" /> */}
-                        <BracketSection title="LUZON A BRACKET" />
-                        <BracketSection title="LUZON B BRACKET" />
-                    </div>
-                </div>
-            </main>
-
-            <div className="relative z-10">
-                <Footer />
+                <Toaster 
+                    position="top-center"
+                    toastOptions={{
+                        duration: 3000,
+                        style: {
+                            background: '#333',
+                            color: '#fff',
+                            border: '1px solid #F3C718',
+                            padding: '16px',
+                            borderRadius: '8px',
+                            marginTop: '80px',
+                            pointerEvents: 'auto'
+                        },
+                    }}
+                />
             </div>
-        </div>
+
+            <div className="min-h-screen bg-black text-white">
+                <div className="relative z-10">
+                    <Header />
+                </div>
+
+                <main 
+                    className="relative z-0 min-h-screen py-8 md:py-16"
+                    style={{
+                        backgroundImage: "url('/images/MCC/VoteBG.png')",
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                        backgroundAttachment: "fixed"
+                    }}
+                >
+                    <div className="Main flex flex-col justify-center items-center overflow-hidden">
+                        {/* Header Section - Adjusted spacing */}
+                        <div className="MccHeaderLogo w-full px-4 md:px-20 lg:px-80 py-2 md:py-2.5 flex flex-col justify-center items-center overflow-hidden">
+                            <img 
+                                className="MccHlogo1 h-20 md:h-28 object-contain" 
+                                src="/images/MCC/Pamantasan.png" 
+                                alt="MCC Logo"
+                            />
+                            <div className="text-center mt-0.8 md:mt-3">
+                                <h1 className="text-[1.75rem] md:text-[3.25rem] lg:text-[3.25rem] font-bold font-space leading-tight">
+                                    GROUP STAGE PREDICTION
+                                </h1>
+                            </div>
+                            <div className="mt-0 md:mt-0 text-center flex flex-col gap-0">
+                                <p className="text-lg md:text-xl font-poppins font-medium leading-none">
+                                    Predict who will make it to the Finals?
+                                </p>
+                                <p className="text-lg md:text-xl font-poppins font-bold leading-none">
+                                    Choose 1 or 2 Teams!
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Body Section with Brackets */}
+                        <div className="Body w-full flex flex-col items-center gap-4 md:gap-8 mt-8 md:mt-16">
+                            <BracketSection 
+                                title="MINDANAO BRACKET"
+                                status="closed"
+                                existingVotes={userVotes['MINDANAO BRACKET']}
+                                bracketStatus={bracketStatus}
+                                users_id={users_id}
+                            />
+                            <BracketSection 
+                                title="VISAYAS BRACKET"
+                                status="upcoming"
+                                existingVotes={userVotes['VISAYAS BRACKET']}
+                                bracketStatus={bracketStatus}
+                                users_id={users_id}
+                            />
+                            <BracketSection 
+                                title="LUZON A BRACKET"
+                                existingVotes={userVotes['LUZON A BRACKET']}
+                                bracketStatus={bracketStatus}
+                                users_id={users_id}
+                            />
+                            <BracketSection 
+                                title="LUZON B BRACKET"
+                                existingVotes={userVotes['LUZON B BRACKET']}
+                                bracketStatus={bracketStatus}
+                                users_id={users_id}
+                            />
+                        </div>
+                    </div>
+                </main>
+
+                <div className="relative z-10">
+                    <Footer />
+                </div>
+            </div>
+        </>
     );
 }

@@ -48,50 +48,39 @@ jobs:
           script: |
             set -e
             cd ${{ secrets.VPS_DEPLOY_PATH }}
-            
-            # Pull latest changes
+
+            git reset --hard
+            git clean -fd
             git pull origin main
-            
-            # Install/Update Composer dependencies
+
+            rm -rf node_modules package-lock.json
+
             composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
-            
-            # Install/Update NPM dependencies
-            npm ci
-            
-            # Build frontend assets
+            npm install
             npm run build
-            
-            # Laravel specific commands
-            php artisan down --message="Deploying new version..."
+
+            php artisan down
+            echo "Application in maintenance mode: Deploying new version..."
+
             php artisan migrate --force
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
-            
-            # Clear and cache
+
             php artisan cache:clear
             php artisan config:clear
             php artisan view:clear
-            
-            # Set proper permissions
+
             chmod -R 775 storage bootstrap/cache
-            chown -R www-data:www-data storage bootstrap/cache
-            
-            # Bring application back up
+            chown -R daemon:daemon storage bootstrap/cache
+
             php artisan up
             
-            # Reload or restart PM2
+            # Restart PM2 process
             if pm2 list | grep -q "my-app"; then
               pm2 reload my-app
             else
               pm2 start npm --name "my-app" -- run start
             fi
             
-            # Verify deployment
-            if [ $? -eq 0 ]; then
-              echo "Deployment completed successfully"
-            else
-              echo "Deployment failed"
-              php artisan up
-              exit 1
-            fi 
+            echo "Deployment completed successfully"

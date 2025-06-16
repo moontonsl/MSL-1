@@ -1,6 +1,6 @@
-// components/HeroCarousel.tsx
+// Components/HeroCarousel.tsx
 import styles from "./HeroSection.module.scss";
-import EmblaCarousel from "@/components/EmblaCarousel/EmblaCarousel.jsx";
+import EmblaCarousel from "@/Components/EmblaCarousel/EmblaCarousel.jsx";
 
 const HeroCarousel = () => {
     const OPTIONS = {loop: true}
