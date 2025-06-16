@@ -11,19 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('votings', function (Blueprint $table) {
-            $table->id();
-            $table->string('ml_id');
-            $table->foreign('ml_id')
-                  ->references('ml_id')
-                  ->on('ml_users')
-                  ->onDelete('cascade');
-            $table->string('image');
-            $table->string('bracket');
-            $table->string('team');
-            $table->string('status')->default('open');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('votings')) {
+            Schema::create('votings', function (Blueprint $table) {
+                $table->id();
+                $table->string('ml_id');
+                $table->foreign('ml_id')
+                      ->references('ml_id')
+                      ->on('ml_users')
+                      ->onDelete('cascade');
+                $table->string('image');
+                $table->string('bracket');
+                $table->string('team');
+                $table->string('status')->default('open');
+                $table->timestamps();
+            });
+        }
     }
 
     /**
@@ -33,4 +35,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('votings');
     }
-}; 
+};
