@@ -72,7 +72,7 @@ jobs:
             php artisan view:clear
 
             chmod -R 775 storage bootstrap/cache
-            chown -R www-data:www-data storage bootstrap/cache
+            chown -R daemon:daemon storage bootstrap/cache
 
             php artisan up
             
