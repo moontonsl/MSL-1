@@ -48,41 +48,32 @@ jobs:
           script: |
             set -e
             cd ${{ secrets.VPS_DEPLOY_PATH }}
-            
-            # Clean up local changes before pulling
+
             git reset --hard
             git clean -fd
             git pull origin main
-            
-            # Clean old node modules and package-lock to avoid npm bugs
+
             rm -rf node_modules package-lock.json
-            
-            # Install Composer dependencies
+
             composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
-            
-            # Reinstall NPM dependencies
             npm install
-            
-            # Build frontend assets
             npm run build
-            
-            # Laravel maintenance mode
-            php artisan down --message="Deploying new version..."
+
+            php artisan down
+            echo "Application in maintenance mode: Deploying new version..."
+
             php artisan migrate --force
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
-            
-            # Clear and cache
+
             php artisan cache:clear
             php artisan config:clear
             php artisan view:clear
-            
-            # Set proper permissions
+
             chmod -R 775 storage bootstrap/cache
             chown -R www-data:www-data storage bootstrap/cache
-            
-            # Bring app back up
+
             php artisan up
             
             # Restart PM2 process
