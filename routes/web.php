@@ -82,6 +82,9 @@ Route::prefix('mcc')->name('mcc.')->group(function () {
     });
 });
 
+
+
+
 // News Routes
 Route::get('/news', [NewsController::class, 'index'])->name('news.index');
 Route::get('/news-articles', [NewsController::class, 'getArticles'])->name('news.articles');
@@ -93,7 +96,7 @@ Route::get('/stats', function () {
         'student_leaders' => DB::table('users')->where('user_type', 'SL')->count(),
         'university_communities' => DB::table('msl_schools')->count(),
         'school_partners' => DB::table('msl_school_partner')->count(),
-     
+
     ];
 });
 Route::post('/send-verification-code', [VerifyEmailController::class, 'sendCode']);
