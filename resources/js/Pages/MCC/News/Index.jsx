@@ -27,7 +27,7 @@ export default function NewsPage() {
           }}
         >
           <div className="max-w-[1900px] mx-auto px-4 md:px-12">
-            <section className="mb-8">
+            <section className="py-8 md:py-10">
               <Highlights />
             </section>
             <section>

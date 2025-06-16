@@ -24,20 +24,19 @@ Route::get('/', function () {
     ]);
 });
 
+
+Route::get('/notfound', function () {return Inertia::render('Errors/NotFound');})->name('notfound');
+
 Route::inertia('/upload', 'SchoolUploader');
 Route::post('/upload-schools', [SchoolUploadController::class, 'store'])->name('upload-schools');
 Route::get('/schools/search', [SchoolController::class, 'search']);
 
 //LOGIN ROUTES
-Route::get('/login', function () {
-    return Inertia::render('Login/Login');
-})->name('login');
+Route::get('/login', function () {return Inertia::render('Login/Login');})->name('login');
 // Route::post('/login2', [AuthController::class, 'login'])->name('login2');
 
 //ACCOUNT REGISTRATION ROUTES
-Route::get('/register', function () {
-    return Inertia::render('Account Creation/Register');
-})->name('register');
+Route::get('/register', function () {return Inertia::render('Account Creation/Register');})->name('register');
 
 
 // //STUDENT PORTAL

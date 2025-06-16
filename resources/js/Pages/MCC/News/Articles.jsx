@@ -15,7 +15,7 @@ export default function Articles() {
     <div className="flex flex-col items-center justify-center w-full py-6 md:py-16">
       {/* Title Section */}
       <div className="mb-6 md:mb-16 text-center">
-        <h2 className="text-2xl xs:text-3xl md:text-5xl font-bold font-['Space_Grotesk'] text-white mb-4">
+        <h2 className="text-2xl xs:text-3xl md:text-5xl font-bold text-white mb-4">
           NEWS AND ARTICLES
         </h2>
         <div className="w-16 md:w-24 h-1 bg-[#F3C718] mx-auto"></div>
@@ -37,10 +37,10 @@ export default function Articles() {
               />
             </div>
             <div className="w-full bg-neutral-950 flex flex-col justify-start items-start p-3 md:p-4">
-              <h3 className="text-center w-full text-white text-base xs:text-lg md:text-xl font-bold font-['Space_Grotesk'] leading-loose mb-1 md:mb-2">
+              <h3 className="text-center w-full text-white text-base xs:text-lg md:text-xl font-bold leading-loose mb-1 md:mb-2">
                 {article.title}
               </h3>
-              <p className="text-center w-full text-white text-xs xs:text-sm md:text-lg font-normal font-['Space_Grotesk'] leading-relaxed">
+              <p className="text-center w-full text-white text-xs xs:text-sm md:text-lg font-normal leading-relaxed">
                 {article.description}
               </p>
             </div>
