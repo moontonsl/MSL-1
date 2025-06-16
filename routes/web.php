@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\AuthController;
 use App\Models\User;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\VotingController;
+use App\Http\Controllers\BracketTeamController;
 
 Route::get('/', function () {
     return Inertia::render('Home/Home', [
@@ -59,10 +61,6 @@ Route::prefix('mcc')->name('mcc.')->group(function () {
         return Inertia::render('MCC/Calendar/index');
     })->name('calendar');
 
-    Route::get('/predictions', function () {
-        return Inertia::render('MCC/Predictions/index');
-    })->name('predictions');
-
     // News Route
     Route::get('/news', function () {
         return Inertia::render('MCC/News/Index');
@@ -109,6 +107,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('mcc/predictions', [VotingController::class, 'index'])->name('predictions.index');
+    Route::post('/predictions/vote', [VotingController::class, 'store'])->name('predictions.vote');
 });
+
+Route::get('/api/bracket-teams/{bracketName}', [BracketTeamController::class, 'getTeamsByBracket']);
+Route::get('/api/bracket-teams', [BracketTeamController::class, 'getAllBrackets']);
+Route::patch('/api/bracket-teams/{bracketName}/status', [BracketTeamController::class, 'updateBracketStatus']);
 
 require __DIR__.'/auth.php';
