@@ -248,7 +248,7 @@
   cursor: pointer;
   transition: background 0.2s, border 0.2s;
   box-shadow: 0 2px 8px #0003;
-  textAlign: 'center',
+  text-align: center;
 }
 
 .choose-login-btn:last-child {
@@ -350,7 +350,7 @@
   cursor: pointer;
   transition: background 0.2s, border 0.2s;
   box-shadow: 0 2px 8px #0003;
-  textAlign: 'center',
+  text-align: center;
   }
 
   .choose-login-title {
