@@ -1,8 +1,8 @@
-import HeroSection from './components/HeroSection/HeroSection.jsx';
-import ExperienceSection from './components/ExperienceSection.jsx';
-import InfoSection from './components/InfoSection.jsx';
-import NewsSection from './components/NewsSection.jsx';
-import NetworkSection from './components/NetworkSection.jsx';
+import HeroSection from './Components/HeroSection/HeroSection.jsx';
+import ExperienceSection from './Components/ExperienceSection.jsx';
+import InfoSection from './Components/InfoSection.jsx';
+import NewsSection from './Components/NewsSection.jsx';
+import NetworkSection from './Components/NetworkSection.jsx';
 import MainLayout from '@/Layouts/MainLayout.jsx';
 import { Head, Link } from '@inertiajs/react';
 
