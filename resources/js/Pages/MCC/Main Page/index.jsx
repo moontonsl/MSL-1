@@ -16,7 +16,7 @@ export default function MCCMAINPage() {
         { image: "/images/MCC/Overview.png", alt: "Tournament Structure", path: "https://www.facebook.com/share/1CRcwCMgjY/", isExternal: true },
         { image: "/images/MCC/Rulebook.png", alt: "Rulebook", path: "https://mslphilippines.notion.site/MSL-Collegiate-Cup-S2-Rulebook-1356a35bd22f80bc80a2e84cd4280a48", isExternal: true },
         { image: "/images/MCC/Roadmap.png", alt: "Calendar", path: "/mcc/calendar", isExternal: false },
-        { image: "/images/MCC/Pred.png", alt: "Prediction", path: "/mcc/voting", isExternal: false }
+        { image: "/images/MCC/Pred.png", alt: "Prediction", path: "/mcc/predictions", isExternal: false }
     ];
 
     return (
