@@ -10,42 +10,94 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             // ML related fields
-            $table->string('ml_id')->nullable();
-            $table->string('username')->nullable();
-            $table->string('ml_server')->nullable();
-            $table->string('ml_ign')->nullable();
-            $table->enum('status', ['active', 'inactive'])->default('active');
-            
+            if (!Schema::hasColumn('users', 'ml_id')) {
+                $table->string('ml_id')->nullable();
+            }
+            if (!Schema::hasColumn('users', 'username')) {
+                $table->string('username')->nullable();
+            }
+            if (!Schema::hasColumn('users', 'ml_server')) {
+                $table->string('ml_server')->nullable();
+            }
+            if (!Schema::hasColumn('users', 'ml_ign')) {
+                $table->string('ml_ign')->nullable();
+            }
+            if (!Schema::hasColumn('users', 'status')) {
+                $table->enum('status', ['active', 'inactive'])->default('active');
+            }
+
             // Personal details
-            $table->string('surname')->nullable();
-            $table->string('lastName')->nullable();
-            $table->string('suffix')->nullable();
-            $table->date('birthday')->nullable();
-            $table->integer('age')->nullable();
-            $table->enum('gender', ['male', 'female', 'other'])->nullable();
-            $table->string('contact_number')->nullable();
-            $table->string('facebook_link')->nullable();
-            
+            if (!Schema::hasColumn('users', 'surname')) {
+                $table->string('surname')->nullable();
+            }
+            if (!Schema::hasColumn('users', 'lastName')) {
+                $table->string('lastName')->nullable();
+            }
+            if (!Schema::hasColumn('users', 'suffix')) {
+                $table->string('suffix')->nullable();
+            }
+            if (!Schema::hasColumn('users', 'birthday')) {
+                $table->date('birthday')->nullable();
+            }
+            if (!Schema::hasColumn('users', 'age')) {
+                $table->integer('age')->nullable();
+            }
+            if (!Schema::hasColumn('users', 'gender')) {
+                $table->enum('gender', ['male', 'female', 'other'])->nullable();
+            }
+            if (!Schema::hasColumn('users', 'contact_number')) {
+                $table->string('contact_number')->nullable();
+            }
+            if (!Schema::hasColumn('users', 'facebook_link')) {
+                $table->string('facebook_link')->nullable();
+            }
+
             // Academic details
-            $table->string('course')->nullable();
-            $table->string('university')->nullable();
-            $table->string('year_level')->nullable();
-            $table->string('studentId')->nullable();
-            $table->string('proofOfEnrollment')->nullable();
-            
+            if (!Schema::hasColumn('users', 'course')) {
+                $table->string('course')->nullable();
+            }
+            if (!Schema::hasColumn('users', 'university')) {
+                $table->string('university')->nullable();
+            }
+            if (!Schema::hasColumn('users', 'year_level')) {
+                $table->string('year_level')->nullable();
+            }
+            if (!Schema::hasColumn('users', 'studentId')) {
+                $table->string('studentId')->nullable();
+            }
+            if (!Schema::hasColumn('users', 'proofOfEnrollment')) {
+                $table->string('proofOfEnrollment')->nullable();
+            }
+
             // Location details
-            $table->string('region')->nullable();
-            $table->string('island')->nullable();
-            
+            if (!Schema::hasColumn('users', 'region')) {
+                $table->string('region')->nullable();
+            }
+            if (!Schema::hasColumn('users', 'island')) {
+                $table->string('island')->nullable();
+            }
+
             // Squad details
-            $table->string('squadAbbreviation')->nullable();
-            $table->string('squadName')->nullable();
-            $table->string('inGameRole')->nullable();
-            $table->string('mainHero')->nullable();
-            $table->string('rank')->nullable();
-            
+            if (!Schema::hasColumn('users', 'squadAbbreviation')) {
+                $table->string('squadAbbreviation')->nullable();
+            }
+            if (!Schema::hasColumn('users', 'squadName')) {
+                $table->string('squadName')->nullable();
+            }
+            if (!Schema::hasColumn('users', 'inGameRole')) {
+                $table->string('inGameRole')->nullable();
+            }
+            if (!Schema::hasColumn('users', 'mainHero')) {
+                $table->string('mainHero')->nullable();
+            }
+            if (!Schema::hasColumn('users', 'rank')) {
+                $table->string('rank')->nullable();
+            }
+
             // User type
-            $table->string('user_type')->nullable();
+            if (!Schema::hasColumn('users', 'user_type')) {
+                $table->string('user_type')->nullable();
+            }
         });
     }
 
