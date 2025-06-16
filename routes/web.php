@@ -32,11 +32,15 @@ Route::post('/upload-schools', [SchoolUploadController::class, 'store'])->name('
 Route::get('/schools/search', [SchoolController::class, 'search']);
 
 //LOGIN ROUTES
-Route::get('/login', function () {return Inertia::render('Login/Login');})->name('login');
+Route::get('/login', function () {
+    return Inertia::render('Login/Login');
+})->name('login');
 // Route::post('/login2', [AuthController::class, 'login'])->name('login2');
 
 //ACCOUNT REGISTRATION ROUTES
-Route::get('/register', function () {return Inertia::render('Account Creation/Register');})->name('register');
+Route::get('/register', function () {
+    return Inertia::render('Account Creation/Register');
+})->name('register');
 
 
 // //STUDENT PORTAL
@@ -81,9 +85,6 @@ Route::prefix('mcc')->name('mcc.')->group(function () {
     });
 });
 
-
-
-
 // News Routes
 Route::get('/news', [NewsController::class, 'index'])->name('news.index');
 Route::get('/news-articles', [NewsController::class, 'getArticles'])->name('news.articles');
@@ -109,12 +110,24 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::get('mcc/predictions', [VotingController::class, 'index'])->name('predictions.index');
-    Route::post('/predictions/vote', [VotingController::class, 'store'])->name('predictions.vote');
 });
 
 Route::get('/api/bracket-teams/{bracketName}', [BracketTeamController::class, 'getTeamsByBracket']);
 Route::get('/api/bracket-teams', [BracketTeamController::class, 'getAllBrackets']);
 Route::patch('/api/bracket-teams/{bracketName}/status', [BracketTeamController::class, 'updateBracketStatus']);
+
+// ML User Authentication Routes
+Route::prefix('ml')->group(function () {
+    Route::get('/login', [MlAuthController::class, 'showLoginForm'])->name('ml.login');
+    Route::post('/login', [MlAuthController::class, 'login'])->name('ml.login.submit');
+    Route::post('/logout', [MlAuthController::class, 'logout'])->name('ml.logout');
+    Route::post('/verify-token', [MlAuthController::class, 'verifyToken'])->name('ml.verify-token');
+});
+
+Route::post('/ml/logout', [MlAuthController::class, 'logout'])->name('ml.logout');
+
+Route::get('/mcc/predictions', [VotingController::class, 'index'])->name('predictions.index');
+Route::post('/mcc/predictions', [VotingController::class, 'store'])->name('predictions.vote');
+
 
 require __DIR__.'/auth.php';

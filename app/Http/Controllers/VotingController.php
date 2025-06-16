@@ -3,31 +3,38 @@
 namespace App\Http\Controllers;
 
 use App\Models\Voting;
+use App\Models\MlUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
+use App\Models\Bracket;
 
 class VotingController extends Controller
 {
     public function index()
     {
-        // Get current user's votes and voting status for each bracket
         $brackets = ['MINDANAO BRACKET', 'VISAYAS BRACKET', 'LUZON A BRACKET', 'LUZON B BRACKET'];
-        $bracketStatus = [];
         $userVotes = [];
-        $users_id = Auth::user();
-        
-        // Debug the user ID
-        \Log::info('User ID in controller: ' . $users_id);
 
+        // Fetch status for each bracket from the database
+        $bracketStatusDb = Bracket::whereIn('name', $brackets)->pluck('status', 'name');
+
+        $mlUser = session('ml_user');
+        if (!$mlUser) {
+            return redirect()->route('ml.login')->with('error', 'Please login with your ML account first.');
+        }
+
+        $bracketStatus = [];
         foreach ($brackets as $bracket) {
-            // Check if user has voted for this bracket
-            $hasVoted = Voting::hasUserVotedForBracket(Auth::id(), $bracket);
-            $bracketStatus[$bracket] = $hasVoted;
+            $hasVoted = Voting::hasUserVotedForBracket($mlUser->ml_id, $bracket);
+            $bracketStatus[$bracket] = [
+                'voted' => $hasVoted,
+                'status' => $bracketStatusDb[$bracket] ?? 'open', // fallback to 'open'
+            ];
 
-            // If user has voted, get their votes for this bracket
             if ($hasVoted) {
-                $votes = Voting::getUserVotesForBracket(Auth::id(), $bracket)
+                $votes = Voting::getUserVotesForBracket($mlUser->ml_id, $bracket)
                     ->map(function ($vote) {
                         return [
                             'id' => $vote->id,
@@ -45,38 +52,42 @@ class VotingController extends Controller
         return Inertia::render('MCC/Predictions/index', [
             'userVotes' => $userVotes,
             'bracketStatus' => $bracketStatus,
-            'users_id' => Auth::user()->id,
+            'ml_user' => [
+                'ml_id' => $mlUser->ml_id,
+                'ign' => $mlUser->ign,
+                'server_id' => $mlUser->server_id
+            ],
         ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'bracket' => 'required|string',
+            'bracket' => 'required|string|in:MINDANAO BRACKET,VISAYAS BRACKET,LUZON A BRACKET,LUZON B BRACKET',
             'selectedTeams' => 'required|array|min:1|max:2',
             'selectedTeams.*.id' => 'required|integer',
             'selectedTeams.*.name' => 'required|string',
             'selectedTeams.*.image' => 'required|string'
         ]);
 
-        // Use the new hasUserVotedForBracket method to check if user has already voted
-        if (Voting::hasUserVotedForBracket(Auth::id(), $request->bracket)) {
-            return back()->with('error', 'You have already voted for this bracket.');
+        // Get the ML user from session
+        $mlUser = session('ml_user');
+        
+        if (!$mlUser) {
+            return redirect()->route('ml.login')->with('error', 'Please login with your ML account first.');
         }
 
-        // Create the votes
-        $votes = [];
-        foreach ($request->selectedTeams as $team) {
-            $votes[] = Voting::create([
-                'user_id' => Auth::id(),
-                'bracket' => $request->bracket,
-                'team' => $team['name'],
-                'image' => $team['image'],
-                'status' => 'open',
-                'created_at' => now()
-            ]);
-        }
+        try {
+            // Use the transaction-based method to create votes
+            $votes = Voting::createVotesForBracket(
+                $mlUser->ml_id,
+                $request->bracket,
+                $request->selectedTeams
+            );
 
-        return back()->with('success', 'Votes submitted successfully');
+            return back()->with('success', 'Votes submitted successfully');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 } 

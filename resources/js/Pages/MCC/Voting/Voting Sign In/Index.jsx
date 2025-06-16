@@ -1,184 +1,85 @@
-import React, { useState } from "react";
-import { Link } from "@inertiajs/react";
+import React, { useRef } from 'react';
 import { Header, Footer } from "@/Components";
+import { Toaster } from 'react-hot-toast';
+import MLLoginVoting from './MLLoginVoting';
 
-// YouTube video component with responsive styling
-const YouTubeVideo = () => {
-    return (
-        <div className="w-full h-full relative overflow-hidden rounded-2xl">
-            <div className="absolute inset-0 bg-black/50" /> {/* Overlay to ensure form readability */}
-            <iframe
-                src="https://www.youtube.com/embed/b6A3EToebqE?autoplay=1&mute=1&loop=1&playlist=b6A3EToebqE"
-                title="MSL Video"
-                className="w-full h-full object-cover"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                style={{ minHeight: '100%' }}
-            />
-        </div>
-    );
-};
+export default function VotingSignIn() {
+    const mlLoginRef = useRef(null);
 
-export default function ToVotePage() {
-    // Temporary state management until backend is ready
-    const [userId, setUserId] = useState("");
-    const [serverId, setServerId] = useState("");
-    const [userStatus, setUserStatus] = useState(null); // null = not checked, 'eligible' = can vote, 'voted' = already voted
-    const [ign, setIgn] = useState("");
-
-    // Temporary function to simulate backend check
-    const checkEligibility = () => {
-        // This is temporary logic - replace with actual API call when backend is ready
-        if (userId && serverId) {
-            // Simulate API call delay
-            setTimeout(() => {
-                // For testing: if userId ends with '1', simulate already voted user
-                if (userId.endsWith('1')) {
-                    setUserStatus('voted');
-                    setIgn('TestUser1');
-                } else {
-                    setUserStatus('eligible');
-                    setIgn('TestUser2');
-                }
-            }, 500);
+    const handleLoginClick = () => {
+        if (mlLoginRef.current) {
+            mlLoginRef.current.triggerLogin();
         }
     };
 
     return (
-        <div className="min-h-screen bg-black text-white">
-            <div className="relative z-10">
-                <Header />
+        <>
+            <div 
+                style={{ 
+                    position: 'fixed', 
+                    top: 0, 
+                    left: 0, 
+                    right: 0, 
+                    zIndex: 9999,
+                    pointerEvents: 'none'
+                }}
+            >
+                <Toaster 
+                    position="top-center"
+                    toastOptions={{
+                        duration: 3000,
+                        style: {
+                            background: '#333',
+                            color: '#fff',
+                            border: '1px solid #F3C718',
+                            padding: '16px',
+                            borderRadius: '8px',
+                            marginTop: '80px',
+                            pointerEvents: 'auto'
+                        },
+                    }}
+                />
             </div>
 
-            <main className="relative z-0">
-                <div className="w-full min-h-screen bg-black flex flex-col items-center justify-center p-4 md:p-10" 
-                    style={{ 
-                        background: "#000",
-                        backgroundImage: "url('/images/MCC/VoteBG.png')", 
-                        backgroundSize: "cover", 
+            <div className="min-h-screen bg-black text-white">
+                <div className="relative z-10">
+                    <Header />
+                </div>
+
+                <main 
+                    className="relative z-0 min-h-screen py-8 md:py-16"
+                    style={{
+                        backgroundImage: "url('/images/MCC/VoteBG.png')",
+                        backgroundSize: "cover",
                         backgroundPosition: "center",
-                        fontFamily: "'Space Grotesk', sans-serif"
+                        backgroundAttachment: "fixed"
                     }}
                 >
-                    {/* Main Container with Login Form and Video */}
-                    <div className="w-full max-w-[1200px] flex flex-col md:flex-row">
-                        {/* Login Form Container */}
-                        <div className="w-full md:w-[45%] p-6 md:p-10 bg-neutral-950/30 rounded-2xl outline outline-1 outline-offset-[-0.1px] outline-[#2C2C2C] backdrop-blur-lg flex flex-col items-center">
-                            {/* MCC Logo */}
-                            <img 
-                                src="/images/MCC/VoteMCC.png" 
-                                alt="MCC Logo" 
-                                className="w-20 h-20 mb-4"
-                            />
-                            
-                            {/* Title */}
-                            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 text-center">MCC S2 AWARDS</h1>
-                            <h2 className="text-xl md:text-2xl font-bold text-white mb-6 text-center">Login your MLBB Account</h2>
-                            
-                            {/* Form Container */}
-                            <div className="w-full max-w-[320px] space-y-4">
-                                {/* User ID */}
-                                <div className="w-full">
-                                    <label className="block text-white text-xl mb-2 text-center">USER ID</label>
-                                    <input 
-                                        type="text" 
-                                        value={userId}
-                                        onChange={(e) => setUserId(e.target.value)}
-                                        onBlur={checkEligibility}
-                                        placeholder="e.g. 31244913 (****)"
-                                        className="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-gray-400 text-base placeholder-gray-600"
-                                    />
-                                </div>
-                                
-                                {/* Server ID */}
-                                <div className="w-full">
-                                    <label className="block text-white text-xl mb-2 text-center">SERVER ID</label>
-                                    <input 
-                                        type="text" 
-                                        value={serverId}
-                                        onChange={(e) => setServerId(e.target.value)}
-                                        onBlur={checkEligibility}
-                                        placeholder="e.g. ********* (2032)"
-                                        className="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-gray-400 text-base placeholder-gray-600"
-                                    />
-                                </div>
-                                
-                                {/* Status Message */}
-                                {userStatus && (
-                                    <div className="flex items-center justify-center gap-2 mt-4">
-                                        {userStatus === 'eligible' ? (
-                                            <>
-                                                <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                                    </svg>
-                                                </div>
-                                                <span className="text-white text-base">Account Eligible</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                                    </svg>
-                                                </div>
-                                                <span className="text-white text-base">Already Voted</span>
-                                            </>
-                                        )}
-                                    </div>
-                                )}
-                                
-                                {/* Welcome Text */}
-                                {userStatus && (
-                                    <div className="text-center mt-4 space-y-1">
-                                        <p className="text-white text-2xl">
-                                            {userStatus === 'eligible' ? 'Welcome ' : 'Hello '}
-                                            <span className="text-[#F3C718]">&quot;{ign}&quot;</span>
-                                        </p>
-                                        <p className="text-white text-2xl">
-                                            {userStatus === 'eligible' 
-                                                ? <span>Click <span className="text-[#F3C718]">VOTE</span> to participate</span>
-                                                : 'You already voted. Thank you for participating!'
-                                            }
-                                        </p>
-                                    </div>
-                                )}
-                                
-                                {/* Vote Button */}
-                                <div className="flex justify-center mt-6">
-                                    <Link
-                                        href={userStatus === 'eligible' ? '/mcc/voting/vote' : '#'}
-                                        disabled={!userStatus || userStatus === 'voted'}
-                                        className={`w-40 h-14 flex items-center justify-center ${
-                                            userStatus === 'eligible'
-                                                ? 'bg-zinc-800 hover:bg-zinc-700 text-white' 
-                                                : 'bg-zinc-700 text-gray-400 cursor-not-allowed'
-                                        } text-2xl rounded-2xl transition-colors`}
-                                    >
-                                        VOTE
-                                    </Link>
-                                </div>
-                            </div>
+                    <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
+                        <div className="text-center mb-8">
+                            <h1 className="text-4xl md:text-6xl font-bold font-space mb-4">
+                                VOTING SIGN IN
+                            </h1>
+                            <p className="text-lg md:text-xl font-poppins">
+                                Sign in with your Mobile Legends account to vote
+                            </p>
                         </div>
 
-                        {/* YouTube Video Container */}
-                        <div className="w-full md:w-[55%] h-[300px] md:h-auto rounded-2xl overflow-hidden bg-neutral-950/30 outline outline-1 outline-offset-[-0.1px] outline-[#2C2C2C]">
-                            <YouTubeVideo />
-                        </div>
+                        <button
+                            onClick={handleLoginClick}
+                            className="bg-[#F3C718] text-black px-8 py-4 rounded-lg font-bold text-lg hover:bg-[#F3C718]/90 transition-all duration-300 transform hover:scale-105"
+                        >
+                            Sign in with Mobile Legends
+                        </button>
+
+                        <MLLoginVoting ref={mlLoginRef} />
                     </div>
-                    
-                    {/* Sponsor Logos */}
-                    <div className="flex flex-wrap justify-center items-center gap-6 mt-8">
-                        <img src="/images/MCC/Smart.png" alt="Smart Logo" className="h-10 md:h-16" />
-                        <img src="/images/MCC/BPI.png" alt="BPI Logo" className="h-10 md:h-16" />
-                        <img src="/images/MCC/MoontonLogo.png" alt="Moonton Logo" className="h-10 md:h-16" />
-                    </div>
+                </main>
+
+                <div className="relative z-10">
+                    <Footer />
                 </div>
-            </main>
-
-            <div className="relative z-10">
-                <Footer />
             </div>
-        </div>
+        </>
     );
 }
