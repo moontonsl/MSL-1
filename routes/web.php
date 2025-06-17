@@ -114,6 +114,7 @@ Route::get('/api/bracket-teams/{bracketName}', [BracketTeamController::class, 'g
 Route::get('/api/bracket-teams', [BracketTeamController::class, 'getAllBrackets']);
 Route::patch('/api/bracket-teams/{bracketName}/status', [BracketTeamController::class, 'updateBracketStatus']);
 
+//WAG MAG REMOVE DITO KUNG DI ALAM ANG GINAGAWA
 // ML User Authentication Routes
 Route::prefix('ml')->group(function () {
     Route::get('/login', [MlAuthController::class, 'showLoginForm'])->name('ml.login');
