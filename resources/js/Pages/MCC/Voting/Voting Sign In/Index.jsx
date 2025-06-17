@@ -3,6 +3,8 @@ import { Header, Footer } from "@/Components";
 import { Toaster } from 'react-hot-toast';
 import MLLoginVoting from './MLLoginVoting';
 
+import LightningNextButton from './LightningNextButton.jsx';
+
 export default function VotingSignIn() {
     const mlLoginRef = useRef(null);
 
@@ -57,6 +59,10 @@ export default function VotingSignIn() {
                 >
                     <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
                         <div className="text-center mb-8">
+                            <img src="/images/MCC/MCCLOGO.png" alt="Voting Sign In" 
+                            className="w-32 md:w-64 h-auto mx-auto drop-shadow-[0_0_10px_#F3C718]" />
+                        </div>
+                        <div className="text-center mb-8">
                             <h1 className="text-4xl md:text-6xl font-bold font-space mb-4">
                                 VOTING SIGN IN
                             </h1>
@@ -64,15 +70,14 @@ export default function VotingSignIn() {
                                 Sign in with your Mobile Legends account to vote
                             </p>
                         </div>
-
-                        <button
-                            onClick={handleLoginClick}
-                            className="bg-[#F3C718] text-black px-8 py-4 rounded-lg font-bold text-lg hover:bg-[#F3C718]/90 transition-all duration-300 transform hover:scale-105"
-                        >
-                            Sign in with Mobile Legends
-                        </button>
-
+                        
+                        <LightningNextButton onClick={handleLoginClick} />
+                        
                         <MLLoginVoting ref={mlLoginRef} />
+
+                        <div className="text-center mb-8 mt-8">
+                            <img src="/images/MCC/SMARTLOGO.png" alt="Voting Sign In" className="w-32 h-auto mx-auto" />
+                        </div>
                     </div>
                 </main>
 
