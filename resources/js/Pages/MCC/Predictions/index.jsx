@@ -15,11 +15,11 @@ const shuffleArray = (array) => {
     return shuffled;
 };
 
-const BracketSection = ({ title, status = 'open', existingVotes = [], bracketStatus = {} }) => {
+const BracketSection = ({ title, status, existingVotes = [], bracketStatus = {} }) => {
     const [selectedTeams, setSelectedTeams] = useState([]);
     const [shuffledTeams, setShuffledTeams] = useState([]);
     const [teams, setTeams] = useState([]);
-    const hasVoted = bracketStatus[title] || existingVotes.length > 0;
+    const hasVoted = bracketStatus[title]?.voted || existingVotes.length > 0;
 
     useEffect(() => {
         // mga teams para sa mga brackets
@@ -122,6 +122,7 @@ const BracketSection = ({ title, status = 'open', existingVotes = [], bracketSta
                 return '';
         }
     };
+
 
     return (
         <div className="w-full max-w-[1640px] relative mb-24 px-4 md:px-8">
@@ -255,7 +256,17 @@ const BracketSection = ({ title, status = 'open', existingVotes = [], bracketSta
 };
 
 export default function PredictionsPage({ userVotes = {}, bracketStatus = {}, users_id, auth }) {
-    
+    const handleLogout = async () => {
+        try {
+            const response = await axios.post('/ml/logout');
+            if (response.data.success) {
+                toast.success('Logged out!');
+                window.location.href = response.data.redirect; // Redirect to login
+            }
+        } catch (error) {
+            toast.error('Logout failed!');
+        }
+    };
     return (
         <>
             <div 
@@ -287,9 +298,14 @@ export default function PredictionsPage({ userVotes = {}, bracketStatus = {}, us
 
             <div className="min-h-screen bg-black text-white">
                 <div className="relative z-10">
-                    <Header />
+                    <div className="flex justify-end m-4 absolute top-0 right-0">
+                        <button
+                            onClick={handleLogout}
+                            className="bg-red-600 text-white px-4 py-2 rounded">
+                            Logout
+                        </button>
+                    </div>
                 </div>
-
                 <main 
                     className="relative z-0 min-h-screen py-8 md:py-16"
                     style={{
@@ -326,26 +342,28 @@ export default function PredictionsPage({ userVotes = {}, bracketStatus = {}, us
                         <div className="Body w-full flex flex-col items-center gap-4 md:gap-8 mt-8 md:mt-16">
                             <BracketSection 
                                 title="MINDANAO BRACKET"
-                                status="closed"
+                                status={bracketStatus['MINDANAO BRACKET']?.status}
                                 existingVotes={userVotes['MINDANAO BRACKET']}
                                 bracketStatus={bracketStatus}
                                 users_id={users_id}
                             />
                             <BracketSection 
                                 title="VISAYAS BRACKET"
-                                status="upcoming"
+                                status={bracketStatus['VISAYAS BRACKET']?.status}
                                 existingVotes={userVotes['VISAYAS BRACKET']}
                                 bracketStatus={bracketStatus}
                                 users_id={users_id}
                             />
                             <BracketSection 
                                 title="LUZON A BRACKET"
+                                status={bracketStatus['LUZON A BRACKET']?.status}
                                 existingVotes={userVotes['LUZON A BRACKET']}
                                 bracketStatus={bracketStatus}
                                 users_id={users_id}
                             />
                             <BracketSection 
                                 title="LUZON B BRACKET"
+                                status={bracketStatus['LUZON B BRACKET']?.status}
                                 existingVotes={userVotes['LUZON B BRACKET']}
                                 bracketStatus={bracketStatus}
                                 users_id={users_id}

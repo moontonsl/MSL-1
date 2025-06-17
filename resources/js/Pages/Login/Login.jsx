@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useForm } from '@inertiajs/react';
 import { Header, Footer } from '@/Components';
 import './login.css';
 import { Head } from '@inertiajs/react';
 import { Eye, EyeOff } from 'react-feather';
 import axios from 'axios';
+import webBg2025 from "@/Pages/Account Creation/assets/webbg2025.png";
 const Login = () => {
   const { post, data, setData } = useForm({
     username: '',
@@ -73,6 +74,8 @@ const Login = () => {
         <Header />
         <main>
           <div className="login-main-bg">
+
+              <img src={webBg2025} className="background-image-register" alt="Web Background" />
               <div className="login-wrapper" >
                 <div className="login-container-login">
                   <div className="form-container-login">
@@ -158,9 +161,9 @@ const Login = () => {
             <div className="login-wrapper">
             <div className={`login-container-login ${error ? 'has-error' : ''}`} style={{ flex: 1 }}>
               <div className="form-container-login">
-                <h1 className="title-login" style={{ textAlign: 'left', }}>Unlock your path in student esports and leadership.</h1>               
+                <h1 className="title-login" style={{ textAlign: 'left', }}>Unlock your path in student esports and leadership.</h1>
                 <form className="form-login" onSubmit={handleSubmit}>
-                  
+
                   <div className="input-group-login">
                     <label htmlFor="username" className="label-login">
                       Username
@@ -173,7 +176,7 @@ const Login = () => {
                     </label>
                     <div className="password-container-login">
                       <input type={passwordVisible ? 'text' : 'password'} id="password" name="password" placeholder="********" value={formData.password} onChange={handleInputChange} className="input-field-login"/>
-                      <button type="button" className="eye-icon-login" onClick={() => setPasswordVisible((v) => !v)} aria-label={passwordVisible ? 'Hide password' : 'Show password'}>{passwordVisible ? 
+                      <button type="button" className="eye-icon-login" onClick={() => setPasswordVisible((v) => !v)} aria-label={passwordVisible ? 'Hide password' : 'Show password'}>{passwordVisible ?
                         <EyeOff size={24} /> : <Eye size={24} />}
                       </button>
                     </div>

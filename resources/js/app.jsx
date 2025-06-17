@@ -3,6 +3,7 @@ import '../css/variables.css';
 import '../css/index.css';
 import '../css/global.scss';
 import '../css/embla.css';
+// import '../js/Pages/Student Portal/profile.css'
 import './bootstrap';
 
 import { createInertiaApp } from '@inertiajs/react';

@@ -1,6 +1,6 @@
 import { Header, Footer } from '@/Components';
 import './profile.css';
-import '../../../css/variables.css';
+// import '../../../css/variables.css';
 import { Head } from '@inertiajs/react';
 import { Eye, EyeOff } from 'react-feather';
 
@@ -70,7 +70,7 @@ const Profile = () => {
                                         <div className="profile-tournament-sub">Winrate</div>
                                     </div>
                                     </div>
-                                </div>      
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -6,7 +6,7 @@ import { MdAccountCircle } from "react-icons/md";
 
 // Navigation links array (only main nav links)
 const navLinks = [
-    { name: 'Events', href: '/events' },
+    { name: 'Events', href: '/mcc' },
     { name: 'Program', href: '/program' },
     { name: 'Resources', href: '/resources' },
     { name: 'News', href: '/news' },
