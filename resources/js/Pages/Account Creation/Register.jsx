@@ -5,6 +5,7 @@ import Step1BasicDetails from './Step1BasicDetails';
 import Step2EducationDetails from './Step2EducationDetails';
 import Step3GameDetails from './Step3GameDetails';
 import Step4AccountCredentials from './Step4AccountCredentials';
+import webBg2025 from './assets/webbg2025.png';
 import './register.css';
 
 const initialFormData = {
@@ -33,7 +34,7 @@ const Register = () => {
             ...prev,
             [name]: type === 'file' ? files[0] : value
         }));
-        
+
         // setData(prev => ({
         //     ...prev,
         //     [name]: type === 'file' ? files[0] : value
@@ -60,7 +61,7 @@ const Register = () => {
         setErrorMessage("");
         // console.log(data);
         // setData(formData);
-        
+
         post(route('register'), {
             onStart: () => {
                 console.log("Starting registration...");
@@ -80,13 +81,13 @@ const Register = () => {
             },
             onError: (errors) => {
                 console.error("Registration failed:", errors);
-                
+
                 // Handle validation errors
                 if (errors) {
                     // If there are specific field errors
                     const errorMessages = Object.values(errors).flat();
                     setErrorMessage(`⚠️ ${errorMessages.join(', ')}`);
-                    
+
                     // Or handle specific errors
                     if (errors.email) {
                         setErrorMessage(`⚠️ Email: ${errors.email[0]}`);
@@ -105,9 +106,9 @@ const Register = () => {
             preserveState: true,  // Keep form state on errors
         });
         // Optionally reset form or redirect here
-        
+
         setFormData(initialFormData);
-        
+
         setCurrentStep(1);
     };
 
@@ -195,9 +196,15 @@ const Register = () => {
         <Header />
             <main>
                 <div className="register-main-bg">
+
+
+                    <img src={webBg2025} className="background-image-register" alt="Web Background" />
+
+
+
                     <div className={currentStep === 4? `form-container-register-step4${errorMessage ? ' has-error' : ''}`: `form-container-register${errorMessage ? ' has-error' : ''}`}>
                         <form onSubmit={handleSubmit} className="form-register">
-                            {stepComponents[currentStep]} 
+                            {stepComponents[currentStep]}
                                 {errorMessage && (
                                     <div className="error-message">
                                         <p>{errorMessage}</p>

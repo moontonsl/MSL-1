@@ -129,7 +129,7 @@
 .profile-name {
 color: #FFF;
 font-feature-settings: 'dlig' on;
-font-family: "Space Grotesk";
+/*font-family: "Space Grotesk";*/
 font-size: 64px;
 font-style: normal;
 font-weight: 700;
@@ -144,7 +144,7 @@ align-self: stretch;
 }
 
 .username-text {
-  font-family: "Space Grotesk";
+  /*font-family: "Space Grotesk";*/
   font-size: var(--subtitle-size-base);
   font-weight: 400;
   line-height: 22px;
@@ -301,7 +301,7 @@ align-self: stretch;
 .portal-tabs {
   display: flex;
   gap: 18px;
-  margin: 0; 
+  margin: 0;
   padding: 10px;
   font-size: 1rem;
   font-weight: 500;
@@ -386,7 +386,7 @@ align-self: stretch;
 
 .hero-highlight-card {
   display: flex;
-  justify-content: space-between; 
+  justify-content: space-between;
   align-items: center;
   background: rgba(255,255,255,0.07);
   border-radius: 12px;
@@ -394,8 +394,8 @@ align-self: stretch;
   margin: 0 20px 10px 20px;
   gap: 16px;
   box-shadow: 0 1px 8px rgba(0,0,0,0.10);
-  overflow: hidden; 
-  height: 150px; 
+  overflow: hidden;
+  height: 150px;
   position: relative;
   z-index: 1;
 }
@@ -405,7 +405,7 @@ align-self: stretch;
   height: 250px;
   border-radius: 8px;
   object-fit: cover;
-  object-position: top top; 
+  object-position: top top;
   transform: scale(2) translateY(30%);
 }
 
@@ -431,7 +431,7 @@ align-self: stretch;
 /* Sample Viewport 1920 x 1080 | 2560 x 1440 */
 /* Desktop Large (1920px and above) */
 @media (min-width: 1920px) {
-  
+
   .avatar-border {
     background: linear-gradient(135deg, #fff, #f3c718c6 77.49%, #fff);
     border-radius: 50%;
@@ -484,7 +484,7 @@ align-self: stretch;
   }
 
   .profile-name {
-    font-family: "Space Grotesk";
+    /*font-family: "Space Grotesk";*/
     font-size: 50px;
     font-weight: 700;
     line-height: 64px;
@@ -497,7 +497,7 @@ align-self: stretch;
   }
 
   .username-text {
-    font-family: "Space Grotesk";
+    /*font-family: "Space Grotesk";*/
     font-size: var(--subtitle-size-base);
     font-weight: 400;
     line-height: 22px;
@@ -512,7 +512,7 @@ align-self: stretch;
   margin-top: 25px;
   margin-left: 20px;
   }
-  
+
   .profile-rank-img {
     width: 250px;
     height: 250px;
@@ -617,7 +617,7 @@ align-self: stretch;
   content: '';
   position: absolute;
   left: 0;
-  margin-left: -270px;    
+  margin-left: -270px;
   bottom: -12px;
   width: 130%;
   height: 1px;
@@ -651,7 +651,7 @@ align-self: stretch;
   }
 
   .profile-name {
-    font-family: "Space Grotesk";
+    /*font-family: "Space Grotesk";*/
     font-size: 40px;
     font-weight: 700;
     line-height: 64px;
@@ -739,14 +739,14 @@ align-self: stretch;
 }
 
 .profile-name {
-  font-family: "Space Grotesk";
+  /*font-family: "Space Grotesk";*/
   font-size: 40px;
   font-weight: 700;
   line-height: 34px;
 }
 
 .username-text {
-  font-family: "Space Grotesk";
+  /*font-family: "Space Grotesk";*/
   font-size: var(--subtitle-size-base);
   font-weight: 400;
   line-height: 22px;
@@ -840,7 +840,7 @@ background: linear-gradient(
 .profile-details {
   margin-top: 20px; /* Add space after divider */
 }
-  
+
 .profile-icons {
   display: flex;
   gap: 12px;
@@ -866,7 +866,7 @@ background: linear-gradient(
     flex-direction: column;
     gap: 24px;
   }
-  
+
 .portal-bottom {
   flex-direction: column-reverse; /* 🔄 Reverses the order */
   gap: 24px;
@@ -893,7 +893,7 @@ font-size: 1.5rem;
 /* Sample Viewport 390 x 844 | 350 x 800 */
 /* Mobile (0px - 639px) */
 @media (max-width: 639px) {
-  
+
   .portal-container {
   width: 95%;
   padding: 16px;
@@ -912,7 +912,7 @@ font-size: 1.5rem;
   .divider-middle::after {
     display: none; /* Remove original divider */
   }
-  
+
   .divider::after {
     display: none; /* Remove original divider */
   }
@@ -1061,7 +1061,7 @@ font-size: 1.5rem;
     object-fit: cover;
   }
 
-  
+
 
 }
 

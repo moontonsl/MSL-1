@@ -4,27 +4,46 @@
 .register-main-bg {
   min-height: 100vh;
   width: 100%;
-  background-image: url('webbg2025.png');
+  /*background-image: url('webbg2025.png');*/
+  /*  background-color: black;*/
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center center;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow-x: hidden; 
-  box-sizing: border-box; 
-  padding: 40px 20px; 
+  overflow-x: hidden;
+  box-sizing: border-box;
+  padding: 40px 20px;
+    position: relative;
+    z-index: 1;
+
 }
+
+.background-image-register {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /*background-image: url('webbg2025.png');*/
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+    z-index: -1;
+    object-fit: cover;
+}
+
 
 .form-container-register {
   width: 100%;
   max-width: 758px;
   height: 820px;
-  margin: 20px; 
+  margin: 20px;
   padding: 2rem;
   background-color: #0A0A0A;
   border-radius: 15px;
-  border: 1px solid #242424; 
+  border: 1px solid #242424;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   background-color: rgba(10, 10, 10, 0.5);
   -webkit-backdrop-filter: blur(10px);
@@ -37,7 +56,7 @@
 }
 
 .form-container-register.has-error {
-  height: auto; 
+  height: auto;
   border-radius: 15px;
 }
 
@@ -71,11 +90,11 @@
   width: 100%;
   max-width: 758px;
   height: 850px;
-  margin: 20px; 
+  margin: 20px;
   padding: 1rem;
   background-color: #0A0A0A;
   border-radius: 15px;
-  border: 1px solid #242424; 
+  border: 1px solid #242424;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   background-color: rgba(10, 10, 10, 0.5);
   -webkit-backdrop-filter: blur(10px);
@@ -130,9 +149,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.316); 
+  background-color: rgba(0, 0, 0, 0.316);
   -webkit-backdrop-filter: blur(5px);
-  backdrop-filter: blur(5px); 
+  backdrop-filter: blur(5px);
   border-radius: 8px;
   padding: 20px;
 }
@@ -175,7 +194,7 @@
   border-radius: 8px;
   font-size: 1rem;
   appearance: none;
-  background-size: 12px; 
+  background-size: 12px;
   padding-right: 2rem;
   margin-top: 4px;
 }
@@ -241,7 +260,7 @@
 
 .input-field-register option,
 .input-field-register.suffix-select option
-.input-field-register.year-level-select option 
+.input-field-register.year-level-select option
 .input-field-register.current-rank-select option
 .input-field-register.course-select option
 .input-field-register.in-game-role-select option
@@ -256,8 +275,8 @@
   margin-bottom: 10px;
   display: flex;
   justify-content: center;
-  align-items: center; 
-  text-align: center; 
+  align-items: center;
+  text-align: center;
 }
 
 .navigation-buttons {
@@ -526,7 +545,7 @@
 }
 
 @media only screen and (max-width: 768px) {
-  
+
   .input-field-register.mobile-date-placeholder:empty::before {
   color: rgba(255, 255, 255, 0.6);
   position: absolute;
@@ -602,8 +621,8 @@
     margin-bottom: 10px;
     padding: 0 0.5rem;
     display: flex;
-    align-items: center;  
-    justify-content: center; 
+    align-items: center;
+    justify-content: center;
   }
 
 }
@@ -629,7 +648,7 @@
 /* Sample Viewport 1280 x 800 | 1200 x 768 */
 /* Desktop (1440px - 1919px) */
 @media (min-width: 1440px) and (max-width: 1919px) {
-  
+
   .form-container-register,
   .form-container-register-step4 {
     max-width: 800px;
@@ -645,7 +664,7 @@
 /* Sample Viewport 820 x 1180 | 800 x 1280 */
 /* Tablet Landscape (1024px - 1439px) */
 @media (min-width: 1024px) and (max-width: 1439px) {
-  
+
   .form-container-register,
   .form-container-register-step4 {
     max-width: 700px;
@@ -661,7 +680,7 @@
 /* Sample Viewport 820 x 1180 | 800 x 1280 */
 /* Tablet Portrait (640px - 1023px) */
 @media (min-width: 640px) and (max-width: 1023px) {
-  
+
   .register-main-bg {
     padding: 30px 15px;
   }
@@ -701,7 +720,7 @@
 @media (max-width: 639px) {
 
   .register-main-bg {
-    padding: 20px 20px; 
+    padding: 20px 20px;
     width: 100%;
   }
 
@@ -714,7 +733,7 @@
     min-height: 700px;
   }
 
-  
+
 
   .form-register {
     width: 100%;
@@ -795,8 +814,8 @@
     margin-bottom: 20px;
     display: flex;
     justify-content: center;
-    align-items: center; 
-    text-align: center; 
+    align-items: center;
+    text-align: center;
   }
   .footer-text-register {
     font-size: 0.9rem;

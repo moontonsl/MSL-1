@@ -25,6 +25,9 @@ Route::get('/', function () {
     ]);
 });
 
+
+Route::get('/notfound', function () {return Inertia::render('Errors/NotFound');})->name('notfound');
+
 Route::inertia('/upload', 'SchoolUploader');
 Route::post('/upload-schools', [SchoolUploadController::class, 'store'])->name('upload-schools');
 Route::get('/schools/search', [SchoolController::class, 'search']);
@@ -94,7 +97,7 @@ Route::get('/stats', function () {
         'student_leaders' => DB::table('users')->where('user_type', 'SL')->count(),
         'university_communities' => DB::table('msl_schools')->count(),
         'school_partners' => DB::table('msl_school_partner')->count(),
-     
+
     ];
 });
 Route::post('/send-verification-code', [VerifyEmailController::class, 'sendCode']);
@@ -108,6 +111,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('mcc/predictions', [VotingController::class, 'index'])->name('predictions.index');
+    Route::post('/predictions/vote', [VotingController::class, 'store'])->name('predictions.vote');
 });
 
 Route::get('/api/bracket-teams/{bracketName}', [BracketTeamController::class, 'getTeamsByBracket']);
@@ -127,6 +132,5 @@ Route::post('/ml/logout', [MlAuthController::class, 'logout'])->name('ml.logout'
 
 Route::get('/mcc/predictions', [VotingController::class, 'index'])->name('predictions.index');
 Route::post('/mcc/predictions', [VotingController::class, 'store'])->name('predictions.vote');
-
 
 require __DIR__.'/auth.php';
