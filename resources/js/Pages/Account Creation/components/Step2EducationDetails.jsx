@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import courses from "../../../../public/json/courses.json";
+import courses from "../../../../../public/json/courses.json";
 import axios from "axios";
 
 function debounce(func, delay) {
@@ -85,7 +85,7 @@ const Step2EducationDetails = ({
     handleInputChange({ target: { name: "region", value: school.region } });
     setFilteredSchools([]);
   };
-  
+
   const handleCourseChange = (e) => {
     const { value } = e.target;
     handleInputChange(e); // update university
