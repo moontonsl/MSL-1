@@ -158,6 +158,7 @@ const Login = () => {
     <Header />
       <main>
           <div className="login-main-bg">
+              <img src={webBg2025} className="background-image-register" alt="Web Background" />
             <div className="login-wrapper">
             <div className={`login-container-login ${error ? 'has-error' : ''}`} style={{ flex: 1 }}>
               <div className="form-container-login">
