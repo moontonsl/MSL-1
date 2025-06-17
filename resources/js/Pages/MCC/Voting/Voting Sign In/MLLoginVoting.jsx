@@ -128,10 +128,80 @@ const MLLoginVoting = forwardRef(({ onLoginSuccess }, ref) => {
     return () => document.body.removeChild(script);
   }, [onLoginSuccess]);
 
+  function tite() {
+    const observer = new MutationObserver(() => {
+      const mlbbGameDownLoad = document.getElementsByClassName('mlbb-download-box');
+      const mlbbSocial = document.getElementsByClassName('mlbb-social-box');
+      const mlbbCommontip = document.getElementsByClassName('mlbb-common-tip');
+      const mtCommonInner = document.getElementsByClassName('mt-common-inner');
+      const signmlbb = document.getElementsByClassName('signmlbb');
+      const loginTypeOuter = document.getElementsByClassName('login-type-outer');
+      const mtTitle = document.getElementsByClassName('mt-title');
+
+      if (mtCommonInner.length > 0) {
+        mtCommonInner[0].style.backgroundColor = 'black';
+        mtCommonInner[0].style.color = 'white';
+        mtCommonInner[0].style.borderRadius = '10px';
+        mtCommonInner[0].style.padding = '10px';
+        mtCommonInner[0].style.margin = '10px';
+        mtCommonInner[0].style.textAlign = 'center';
+        mtCommonInner[0].style.fontSize = '16px';
+      }
+
+      if (mtTitle.length > 0) {
+        mtTitle[0].innerHTML = 'Sign in with Mobile Legends';
+        mtTitle[0].style.marginLeft = '50px';
+        mtTitle[0].style.fontSize = '20px';
+        mtTitle[0].style.fontWeight = 'bold';
+        mtTitle[0].style.color = 'white';
+        mtTitle[0].style.backgroundColor = 'black';
+        mtTitle[0].style.borderRadius = '10px';
+        mtTitle[0].style.padding = '10px';
+        mtTitle[0].style.marginBottom = '20px';
+      }
+
+      if (loginTypeOuter.length > 0) {
+        const signInImage = document.createElement('img');
+        signInImage.className = 'signmlbb';
+        signInImage.src = '/images/MCC/MCCLOGO.png'; 
+        signInImage.alt = 'Sign in with Mobile Legends';
+        signInImage.style.cursor = 'pointer';
+        signInImage.style.width = '50px';
+        signInImage.style.position = 'absolute';
+        signInImage.style.left = '35px';
+        signInImage.style.top = '20px';  
+        loginTypeOuter[0].appendChild(signInImage);
+      }
+
+
+      if (signmlbb.length > 0) {
+        signmlbb[0].style.display = 'none';
+      }
+
+      if (mlbbCommontip.length > 1) {
+        for (let i = 0; i < mlbbGameDownLoad.length; i++) {
+          mlbbGameDownLoad[i].style.display = 'none';
+        }
+        for (let i = 0; i < mlbbSocial.length; i++) {
+          mlbbSocial[i].style.display = 'none';
+        }
+        mlbbCommontip[1].innerHTML =
+          'Your credentials are encrypted and protected. We never share your information — your privacy and security are our top priority.<br/>';
+
+        observer.disconnect();
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
+  }
+
   useImperativeHandle(ref, () => ({
     triggerLogin: () => {
       if (instanceRef.current) {
         instanceRef.current.loadIframe();
+        tite();
       }
     },
   }));

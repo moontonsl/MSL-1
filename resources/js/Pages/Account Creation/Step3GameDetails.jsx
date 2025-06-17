@@ -40,6 +40,7 @@ const Step3GameDetails = ({
 
       const mlIdExists = checkMlIdExists(formData.userId);
       if (mlIdExists === true) {
+        console.log("mlIdExists", mlIdExists);
         setLocalError("⚠️ MLID already exists. Please use a different MLID.");formData.ign = '';
         formData.level = '';
         formData.country = '';
