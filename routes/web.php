@@ -102,6 +102,9 @@ Route::get('/stats', function () {
 });
 Route::post('/send-verification-code', [VerifyEmailController::class, 'sendCode']);
 Route::get('/check-ml-id', [VerifyEmailController::class, 'checkMlId']);
+Route::get('/check-ml-id-availability', [VerifyEmailController::class, 'checkMlIdAvailability']);
+Route::get('/get-user-by-ml-id', [VerifyEmailController::class, 'getUserByMlId']);
+Route::get('/validate-ml-id', [VerifyEmailController::class, 'validateMlId']);
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
