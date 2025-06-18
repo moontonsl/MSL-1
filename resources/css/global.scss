@@ -1,4 +1,4 @@
-@use "./global/debug";
+//@use "./global/debug";
 
 /*------------------------------------*\
   #GLOBAL-STYLING-HERE ↓
@@ -26,6 +26,15 @@
   main {
     grid-area: main;
     min-height: calc(100svh - 56px);
+
+      .webBG {
+          position: absolute;
+          opacity: 0.5;
+          inset: 0;
+          height: 100vh;
+          width: 100vw;
+          background: linear-gradient(180deg, #0A0A0A 0%, rgba(10, 10, 10, 0.50) 25%, rgba(10, 10, 10, 0.20) 50%, rgba(10, 10, 10, 0.50) 75%, #0A0A0A 100%), url(/webbg2025.png) lightgray 50% / cover no-repeat;
+      }
   }
 
   footer {
