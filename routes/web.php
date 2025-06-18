@@ -27,6 +27,8 @@ Route::get('/', function () {
 
 
 Route::get('/notfound', function () {return Inertia::render('Errors/NotFound');})->name('notfound');
+Route::get('/sl-admin', function () {return Inertia::render('SLAdmin/SLAdmin');})->name('sl-admin');
+
 
 Route::inertia('/upload', 'SchoolUploader');
 Route::post('/upload-schools', [SchoolUploadController::class, 'store'])->name('upload-schools');
