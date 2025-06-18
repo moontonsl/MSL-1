@@ -134,4 +134,8 @@ Route::post('/ml/logout', [MlAuthController::class, 'logout'])->name('ml.logout'
 Route::get('/mcc/predictions', [VotingController::class, 'index'])->name('predictions.index');
 Route::post('/mcc/predictions', [VotingController::class, 'store'])->name('predictions.vote');
 
+Route::get('/soon', function () {
+    return Inertia::render('Soon/Soon');
+})->name('soon');
+
 require __DIR__.'/auth.php';
