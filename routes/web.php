@@ -102,6 +102,9 @@ Route::get('/stats', function () {
 });
 Route::post('/send-verification-code', [VerifyEmailController::class, 'sendCode']);
 Route::get('/check-ml-id', [VerifyEmailController::class, 'checkMlId']);
+Route::get('/check-ml-id-availability', [VerifyEmailController::class, 'checkMlIdAvailability']);
+Route::get('/get-user-by-ml-id', [VerifyEmailController::class, 'getUserByMlId']);
+Route::get('/validate-ml-id', [VerifyEmailController::class, 'validateMlId']);
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
@@ -130,5 +133,9 @@ Route::post('/ml/logout', [MlAuthController::class, 'logout'])->name('ml.logout'
 
 Route::get('/mcc/predictions', [VotingController::class, 'index'])->name('predictions.index');
 Route::post('/mcc/predictions', [VotingController::class, 'store'])->name('predictions.vote');
+
+Route::get('/soon', function () {
+    return Inertia::render('Soon/Soon');
+})->name('soon');
 
 require __DIR__.'/auth.php';

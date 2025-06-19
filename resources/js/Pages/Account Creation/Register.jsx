@@ -40,8 +40,6 @@ const Register = () => {
         //     [name]: type === 'file' ? files[0] : value
         // }));
         setData(formData);
-        console.log(data);
-        console.log(formData);
     };
 
     const handleNext = () => {

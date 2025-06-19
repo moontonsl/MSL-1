@@ -12,6 +12,8 @@ const Step3GameDetails = ({
   const [localError, setLocalError] = useState("");
   const [isBlurred, setIsBlurred] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingMlId, setIsCheckingMlId] = useState(false);
+  const [isMlIdValid, setIsMlIdValid] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
 
   const loginRef = useRef();
@@ -19,49 +21,71 @@ const Step3GameDetails = ({
   const handleLoginInfo = (info) => {
     console.log('Received Login Info:', info);
     setUserInfo(info); 
-    info ? setIsBlurred(false) : setIsBlurred(true);
+    
     if (info?.code === 0) {
       const data = info.data;
-     
-      formData.ign = data.name || '';
-      formData.level = data.level || '';
-      formData.country = data.reg_country || '';
-      formData.userId = data.roleId || '';
-      formData.serverId = data.zoneId || '';
-      formData.avatar = data.avatar || '';
-    
       
+      handleInputChange({ target: { name: 'ign', value: data.name || '' } });
+      handleInputChange({ target: { name: 'level', value: data.level || '' } });
+      handleInputChange({ target: { name: 'country', value: data.reg_country || '' } });
+      handleInputChange({ target: { name: 'userId', value: data.roleId || '' } });
+      handleInputChange({ target: { name: 'serverId', value: data.zoneId || '' } });
+      handleInputChange({ target: { name: 'avatar', value: data.avatar || '' } });
+    
       const checkMlIdExists = async (ml_id) => {
-        const response = await fetch(`/check-ml-id?ml_id=${encodeURIComponent(ml_id)}`);
-        const data = await response.json();
-        console.log(data.exists);
-        return data.exists; // true if exists, false if not
+        try {
+          const response = await fetch(`/check-ml-id?ml_id=${encodeURIComponent(ml_id)}`);
+          const data = await response.json();
+          return data.exists; // true if exists, false if not
+        } catch (error) {
+          console.error('Error checking ML ID:', error);
+          return false;
+        }
       };
 
-      const mlIdExists = checkMlIdExists(formData.userId);
-      if (mlIdExists === true) {
-        console.log("mlIdExists", mlIdExists);
-        setLocalError("⚠️ MLID already exists. Please use a different MLID.");formData.ign = '';
-        formData.level = '';
-        formData.country = '';
-        formData.userId = '';
-        formData.serverId = '';
-        formData.avatar = '';
-        setTimeout(() => {
-          
-          setIsBlurred(false);
-        }, 1000);
-       
-      }else{
-        setErrorMessage("");
-        console.log("1");
-        console.log(formData);
-        setIsBlurred(true);
-        setIsLoading(false);
-      }
+      const checkMlIdAndHandleResult = async () => {
+        setIsCheckingMlId(true);
+        setLocalError(""); // Clear any previous errors
+        
+        try {
+          const mlIdExists = await checkMlIdExists(data.roleId || '');
+
+          if (mlIdExists) {
+            setLocalError("⚠️ ML Account already used. Please use a different ML Account.");
+            setIsMlIdValid(false);
+            // Clear the form data using handleInputChange
+            handleInputChange({ target: { name: 'ign', value: '' } });
+            handleInputChange({ target: { name: 'level', value: '' } });
+            handleInputChange({ target: { name: 'country', value: '' } });
+            handleInputChange({ target: { name: 'userId', value: '' } });
+            handleInputChange({ target: { name: 'serverId', value: '' } });
+            handleInputChange({ target: { name: 'avatar', value: '' } });
+            
+            setTimeout(() => {
+              setIsBlurred(false);
+            }, 1000);
+          } else {
+            setLocalError(""); // Clear any existing errors
+            setIsMlIdValid(true);
+            if (setErrorMessage) setErrorMessage(""); // Clear parent errors
+            setIsBlurred(true);
+            setIsLoading(false);
+          }
+        } catch (error) {
+          console.error('Error during ML ID check:', error);
+          setLocalError("⚠️ Error checking ML ID. Please try again.");
+          // Don't clear form data on network error, let user retry
+        } finally {
+          setIsCheckingMlId(false);
+        }
+      };
+
+      // Call the async function
+      checkMlIdAndHandleResult();
       
-    }else{
+    } else {
       setIsLoading(false);
+      setIsBlurred(false); // Show the login screen again
     }
   };
 
@@ -176,6 +200,35 @@ const Step3GameDetails = ({
           </div>
         : null}
         <div className={`form-register`}>
+          {isCheckingMlId && (
+            <div className="mb-4 p-3 bg-blue-100 border border-blue-400 text-blue-700 rounded z-10">
+              <div className="flex items-center">
+                <svg className="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Checking ML ID availability...
+              </div>
+            </div>
+          )}
+          
+          {localError && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded z-10">
+              {localError}
+            </div>
+          )}
+          
+          {isMlIdValid && !isCheckingMlId && (
+            <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+              <div className="flex items-center">
+                <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                ML ID is available! Please complete the form below.
+              </div>
+            </div>
+          )}
+          
           <div className="form-row-register">
             <div className="input-group-register left-side-register">
               <label htmlFor="userId" className="label-register">
