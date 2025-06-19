@@ -111,8 +111,8 @@ const Login = () => {
                       allow="autoplay; fullscreen; picture-in-picture"
                       allowFullScreen>
                     </iframe>
+                  </div>
                 </div>
-              </div>
             </div>
           </div>
         </main>
@@ -202,11 +202,14 @@ const Login = () => {
               </div>
             </div>
             <div className="video-container-login">
-              <video className="video-bg-blur" src="/loginvideo.mp4" type="video/mp4" autoPlay muted loop playsInline>
-              </video>
               <div className="video-foreground">
-                <iframe src="https://www.youtube.com/embed/b6A3EToebqE?autoplay=1&loop=1&playlist=b6A3EToebqE&mute=1&controls=0&rel=0&modestbranding=1" title="MSL Video" frameBorder="0" allow="autoplay; encrypted-media" allowFullScreen
-                ></iframe>
+                <iframe
+                  src="https://player.vimeo.com/video/1091173390?h=b2f78d509b&autoplay=1&loop=1&muted=1&background=1"
+                  title="MSL Video"
+                  frameBorder="0"
+                  allow="autoplay; fullscreen; picture-in-picture"
+                  allowFullScreen>
+                </iframe>
               </div>
             </div>
           </div>
