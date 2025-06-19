@@ -49,6 +49,8 @@ class GoogleSheetController extends Controller
             ];
         }
 
+        $service->spreadsheets_values->clear($spreadsheetId, $range, new \Google_Service_Sheets_ClearValuesRequest());
+
         // 5. Push to Google Sheets
         $body = new \Google_Service_Sheets_ValueRange([
             'values' => $values
