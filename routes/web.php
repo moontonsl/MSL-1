@@ -46,12 +46,12 @@ Route::get('/register', function () {
 
 // //STUDENT PORTAL
 // Route::get('/studentportal', function () {
-//     return Inertia::render('Student Portal/Profile');
+//     return Inertia::render('StudentPortal/Profile');
 // })->middleware(['auth', 'verified'])->name('profile');
 
 // TEMPORARY STUDENT PORTAL ACCESS (NO AUTH)
 Route::get('/studentportal', function () {
-    return Inertia::render('Student Portal/Profile');
+    return Inertia::render('StudentPortal/Profile');
 })->name('profile');
 
 
