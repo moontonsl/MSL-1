@@ -67,7 +67,7 @@ Route::prefix('mcc')->name('mcc.')->group(function () {
 
     // News Route
     Route::get('/news', function () {
-        return Inertia::render('MCC/News/Index');
+        return Inertia::render('News/Index');
     })->name('news');
 
     // Voting Routes
