@@ -13,13 +13,13 @@ const HeroSection = () => {
 
     const heroBoxes = [
         {
-            path: "/network",
+            path: "/soon",
             title: "Network",
             img: minImg,
             imgPosition: "object-center",
         },
         {
-            path: "/buff-&-support",
+            path: "/soon",
             title: (
                 <>
                     Buffs <br className="hidden xl:block" /> & Supports
@@ -29,7 +29,7 @@ const HeroSection = () => {
             imgPosition: "object-center",
         },
         {
-            path: "/student-leader",
+            path: "/soon",
             title: "STUDENT LEADER",
             img: badingImg,
             imgPosition: "object-center",

@@ -40,8 +40,6 @@ const Register = () => {
         //     [name]: type === 'file' ? files[0] : value
         // }));
         setData(formData);
-        console.log(data);
-        console.log(formData);
     };
 
     const handleNext = () => {
@@ -93,6 +91,8 @@ const Register = () => {
                         setErrorMessage(`⚠️ Email: ${errors.email[0]}`);
                     } else if (errors.username) {
                         setErrorMessage(`⚠️ Username: ${errors.username[0]}`);
+                    }else if (errors.userId) {
+                        setErrorMessage(`⚠️ ML Account: The ML Account has already been taken.`);
                     } else {
                         setErrorMessage("⚠️ Please check your information and try again.");
                     }

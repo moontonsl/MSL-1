@@ -73,7 +73,7 @@ jobs:
 
             chmod -R 775 storage bootstrap/cache
             chown -R daemon:daemon storage bootstrap/cache
-
+            chmod -R 777 /home/moontonslph.online/testsub/storage /home/moontonslph.online/testsub/bootstrap/cache
             php artisan up
             
             # Restart PM2 process
