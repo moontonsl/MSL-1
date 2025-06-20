@@ -60,10 +60,26 @@
         border-radius: 9999px;
         border: 8px solid #F3C718;
         background: lightgray 50% / cover no-repeat;
-
     }
 
 
+
+
+    .tableHeader {
+        background: linear-gradient(90deg, rgba(20, 20, 20, 0.00) 0%, #141414 50%, rgba(20, 20, 20, 0.00) 100%);
+
+        .slInput {
+            display: flex;
+            //max-width: 214px;
+            padding: 10px 24px;
+            align-items: center;
+            gap: 10px;
+
+            border-radius: 58px;
+            border: 2px solid #838383;
+            background: rgba(255, 255, 255, 0.10);
+        }
+    }
 
 
 

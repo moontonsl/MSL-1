@@ -28,6 +28,8 @@ Route::get('/', function () {
 
 
 Route::get('/notfound', function () {return Inertia::render('Errors/NotFound');})->name('notfound');
+
+// SL ADMIN ROUTES
 Route::get('/sl-admin', function () {return Inertia::render('SLAdmin/SLAdmin');})->name('sl-admin');
 
 

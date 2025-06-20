@@ -31,8 +31,6 @@
           position: absolute;
           opacity: 0.5;
           inset: 0;
-          height: 100vh;
-          width: 100vw;
           background: linear-gradient(180deg, #0A0A0A 0%, rgba(10, 10, 10, 0.50) 25%, rgba(10, 10, 10, 0.20) 50%, rgba(10, 10, 10, 0.50) 75%, #0A0A0A 100%), url(/webbg2025.png) lightgray 50% / cover no-repeat;
       }
   }
@@ -58,10 +56,30 @@
 }
 
 
+
+
+
+/* Hide scrollbar for all elements */
+
 .scrollbar-hide {
     -ms-overflow-style: none; /* IE & Edge */
     scrollbar-width: none; /* Firefox */
 }
 .scrollbar-hide::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Opera */
+}
+
+
+
+/* Custom scrollbar styles */
+
+.custom-scrollbar::-webkit-scrollbar {
+    height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #1A1919; /* light gray */
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #2F2F2F; /* dark gray */
+    border-radius: 10px;
 }
