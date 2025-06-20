@@ -129,21 +129,26 @@ const Login = () => {
         <Header />
         <main>
           <div className="login-main-bg">
-            <div className="login-wrapper" style={{ justifyContent: 'center', alignItems: 'center' }}>
-              <div className="choose-login-container">
-                <h2 className="choose-login-title">MLBB ACCOUNT LOGIN</h2>
-                <div style={{ color: "#fff", textAlign: "center", margin: "2rem 0" }}>
-                  This is the modal for the MLBB account.
+            <img src={webBg2025} className="background-image-register" alt="Web Background" />
+              <div className="login-wrapper" style={{ justifyContent: 'center', alignItems: 'center' }}>
+                <div className="choose-login-container">
+                  <h2 className="choose-login-title">MLBB ACCOUNT LOGIN</h2>
+                  <div style={{ color: "#fff", textAlign: "center", margin: "2rem 0" }}>
+                    This is still on progress, please wait for the next update.
+                    <br />
+                    <br />
+                    <span style={{ fontSize: "0.9rem", color: "#ccc" }}>
+                      If you have any questions, please contact the SERP Web Dev </span>
+                  </div>
+                  <button
+                    className="choose-login-btn"
+                    onClick={() => setShowMLBBModal(false)}>
+                    <span>
+                      Back
+                    </span>
+                  </button>
                 </div>
-                <button
-                  className="choose-login-btn"
-                  onClick={() => setShowMLBBModal(false)}>
-                  <span>
-                    Back
-                  </span>
-                </button>
               </div>
-            </div>
           </div>
         </main>
         <Footer />
