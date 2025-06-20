@@ -15,6 +15,7 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\VotingController;
 use App\Http\Controllers\BracketTeamController;
 use App\Http\Controllers\MlAuthController;
+use App\Http\Controllers\GoogleSheetController;
 
 Route::get('/', function () {
     return Inertia::render('Home/Home', [
@@ -48,12 +49,12 @@ Route::get('/register', function () {
 
 // //STUDENT PORTAL
 // Route::get('/studentportal', function () {
-//     return Inertia::render('Student Portal/Profile');
+//     return Inertia::render('StudentPortal/Profile');
 // })->middleware(['auth', 'verified'])->name('profile');
 
 // TEMPORARY STUDENT PORTAL ACCESS (NO AUTH)
 Route::get('/studentportal', function () {
-    return Inertia::render('Student Portal/Profile');
+    return Inertia::render('StudentPortal/Profile');
 })->name('profile');
 
 
@@ -104,6 +105,9 @@ Route::get('/stats', function () {
 });
 Route::post('/send-verification-code', [VerifyEmailController::class, 'sendCode']);
 Route::get('/check-ml-id', [VerifyEmailController::class, 'checkMlId']);
+Route::get('/check-ml-id-availability', [VerifyEmailController::class, 'checkMlIdAvailability']);
+Route::get('/get-user-by-ml-id', [VerifyEmailController::class, 'getUserByMlId']);
+Route::get('/validate-ml-id', [VerifyEmailController::class, 'validateMlId']);
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
@@ -132,5 +136,12 @@ Route::post('/ml/logout', [MlAuthController::class, 'logout'])->name('ml.logout'
 
 Route::get('/mcc/predictions', [VotingController::class, 'index'])->name('predictions.index');
 Route::post('/mcc/predictions', [VotingController::class, 'store'])->name('predictions.vote');
+
+Route::get('/soon', function () {
+    return Inertia::render('Soon/Soon');
+})->name('soon');
+
+// Google Sheet Routes
+Route::get('/google-sheet', [GoogleSheetController::class, 'exportToGoogleSheet'])->name('google-sheet.export');
 
 require __DIR__.'/auth.php';
