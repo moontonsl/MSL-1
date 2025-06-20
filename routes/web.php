@@ -15,6 +15,7 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\VotingController;
 use App\Http\Controllers\BracketTeamController;
 use App\Http\Controllers\MlAuthController;
+use App\Http\Controllers\GoogleSheetController;
 
 Route::get('/', function () {
     return Inertia::render('Home/Home', [
@@ -137,5 +138,8 @@ Route::post('/mcc/predictions', [VotingController::class, 'store'])->name('predi
 Route::get('/soon', function () {
     return Inertia::render('Soon/Soon');
 })->name('soon');
+
+// Google Sheet Routes
+Route::get('/google-sheet', [GoogleSheetController::class, 'exportToGoogleSheet'])->name('google-sheet.export');
 
 require __DIR__.'/auth.php';
