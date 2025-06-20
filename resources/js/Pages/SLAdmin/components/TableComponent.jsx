@@ -64,16 +64,21 @@ const TableComponent = () => {
                     {currentData.map((item, index) => (
                         <tr key={index} className="hover:bg-[#2f2f2f] transition-colors">
                             <td className="flex items-center gap-3 px-4 py-3">
-                                <img
-                                    src={item.avatar}
-                                    alt={item.name}
-                                    className="h-9 w-9 rounded-full border-2 border-white object-cover"
-                                />
+                                <div className="bg-gradient-to-tr from-[#D4AF37] to-[#FFFACD] p-[2px] rounded-full">
+                                    <div className="bg-neutral-900 rounded-full">
+                                        <img
+                                            src={item.avatar}
+                                            alt={item.name}
+                                            className="h-[32px] w-[32px] rounded-full object-cover"
+                                        />
+                                    </div>
+                                </div>
+
                                 <div>
                                     <div className="font-medium text-white">{item.name}</div>
                                     <div className="text-xs text-gray-400">{item.mslId}</div>
                                 </div>
-                                <Facebook className="ml-2 h-4 w-4 text-blue-500" />
+                                <Facebook className="ml-2 h-4 w-4 text-blue-500 hidden md:table-cell" />
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell">{item.fullName}</td>
                             <td className="px-4 py-3 hidden md:table-cell">{item.school}</td>

@@ -1,4 +1,3 @@
-import MainLayout from "@/Layouts/MainLayout.jsx";
 import styles from "./SLAdmin.module.scss";
 import {BadgeCheck, ArrowDownAZ, Funnel} from 'lucide-react';
 
@@ -16,18 +15,22 @@ const SLAdmin = () => {
                     <div className={`${styles.topCard} px-4 py-6 md:py-10 grid md:grid-cols-[25%_40%_35%] xl:min-h-[365px]`}>
                         {/* profile section */}
                         <div className="flex justify-center items-center">
-                            <img
-                                src={profilePic}
-                                alt="Profile of Rei Takahashi"
-                                className={`${styles.profPic} w-40 h-40 xl:w-[240px] xl:h-[240px] rounded-full object-cover mb-4 md:mb-0`}
-                            />
+                                <div className="bg-gradient-to-tr from-[#D4AF37] to-[#FFFACD] p-[8px] rounded-full">
+                                    <div className="bg-neutral-900 rounded-full">
+                                        <img
+                                            src={profilePic}
+                                            alt="Profile"
+                                            className="w-[clamp(10rem,12vw,15rem)] h-[clamp(10rem,12vw,15rem)] rounded-full object-cover"
+                                        />
+                                    </div>
+                                </div>
                         </div>
 
 
-                        <div className="w-full flex flex-col justify-center xl:gap-[32px]">
+                        <div className="w-full flex flex-col justify-center gap-6 xl:gap-[32px]">
                             <div className="flex flex-col items-center md:items-start mb-6 md:mb-0">
 
-                                <h1 className="text-2xl font-semibold xl:text-[64px] xl:leading-[64px]">Rei Takahashi</h1>
+                                <h1 className="text-2xl font-semibold text-[clamp(1.75rem,3vw+1rem,4rem)] leading-[clamp(2rem,4vw+1rem,4.25rem)]">Rei Takahashi</h1>
                                 <div className="flex items-center gap-2 xl:text-[32px] xl:leading-[32px] mt-1">
                                     <span>username</span>
                                     <BadgeCheck className={`text-[var(--border-brand-default)] w-[16px] xl:w-[32px]`}/>
@@ -35,7 +38,7 @@ const SLAdmin = () => {
                             </div>
 
                             {/* details section */}
-                            <div className="grid gap-1 mb-6 md:mb-0 lg:grid-cols-2">
+                            <div className="grid gap-1 lg:gap-2 mb-6 md:mb-0 lg:grid-cols-2">
                                 <div className="flex lg:flex-col">
                                     <div className="mr-2 opacity-50">Role:</div>
                                     <div className="font-medium xl:text-2xl">Super Admin</div>
