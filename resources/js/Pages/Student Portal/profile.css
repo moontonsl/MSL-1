@@ -3,7 +3,7 @@
 .portal-main-bg {
   min-height: 100vh;
   width: 100%;
-  background-image: url('webbg2025.png');
+  /* background-image: url('webbg2025.png'); */
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center center;
@@ -11,6 +11,23 @@
   align-items: center;
   justify-content: center;
   overflow-x: hidden;
+}
+
+
+.background-image-student-portal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;     /* Use viewport width */
+  height: 150vh;     /* Use viewport height */
+  background-image: url('/webbg2025.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
+  z-index: -1;
+  overflow-x: hidden;
+  object-fit: cover;
+  pointer-events: none; /* Optional: allow clicks through */
 }
 
 .portal-container {
@@ -131,10 +148,10 @@ backdrop-filter: blur(20px);
 color: #FFF;
 font-feature-settings: 'dlig' on;
 /*font-family: "Space Grotesk";*/
-font-size: 64px;
+font-size: 44px;
 font-style: normal;
 font-weight: 700;
-line-height: 64px; /* 100% */
+line-height: 44px; /* 100% */
 align-self: stretch;
 }
 
@@ -166,7 +183,7 @@ align-self: stretch;
 
 .profile-label {
   color: rgba(255, 255, 255, 0.5);
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
 }
 
@@ -236,10 +253,11 @@ align-self: stretch;
   flex-direction: column;
   gap: 12px;
   min-width: 130px;
+
 }
 
 .profile-tournament-label {
-  font-size: 0.8rem;
+  font-size: 1rem;
   color: #fff;
   font-weight: 500;
 }
@@ -252,7 +270,7 @@ align-self: stretch;
 }
 
 .profile-tournament-sub {
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: #fff;
   font-weight: 500;
 }
@@ -528,7 +546,7 @@ align-self: stretch;
   }
 
   .profile-tournament-label {
-    font-size: 0.9rem;
+    font-size: 1.2rem;
     color: #fff;
     font-weight: 500;
   }
@@ -541,7 +559,7 @@ align-self: stretch;
   }
 
   .profile-tournament-sub {
-    font-size: 1rem;
+    font-size: 1.1rem;
     color: #fff;
     font-weight: 500;
   }

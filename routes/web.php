@@ -49,15 +49,15 @@ Route::get('/register', function () {
 })->name('register');
 
 
-// //STUDENT PORTAL
-// Route::get('/studentportal', function () {
-//     return Inertia::render('StudentPortal/Profile');
-// })->middleware(['auth', 'verified'])->name('profile');
-
-// TEMPORARY STUDENT PORTAL ACCESS (NO AUTH)
+//STUDENT PORTAL
 Route::get('/studentportal', function () {
-    return Inertia::render('StudentPortal/Profile');
-})->name('profile');
+    return Inertia::render('Student Portal/Profile');
+})->middleware(['auth', 'verified'])->name('profile');
+
+// // TEMPORARY STUDENT PORTAL ACCESS (NO AUTH)
+// Route::get('/studentportal', function () {
+//     return Inertia::render('Student Portal/Profile');
+// })->name('profile');
 
 
 // MCC Routes
