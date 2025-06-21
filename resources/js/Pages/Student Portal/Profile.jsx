@@ -11,6 +11,7 @@ const Profile = () => {
       <Header />
       <main>
         <div className="portal-main-bg">
+            <div class="background-image-student-portal"></div>
             <div className='portal-container'>
                 <div class="portal-top">
                     <div className="portal-top-container">
