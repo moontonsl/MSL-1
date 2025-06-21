@@ -142,4 +142,90 @@ Route::get('/soon', function () {
 // Google Sheet Routes
 Route::get('/google-sheet', [GoogleSheetController::class, 'exportToGoogleSheet'])->name('google-sheet.export');
 
+Route::get('/get-old-users', function () {
+    // Set to 0 for no time limit, essential for large migrations
+    set_time_limit(0);
+    ini_set('memory_limit', '-1'); // Optional: removes memory limit for this script
+
+    $count = 0;
+
+    DB::table('msl_user_basic')
+        ->join('msl_user_mlbb', 'msl_user_mlbb.userid', '=', 'msl_user_basic.userid')
+        ->join('msl_user_school', 'msl_user_school.userid', '=', 'msl_user_basic.userid')
+        ->join('msl_user_account', 'msl_user_account.userid', '=', 'msl_user_basic.userid')
+        ->select(
+            'msl_user_basic.userid as ml_id',
+            'msl_user_basic.givenname as name',
+            'msl_user_basic.surname as surname',
+            'msl_user_basic.suffix as suffix',
+            'msl_user_basic.email as email',
+            'msl_user_basic.birthday as birthday',
+            'msl_user_basic.age as age',
+            'msl_user_basic.gender as gender',
+            'msl_user_basic.contact as contact',
+            'msl_user_basic.username as username',
+            'msl_user_mlbb.mslserver as ml_server',
+            'msl_user_mlbb.mslign as ml_ign',
+            'msl_user_mlbb.mslsquad1 as squadName',
+            'msl_user_mlbb.mslsquad2 as squadAbbreviation',
+            'msl_user_mlbb.mslrole as inGameRole',
+            'msl_user_mlbb.mslhero as mainHero',
+            'msl_user_mlbb.mslrank as rank',
+            'msl_user_school.schoolyear as year_level',
+            'msl_user_school.schoolarea as island',
+            'msl_user_school.schoolregion as region',
+            'msl_user_school.schoolid as studentId',
+            'msl_user_school.schoolcourse as course',
+            'msl_user_school.schoolname as university',
+            'msl_user_account.facebook as facebook_link',
+            'msl_user_account.password as password'
+        )
+        ->orderBy('msl_user_basic.userid') // Important: Must order by the chunking column
+        ->chunkById(200, function ($old_users_chunk) use (&$count) {
+            foreach ($old_users_chunk as $old_user) {
+                // Prepare gender value: if it's 'Empty' or null, make it an empty string.
+                $gender = ($old_user->gender === 'Empty' || is_null($old_user->gender)) ? 'other' : $old_user->gender;
+
+                // Handle data truncation for facebook_link. If it's too long, make it an empty string.
+                $facebook_link = $old_user->facebook_link ?? '';
+                if (strlen($facebook_link) > 255) { // Assuming a standard VARCHAR(255) limit for URLs
+                    $facebook_link = '';
+                }
+
+                \App\Models\User::updateOrCreate(
+                    ['ml_id' => $old_user->ml_id], // Your original, correct unique key
+                    [
+                        'name'              => trim($old_user->name ?? ''),
+                        'surname'           => $old_user->surname ?? '',
+                        'suffix'            => $old_user->suffix ?? '',
+                        'email'             => $old_user->email ?? '',
+                        'password'          => $old_user->password ?? '', // SECURITY WARNING: Passwords should be hashed.
+                        'username'          => $old_user->username ?? '',
+                        'birthday'          => $old_user->birthday ?? '',
+                        'age'               => $old_user->age ?? '',
+                        'gender'            => $gender, // FIXED
+                        'contact_number'    => $old_user->contact ?? '',
+                        'facebook_link'     => $facebook_link, // FIXED
+                        'ml_server'         => $old_user->ml_server ?? '',
+                        'ml_ign'            => $old_user->ml_ign ?? '',
+                        'squadName'         => $old_user->squadName ?? '',
+                        'squadAbbreviation' => $old_user->squadAbbreviation ?? '',
+                        'inGameRole'        => $old_user->inGameRole ?? '',
+                        'mainHero'          => $old_user->mainHero ?? '',
+                        'rank'              => $old_user->rank ?? '',
+                        'studentId'         => $old_user->studentId ?? '',
+                        'course'            => $old_user->course ?? '',
+                        'university'        => $old_user->university ?? '',
+                        'year_level'        => $old_user->year_level ?? '',
+                        'region'            => $old_user->region ?? '',
+                        'island'            => $old_user->island ?? '',
+                    ]
+                );
+                $count++;
+            }
+        }, 'msl_user_basic.userid', 'ml_id'); // FIXED: Correct column for chunking
+
+    return "User migration completed successfully! Processed " . $count . " records.";
+})->name('old');
+
 require __DIR__.'/auth.php';
