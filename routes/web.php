@@ -29,6 +29,10 @@ Route::get('/', function () {
 
 Route::get('/notfound', function () {return Inertia::render('Errors/NotFound');})->name('notfound');
 
+// SL ADMIN ROUTES
+Route::get('/sl-admin', function () {return Inertia::render('SLAdmin/SLAdmin');})->name('sl-admin');
+
+
 Route::inertia('/upload', 'SchoolUploader');
 Route::post('/upload-schools', [SchoolUploadController::class, 'store'])->name('upload-schools');
 Route::get('/schools/search', [SchoolController::class, 'search']);
@@ -47,12 +51,12 @@ Route::get('/register', function () {
 
 // //STUDENT PORTAL
 // Route::get('/studentportal', function () {
-//     return Inertia::render('Student Portal/Profile');
+//     return Inertia::render('StudentPortal/Profile');
 // })->middleware(['auth', 'verified'])->name('profile');
 
 // TEMPORARY STUDENT PORTAL ACCESS (NO AUTH)
 Route::get('/studentportal', function () {
-    return Inertia::render('Student Portal/Profile');
+    return Inertia::render('StudentPortal/Profile');
 })->name('profile');
 
 

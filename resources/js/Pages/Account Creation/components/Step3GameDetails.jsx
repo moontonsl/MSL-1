@@ -1,6 +1,6 @@
 // Step3GameDetails.jsx
 import React, { useState, useRef } from "react";
-import MLLogin from '../MLLoginApi/MLLogin';
+import MLLogin from '../../MLLoginApi/MLLogin.jsx';
 
 
 const Step3GameDetails = ({
@@ -17,13 +17,24 @@ const Step3GameDetails = ({
   const [userInfo, setUserInfo] = useState(null);
 
   const loginRef = useRef();
-  
+
   const handleLoginInfo = (info) => {
     console.log('Received Login Info:', info);
+    setUserInfo(info);
+    info ? setIsBlurred(false) : setIsBlurred(true);
     setUserInfo(info); 
     
     if (info?.code === 0) {
       const data = info.data;
+
+      formData.ign = data.name || '';
+      formData.level = data.level || '';
+      formData.country = data.reg_country || '';
+      formData.userId = data.roleId || '';
+      formData.serverId = data.zoneId || '';
+      formData.avatar = data.avatar || '';
+
+
       
       handleInputChange({ target: { name: 'ign', value: data.name || '' } });
       handleInputChange({ target: { name: 'level', value: data.level || '' } });
@@ -124,7 +135,7 @@ const Step3GameDetails = ({
     <div className="">
       <h1 className="title-register">CREATE MSL ACCOUNT</h1>
       <h2 className="subtitle-register">MLBB DETAILS</h2>
-      
+
       {/* Dynamic Progress Bar for Step 3 */}
       {(() => {
         const requiredFields = [
@@ -168,8 +179,8 @@ const Step3GameDetails = ({
                 </svg>
               </div>
               <div className="electric-wrapper">
-                <div onClick={() => { 
-                  handleLoginClick() 
+                <div onClick={() => {
+                  handleLoginClick()
                   }}
                   className="neon-button text-sm md:text-base px-4 md:px-8 py-2 md:py-3 flex items-center justify-center gap-2">
                   {isLoading ? (
@@ -184,9 +195,9 @@ const Step3GameDetails = ({
                     <span>Connect</span>
                   )}
                 </div>
-                <MLLogin 
-                  ref={loginRef} 
-                  onLoginInfo={handleLoginInfo} 
+                <MLLogin
+                  ref={loginRef}
+                  onLoginInfo={handleLoginInfo}
                   onLoginClose={() => {
                     setIsLoading(false);
                   }}
@@ -293,7 +304,7 @@ const Step3GameDetails = ({
                 value={formData.ign}
                 onChange={handleInputChange}
                 className="input-field-register"
-                
+
               disabled/>
             </div>
             <div className="input-group-register right-side-register">

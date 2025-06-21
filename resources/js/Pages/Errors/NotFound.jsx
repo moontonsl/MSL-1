@@ -1,4 +1,5 @@
 import MainLayout from "@/Layouts/MainLayout.jsx";
+import {Header} from "@/Components/index.js";
 
 const PageNotFound = () => {
     return (

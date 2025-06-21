@@ -28,16 +28,16 @@
   gap: 32px;
   display: flex;
   border-radius: 16px;
-  box-shadow: 0px 4px 24px -1px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(20px);
   position: relative;
   color: #fff;
-  border: 1px solid var(--Glass-Effect, rgba(0, 0, 0, 0.40));
-  background: linear-gradient(98deg, rgba(255, 255, 255, 0.03) 9.78%, rgba(243, 199, 24, 0.30) 125.09%);
 
-  /* Glass Effect */
-  box-shadow: 0px 4px 24px -1px rgba(0, 0, 0, 0.20);
-  backdrop-filter: blur(20px);
+border-radius: 16px;
+border: 1px solid var(--Glass-Effect, rgba(0, 0, 0, 0.40));
+
+background: var(--Glass-Effect, linear-gradient(270deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 100%));
+/* Glass Effect */
+box-shadow: 0px 4px 24px -1px rgba(0, 0, 0, 0.20);
+backdrop-filter: blur(20px);
 }
 
 .portal-top-container {
@@ -48,6 +48,7 @@
   display: flex;
   position: relative;
   color: #fff;
+  
 }
 
 .portal-top-left {
@@ -509,7 +510,7 @@ align-self: stretch;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-top: 25px;
+  margin-top: -10px;
   margin-left: 20px;
   }
 
