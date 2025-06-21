@@ -120,7 +120,7 @@ const BracketSection = ({ title, status, existingVotes = [], bracketStatus = {} 
                         <p>OPENS ON JUNE 27</p>
                         <p className="text-sm mt-2">VOTING CLOSED: JUNE 30 | 4:00 PM</p>
                     </div>
-                }else if(title == 'MINDANAO BRACKET'){
+                }else if(title == 'MINDANAO BRACKET '){
                     return <div>
                         <p>OPENS ON JUNE 28</p>
                         <p className="text-sm mt-2">VOTING CLOSED: JULY 1 | 4:00 PM</p>
