@@ -2,10 +2,10 @@
 
 
 .register-main-bg {
-  min-height: 100vh;
+  min-height: calc(100svh - 56px);
   width: 100%;
-  /*background-image: url('webbg2025.png');*/
-  /*  background-color: black;*/
+  background-image: url('./assets/webbg2025.png');
+  background-color: black;
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center center;
@@ -15,24 +15,23 @@
   overflow-x: hidden;
   box-sizing: border-box;
   padding: 40px 20px;
-    position: relative;
-    z-index: 1;
-
+  position: relative;
+  z-index: 1;
 }
 
-.background-image-register {
+/* .background-image-register {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    /*background-image: url('webbg2025.png');*/
+    background-image: url('webbg2025.png');
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center center;
     z-index: -1;
     object-fit: cover;
-}
+} */
 
 
 .form-container-register {
