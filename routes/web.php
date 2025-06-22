@@ -187,6 +187,22 @@ Route::get('/get-old-users', function () {
         ->orderBy('msl_user_basic.userid') // Important: Must order by the chunking column
         ->chunkById(200, function ($old_users_chunk) use (&$count) {
             foreach ($old_users_chunk as $old_user) {
+                $email = trim($old_user->email ?? '');
+
+                // If email is not empty, check if it already exists for a different user
+                if (!empty($email)) {
+                    $existingUser = \App\Models\User::where('email', $email)->first();
+
+                    // If a user with this email exists AND it's not the same user (match by ml_id),
+                    // it's a duplicate. Set email to null for this new record.
+                    if ($existingUser) {
+                        \Illuminate\Support\Facades\Log::warning("Duplicate email '{$email}' for old userid '{$old_user->ml_id}'. Setting email to null.");
+                        $email = "";
+                    }
+                } else {
+                    // If the original email was empty, ensure it's set to null
+                    $email = "";
+                }
                 // Prepare gender value: if it's 'Empty' or null, make it an empty string.
                 $gender = ($old_user->gender === 'Empty' || is_null($old_user->gender)) ? 'other' : $old_user->gender;
 
@@ -202,7 +218,7 @@ Route::get('/get-old-users', function () {
                         'name'              => trim($old_user->name ?? ''),
                         'surname'           => $old_user->surname ?? '',
                         'suffix'            => $old_user->suffix ?? '',
-                        'email'             => $old_user->email ?? '',
+                        'email'             => $email,
                         'password'          => $old_user->password ?? '', // SECURITY WARNING: Passwords should be hashed.
                         'username'          => $old_user->username ?? '',
                         'birthday'          => $old_user->birthday ?? '',
