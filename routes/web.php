@@ -211,7 +211,7 @@ Route::get('/get-old-users', function () {
                 if (strlen($facebook_link) > 255) { // Assuming a standard VARCHAR(255) limit for URLs
                     $facebook_link = '';
                 }
-
+                // to fix
                 \App\Models\User::updateOrCreate(
                     ['ml_id' => $old_user->ml_id], // Your original, correct unique key
                     [
