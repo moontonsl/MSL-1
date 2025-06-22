@@ -74,8 +74,7 @@ const Login = () => {
         <Header />
         <main>
           <div className="login-main-bg">
-
-              <img src={webBg2025} className="background-image-register" alt="Web Background" />
+              {/* <img src={webBg2025} className="background-image-register" alt="Web Background" /> */}
               <div className="login-wrapper" >
                 <div className="login-container-login">
                   <div className="form-container-login">
@@ -129,7 +128,7 @@ const Login = () => {
         <Header />
         <main>
           <div className="login-main-bg">
-            <img src={webBg2025} className="background-image-register" alt="Web Background" />
+            {/* <img src={webBg2025} className="background-image-register" alt="Web Background" /> */}
               <div className="login-wrapper" style={{ justifyContent: 'center', alignItems: 'center' }}>
                 <div className="choose-login-container">
                   <h2 className="choose-login-title">MLBB ACCOUNT LOGIN</h2>
@@ -163,7 +162,7 @@ const Login = () => {
     <Header />
       <main>
           <div className="login-main-bg">
-              <img src={webBg2025} className="background-image-register" alt="Web Background" />
+              {/* <img src={webBg2025} className="background-image-register" alt="Web Background" /> */}
             <div className="login-wrapper">
             <div className={`login-container-login ${error ? 'has-error' : ''}`} style={{ flex: 1 }}>
               <div className="form-container-login">

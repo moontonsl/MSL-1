@@ -199,7 +199,7 @@ const Register = () => {
                 <div className="register-main-bg">
 
 
-                    <img src={webBg2025} className="background-image-register" alt="Web Background" />
+                    {/* <img src={webBg2025} className="background-image-register" alt="Web Background" /> */}
 
 
 
