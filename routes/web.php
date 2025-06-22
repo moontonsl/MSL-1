@@ -51,13 +51,13 @@ Route::get('/register', function () {
 
 //STUDENT PORTAL
 Route::get('/studentportal', function () {
-    return Inertia::render('Student Portal/Profile');
-})->middleware(['auth', 'verified'])->name('profile');
+    return Inertia::render('Student Portal/SLStudent');
+})->middleware(['auth', 'verified'])->name('SLStudent');
 
 // // TEMPORARY STUDENT PORTAL ACCESS (NO AUTH)
 // Route::get('/studentportal', function () {
-//     return Inertia::render('Student Portal/Profile');
-// })->name('profile');
+//     return Inertia::render('Student Portal/SLStudent');
+// })->name('SLStudent');
 
 
 // MCC Routes

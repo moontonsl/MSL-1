@@ -4,10 +4,14 @@ import {BadgeCheck, ArrowDownAZ, Funnel} from 'lucide-react';
 import profilePic from "./assets/42ca9ea53c9f0acd1d273d2864b58719215b59f4.png"
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
 import TableComponent from "@/Pages/SLAdmin/components/TableComponent.jsx";
+import { Head } from '@inertiajs/react';
 
 const SLAdmin = () => {
     return (
         <AuthenticatedLayout>
+
+            {/*Title Page*/}
+            <Head title="SL Admin" />
             <div className={`${styles.slAdmin}`}>
                 <div className={`px-4 pt-4 pb-8 container mx-auto max-w-[1536px]`}>
 
