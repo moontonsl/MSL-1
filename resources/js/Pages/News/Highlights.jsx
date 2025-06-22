@@ -59,9 +59,9 @@ export default function Highlights() {
     <div className="w-full max-w-[1900px] h-auto px-2 md:px-12 mx-auto">
       <h2 className="text-2xl xs:text-3xl md:text-5xl font-bold text-center mb-4 md:mb-10 text-white">MSL HIGHLIGHTS</h2>
       <div className="relative flex items-center justify-center h-[220px] md:h-[600px] w-full overflow-hidden" style={{ minHeight: 220 }}>
-        {slides.map((slide, index) => (
+          {slides.map((slide, index) => (
           <motion.div
-            key={index}
+              key={index}
             className="absolute rounded-2xl md:rounded-[60px] overflow-hidden shadow-lg"
             initial="center"
             animate={positions[positionIndexes[index]]}
@@ -75,56 +75,56 @@ export default function Highlights() {
               // Enlarge for desktop
               ...(window.innerWidth >= 768 ? { width: 1200, maxWidth: 1200, height: 600 } : {})
             }}
-          >
-            <img
-              src={slide.src}
-              alt={slide.title}
-              className="w-full h-full object-cover"
+            >
+              <img 
+                src={slide.src} 
+                alt={slide.title} 
+                className="w-full h-full object-cover"
               style={{ height: "100%" }}
-            />
+              />
             {/* Overlay for center and adjacent slides */}
             {positionIndexes[index] === 0 || positionIndexes[index] === 1 || positionIndexes[index] === 4 ? (
-              <div className="absolute bottom-0 left-0 right-0 p-2 md:p-6 bg-gradient-to-t from-black/70 to-transparent">
-                <h3 className="text-xs xs:text-sm md:text-xl font-semibold text-white">
-                  {slide.title}
-                </h3>
-              </div>
+                <div className="absolute bottom-0 left-0 right-0 p-2 md:p-6 bg-gradient-to-t from-black/70 to-transparent">
+                  <h3 className="text-xs xs:text-sm md:text-xl font-semibold text-white">
+                    {slide.title}
+                  </h3>
+                </div>
             ) : null}
           </motion.div>
-        ))}
+          ))}
       </div>
       {/* Navigation Controls Below Carousel */}
-      <div className="flex items-center justify-center gap-4 mt-4">
-        <button
+        <div className="flex items-center justify-center gap-4 mt-4">
+          <button
           onClick={handleBack}
-          className="bg-white/10 hover:bg-white/20 text-white p-2 md:p-3 rounded-full backdrop-blur-sm transition-colors"
-        >
-          <ChevronLeft size={20} className="md:size-8" />
-        </button>
-        <div className="flex gap-2 md:gap-4 px-2 py-1 md:px-4 md:py-2 rounded-full">
-          {slides.map((_, idx) => (
-            <button
-              key={idx}
+            className="bg-white/10 hover:bg-white/20 text-white p-2 md:p-3 rounded-full backdrop-blur-sm transition-colors"
+          >
+            <ChevronLeft size={20} className="md:size-8" />
+          </button>
+          <div className="flex gap-2 md:gap-4 px-2 py-1 md:px-4 md:py-2 rounded-full">
+            {slides.map((_, idx) => (
+              <button
+                key={idx}
               onClick={() => {
                 // Move to the clicked slide
                 const diff = (idx - currentSlide + slides.length) % slides.length;
                 for (let i = 0; i < diff; i++) handleNext();
               }}
-              className={`rounded-full transition-all ${
-                currentSlide === idx
-                  ? "w-3 h-3 md:w-6 md:h-6 bg-yellow-400"
-                  : "w-2 h-2 md:w-4 md:h-4 bg-white/50 hover:bg-white/70"
-              }`}
-            />
-          ))}
-        </div>
-        <button
+                className={`rounded-full transition-all ${
+                  currentSlide === idx
+                    ? "w-3 h-3 md:w-6 md:h-6 bg-yellow-400"
+                    : "w-2 h-2 md:w-4 md:h-4 bg-white/50 hover:bg-white/70"
+                }`}
+              />
+            ))}
+          </div>
+          <button
           onClick={handleNext}
-          className="bg-white/10 hover:bg-white/20 text-white p-2 md:p-3 rounded-full backdrop-blur-sm transition-colors"
-        >
-          <ChevronRight size={20} className="md:size-8" />
-        </button>
-      </div>
+            className="bg-white/10 hover:bg-white/20 text-white p-2 md:p-3 rounded-full backdrop-blur-sm transition-colors"
+          >
+            <ChevronRight size={20} className="md:size-8" />
+          </button>
+        </div>
     </div>
   );
 }
