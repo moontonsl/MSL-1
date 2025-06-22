@@ -47,8 +47,10 @@ const Step3GameDetails = ({
         try {
           const response = await fetch(`/check-ml-id?ml_id=${encodeURIComponent(ml_id)}`);
           const data = await response.json();
+          console.log('ML ID Check Response:', data);
           return data.exists; // true if exists, false if not
         } catch (error) {
+          console.log(encodeURIComponent(ml_id));
           console.error('Error checking ML ID:', error);
           return false;
         }
@@ -60,7 +62,7 @@ const Step3GameDetails = ({
         
         try {
           const mlIdExists = await checkMlIdExists(data.roleId || '');
-
+          console.log('ML ID Exists:', mlIdExists);
           if (mlIdExists) {
             setLocalError("⚠️ ML Account already used. Please use a different ML Account.");
             setIsMlIdValid(false);

@@ -52,6 +52,7 @@ const Register = () => {
         setErrorMessage("");
         setCurrentStep(prev => Math.max(prev - 1, 1));
     };
+    
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -88,9 +89,9 @@ const Register = () => {
 
                     // Or handle specific errors
                     if (errors.email) {
-                        setErrorMessage(`⚠️ Email: ${errors.email[0]}`);
+                        setErrorMessage(`⚠️ Email: Email has already been taken.`);
                     } else if (errors.username) {
-                        setErrorMessage(`⚠️ Username: ${errors.username[0]}`);
+                        setErrorMessage(`⚠️ Username: Username has already been taken.`);
                     }else if (errors.userId) {
                         setErrorMessage(`⚠️ ML Account: The ML Account has already been taken.`);
                     } else {
