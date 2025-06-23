@@ -5,9 +5,31 @@ import profilePic from "./assets/AccountImage.png";
 import rankPIC from "./assets/MythicIcon.png";
 
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 
 const SLStudent = () => {
+    const { user } = usePage().props;
+    // Male SVG (Gold)
+    const MaleIcon = () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="25" viewBox="0 0 24 25" fill="none">
+        <path d="M16 3.5H21M21 3.5V8.5M21 3.5L14.25 10.25M16 14.5C16 17.8137 13.3137 20.5 10 20.5C6.68629 20.5 4 17.8137 4 14.5C4 11.1863 6.68629 8.5 10 8.5C13.3137 8.5 16 11.1863 16 14.5Z" stroke="#F3C718" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+    );
+    
+    // Female SVG (Pink)
+    const FemaleIcon = () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="25" viewBox="0 0 24 25" fill="none">
+        <circle cx="12" cy="10" r="5" stroke="#E75480" strokeWidth="2"/>
+        <path d="M12 15V22M9 19H15" stroke="#E75480" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
+    );
+    
+    // Other/Non-binary SVG (Purple)
+    const OtherIcon = () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="25" viewBox="0 0 24 25" fill="none">
+        <path d="M12 2L14.09 8.26L20.97 8.27L15.45 12.14L17.54 18.4L12 14.53L6.46 18.4L8.55 12.14L3.03 8.27L9.91 8.26L12 2Z" stroke="#9B59B6" strokeWidth="2" strokeLinejoin="round"/>
+        </svg>
+    );
     return (
         <AuthenticatedLayout>
 
@@ -34,9 +56,9 @@ const SLStudent = () => {
                         <div className="w-full flex flex-col justify-center gap-6 xl:gap-[32px]">
                             {/* Adjust items-alignment for mobile */}
                             <div className="flex flex-col items-center md:items-start mb-6 md:mb-0 pt-6">
-                                <h1 className="text-2xl font-semibold text-[clamp(1.75rem,3vw+1rem,4rem)] leading-[clamp(2rem,4vw+1rem,4.25rem)]">Rei Takahashi</h1>
+                                <h1 className="text-2xl font-semibold text-[clamp(1.75rem,3vw+1rem,4rem)] leading-[clamp(2rem,4vw+1rem,4.25rem)]">{user.name + " " + user.surname}</h1>
                                 <div className="flex items-center gap-2 xl:text-[32px] xl:leading-[32px] mt-1">
-                                    <span>username</span>
+                                    <span>{user.username}</span>
                                     <BadgeCheck className={`text-[var(--border-brand-default)] w-[16px] xl:w-[32px]`}/>
                                 </div>
                             </div>
@@ -46,21 +68,21 @@ const SLStudent = () => {
                                 <div className="flex flex-col">
                                     <div className="flex items-center mb-2">
                                         <div className="mr-2 opacity-50">IGN:</div>
-                                        <div className="font-medium xl:text-2xl">HERO</div>
+                                        <div className="font-medium xl:text-2xl">{user.ml_ign}</div>
                                     </div>
                                     <div className="flex items-center">
                                         <div className="mr-2 opacity-50">ML ID:</div>
-                                        <div className="font-medium xl:text-2xl">928374561 (2110)</div>
+                                        <div className="font-medium xl:text-2xl">{user.ml_id} ({user.ml_server})</div>
                                     </div>
                                 </div>
                                 <div className="flex flex-col">
                                     <div className="flex items-center mb-2">
                                         <div className="mr-2 opacity-50">SQUAD:</div>
-                                        <div className="font-medium xl:text-2xl">Celestial Five</div>
+                                        <div className="font-medium xl:text-2xl">{user.squadName}</div>
                                     </div>
                                     <div className="flex items-center">
                                         <div className="mr-2 opacity-50">YR. LVL:</div>
-                                        <div className="font-medium xl:text-2xl">Masters</div>
+                                        <div className="font-medium xl:text-2xl">{user.year_level}</div>
                                     </div>
                                 </div>
                             </div>
@@ -70,9 +92,11 @@ const SLStudent = () => {
                                 {/* Combining Tailwind for layout and custom CSS Module for complex styles */}
                                 <div className={`flex justify-center items-center aspect-square ${styles.info_column_frame_335_style}`}> {/* info-column-frame-335 */}
                                     <div className={`flex items-center justify-center gap-2.5 shrink-0 ${styles.info_column_frame_337_item_style}`}>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="25" viewBox="0 0 24 25" fill="none">
-                                        <path d="M16 3.5H21M21 3.5V8.5M21 3.5L14.25 10.25M16 14.5C16 17.8137 13.3137 20.5 10 20.5C6.68629 20.5 4 17.8137 4 14.5C4 11.1863 6.68629 8.5 10 8.5C13.3137 8.5 16 11.1863 16 14.5Z" stroke="#F3C718" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                    </svg>
+                                    <div className="flex items-center justify-center aspect-square">
+                                        {user.gender === 'male' && <MaleIcon />}
+                                        {user.gender === 'female' && <FemaleIcon />}
+                                        {user.gender !== 'male' && user.gender !== 'female' && <OtherIcon />}
+                                    </div>
                                     </div>
                                 </div>
                                 <div className={`flex items-center gap-4 ${styles.info_column_frame_337_width}`}> {/* info-column-frame-337 */}
@@ -140,7 +164,7 @@ const SLStudent = () => {
                                     <div className="flex items-center md:ml-0 flex-1 self-stretch z-10">
                                     {/* The actual text block (assuming previous items-end for internal text alignment) */}
                                         <div className={`flex flex-col justify-end items-end md:items-start gap-3 self-stretch text-white`}>
-                                            <div className={`${styles.highlightCardHeroText}`}>Layla</div>
+                                            <div className={`${styles.highlightCardHeroText}`}>{user.mainHero}</div>
                                             <div className={`${styles.highlightCardSubheadingText}`}>Main</div>
                                         </div>
                                     </div>
@@ -151,7 +175,7 @@ const SLStudent = () => {
                                     <div className="flex items-center md:ml-0 flex-1 self-stretch z-10">
                                     {/* The actual text block (assuming previous items-end for internal text alignment) */}
                                         <div className={`flex flex-col justify-end items-end md:items-start gap-3 self-stretch text-white`}>
-                                            <div className={`${styles.highlightCardHeroText}`}>Layla</div>
+                                            <div className={`${styles.highlightCardHeroText}`}>{user.mainHero}</div>
                                             <div className={`${styles.highlightCardSubheadingText}`}>Main</div>
                                         </div>
                                     </div>
