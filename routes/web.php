@@ -148,6 +148,11 @@ Route::get('/soon', function () {
 
 // Google Sheet Routes
 Route::get('/google-sheet', [GoogleSheetController::class, 'exportToGoogleSheet'])->name('google-sheet.export');
+//force logout
+Route::get('/force-logout', function () {
+    Auth::logout();
+    return redirect()->route('login');
+})->name('force-logout');
 
 Route::get('/get-old-users', function () {
     // Set to 0 for no time limit, essential for large migrations
