@@ -5,7 +5,6 @@ import './login.css';
 import { Head } from '@inertiajs/react';
 import { Eye, EyeOff } from 'react-feather';
 import axios from 'axios';
-import webBg2025 from "@/Pages/Account Creation/assets/webbg2025.png";
 const Login = () => {
   const { post, data, setData } = useForm({
     username: '',

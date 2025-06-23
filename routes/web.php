@@ -37,9 +37,15 @@ Route::inertia('/upload', 'SchoolUploader');
 Route::post('/upload-schools', [SchoolUploadController::class, 'store'])->name('upload-schools');
 Route::get('/schools/search', [SchoolController::class, 'search']);
 
+// //LOGIN ROUTES
+// Route::get('/login', function () {
+//     return Inertia::render('Login/Login');
+// })->name('login');
+// // Route::post('/login2', [AuthController::class, 'login'])->name('login2');
+
 //LOGIN ROUTES
-Route::get('/login', function () {
-    return Inertia::render('Login/Login');
+Route::get('/login2', function () {
+    return Inertia::render('Login/Login2');
 })->name('login');
 // Route::post('/login2', [AuthController::class, 'login'])->name('login2');
 
@@ -49,15 +55,15 @@ Route::get('/register', function () {
 })->name('register');
 
 
-//STUDENT PORTAL
-Route::get('/studentportal', function () {
-    return Inertia::render('Student Portal/SLStudent');
-})->middleware(['auth', 'verified'])->name('SLStudent');
-
-// // TEMPORARY STUDENT PORTAL ACCESS (NO AUTH)
+// //STUDENT PORTAL
 // Route::get('/studentportal', function () {
 //     return Inertia::render('Student Portal/SLStudent');
-// })->name('SLStudent');
+// })->middleware(['auth', 'verified'])->name('SLStudent');
+
+// TEMPORARY STUDENT PORTAL ACCESS (NO AUTH)
+Route::get('/studentportal', function () {
+    return Inertia::render('Student Portal/SLStudent');
+})->name('SLStudent');
 
 
 // MCC Routes
