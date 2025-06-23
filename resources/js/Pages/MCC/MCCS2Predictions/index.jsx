@@ -48,9 +48,9 @@ const baseTeams = [
   
     return (
       <div className="w-full flex flex-col items-center relative">
-        <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-center text-white mb-2 mt-8 tracking-widest">SQUAD OF THE SEASON</h2>
-        <p className="text-base md:text-lg text-center text-white mb-6">Choose at least 2 Teams</p>
-        <div className="border-4 border-white rounded-2xl p-4 md:p-6 bg-black/40" style={{maxWidth:'1200px'}}>
+        <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-center text-white mb-0 mt-2 tracking-wide">SQUAD OF THE SEASON</h2>
+        <p className="text-base md:text-lg font-semibold text-center text-white mb-6">Choose at least 2 Teams</p>
+        <div className="rounded-2xl p-4 md:p-6 bg-black/40" style={{maxWidth:'1200px'}}>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
             {teams.map((team, idx) => {
               const isSelected = selected.includes(idx);
@@ -81,8 +81,8 @@ const basePlayers = Array(8).fill({
   image: '/images/MCC/MCCS2Predictions/Player Card.png',
 });
 
-const CARD_HEIGHT = 300;
-const CARD_WIDTH = 120;
+const CARD_HEIGHT = 290;
+const CARD_WIDTH = 115;
 
 function PlayerVoting() {
   const [selected, setSelected] = useState({});
@@ -93,58 +93,85 @@ function PlayerVoting() {
   }, []);
 
   const selectPlayer = (roleIdx, playerIdx) => {
-    if (selected[roleIdx] === playerIdx) {
-      setSelected({ ...selected, [roleIdx]: undefined });
-    } else if (selected[roleIdx] === undefined) {
-      setSelected({ ...selected, [roleIdx]: playerIdx });
+    const currentSelections = selected[roleIdx] || [];
+    
+    if (currentSelections.includes(playerIdx)) {
+      // Remove player if already selected
+      const newSelections = currentSelections.filter(idx => idx !== playerIdx);
+      setSelected({ ...selected, [roleIdx]: newSelections.length > 0 ? newSelections : undefined });
+    } else if (currentSelections.length < 3) {
+      // Add player if less than 3 selected
+      const newSelections = [...currentSelections, playerIdx];
+      setSelected({ ...selected, [roleIdx]: newSelections });
     }
   };
 
   return (
-    <div className="w-full flex flex-col items-center mb-24">
-      <h2 className="text-3xl md:text-5xl font-bold text-center text-white mb-2">PLAYERS OF THE SEASON</h2>
-      <p className="text-center text-white text-lg mb-6">Choose 1 Player per Role</p>
-      <div className="flex flex-col gap-0 md:gap-8 w-full max-w-6xl">
+    <div className="w-full flex flex-col items-center mb-24 mt-12">
+      <h2 className="text-2xl md:text-5xl font-bold text-center text-white mb-0 tracking-wide">PLAYER OF THE SEASON</h2>
+      <p className="text-center text-white text-lg font-semibold mb-8 md:mb-10">Choose 3 Players per Role</p>
+      <div className="flex flex-col gap-2 md:gap-8 w-full max-w-6xl -mt-2 md:mt-0">
         {roles.map((role, roleIdx) => (
-          <div key={role} className="flex items-start -space-x-8 md:-space-x-12 w-full relative justify-start md:justify-center">
+          <div key={role} className="flex items-start w-full justify-start md:justify-center relative gap-1 md:gap-0 pl-4 md:pl-0">
             <div
-              className="flex items-center justify-center bg-stone-900 scale-[0.6] sm:scale-[0.6] md:scale-90 lg:scale-100 flex-shrink-0 relative z-10"
-              style={{ width: 56, height: CARD_HEIGHT, borderRadius: '16px' }}
+              className="flex items-center justify-center bg-stone-900 flex-shrink-0 relative z-10"
+              style={{ 
+                width: window.innerWidth >= 768 ? 56 : 56 * 0.73, 
+                height: window.innerWidth >= 768 ? CARD_HEIGHT * 0.9 : CARD_HEIGHT * 0.65, 
+                borderRadius: '16px'
+              }}
             >
-              <span
-                className="text-yellow-400 font-bold font-montserrat text-3xl tracking-widest uppercase"
-                style={{ transform: 'rotate(-90deg)', whiteSpace: 'nowrap', letterSpacing: '0.1em' }}
-              >
+                              <span
+                  className="text-yellow-400 font-bold font-montserrat tracking-widest uppercase"
+                  style={{ 
+                    transform: 'rotate(-90deg)', 
+                    whiteSpace: 'nowrap', 
+                    letterSpacing: '0.1em',
+                    fontSize: window.innerWidth >= 768 ? '1.875rem' : '1.25rem'
+                  }}
+                >
                 {role}
               </span>
             </div>
-            <div className="flex flex-row -space-x-10 md:gap-11 overflow-x-auto w-full max-w-[85vw] sm:max-w-[90vw] md:max-w-none md:justify-center custom-scrollbar relative z-0 items-start">
-              {shuffledPlayers[roleIdx] && shuffledPlayers[roleIdx].map((player, playerIdx) => {
-                const isSelected = selected[roleIdx] === playerIdx;
-                const isDimmed = selected[roleIdx] !== undefined && !isSelected;
-                return (
-                  <div
-                    key={playerIdx}
-                    className={`relative rounded-2xl overflow-hidden flex flex-col items-center group cursor-pointer transition-all duration-200 scale-[0.6] sm:scale-[0.6] md:scale-90 lg:scale-100 flex-shrink-0 ${isSelected ? 'ring-4 ring-yellow-400' : ''}`}
-                    style={{ width: CARD_WIDTH, height: CARD_HEIGHT, background: '#18181b', opacity: isDimmed ? 0.5 : 1 }}
-                    onClick={() => selectPlayer(roleIdx, playerIdx)}
-                  >
-                    <div className="absolute top-4 right-4 z-10">
-                      <CheckCircle size={32} className={`transition-opacity duration-300 ${isSelected ? 'opacity-100 text-yellow-400' : 'opacity-0'}`} />
+            <div className="w-full max-w-[90vw] md:max-w-none overflow-x-auto relative z-0 pb-2 custom-scrollbar">
+              <div className="flex flex-row gap-1 md:gap-4 md:justify-center">
+                {shuffledPlayers[roleIdx] && shuffledPlayers[roleIdx].map((player, playerIdx) => {
+                  const currentSelections = selected[roleIdx] || [];
+                  const isSelected = currentSelections.includes(playerIdx);
+                  const isDimmed = currentSelections.length === 3 && !isSelected;
+                  return (
+                    <div
+                      key={playerIdx}
+                      className={`relative rounded-2xl overflow-hidden flex flex-col items-center cursor-pointer transition-all duration-200 ${isSelected ? 'ring-4 ring-yellow-400' : ''}`}
+                                              style={{
+                          width: window.innerWidth >= 768 ? CARD_WIDTH : CARD_WIDTH * 0.73,
+                          height: window.innerWidth >= 768 ? CARD_HEIGHT * 0.9 : CARD_HEIGHT * 0.65,
+                          transform: 'scale(1)',
+                          opacity: isDimmed ? 0.5 : 1,
+                          flexShrink: 0,
+                          background: '#18181b',
+                        }}
+                      onClick={() => selectPlayer(roleIdx, playerIdx)}
+                    >
+                      <div className="absolute top-2 right-2 z-10">
+                        <CheckCircle size={window.innerWidth >= 768 ? 32 : 20} className={`transition-opacity duration-300 ${isSelected ? 'opacity-100 text-yellow-400' : 'opacity-0'}`} />
+                      </div>
+                                              <img
+                          src={player.image}
+                          alt={player.name}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain',
+                          }}
+                        />
+                      {isDimmed && <div className="absolute inset-0 bg-black/60 z-10" />}
                     </div>
-                    <img
-                      src={player.image}
-                      alt={player.name}
-                      width={CARD_WIDTH}
-                      height={CARD_HEIGHT}
-                      style={{ width: CARD_WIDTH, height: CARD_HEIGHT, display: 'block' }}
-                    />
-                    {isDimmed && <div className="absolute inset-0 bg-black/60 z-10" />}
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-            <div className="absolute left-0 right-0 -bottom-4 h-1 bg-white rounded-full w-full" style={{ maxWidth: '90%', margin: '0 auto' }} />
+            <div className="absolute left-0 right-0 -bottom-4 h-1 bg-white rounded-full w-full hidden md:block" style={{ maxWidth: '90%', margin: '0 auto' }} />
           </div>
         ))}
       </div>
@@ -179,10 +206,10 @@ export default function MCCS2PredictionsPage() {
         className="min-h-screen bg-no-repeat bg-cover bg-center bg-fixed w-full"
         style={{ backgroundImage: "url('/images/MCC/MCCS2Predictions/PredictionsBG.png')" }}
       >
-        <div className="flex-1 w-full flex flex-col items-center justify-start pt-12 gap-16">
+        <div className="flex-1 w-full flex flex-col items-center justify-start pt-0 gap-4">
           <div className="text-center">
-            <img src="/images/MCC/Pamantasan.png" alt="Pamantasan Lakas" className="h-20 md:h-24 mx-auto" />
-            <h1 className="text-xl md:text-3xl font-bold text-white uppercase tracking-widest mt-4">
+            <img src="/images/MCC/MCC_HLOGO.png" alt="Pamantasan Lakas" className="h-70 md:h-50" />
+            <h1 className="text-xl md:text-3xl font-bold text-white uppercase tracking-wide">
               Public Choice Awards
             </h1>
           </div>
