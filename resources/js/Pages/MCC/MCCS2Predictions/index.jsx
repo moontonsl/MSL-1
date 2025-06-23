@@ -104,11 +104,11 @@ function PlayerVoting() {
     <div className="w-full flex flex-col items-center mb-24">
       <h2 className="text-3xl md:text-5xl font-bold text-center text-white mb-2">PLAYERS OF THE SEASON</h2>
       <p className="text-center text-white text-lg mb-6">Choose 1 Player per Role</p>
-      <div className="flex flex-col gap-8 w-full max-w-6xl">
+      <div className="flex flex-col gap-0 md:gap-8 w-full max-w-6xl">
         {roles.map((role, roleIdx) => (
-          <div key={role} className="flex items-center gap-0 md:gap-4 w-full relative justify-start md:justify-center">
+          <div key={role} className="flex items-start -space-x-8 md:-space-x-12 w-full relative justify-start md:justify-center">
             <div
-              className="flex items-center justify-center bg-stone-900 scale-[0.6] sm:scale-[0.6] md:scale-90 lg:scale-100 flex-shrink-0"
+              className="flex items-center justify-center bg-stone-900 scale-[0.6] sm:scale-[0.6] md:scale-90 lg:scale-100 flex-shrink-0 relative z-10"
               style={{ width: 56, height: CARD_HEIGHT, borderRadius: '16px' }}
             >
               <span
@@ -118,7 +118,7 @@ function PlayerVoting() {
                 {role}
               </span>
             </div>
-            <div className="flex flex-row -space-x-10 md:gap-11 overflow-x-auto w-full max-w-[85vw] sm:max-w-[90vw] md:max-w-none md:justify-center">
+            <div className="flex flex-row -space-x-10 md:gap-11 overflow-x-auto w-full max-w-[85vw] sm:max-w-[90vw] md:max-w-none md:justify-center custom-scrollbar relative z-0 items-start">
               {shuffledPlayers[roleIdx] && shuffledPlayers[roleIdx].map((player, playerIdx) => {
                 const isSelected = selected[roleIdx] === playerIdx;
                 const isDimmed = selected[roleIdx] !== undefined && !isSelected;
@@ -159,6 +159,22 @@ function PlayerVoting() {
 export default function MCCS2PredictionsPage() {
   return (
     <MainLayout>
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(0, 0, 0, 0.3);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: linear-gradient(90deg, #fbbf24, #f59e0b);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(90deg, #f59e0b, #d97706);
+        }
+      `}</style>
       <div
         className="min-h-screen bg-no-repeat bg-cover bg-center bg-fixed w-full"
         style={{ backgroundImage: "url('/images/MCC/MCCS2Predictions/PredictionsBG.png')" }}
