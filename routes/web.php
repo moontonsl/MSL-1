@@ -16,6 +16,7 @@ use App\Http\Controllers\VotingController;
 use App\Http\Controllers\BracketTeamController;
 use App\Http\Controllers\MlAuthController;
 use App\Http\Controllers\GoogleSheetController;
+use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
     return Inertia::render('Home/Home', [
@@ -51,7 +52,9 @@ Route::get('/register', function () {
 
 //STUDENT PORTAL
 Route::get('/studentportal', function () {
-    return Inertia::render('Student Portal/SLStudent');
+    return Inertia::render('Student Portal/SLStudent', [
+        'user' => Auth::user(),
+    ]);
 })->middleware(['auth', 'verified'])->name('SLStudent');
 
 // // TEMPORARY STUDENT PORTAL ACCESS (NO AUTH)
