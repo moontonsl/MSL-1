@@ -48,7 +48,7 @@ const baseTeams = [
   
     return (
       <div className="w-full flex flex-col items-center relative">
-        <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-center text-white mb-0 mt-2 tracking-wide">SQUAD OF THE SEASON</h2>
+        <img src="/images/MCC/MCCS2Predictions/SOTS.png" alt="Squad of the Season" className="h-12 sm:h-16 md:h-20 mx-auto mb-0 mt-2" />
         <p className="text-base md:text-lg font-semibold text-center text-white mb-6">Choose at least 2 Teams</p>
         <div className="rounded-2xl p-4 md:p-6 bg-black/40" style={{maxWidth:'1200px'}}>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
@@ -108,7 +108,7 @@ function PlayerVoting() {
 
   return (
     <div className="w-full flex flex-col items-center mb-24 mt-12">
-      <h2 className="text-2xl md:text-5xl font-bold text-center text-white mb-0 tracking-wide">PLAYER OF THE SEASON</h2>
+      <img src="/images/MCC/MCCS2Predictions/POTS.png" alt="Players of the Season" className="h-12 md:h-20 mx-auto mb-0" />
       <p className="text-center text-white text-lg font-semibold mb-8 md:mb-10">Choose 3 Players per Role</p>
       <div className="flex flex-col gap-2 md:gap-8 w-full max-w-6xl -mt-2 md:mt-0">
         {roles.map((role, roleIdx) => (

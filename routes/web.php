@@ -139,7 +139,7 @@ Route::post('/ml/logout', [MlAuthController::class, 'logout'])->name('ml.logout'
 Route::get('/mcc/predictions', [VotingController::class, 'index'])->name('predictions.index');
 Route::post('/mcc/predictions', [VotingController::class, 'store'])->name('predictions.vote');
 
-Route::get('/mcc/MCCS2Predictions', function () {
+Route::get('/mcc/MCCFavourites', function () {
     return Inertia::render('MCC/MCCS2Predictions/index');
 });
 
