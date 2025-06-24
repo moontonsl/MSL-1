@@ -75,8 +75,9 @@ export default function VotingSignIn() {
                         
                         <MLLoginVoting ref={mlLoginRef} />
 
-                        <div className="text-center mb-8 mt-8">
+                        <div className="flex justify-center items-center gap-6 md:gap-12 mt-6 md:mt-10 mb-2">
                             <img src="/images/MCC/SMARTLOGO.png" alt="Voting Sign In" className="w-32 h-auto mx-auto" />
+                            <img src="/images/MCC/OppoLOGO.png" alt="Voting Sign In" className="w-32 h-auto mx-auto" />
                         </div>
                     </div>
                 </main>
