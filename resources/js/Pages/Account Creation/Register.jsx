@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import { Header, Footer } from '@/Components';
-import Step1BasicDetails from './Step1BasicDetails';
-import Step2EducationDetails from './Step2EducationDetails';
-import Step3GameDetails from './Step3GameDetails';
-import Step4AccountCredentials from './Step4AccountCredentials';
+import Step1BasicDetails from './components/Step1BasicDetails.jsx';
+import Step2EducationDetails from './components/Step2EducationDetails.jsx';
+import Step3GameDetails from './components/Step3GameDetails.jsx';
+import Step4AccountCredentials from './components/Step4AccountCredentials.jsx';
 import webBg2025 from './assets/webbg2025.png';
 import './register.css';
 
@@ -40,8 +40,6 @@ const Register = () => {
         //     [name]: type === 'file' ? files[0] : value
         // }));
         setData(formData);
-        console.log(data);
-        console.log(formData);
     };
 
     const handleNext = () => {
@@ -54,6 +52,7 @@ const Register = () => {
         setErrorMessage("");
         setCurrentStep(prev => Math.max(prev - 1, 1));
     };
+    
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -90,9 +89,11 @@ const Register = () => {
 
                     // Or handle specific errors
                     if (errors.email) {
-                        setErrorMessage(`⚠️ Email: ${errors.email[0]}`);
+                        setErrorMessage(`⚠️ Email: Email has already been taken.`);
                     } else if (errors.username) {
-                        setErrorMessage(`⚠️ Username: ${errors.username[0]}`);
+                        setErrorMessage(`⚠️ Username: Username has already been taken.`);
+                    }else if (errors.userId) {
+                        setErrorMessage(`⚠️ ML Account: The ML Account has already been taken.`);
                     } else {
                         setErrorMessage("⚠️ Please check your information and try again.");
                     }
@@ -198,7 +199,7 @@ const Register = () => {
                 <div className="register-main-bg">
 
 
-                    <img src={webBg2025} className="background-image-register" alt="Web Background" />
+                    {/* <img src={webBg2025} className="background-image-register" alt="Web Background" /> */}
 
 
 
