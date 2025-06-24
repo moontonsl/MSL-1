@@ -91,6 +91,11 @@ export default function MCCMAINPage() {
                             alt="Oppo Logo"
                             className="h-[40px] md:h-[50px] object-contain"
                         />
+                        <img
+                            src="/images/MCC/OppoLogo.png"
+                            alt="Oppo Logo"
+                            className="h-[40px] md:h-[50px] object-contain"
+                        />                        
                     </div>
                 </div>
             </main>
