@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import styles from '../register.module.scss';
-import { CalendarDays } from 'lucide-react';
+
 
 const Step1BasicDetails = ({
   formData,
@@ -101,199 +100,183 @@ const Step1BasicDetails = ({
   };
 
   return (
-<div className="">
-  <h1 className={`${styles['title-register']} text-white mb-2 text-2xl md:text-[2.5rem]`}>
-    CREATE MSL ACCOUNT
-  </h1>
-  <h2 className={`${styles['subtitle-register']} text-white`}>
-    BASIC DETAILS
-  </h2>
+    <div className="">
+      <h1 className="title-register">CREATE MSL ACCOUNT</h1>
+      <h2 className="subtitle-register">BASIC DETAILS</h2>
+      {/* Dynamic Progress Bar for Step 1 */}
+      {(() => {
+        const filled = requiredFields.filter(
+          (field) => formData[field] && formData[field].toString().trim() !== ""
+        ).length;
+        const percent = Math.round((filled / requiredFields.length) * 25);
 
-  {/* Progress Bar */}
-  {(() => {
-    const filled = requiredFields.filter(
-      (field) => formData[field] && formData[field].toString().trim() !== ""
-    ).length;
-    const percent = Math.round((filled / requiredFields.length) * 25);
+        return (
+          <div style={{ margin: "16px 0" }}>
+            <div style={{
+              height: "12px",
+              background: "#eee",
+              borderRadius: "6px",
+              overflow: "hidden",
+              marginBottom: "4px"
+            }}>
+              <div style={{
+                width: `${percent}%`,
+                height: "100%",
+                background: "#f1c40f",
+                transition: "width 0.3s"
+              }} />
+            </div>
+            <div style={{ fontSize: "12px", color: "#555" }}>
+              Step 1 of 4 &mdash; {percent}% of this step complete
+            </div>
+          </div>
+        );
+      })()}
 
-    return (
-      <div className="my-4 px-1">
-        <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-1">
-          <div
-            className="h-full bg-yellow-500 transition-all duration-300"
-            style={{ width: `${percent}%` }}
+
+      <div className="form-row-register">
+        <div className="input-group-register left-side-register">
+          <label htmlFor="firstName" className="label-register">
+            First Name<span className="required"> *</span>
+          </label>
+          <input
+            type="text"
+            id="firstName"
+            name="firstName"
+            value={formData.firstName}
+            onChange={handleAnyInputChange}
+            onBlur={handleAnyInputBlur}
+            className="input-field-register"
+            placeholder="e.g. Crisostomo"
+            required
           />
         </div>
-        <div className="text-xs text-gray-100 text-right">
-          Step 1 of 4 &mdash; {percent}% of this step complete
+        <div className="input-group-register right-side-register">
+          <label htmlFor="lastName" className="label-register">
+            Last Name<span className="required"> *</span>
+          </label>
+          <input
+            type="text"
+            id="lastName"
+            name="lastName"
+            value={formData.lastName}
+            onChange={handleAnyInputChange}
+            onBlur={handleAnyInputBlur}
+            className="input-field-register"
+            placeholder="e.g. Ibarra"
+            required
+          />
         </div>
       </div>
-    );
-  })()}
-
-  {/* First Name & Last Name */}
-  <div className="flex flex-col md:flex-row justify-between mb-4 gap-4">
-    <div className="w-full">
-      <label htmlFor="firstName" className={`${styles['label-register']} block mb-1`}>
-        First Name<span className={styles.required}> *</span>
-      </label>
-      <input
-        type="text"
-        id="firstName"
-        name="firstName"
-        value={formData.firstName}
-        onChange={handleAnyInputChange}
-        onBlur={handleAnyInputBlur}
-        className={`${styles['input-field-register']} w-full p-3 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
-        placeholder="e.g. Crisostomo"
-        required
-      />
+      <div className="form-row-register">
+        <div className="input-group-register left-side-register">
+          <label htmlFor="suffix" className="label-register">
+            Suffix
+          </label>
+          <select
+            id="suffix"
+            name="suffix"
+            value={formData.suffix}
+            onChange={handleAnyInputChange}
+            onBlur={handleAnyInputBlur}
+            className="input-field-register suffix-select"
+          >
+            <option value=""></option>
+            <option value="Jr">Jr</option>
+            <option value="Sr">Sr</option>
+            <option value="II">II</option>
+            <option value="III">III</option>
+            <option value="IV">IV</option>
+          </select>
+        </div>
+        <div className="input-group-register left-side-register">
+          <label htmlFor="gender" className="label-register" >
+            Gender <span className="required"> *</span>
+          </label>
+          <select
+            id="gender"
+            name="gender"
+            value={formData.gender}
+            onChange={handleAnyInputChange}
+            onBlur={handleAnyInputBlur}
+            className="input-field-register gender-select"
+            required
+          >
+            <option value="" disabled>Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Prefer not to say">Prefer not to say</option>
+          </select>
+        </div>
+      </div>
+      <div className="form-row-register">
+        <div className="input-group-register full-width-register">
+          <label htmlFor="birthday" className="label-register">
+            Birthday<span className="required"> *</span>
+          </label>
+          <input
+            type="date"
+            id="birthday"
+            name="birthday"
+            max={new Date().toISOString().split('T')[0]}
+            value={formData.birthday}
+            onChange={handleBirthdayChange}
+            className={`input-field-register birthday ${!formData.birthday ? 'mobile-date-placeholder' : ''}`}
+            required
+          />
+        </div>
+      </div>
+      <div className="form-row-register">
+        <div className="input-group-register right-side-register">
+          <label htmlFor="age" className="label-register">
+            Age<span className="required"> *</span>
+          </label>
+          <input
+            type="number"
+            id="age"
+            name="age"
+            value={formData.age}
+            onChange={handleAnyInputChange}
+            className="input-field-register"
+            readOnly
+          />
+        </div>
+        <div className="input-group-register right-side-register">
+          <label htmlFor="contactNo" className="label-register">
+            Contact No.<span className="required"> *</span>
+          </label>
+          <input
+            type="text"
+            id="contactNo"
+            name="contactNo"
+            value={formData.contactNo}
+            onChange={handleContactChange}
+            onBlur={handleContactBlur}
+            className="input-field-register"
+            placeholder="e.g. 09123456789"
+            required
+          />
+        </div>
+      </div>
+      <div className="form-row-register">
+        <div className="input-group-register full-width-register">
+          <label htmlFor="facebookLink" className="label-register">
+            Facebook Profile Link<span className="required"> *</span>
+          </label>
+          <input
+            type="text"
+            id="facebookLink"
+            name="facebookLink"
+            value={formData.facebookLink}
+            onChange={handleAnyInputChange}
+            onBlur={handleAnyInputBlur}
+            className="input-field-register"
+            placeholder="e.g. http://facebook.com/username"
+            required
+          />
+        </div>
+      </div>
     </div>
-    <div className="w-full">
-      <label htmlFor="lastName" className={`${styles['label-register']} block mb-1`}>
-        Last Name<span className={styles.required}> *</span>
-      </label>
-      <input
-        type="text"
-        id="lastName"
-        name="lastName"
-        value={formData.lastName}
-        onChange={handleAnyInputChange}
-        onBlur={handleAnyInputBlur}
-        className={`${styles['input-field-register']} w-full p-3 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
-        placeholder="e.g. Ibarra"
-        required
-      />
-    </div>
-  </div>
-
-  {/* Suffix & Gender */}
-  <div className="flex flex-col md:flex-row justify-between mb-4 gap-4">
-    <div className="w-full">
-      <label htmlFor="suffix" className={`${styles['label-register']} block mb-1`}>
-        Suffix
-      </label>
-      <select
-        id="suffix"
-        name="suffix"
-        value={formData.suffix}
-        onChange={handleAnyInputChange}
-        onBlur={handleAnyInputBlur}
-        className={`${styles['input-field-register']} ${styles['suffix-select']} appearance-none bg-[url('data:image/svg+xml;base64,...')] bg-no-repeat bg-right-4 bg-center bg-3 bg-transparent pr-12 text-white border border-gray-700 bg-gray-900 bg-opacity-70 cursor-pointer w-full p-3 rounded-lg text-base focus:outline-none focus:border-yellow-400`}
-      >
-        <option value=""></option>
-        <option value="Jr">Jr</option>
-        <option value="Sr">Sr</option>
-        <option value="II">II</option>
-        <option value="III">III</option>
-        <option value="IV">IV</option>
-      </select>
-    </div>
-    <div className="w-full">
-      <label htmlFor="gender" className={`${styles['label-register']} block mb-1`}>
-        Gender <span className={styles.required}> *</span>
-      </label>
-      <select
-        id="gender"
-        name="gender"
-        value={formData.gender}
-        onChange={handleAnyInputChange}
-        onBlur={handleAnyInputBlur}
-        className={`${styles['input-field-register']} ${styles['gender-select']} appearance-none bg-[url('data:image/svg+xml;base64,...')] bg-no-repeat bg-right-4 bg-center bg-3 bg-transparent pr-12 text-white border border-gray-700 bg-gray-900 bg-opacity-70 cursor-pointer w-full p-3 rounded-lg text-base focus:outline-none focus:border-yellow-400`}
-        required
-      >
-        <option value="" disabled>Select Gender</option>
-        <option value="Male">Male</option>
-        <option value="Female">Female</option>
-        <option value="Prefer not to say">Prefer not to say</option>
-      </select>
-    </div>
-  </div>
-
-  {/* Birthday */}
-  <div className="mb-4">
-    <div className="w-full relative">
-      <label htmlFor="birthday" className={`${styles['label-register']} block mb-1`}>
-        Birthday<span className={styles.required}> *</span>
-      </label>
-      <input
-        type="date"
-        id="birthday"
-        name="birthday"
-        max={new Date().toISOString().split('T')[0]}
-        value={formData.birthday}
-        onChange={handleBirthdayChange}
-        className={`
-          ${styles['input-field-register']} 
-          ${!formData.birthday ? 'mobile-date-placeholder' : ''} 
-          w-full p-3 text-white 
-          border border-gray-700 bg-gray-900 bg-opacity-70 
-          rounded-lg text-base placeholder-gray-500 
-          focus:outline-none focus:border-yellow-400
-          md:appearance-auto appearance-none
-        `}
-        placeholder="Please click to select a date"
-        required
-      />
-      <CalendarDays className="absolute top-[65%] right-3 -translate-y-1/2 text-gray-400 w-5 h-5 md:hidden pointer-events-none" />
-    </div>
-  </div>
-
-  {/* Age & Contact No. */}
-  <div className="flex flex-col md:flex-row justify-between mb-4 gap-4">
-    <div className="w-full">
-      <label htmlFor="age" className={`${styles['label-register']} block mb-1`}>
-        Age<span className={styles.required}> *</span>
-      </label>
-      <input
-        type="number"
-        id="age"
-        name="age"
-        value={formData.age}
-        onChange={handleAnyInputChange}
-        className={`${styles['input-field-register']} w-full p-3 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
-        readOnly
-      />
-    </div>
-    <div className="w-full">
-      <label htmlFor="contactNo" className={`${styles['label-register']} block mb-1`}>
-        Contact No.<span className={styles.required}> *</span>
-      </label>
-      <input
-        type="text"
-        id="contactNo"
-        name="contactNo"
-        value={formData.contactNo}
-        onChange={handleContactChange}
-        onBlur={handleContactBlur}
-        className={`${styles['input-field-register']} w-full p-3 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
-        placeholder="e.g. 09123456789"
-        required
-      />
-    </div>
-  </div>
-
-  {/* Facebook Profile Link */}
-  <div className="mb-8">
-    <div className="w-full">
-      <label htmlFor="facebookLink" className={`${styles['label-register']} block mb-1`}>
-        Facebook Profile Link<span className={styles.required}> *</span>
-      </label>
-      <input
-        type="text"
-        id="facebookLink"
-        name="facebookLink"
-        value={formData.facebookLink}
-        onChange={handleAnyInputChange}
-        onBlur={handleAnyInputBlur}
-        className={`${styles['input-field-register']} w-full p-3 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
-        placeholder="e.g. http://facebook.com/username"
-        required
-      />
-    </div>
-  </div>
-</div>
-
   );
 };
 

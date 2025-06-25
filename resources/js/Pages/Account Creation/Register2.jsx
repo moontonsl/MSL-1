@@ -1,17 +1,12 @@
-import styles from "./register.module.scss";
-import {BadgeCheck} from 'lucide-react';
-
-import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
-import { Head, usePage } from '@inertiajs/react';
-
 import React, { useState } from 'react';
-import { useForm } from '@inertiajs/react';
-
-import Step1BasicDetails2 from './components/Step1BasicDetails2.jsx';
-import Step2EducationDetails2 from './components/Step2EducationDetails2.jsx';
-import Step3GameDetails2 from './components/Step3GameDetails2.jsx';
+import { Head, useForm } from '@inertiajs/react';
+import { Header, Footer } from '@/Components';
+import Step1BasicDetails from './components/Step1BasicDetails.jsx';
+import Step2EducationDetails from './components/Step2EducationDetails.jsx';
+import Step3GameDetails from './components/Step3GameDetails.jsx';
 import Step4AccountCredentials from './components/Step4AccountCredentials.jsx';
-
+import webBg2025 from './assets/webbg2025.png';
+import './register.css';
 
 const initialFormData = {
     // Step 1
@@ -190,70 +185,60 @@ const Register = () => {
     };
 
     const stepComponents = {
-        1: <Step1BasicDetails2 {...stepProps} />,
-        2: <Step2EducationDetails2 {...stepProps} />,
-        3: <Step3GameDetails2 {...stepProps} />,
+        1: <Step1BasicDetails {...stepProps} />,
+        2: <Step2EducationDetails {...stepProps} />,
+        3: <Step3GameDetails {...stepProps} />,
         4: <Step4AccountCredentials {...stepProps} />
     };
 
     return (
         <>
         <Head title="Register Account" />
-            <AuthenticatedLayout>
-                    <div className={`w-full max-w-[400px] mx-auto py-10 px-6 my-10 bg-[rgba(10,10,10,0.5)] rounded-[15px_15px_15px_15px] md:rounded-[15px_15px_15px_15px] border border-[#242424] shadow-[0_4px_8px_rgba(0,0,0,0.1)] backdrop-blur-[10px] flex flex-col justify-center items-start transition-all duration-300 ease-in-out overflow-hidden ${errorMessage ? 'rounded-2xl' : ''} md:max-w-[758px] md:min-h-[850px] md:py-12 md:px-12`}>
-                    <form onSubmit={handleSubmit} className="form-register w-full">
-                        {stepComponents[currentStep]}
+        <Header />
+            <main>
+                <div className="register-main-bg">
 
-                        {errorMessage && (
-                        <div className="bg-[#ffdddd] border-l-6 border-l-[#f44336] p-4 mt-4 mb-4 text-red-700 font-medium rounded-md w-full animate-fadeIn">
-                            <p>{errorMessage}</p>
-                        </div>
-                        )}
 
-                        <div className="flex flex-col md:flex-row justify-center items-center gap-4 mt-6 mb-6">
-                        {currentStep > 1 && (
-                            <button
-                            type="button"
-                            onClick={handlePrev}
-                            className="bg-[#2c2c2c] text-white text-white py-3 px-6 w-full md:w-2/5 rounded-md text-base cursor-pointer hover:bg-yellow-500 transition-all duration-200"
-                            >
-                            Prev
-                            </button>
-                        )}
-                        {currentStep < 4 ? (
-                            <button
-                            type="button"
-                            onClick={handleNext}
-                            className="bg-[#2c2c2c] text-white text-white py-3 px-6 w-full md:w-2/5 rounded-md text-base cursor-pointer hover:bg-yellow-500 transition-all duration-200"
-                            >
-                            Next
-                            </button>
-                        ) : (
-                            <button
-                            type="submit"
-                            className="bg-[#2c2c2c] text-white text-white py-3 px-6 w-full md:w-2/5 rounded-md text-base cursor-pointer hover:bg-yellow-500 transition-all duration-200"
-                            >
-                            Submit
-                            </button>
-                        )}
-                        </div>
+                    {/* <img src={webBg2025} className="background-image-register" alt="Web Background" /> */}
 
-                        <div className="mt-4 flex justify-center items-center text-center">
-                        <p className="text-white">
-                            Already have an account?&nbsp;
-                            <a href="/login" className="text-yellow-400 hover:underline">
-                            Login here
-                            </a>
-                        </p>
-                        </div>
-                    </form>
+
+
+                    <div className={currentStep === 4? `form-container-register-step4${errorMessage ? ' has-error' : ''}`: `form-container-register${errorMessage ? ' has-error' : ''}`}>
+                        <form onSubmit={handleSubmit} className="form-register">
+                            {stepComponents[currentStep]}
+                                {errorMessage && (
+                                    <div className="error-message">
+                                        <p>{errorMessage}</p>
+                                    </div>
+                                )}
+                            <div className="navigation-buttons">
+                                {currentStep > 1 && (
+                                    <button type="button" onClick={handlePrev} className="register-btn">
+                                        Prev
+                                    </button>
+                                )}
+                                {currentStep < 4 ? (
+                                    <button type="button" onClick={handleNext} className="register-btn">
+                                        Next
+                                    </button>
+                                ) : (
+                                    <button type="submit" className="register-btn">
+                                        Submit
+                                    </button>
+                                )}
+                            </div>
+                            <div className="footer-container-register">
+                                <p className="footer-text-register">
+                                    Already have an account?&nbsp;<a href="/login" className="sign-in-link-register">Login here</a>
+                                </p>
+                            </div>
+                        </form>
                     </div>
-
-            </AuthenticatedLayout>
-        </>
-        )
-    }
+                </div>
+            </main>
+        <Footer />
+    </>
+    );
+};
 
 export default Register;
-
-

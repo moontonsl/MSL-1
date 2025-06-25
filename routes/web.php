@@ -55,10 +55,10 @@ Route::get('/register', function () {
     return Inertia::render('Account Creation/Register');
 })->name('register');
 
-//ACCOUNT REGISTRATION ROUTES
-Route::get('/register2', function () {
-    return Inertia::render('Account Creation/Register2');
-})->name('register');
+// //ACCOUNT REGISTRATION 2 ROUTES
+// Route::get('/register2', function () {
+//     return Inertia::render('Account Creation/Register2');
+// })->name('register');
 
 
 //STUDENT PORTAL
@@ -73,10 +73,10 @@ Route::get('/studentportal', function () {
 //     return Inertia::render('Student Portal/SLStudent');
 // })->middleware(['auth', 'verified'])->name('SLStudent');
 
-// TEMPORARY STUDENT PORTAL ACCESS (NO AUTH)
-Route::get('/studentportal', function () {
-    return Inertia::render('Student Portal/SLStudent');
-})->name('SLStudent');
+// // TEMPORARY STUDENT PORTAL ACCESS (NO AUTH)
+// Route::get('/studentportal', function () {
+//     return Inertia::render('Student Portal/SLStudent');
+// })->name('SLStudent');
 
 
 // MCC Routes
