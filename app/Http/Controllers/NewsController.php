@@ -46,7 +46,7 @@ class NewsController extends Controller
     public function index()
     {
         $news = News::all();
-        return Inertia::render('MCC/News/Index', ['news' => $news]);
+        return Inertia::render('News/Index', ['news' => $news]);
     }
 
     /**

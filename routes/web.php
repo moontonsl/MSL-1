@@ -75,7 +75,7 @@ Route::prefix('mcc')->name('mcc.')->group(function () {
 
     // News Route
     Route::get('/news', function () {
-        return Inertia::render('MCC/News/Index');
+        return Inertia::render('News/Index');
     })->name('news');
 
     // Voting Routes
@@ -141,6 +141,10 @@ Route::post('/ml/logout', [MlAuthController::class, 'logout'])->name('ml.logout'
 
 Route::get('/mcc/predictions', [VotingController::class, 'index'])->name('predictions.index');
 Route::post('/mcc/predictions', [VotingController::class, 'store'])->name('predictions.vote');
+
+Route::get('/mcc/MCCFavourites', function () {
+    return Inertia::render('MCC/MCCS2Predictions/index');
+});
 
 Route::get('/soon', function () {
     return Inertia::render('Soon/Soon');
