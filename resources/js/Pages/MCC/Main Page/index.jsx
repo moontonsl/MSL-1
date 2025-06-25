@@ -72,14 +72,24 @@ export default function MCCMAINPage() {
                     {/* Bottom logos */}
                     <div className="flex justify-center items-center gap-6 md:gap-12 mt-6 md:mt-10 mb-2">
                         <img
+                            src="/images/MCC/MLBB NEW LOGO.png"
+                            alt="MLBB Logo"
+                            className="h-[40px] md:h-[60px] object-contain"
+                        />
+                        <img
                             src="/images/MCC/MSL LOGO.png"
                             alt="MSL Logo"
                             className="h-[40px] md:h-[60px] object-contain"
                         />
                         <img
-                            src="/images/MCC/MLBB NEW LOGO.png"
-                            alt="MLBB Logo"
+                            src="/images/MCC/SMARTLOGO.png"
+                            alt="Smart Logo"
                             className="h-[40px] md:h-[60px] object-contain"
+                        />
+                        <img
+                            src="/images/MCC/OppoLogo.png"
+                            alt="Oppo Logo"
+                            className="h-[40px] md:h-[50px] object-contain"
                         />
                     </div>
                 </div>

@@ -16,6 +16,7 @@ use App\Http\Controllers\VotingController;
 use App\Http\Controllers\BracketTeamController;
 use App\Http\Controllers\MlAuthController;
 use App\Http\Controllers\GoogleSheetController;
+use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
     return Inertia::render('Home/Home', [
@@ -51,7 +52,9 @@ Route::get('/register', function () {
 
 //STUDENT PORTAL
 Route::get('/studentportal', function () {
-    return Inertia::render('Student Portal/SLStudent');
+    return Inertia::render('Student Portal/SLStudent', [
+        'user' => Auth::user(),
+    ]);
 })->middleware(['auth', 'verified'])->name('SLStudent');
 
 // // TEMPORARY STUDENT PORTAL ACCESS (NO AUTH)
@@ -149,14 +152,19 @@ Route::get('/soon', function () {
 
 // Google Sheet Routes
 Route::get('/google-sheet', [GoogleSheetController::class, 'exportToGoogleSheet'])->name('google-sheet.export');
+//force logout
+Route::get('/force-logout', function () {
+    Auth::logout();
+    return redirect()->route('login');
+})->name('force-logout');
 
 Route::get('/get-old-users', function () {
     // Set to 0 for no time limit, essential for large migrations
     set_time_limit(0);
     ini_set('memory_limit', '-1'); // Optional: removes memory limit for this script
-
+    return "test";
     $count = 0;
-
+  
     DB::table('msl_user_basic')
         ->join('msl_user_mlbb', 'msl_user_mlbb.userid', '=', 'msl_user_basic.userid')
         ->join('msl_user_school', 'msl_user_school.userid', '=', 'msl_user_basic.userid')
@@ -191,46 +199,61 @@ Route::get('/get-old-users', function () {
         ->orderBy('msl_user_basic.userid') // Important: Must order by the chunking column
         ->chunkById(200, function ($old_users_chunk) use (&$count) {
             foreach ($old_users_chunk as $old_user) {
-                // --- Start of corrected logic ---
                 $email = trim($old_user->email ?? '');
-
-                // If email is not empty, check if it already exists for a different user
+                $ml_id = $old_user->ml_id;
+                $username = trim($old_user->username ?? '');
+            
+                // Check for duplicate email (used by a different ml_id)
                 if (!empty($email)) {
-                    $existingUser = \App\Models\User::where('email', $email)->first();
-
-                    // If a user with this email exists AND it's not the same user (match by ml_id),
-                    // it's a duplicate. Set email to null for this new record.
-                    if ($existingUser && $existingUser->ml_id != $old_user->ml_id) {
-                        $email = null;
+                    $existingEmail = \App\Models\User::where('email', $email)
+                        ->where('ml_id', '!=', $ml_id)
+                        ->exists();
+                    if ($existingEmail) {
+                        continue; // Skip this user
                     }
-                } else {
-                    // If the original email was empty or just spaces, ensure it's set to null
-                    $email = null;
                 }
-                // --- End of corrected logic ---
-                // Prepare gender value: if it's 'Empty' or null, make it an empty string.
+            
+                // Check for duplicate ml_id (used by a different user)
+                if (!empty($ml_id)) {
+                    $existingMlId = \App\Models\User::where('ml_id', $ml_id)
+                        ->where('email', '!=', $email)
+                        ->exists();
+                    if ($existingMlId) {
+                        continue; // Skip this user
+                    }
+                }
+            
+                // Check for duplicate username (used by a different ml_id)
+                if (!empty($username)) {
+                    $existingUsername = \App\Models\User::where('username', $username)
+                        ->where('ml_id', '!=', $ml_id)
+                        ->exists();
+                    if ($existingUsername) {
+                        continue; // Skip this user
+                    }
+                }
+            
+                // Prepare other fields
                 $gender = ($old_user->gender === 'Empty' || is_null($old_user->gender)) ? 'other' : $old_user->gender;
-
-                // Handle data truncation for facebook_link. If it's too long, make it an empty string.
                 $facebook_link = $old_user->facebook_link ?? '';
-                if (strlen($facebook_link) > 255) { // Assuming a standard VARCHAR(255) limit for URLs
+                if (strlen($facebook_link) > 255) {
                     $facebook_link = '';
                 }
-                // to fix
+            
                 \App\Models\User::updateOrCreate(
-                    ['ml_id' => $old_user->ml_id], // Your original, correct unique key
+                    ['ml_id' => $ml_id], // Unique key
                     [
                         'name'              => trim($old_user->name ?? ''),
                         'surname'           => $old_user->surname ?? '',
                         'suffix'            => $old_user->suffix ?? '',
                         'email'             => $email,
                         'password'          => $old_user->password ?? '', // SECURITY WARNING: Passwords should be hashed.
-                        'username'          => $old_user->username ?? '',
-                        'birthday'          => $old_user->birthday ?? '',
-                        'age'               => $old_user->age ?? '',
-                        'gender'            => $gender, // FIXED
+                        'username'          => $username,
+                        'birthday'          => $old_user->birthday,
+                        'age'               => $old_user->age,
+                        'gender'            => $gender,
                         'contact_number'    => $old_user->contact ?? '',
-                        'facebook_link'     => $facebook_link, // FIXED
+                        'facebook_link'     => $facebook_link,
                         'ml_server'         => $old_user->ml_server ?? '',
                         'ml_ign'            => $old_user->ml_ign ?? '',
                         'squadName'         => $old_user->squadName ?? '',
@@ -252,5 +275,19 @@ Route::get('/get-old-users', function () {
 
     return "User migration completed successfully! Processed " . $count . " records.";
 })->name('old');
+//update user type
+Route::get('/update-user-type', function () {
+    set_time_limit(0);
+    $users = DB::table('msl_user_account')->where('administrator', "!=", "")->get();
+    foreach ($users as $user) {
+        $user_type = $user->administrator;
+        $update = User::where('ml_id', $user->userid)->update(['user_type' => $user_type]);
+        if($update){
+            echo $user->userid." ".$user_type." updated"."<br>";
+        }else{
+            echo $user->userid." ".$user_type." not updated"."<br>";
+        }
+    }
+})->name('update-user-type');
 
 require __DIR__.'/auth.php';
