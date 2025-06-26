@@ -61,6 +61,11 @@ Route::get('/register', function () {
 // })->name('register');
 
 
+//EVENT  ROUTES
+Route::get('/Events', function () {
+    return Inertia::render('Events/Events');
+})->name('Events');
+
 //STUDENT PORTAL
 Route::get('/studentportal', function () {
     return Inertia::render('Student Portal/SLStudent', [

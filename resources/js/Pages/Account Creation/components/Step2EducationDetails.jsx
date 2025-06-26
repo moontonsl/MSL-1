@@ -184,10 +184,10 @@ const Step2EducationDetails = ({
     const percent = 26 + Math.round((filled / requiredFields.length) * (50 - 26));
 
     return (
-      <div className="my-4">
-        <div className="h-3 bg-gray-200 rounded-full overflow-hidden mb-1">
+      <div className="my-4 px-1">
+        <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-1">
           <div
-            className="h-full bg-yellow-400 transition-all duration-300"
+            className="h-full bg-yellow-500 transition-all duration-300"
             style={{ width: `${percent}%` }}
           />
         </div>

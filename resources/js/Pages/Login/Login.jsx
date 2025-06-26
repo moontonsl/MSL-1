@@ -137,9 +137,9 @@ console.log(formData);
             <div className="login-wrapper w-full max-w-sm mx-auto flex flex-col items-start justify-center gap-0 m-0 p-0 h-auto">
                 {/* Login Container (for MLBB Account Login) */}
                 <div className="login-container-login w-full h-auto p-6 bg-[rgba(10,10,10,0.5)] rounded-[15px] border border-[#242424] shadow-[0_4px_8px_rgba(0,0,0,0.1)] backdrop-blur-[10px] flex flex-col justify-center items-start">
-                <div className="choose-login-container p-0 flex flex-col items-stretch w-full">
-                    <h2 className={`${styles['choose-login-title']} text-[#ffffff] text-xl font-bold mb-6 leading-tight text-center`}>
-                    MLBB ACCOUNT LOGIN
+                <div className="choose-login-container p-0 flex flex-col items-center w-full"> {/* Changed items-stretch to items-center */}
+                    <h2 className={`${styles['choose-login-title']} text-[#ffffff] text-xl font-bold mb-6 leading-tight text-center mx-auto`}> {/* Added mx-auto */}
+                        MLBB ACCOUNT LOGIN
                     </h2>
                     <div className="text-white text-center my-8">
                     This is still in progress, please wait for the next update.

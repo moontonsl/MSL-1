@@ -16,15 +16,6 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes dash_682 {
-  72.5% {
-    opacity: 0;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
 @keyframes spark {
   0% {
     opacity: 0;
@@ -157,24 +148,6 @@
   color: white;
 }
 
-/* Styles for the loading SVG in the button wrapper */
-.loading svg polyline {
-  fill: none;
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.loading svg polyline#back {
-  stroke: #c14d058c;
-}
-
-.loading svg polyline#front {
-  stroke: #00ffcc;
-  stroke-dasharray: 48, 144;
-  stroke-dashoffset: 192;
-  animation: dash_682 1.4s linear infinite;
-}
 
 /* Neon Button Specific Styles */
 .neon-button {
@@ -210,6 +183,16 @@
   z-index: 0;
 }
 
+.lightning {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.lightning-show {
+  opacity: 1;
+  animation: spark 0.4s linear;
+}
+
 .blurred {
   position: absolute;
   top: 0;
@@ -221,7 +204,6 @@
   -webkit-backdrop-filter: blur(8px);
   background-color: rgba(0, 0, 0, 0.5); /* Ensure this matches your bg-black bg-opacity-50 */
   border-radius: 0.5rem; /* Ensure this matches your rounded-lg */
-  border: 1px solid #fafafa; /* This is the border that will be visible initially */
 }
 
 .neon-button::before {
@@ -316,4 +298,27 @@
 
   // Ensure this container is relative for absolute positioning of children
   position: relative;
+}
+
+.neon-flow {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: dashFlow 1.5s linear infinite, neonGlow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes dashFlow {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes neonGlow {
+  0% {
+    stroke: #00ffcc;
+    filter: drop-shadow(0 0 2px #00ffcc) drop-shadow(0 0 4px #00ffcc);
+  }
+  100% {
+    stroke: #00ffff;
+    filter: drop-shadow(0 0 4px #00ffff) drop-shadow(0 0 6px #00ffff);
+  }
 }
