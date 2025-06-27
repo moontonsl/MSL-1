@@ -277,6 +277,7 @@ Route::get('/get-old-users', function () {
 })->name('old');
 //update user type
 Route::get('/update-user-type', function () {
+    return "test";
     set_time_limit(0);
     $users = DB::table('msl_user_mlbb')->get();
     foreach ($users as $user) {
