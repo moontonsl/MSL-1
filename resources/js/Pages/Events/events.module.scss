@@ -9,9 +9,3 @@
   letter-spacing: -0.015em;
   text-align: center;
 }
-
-@media (min-width: 768px) {
-  .title {
-    font-size: 3rem; // Tailwind's md:text-5xl
-  }
-}
