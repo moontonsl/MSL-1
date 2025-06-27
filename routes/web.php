@@ -278,14 +278,15 @@ Route::get('/get-old-users', function () {
 //update user type
 Route::get('/update-user-type', function () {
     set_time_limit(0);
-    $users = DB::table('msl_user_account')->where('administrator', "!=", "")->get();
+    $users = DB::table('msl_user_mlbb')->get();
     foreach ($users as $user) {
-        $user_type = $user->administrator;
-        $update = User::where('ml_id', $user->userid)->update(['user_type' => $user_type]);
-        if($update){
-            echo $user->userid." ".$user_type." updated"."<br>";
+        $get = User::where('ml_id', $user->userid)->first();
+        if($get){
+            $get->ml_id = $user->mslid;
+            $get->save();
+            echo $user->userid." ".$get->ml_id." updated"."<br>";
         }else{
-            echo $user->userid." ".$user_type." not updated"."<br>";
+            echo $user->userid." not found"."<br>";
         }
     }
 })->name('update-user-type');
