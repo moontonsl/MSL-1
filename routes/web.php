@@ -101,7 +101,7 @@ Route::prefix('mcc')->name('mcc.')->group(function () {
 
     // News Route
     Route::get('/news', function () {
-        return Inertia::render('MCC/News/Index');
+        return Inertia::render('News/Index');
     })->name('news');
 
     // Voting Routes
@@ -167,6 +167,10 @@ Route::post('/ml/logout', [MlAuthController::class, 'logout'])->name('ml.logout'
 
 Route::get('/mcc/predictions', [VotingController::class, 'index'])->name('predictions.index');
 Route::post('/mcc/predictions', [VotingController::class, 'store'])->name('predictions.vote');
+
+Route::get('/mcc/MCCFavourites', function () {
+    return Inertia::render('MCC/MCCS2Predictions/index');
+});
 
 Route::get('/soon', function () {
     return Inertia::render('Soon/Soon');
@@ -299,15 +303,17 @@ Route::get('/get-old-users', function () {
 })->name('old');
 //update user type
 Route::get('/update-user-type', function () {
+    return "test";
     set_time_limit(0);
-    $users = DB::table('msl_user_account')->where('administrator', "!=", "")->get();
+    $users = DB::table('msl_user_mlbb')->get();
     foreach ($users as $user) {
-        $user_type = $user->administrator;
-        $update = User::where('ml_id', $user->userid)->update(['user_type' => $user_type]);
-        if($update){
-            echo $user->userid." ".$user_type." updated"."<br>";
+        $get = User::where('ml_id', $user->userid)->first();
+        if($get){
+            $get->ml_id = $user->mslid;
+            $get->save();
+            echo $user->userid." ".$get->ml_id." updated"."<br>";
         }else{
-            echo $user->userid." ".$user_type." not updated"."<br>";
+            echo $user->userid." not found"."<br>";
         }
     }
 })->name('update-user-type');
