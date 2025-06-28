@@ -66,6 +66,11 @@ Route::get('/Events', function () {
     return Inertia::render('Events/Events');
 })->name('Events');
 
+//EVENT  ROUTES - MCC WATCHFEST REG
+Route::get('/MCCWatchFestReg', function () {
+    return Inertia::render('MCCWatchFest/MCCWatchFestReg');
+})->name('MCCWatchFestReg');
+
 //STUDENT PORTAL
 Route::get('/studentportal', function () {
     return Inertia::render('Student Portal/SLStudent', [
