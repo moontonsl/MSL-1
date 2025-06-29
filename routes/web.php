@@ -16,6 +16,7 @@ use App\Http\Controllers\VotingController;
 use App\Http\Controllers\BracketTeamController;
 use App\Http\Controllers\MlAuthController;
 use App\Http\Controllers\GoogleSheetController;
+use App\Http\Controllers\SpreadSheetAutomationController;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
@@ -152,6 +153,15 @@ Route::get('/soon', function () {
 
 // Google Sheet Routes
 Route::get('/google-sheet', [GoogleSheetController::class, 'exportToGoogleSheet'])->name('google-sheet.export');
+
+//SpreadSheet Automation Routes
+Route::get('/import-from-spreadsheet', [SpreadSheetAutomationController::class, 'importFromSpreadsheet'])->name('import-from-spreadsheet');
+
+// Spreadsheet Automation Routes
+Route::prefix('spreadsheet')->name('spreadsheet.')->group(function () {
+    Route::post('/export-users', [SpreadSheetAutomationController::class, 'exportUsersToSpreadsheet'])->name('export-users');
+});
+
 //force logout
 Route::get('/force-logout', function () {
     Auth::logout();
