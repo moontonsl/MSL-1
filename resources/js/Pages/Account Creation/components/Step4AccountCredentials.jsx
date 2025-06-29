@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import styles from '../register.module.scss';
 
 const Step4AccountCredentials = ({
   formData,
@@ -101,10 +102,12 @@ const validateUsername = (username) => {
   
   return (
     <div className="">
-      <h1 className="title-register">CREATE MSL ACCOUNT</h1>
-      <div className="image-container-register">
-        <img src="msl-logo.png" alt="MSL Account Logo" className="image-logo-register" />
-      </div>
+        <h1 className={`${styles['title-register']} text-white mb-2 text-2xl md:text-[2.5rem]`}>
+          CREATE MSL ACCOUNT
+        </h1>
+        <h2 className={`${styles['subtitle-register']} text-white`}>
+          LOGIN DETAILS
+        </h2>
 
       {/* Dynamic Progress Bar for Step 4 */}
       {(() => {
@@ -121,78 +124,148 @@ const validateUsername = (username) => {
         const percent = 76 + Math.round((filled / requiredFields.length) * (100 - 76));
 
         return (
-          <div style={{ margin: "16px 0" }}>
-            <div style={{ height: "12px", background: "#eee", borderRadius: "6px", overflow: "hidden", marginBottom: "4px" }}>
-              <div style={{ width: `${percent}%`, height: "100%", background: "#f1c40f", transition: "width 0.3s" }} />
+          <div className="my-4 px-1">
+            <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-1">
+              <div
+                className="h-full bg-yellow-500 transition-all duration-300"
+                style={{ width: `${percent}%` }}
+              />
             </div>
-            <div style={{ fontSize: "12px", color: "#555" }}>
+            <div className="text-xs text-gray-100 text-right">
               Step 4 of 4 &mdash; {percent}% of this step complete
             </div>
           </div>
         );
       })()}
 
-      <div className="form-row-register">
-        <div className="input-group-register full-width-register">
-          <label htmlFor="username" className="label-register">
-            Username<span className="required"> *</span>
-          </label>
-          <input type="text" id="username" name="username" value={formData.username} onChange={handleUsernameChange} className="input-field-register" placeholder="e.g. Simoun" required maxLength={15} autoComplete="off" />
-        </div>
-      </div>
+<div className="flex flex-col mb-4 gap-4">
+  {/* Username */}
+  <div className="w-full">
+    <label htmlFor="username" className="block mb-1 text-white">
+      Username<span className={styles.required}> *</span>
+    </label>
+    <input
+      type="text"
+      id="username"
+      name="username"
+      value={formData.username}
+      onChange={handleUsernameChange}
+      maxLength={15}
+      autoComplete="off"
+      required
+      placeholder="e.g. Simoun"
+      className={`${styles['input-field-register']} w-full p-3 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
+    />
+  </div>
 
-      <div className="form-row-register">
-        <div className="input-group-register full-width-register">
-          <label htmlFor="password" className="label-register">
-            Create a password<span className="required"> *</span>
-          </label>
-          <div className="password-container">
-            <input type={showPassword ? "text" : "password"} id="password" name="password" value={formData.password} onChange={handleInputChange} className="input-field-register" placeholder="must be 8 characters" required />
-            <button type="button" className="eye-icon-login" onClick={() => setShowPassword((v) => !v)} >
-              {showPassword ? <EyeOff size={24} /> : <Eye size={24} />}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="form-row-register">
-        <div className="input-group-register full-width-register">
-          <label htmlFor="confirmPassword" className="label-register">
-            Confirm password<span className="required"> *</span>
-          </label>
-          <div className="password-container">
-            <input type={showConfirmPassword ? "text" : "password"} id="confirmPassword" name="confirmPassword" value={formData.confirmPassword} onChange={handleInputChange} className="input-field-register" placeholder="repeat password" required />
-            <button type="button" className="eye-icon-login" onClick={() => setShowConfirmPassword((v) => !v)} >
-              {showConfirmPassword ? <EyeOff size={24} /> : <Eye size={24} />}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="form-row-register">
-        <div className="input-group-register full-width-register">
-          <label htmlFor="email" className="label-register">
-            Email Address<span className="required"> *</span>
-          </label>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <input type="email" id="email" name="email" value={formData.email} onChange={handleInputChange} className="input-field-register" placeholder="e.g. crislbarra@gmail.com" required style={{ flex: 3, marginRight: 8 }} />
-            <button type="button" className="register-btn-sendcode" style={{ flex: 1, minWidth: 0, background: timer > 0 ? "#fffbe6" : "", color: timer > 0 ? "gray" : "", borderColor: timer > 0 ? "#f1c40f" : "", cursor: timer > 0 ? "not-allowed" : "pointer" }} onClick={handleSendCode} disabled={ timer > 0 || !isFormValidForSendCode() } title={ !isFormValidForSendCode() ? "Fill out all fields correctly to enable" : timer > 0 ? `Please wait ${timer}s before resending` : "" } >
-              {timer > 0 ? `Resend in ${timer}s` : "Send Code"}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="form-row-register">
-        <div className="input-group-register full-width-register">
-          <label htmlFor="captcha" className="label-register">
-            Code <span className="required"> *</span>
-          </label>
-          <input type="text" id="captcha" name="captcha" value={formData.captcha} onChange={handleInputChange} className="input-field-register captcha-input" placeholder="Enter the code" required style={{ flex: 3 }} />
-        </div>
-      </div>
-
+  {/* Password */}
+  <div className="w-full">
+    <label htmlFor="password" className="block mb-1 text-white">
+      Create a password<span className={styles.required}> *</span>
+    </label>
+    <div className="relative">
+      <input
+        type={showPassword ? "text" : "password"}
+        id="password"
+        name="password"
+        value={formData.password}
+        onChange={handleInputChange}
+        placeholder="must be 8 characters"
+        required
+        className={`${styles['input-field-register']} w-full p-3 pr-12 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
+      />
+      <button
+        type="button"
+        onClick={() => setShowPassword((v) => !v)}
+        className="absolute top-1/2 right-3 transform -translate-y-1/2 text-white"
+      >
+        {showPassword ? <EyeOff size={24} /> : <Eye size={24} />}
+      </button>
     </div>
+  </div>
+
+  {/* Confirm Password */}
+  <div className="w-full">
+    <label htmlFor="confirmPassword" className="block mb-1 text-white">
+      Confirm password<span className={styles.required}> *</span>
+    </label>
+    <div className="relative">
+      <input
+        type={showConfirmPassword ? "text" : "password"}
+        id="confirmPassword"
+        name="confirmPassword"
+        value={formData.confirmPassword}
+        onChange={handleInputChange}
+        placeholder="repeat password"
+        required
+        className={`${styles['input-field-register']} w-full p-3 pr-12 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
+      />
+      <button
+        type="button"
+        onClick={() => setShowConfirmPassword((v) => !v)}
+        className="absolute top-1/2 right-3 transform -translate-y-1/2 text-white"
+      >
+        {showConfirmPassword ? <EyeOff size={24} /> : <Eye size={24} />}
+      </button>
+    </div>
+  </div>
+
+{/* Email */}
+<div className="w-full">
+  <label htmlFor="email" className="block mb-1 text-white">
+    Email Address<span className={styles.required}> *</span>
+  </label>
+  <div className="flex items-center gap-2">
+    <input
+      type="email"
+      id="email"
+      name="email"
+      value={formData.email}
+      onChange={handleInputChange}
+      placeholder="e.g. crislbarra@gmail.com"
+      required
+      className={`${styles['input-field-register']} w-full p-3 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
+    />
+    <button
+      type="button"
+      onClick={handleSendCode}
+      disabled={timer > 0 || !isFormValidForSendCode()}
+      title={
+        !isFormValidForSendCode()
+          ? "Fill out all fields correctly to enable"
+          : timer > 0
+          ? `Please wait ${timer}s before resending`
+          : ""
+      }
+      className={`h-[48px] px-4 rounded-lg border text-sm min-w-[8rem] ${
+        timer > 0
+          ? "bg-yellow-100 text-gray-500 border-yellow-400 cursor-not-allowed"
+          : "bg-yellow-400 text-black border-yellow-500 hover:bg-yellow-300"
+      }`}
+    >
+      {timer > 0 ? `Resend in ${timer}s` : "Send Code"}
+    </button>
+  </div>
+</div>
+
+  {/* Captcha */}
+  <div className="w-full">
+    <label htmlFor="captcha" className="block mb-1 text-white">
+      Code<span className={styles.required}> *</span>
+    </label>
+    <input
+      type="text"
+      id="captcha"
+      name="captcha"
+      value={formData.captcha}
+      onChange={handleInputChange}
+      placeholder="Enter the code"
+      required
+      className={`${styles['input-field-register']} w-full p-3 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
+    />
+  </div>
+</div>
+</div>
   );
 };
 

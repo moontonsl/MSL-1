@@ -43,6 +43,12 @@ Route::get('/schools/search', [SchoolController::class, 'search']);
 Route::get('/login', function () {
     return Inertia::render('Login/Login');
 })->name('login');
+// // Route::post('/login', [AuthController::class, 'login'])->name('login');
+
+// //LOGIN ROUTES
+// Route::get('/login2', function () {
+//     return Inertia::render('Login/Login2');
+// })->name('login');
 // Route::post('/login2', [AuthController::class, 'login'])->name('login2');
 
 //ACCOUNT REGISTRATION ROUTES
@@ -50,6 +56,21 @@ Route::get('/register', function () {
     return Inertia::render('Account Creation/Register');
 })->name('register');
 
+// //ACCOUNT REGISTRATION 2 ROUTES
+// Route::get('/register2', function () {
+//     return Inertia::render('Account Creation/Register2');
+// })->name('register');
+
+
+//EVENT  ROUTES
+Route::get('/Events', function () {
+    return Inertia::render('Events/Events');
+})->name('Events');
+
+//EVENT  ROUTES - MCC WATCHFEST REG
+Route::get('/MCCWatchFestReg', function () {
+    return Inertia::render('MCCWatchFest/MCCWatchFestReg');
+})->name('MCCWatchFestReg');
 
 //STUDENT PORTAL
 Route::get('/studentportal', function () {
@@ -57,6 +78,11 @@ Route::get('/studentportal', function () {
         'user' => Auth::user(),
     ]);
 })->middleware(['auth', 'verified'])->name('SLStudent');
+
+// // TEMPORARY STUDENT PORTAL ACCESS (NO AUTH)
+// Route::get('/studentportal', function () {
+//     return Inertia::render('Student Portal/SLStudent');
+// })->middleware(['auth', 'verified'])->name('SLStudent');
 
 // // TEMPORARY STUDENT PORTAL ACCESS (NO AUTH)
 // Route::get('/studentportal', function () {

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import courses from "../../../../../public/json/courses.json";
 import axios from "axios";
+import styles from '../register.module.scss';
 
 function debounce(func, delay) {
   let timer;
@@ -157,171 +158,212 @@ const Step2EducationDetails = ({
   validateForm();
 };
 
-  return (
-    <div className="">
-      <h1 className="title-register">CREATE MSL ACCOUNT</h1>
-      <h2 className="subtitle-register">SCHOOL DETAILS</h2>
+  return ( 
+  <div className="">
+  <h1 className={`${styles['title-register']} text-white mb-2 text-2xl md:text-[2.5rem]`}>
+      CREATE MSL ACCOUNT
+  </h1>
+  <h2 className={`${styles['subtitle-register']} text-white`}>
+      SCHOOL DETAILS
+  </h2>
 
-      {/* Dynamic Progress Bar for Step 2 */}
-      {(() => {
-        const requiredFields = [
-          "yearLevel",
-          "university",
-          "island",
-          "region",
-          "studentId",
-          "course",
-          "proofOfEnrollment",
-        ];
-        const filled = requiredFields.filter(
-          (field) => formData[field] && formData[field].toString().trim() !== ""
-        ).length;
-        const percent = 26 + Math.round((filled / requiredFields.length) * (50 - 26));
+  {/* Dynamic Progress Bar for Step 2 */}
+  {(() => {
+    const requiredFields = [
+      "yearLevel",
+      "university",
+      "island",
+      "region",
+      "studentId",
+      "course",
+      "proofOfEnrollment",
+    ];
+    const filled = requiredFields.filter(
+      (field) => formData[field] && formData[field].toString().trim() !== ""
+    ).length;
+    const percent = 26 + Math.round((filled / requiredFields.length) * (50 - 26));
 
-        return (
-          <div style={{ margin: "16px 0" }}>
-            <div style={{ height: "12px", background: "#eee", borderRadius: "6px", overflow: "hidden", marginBottom: "4px" }}>
-              <div style={{ width: `${percent}%`, height: "100%", background: "#f1c40f", transition: "width 0.3s" }} />
-            </div>
-            <div style={{ fontSize: "12px", color: "#555" }}>
-              Step 2 of 4 &mdash; {percent}% of this step complete
-            </div>
-          </div>
-        );
-      })()}
-
-      <div className="form-register">
-        <div className="form-row-register">
-          <div className="input-group-register left-side-register">
-            <label htmlFor="yearLevel" className="label-register">
-              Year Level<span className="required"> *</span>
-            </label>
-            <select id="yearLevel" name="yearLevel" value={formData.yearLevel} onChange={handleAnyInputChange} onBlur={handleAnyInputBlur} className="input-field-register year-level-select" required >
-              <option value="" disabled>Select Year Level</option>
-              <option value="Grade 11 SHS">Grade 11 SHS</option>
-              <option value="Grade 12 SHS">Grade 12 SHS</option>
-              <option value="Freshmen (1st Yr)">Freshmen (1st Yr)</option>
-              <option value="Sophomore (2nd Yr)">Sophomore (2nd Yr)</option>
-              <option value="Junior (3rd Yr)">Junior (3rd Yr)</option>
-              <option value="Senior (4th Yr Up)">Senior (4th Yr Up)</option>
-              <option value="Alumni">Alumni</option>
-              <option value="Masters">Masters</option>
-              <option value="Doctorate">Doctorate</option>
-            </select>
-          </div>
-          <div className="input-group-register right-side-register relative">
-            <label htmlFor="university" className="label-register">
-              University / College / Institute<span className="required"> *</span>
-            </label>
-
-            <input
-              type="text"
-              id="university"
-              name="university"
-              value={formData.university}
-              onChange={handleUniversityChange}
-              onBlur={handleAnyInputBlur}
-              className="input-field-register"
-              placeholder="e.g. University of XYZ"
-              required
-              autoComplete="off"
-            />
-            {/* dito dropdown university */}
-            {filteredSchools.length > 0 && (
-              <ul
-                ref={dropdownRef}
-                className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md mt-1 max-h-60 overflow-y-auto"
-              >
-                {filteredSchools.map((school) => (
-                  <li
-                    key={school.id}
-                    onMouseDown={() => handleUniversitySelect(school)}
-                    className="px-4 py-2 cursor-pointer hover:bg-gray-100"
-                  >
-                    <p>{highlightMatch(school.name, schoolQuery)}</p>
-                    <p className="text-sm text-gray-500">
-                      {school.island} • {school.region}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-          </div>
+    return (
+      <div className="my-4 px-1">
+        <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-1">
+          <div
+            className="h-full bg-yellow-500 transition-all duration-300"
+            style={{ width: `${percent}%` }}
+          />
         </div>
-        <div className="form-row-register">
-          <div className="input-group-register left-side-register">
-            <label htmlFor="island" className="label-register">
-              Island<span className="required"> *</span>
-            </label>
-
-            <input
-              type="text"
-              id="island"
-              name="island"
-              value={formData.island}
-              onChange={handleAnyInputChange}
-              onBlur={handleAnyInputBlur}
-              className="input-field-register"
-              readOnly
-            />
-
-          </div>
-          <div className="input-group-register right-side-register">
-            <label htmlFor="region" className="label-register">
-              Region<span className="required"> *</span>
-            </label>
-            <input type="text" id="region" name="region" value={formData.region} className="input-field-register" readOnly />
-          </div>
-        </div>
-        <div className="form-row-register">
-          <div className="input-group-register left-side-register">
-            <label htmlFor="studentId" className="label-register">
-              Student ID<span className="required"> *</span>
-            </label>
-            <input type="text" id="studentId" name="studentId" value={formData.studentId} onChange={handleAnyInputChange} onBlur={handleAnyInputBlur} className="input-field-register" placeholder="e.g. 12345678" required />
-          </div>
-          <div className="input-group-register right-side-register">
-            <label htmlFor="course" className="label-register">
-              Course or Program<span className="required"> *</span>
-            </label>
-
-            <input
-              id="course"
-              name="course"
-              value={formData.course}
-              onChange={handleCourseChange}
-              onBlur={handleAnyInputBlur}
-              className="input-field-register course-select"
-              required
-            />
-            {/* dito dropdown */}
-            {filteredCourses.length > 0 && (
-              <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md mt-1 max-h-60 overflow-y-auto">
-                {filteredCourses.map((course, i) => (
-                  <li
-                    key={i}
-                    onMouseDown={() => handleCourseSelect(course)}
-                    className="px-4 py-2 cursor-pointer hover:bg-gray-100"
-                  >
-                    <p>{course.program}</p>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-          </div>
-        </div>
-        <div className="form-row-register">
-          <div className="input-group-register full-width-register">
-            <label htmlFor="proofOfEnrollment" className="label-register">
-              Proof of Enrolment / School ID with Validation<span className="required"> *</span>
-            </label>
-            <input type="file" id="proofOfEnrollment" name="proofOfEnrollment" onChange={handleAnyInputChange} onBlur={handleAnyInputBlur} className="input-field-register file-input" accept=".jpg,.jpeg,.png,.pdf" required />
-          </div>
+        <div className="text-xs text-gray-100 text-right">
+          Step 2 of 4 &mdash; {percent}% of this step complete
         </div>
       </div>
+    );
+  })()}
+
+<div className="space-y-6">
+  <div className="flex flex-col md:flex-row gap-4">
+    <div className="flex-1">
+      <label htmlFor="yearLevel" className="text-white block mb-1">
+        Year Level<span className="text-red-500"> *</span>
+      </label>
+      <select
+        id="yearLevel"
+        name="yearLevel"
+        value={formData.yearLevel}
+        onChange={handleAnyInputChange}
+        onBlur={handleAnyInputBlur}
+        className={`${styles['input-field-register']} w-full p-3 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
+        required
+      >
+        <option value="" disabled>Select Year Level</option>
+        <option value="Grade 11 SHS">Grade 11 SHS</option>
+        <option value="Grade 12 SHS">Grade 12 SHS</option>
+        <option value="Freshmen (1st Yr)">Freshmen (1st Yr)</option>
+        <option value="Sophomore (2nd Yr)">Sophomore (2nd Yr)</option>
+        <option value="Junior (3rd Yr)">Junior (3rd Yr)</option>
+        <option value="Senior (4th Yr Up)">Senior (4th Yr Up)</option>
+        <option value="Alumni">Alumni</option>
+        <option value="Masters">Masters</option>
+        <option value="Doctorate">Doctorate</option>
+      </select>
     </div>
+
+    <div className="flex-1 relative">
+        <label htmlFor="university" className="text-white block mb-1">
+          University / College / Institute<span className="text-red-500"> *</span>
+        </label>
+        <input
+          type="text"
+          id="university"
+          name="university"
+          value={formData.university}
+          onChange={handleUniversityChange}
+          onBlur={handleAnyInputBlur}
+          className={`${styles['input-field-register']} w-full p-3 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
+          placeholder="e.g. University of XYZ"
+          required
+          autoComplete="off"
+        />
+
+        {filteredSchools.length > 0 && (
+          <ul
+            ref={dropdownRef}
+            className="absolute z-10 w-full bg-white text-black border border-gray-300 rounded-md shadow-md mt-1 max-h-60 overflow-y-auto"
+          >
+            {filteredSchools.map((school) => (
+              <li
+                key={school.id}
+                onMouseDown={() => handleUniversitySelect(school)}
+                className="px-4 py-2 cursor-pointer hover:bg-yellow-100"
+              >
+                <p className="font-medium">{highlightMatch(school.name, schoolQuery)}</p>
+                <p className="text-sm text-gray-600">
+                  {school.island} • {school.region}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+  </div>
+
+  <div className="flex flex-col md:flex-row gap-4">
+    <div className="flex-1">
+      <label htmlFor="island" className="text-white block mb-1">
+        Island<span className="text-red-500"> *</span>
+      </label>
+      <input
+        type="text"
+        id="island"
+        name="island"
+        value={formData.island}
+        onChange={handleAnyInputChange}
+        onBlur={handleAnyInputBlur}
+        className={`${styles['input-field-register']} w-full p-3 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base focus:outline-none focus:border-yellow-400`}
+        readOnly
+      />
+    </div>
+    <div className="flex-1">
+      <label htmlFor="region" className="text-white block mb-1">
+        Region<span className="text-red-500"> *</span>
+      </label>
+      <input
+        type="text"
+        id="region"
+        name="region"
+        value={formData.region}
+        className={`${styles['input-field-register']} w-full p-3 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base focus:outline-none focus:border-yellow-400`}
+        readOnly
+      />
+    </div>
+  </div>
+
+  <div className="flex flex-col md:flex-row gap-4">
+    <div className="flex-1">
+      <label htmlFor="studentId" className="text-white block mb-1">
+        Student ID<span className="text-red-500"> *</span>
+      </label>
+      <input
+        type="text"
+        id="studentId"
+        name="studentId"
+        value={formData.studentId}
+        onChange={handleAnyInputChange}
+        onBlur={handleAnyInputBlur}
+        className={`${styles['input-field-register']} w-full p-3 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
+        placeholder="e.g. 12345678"
+        required
+      />
+    </div>
+
+    <div className="flex-1 relative">
+        <label htmlFor="course" className="text-white block mb-1">
+          Course or Program<span className="text-red-500"> *</span>
+        </label>
+        <input
+          id="course"
+          name="course"
+          value={formData.course}
+          onChange={handleCourseChange}
+          onBlur={handleAnyInputBlur}
+          className={`${styles['input-field-register']} w-full p-3 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
+          required
+        />
+        {filteredCourses.length > 0 && (
+          <ul className="absolute z-10 w-full bg-white text-black border border-gray-300 rounded-md shadow-md mt-1 max-h-60 overflow-y-auto">
+            {filteredCourses.map((course, i) => (
+              <li
+                key={i}
+                onMouseDown={() => handleCourseSelect(course)}
+                className="px-4 py-2 cursor-pointer hover:bg-yellow-100"
+              >
+                <p className="font-medium">{course.program}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+  </div>
+
+  <div>
+    <label htmlFor="proofOfEnrollment" className="text-white block mb-1">
+      Proof of Enrolment / School ID with Validation<span className="text-red-500"> *</span>
+    </label>
+    <input
+      type="file"
+      id="proofOfEnrollment"
+      name="proofOfEnrollment"
+      onChange={handleAnyInputChange}
+      onBlur={handleAnyInputBlur}
+      className={`${styles['input-field-register']} w-full text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base p-3 cursor-pointer file:mr-4 file:py-2 file:px-4 file:border-0 file:rounded-md file:bg-yellow-400 file:text-black hover:file:bg-yellow-300 focus:outline-none focus:border-yellow-400`}
+      accept=".jpg,.jpeg,.png,.pdf"
+      required
+    />
+  </div>
+
+</div>
+
+</div>
   );
 };
 
