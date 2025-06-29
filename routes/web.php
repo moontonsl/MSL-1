@@ -185,7 +185,7 @@ Route::get('/import-from-spreadsheet', [SpreadSheetAutomationController::class, 
 
 // Spreadsheet Automation Routes
 Route::prefix('spreadsheet')->name('spreadsheet.')->group(function () {
-    Route::post('/export-users', [SpreadSheetAutomationController::class, 'exportUsersToSpreadsheet'])->name('export-users');
+    Route::get('/export-users', [SpreadSheetAutomationController::class, 'exportUsersToSpreadsheet'])->name('export-users');
 });
 
 //force logout
