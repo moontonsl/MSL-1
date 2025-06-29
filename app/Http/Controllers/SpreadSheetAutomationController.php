@@ -17,14 +17,10 @@ class SpreadSheetAutomationController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function exportUsersToSpreadsheet(Request $request): JsonResponse
+    public function exportUsersToSpreadsheet(Request $request)
     {
         try {
-            $request->validate([
-                'spreadsheet_id' => 'required|string',
-                'range' => 'required|string'
-            ]);
-
+           
             $spreadsheetId = "1Cg5qtopDU6GbSAmkgwdWIIomDa9LuyTxEkh3ZBqFnbU";
             $range = "Sheet1!A1";
 
