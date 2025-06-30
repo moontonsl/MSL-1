@@ -22,7 +22,7 @@ class SpreadSheetAutomationController extends Controller
         set_time_limit(0);
         try {
            
-            $spreadsheetId = "1Cg5qtopDU6GbSAmkgwdWIIomDa9LuyTxEkh3ZBqFnbU";
+            $spreadsheetId = "1TaVpFzFjGWKidQ1sjfJzYOlo2OQ4UpkOqC459Ca-FXY";
             $range = "Sheet1!A1";
 
             // 1. Get users data
