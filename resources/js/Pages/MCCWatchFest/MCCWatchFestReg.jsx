@@ -6,9 +6,9 @@ import styles from './MCCWatchFestReg.module.scss';
 const REGIONS = ["Luzon", "Visayas", "Mindanao"];
 
 const REGION_VENUE_MAP = {
-    Luzon: ["Philippine Normal University", "PNU Sulo", "Still Finalizing"],
-    Visayas: ["Southwestern University PHINMA", "Cobra Esports", "PHINMA Hall Building"],
-    Mindanao: ["Father Saturnino Urios University", "The Urian Arena Vanguards", "SM Butuan"],
+    Luzon: ["National University - Manila", "De La Salle University - Manila", "First Asia Institute of Technology and Humanities" , "Batangas State University - Alangilan"],
+    Visayas: ["PHINMA – University of Iloilo", "University of St. La Salle - Bacolod City"],
+    Mindanao: ["Ateneo de Davao University", "University of Southeastern Philippines - Obrero Campus"],
 };
 
 const AVAILABLE_DATES = [
