@@ -184,10 +184,7 @@ Route::get('/google-sheet', [GoogleSheetController::class, 'exportToGoogleSheet'
 Route::get('/import-from-spreadsheet', [SpreadSheetAutomationController::class, 'importFromSpreadsheet'])->name('import-from-spreadsheet');
 
 // Spreadsheet Automation Routes
-Route::prefix('spreadsheet')->name('spreadsheet.')->group(function () {
-    Route::get('/export-users', [SpreadSheetAutomationController::class, 'exportUsersToSpreadsheet'])->name('export-users');
-});
-
+Route::get('/spreadsheet/export-users', [SpreadSheetAutomationController::class, 'exportUsersToSpreadsheet'])->name('spreadsheet.export-users');
 //force logout
 Route::get('/force-logout', function () {
     Auth::logout();

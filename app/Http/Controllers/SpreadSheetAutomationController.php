@@ -19,6 +19,7 @@ class SpreadSheetAutomationController extends Controller
      */
     public function exportUsersToSpreadsheet(Request $request)
     {
+        set_time_limit(0);
         try {
            
             $spreadsheetId = "1Cg5qtopDU6GbSAmkgwdWIIomDa9LuyTxEkh3ZBqFnbU";
