@@ -12,21 +12,72 @@ function shuffleArray(array) {
 }
 
 const baseTeams = [
-  { image: '/images/MCC/MCCS2Predictions/Final Teams/M_UR1.png' },
-  { image: '/images/MCC/MCCS2Predictions/Final Teams/M_UR2.png' },
-  { image: '/images/MCC/MCCS2Predictions/Final Teams/M_WIL.png' },
-  { image: '/images/MCC/MCCS2Predictions/Final Teams/V_UR1.png' },
-  { image: '/images/MCC/MCCS2Predictions/Final Teams/V_UR2.png' },
-  { image: '/images/MCC/MCCS2Predictions/Final Teams/V_WIL.png' },
-  { image: '/images/MCC/MCCS2Predictions/Final Teams/V_MA.png' },
-  { image: '/images/MCC/MCCS2Predictions/Final Teams/V_FEB.png' },
+  { image: '/images/MCC/MCCS2Predictions/FINAL 8/LA_UR1.png' },
+  { image: '/images/MCC/MCCS2Predictions/FINAL 8/LB_UR2.png' },
+  { image: '/images/MCC/MCCS2Predictions/FINAL 8/M_WIL.png' },
+  { image: '/images/MCC/MCCS2Predictions/FINAL 8/V_WIL.png' },
+  { image: '/images/MCC/MCCS2Predictions/FINAL 8/V_MA.png' },
+  { image: '/images/MCC/MCCS2Predictions/FINAL 8/LB_FEB.png' },
+  { image: '/images/MCC/MCCS2Predictions/FINAL 8/LA_MA.png' },
+  { image: '/images/MCC/MCCS2Predictions/FINAL 8/M_MA.png' },
 ];
 
+
+// Player data organized by role
+const playersByRole = {
+  GOLD: [
+    { name: 'SINFUL', image: '/images/MCC/MCCS2Predictions/Players/Gold/G_SINFUL.png' },
+    { name: 'VanixLl', image: '/images/MCC/MCCS2Predictions/Players/Gold/G_VanixLl.png' },
+    { name: 'SANCHEZ', image: '/images/MCC/MCCS2Predictions/Players/Gold/G_SANCHEZ.png' },
+    { name: 'AOG1RI', image: '/images/MCC/MCCS2Predictions/Players/Gold/G_AOG1RI.png' },
+    { name: 'KIRR', image: '/images/MCC/MCCS2Predictions/Players/Gold/G_KIRR.png' },
+    { name: 'Shaun', image: '/images/MCC/MCCS2Predictions/Players/Gold/G_Shaun.png' },
+    { name: 'Reoshi', image: '/images/MCC/MCCS2Predictions/Players/Gold/G_Reoshi.png' },
+    { name: 'KlutZ', image: '/images/MCC/MCCS2Predictions/Players/Gold/G_KlutZ.png' },
+  ],
+  JUNGLER: [
+    { name: 'TATING', image: '/images/MCC/MCCS2Predictions/Players/Jungler/J_TATING.png' },
+    { name: 'Mijizy', image: '/images/MCC/MCCS2Predictions/Players/Jungler/J_Mijizy.png' },
+    { name: 'ESTACIO', image: '/images/MCC/MCCS2Predictions/Players/Jungler/JG_ESTACIO.png' },
+    { name: 'nari', image: '/images/MCC/MCCS2Predictions/Players/Jungler/J_nari.png' },
+    { name: 'Daledalus', image: '/images/MCC/MCCS2Predictions/Players/Jungler/J_Daledalus.png' },
+    { name: 'JANCY-BOY', image: '/images/MCC/MCCS2Predictions/Players/Jungler/J_JANCY-BOY.png' },
+    { name: 'Saikiii', image: '/images/MCC/MCCS2Predictions/Players/Jungler/J_Saikiii.png' },
+    { name: 'Oying', image: '/images/MCC/MCCS2Predictions/Players/Jungler/J_Oying.png' },
+  ],
+  EXP: [
+    { name: 'SEAJEY', image: '/images/MCC/MCCS2Predictions/Players/EXP/E_SEAJEY.png' },
+    { name: 'Emjayy', image: '/images/MCC/MCCS2Predictions/Players/EXP/E_Emjayy.png' },
+    { name: 'Ren', image: '/images/MCC/MCCS2Predictions/Players/EXP/E_Ren.png' },
+    { name: 'Pann', image: '/images/MCC/MCCS2Predictions/Players/EXP/E_Pann.png' },
+    { name: 'Jinx', image: '/images/MCC/MCCS2Predictions/Players/EXP/E_Jinx.png' },
+    { name: 'MIRACLEE', image: '/images/MCC/MCCS2Predictions/Players/EXP/E_MIRACLEE.png' },
+    { name: 'Flackkooo', image: '/images/MCC/MCCS2Predictions/Players/EXP/E_Flackkooo.png' },
+    { name: 'Soren-Khent', image: '/images/MCC/MCCS2Predictions/Players/EXP/E_Soren-Khent.png' },
+  ],
+  MIDDLE: [
+    { name: 'lmpostor', image: '/images/MCC/MCCS2Predictions/Players/Mid/M_lmpostor.png' },
+    { name: 'Cinderella', image: '/images/MCC/MCCS2Predictions/Players/Mid/M_Cinderella.png' },
+    { name: 'LIM', image: '/images/MCC/MCCS2Predictions/Players/Mid/M_LIM.png' },
+    { name: 'Qorki-Levels', image: '/images/MCC/MCCS2Predictions/Players/Mid/M_Qorki-Levels.png' },
+    { name: 'Xinchi', image: '/images/MCC/MCCS2Predictions/Players/Mid/M_Xinchi.png' },
+    { name: 'VICT-JAVELLANA', image: '/images/MCC/MCCS2Predictions/Players/Mid/M_VICT-JAVELLANA.png' },
+    { name: 'ZYWIN', image: '/images/MCC/MCCS2Predictions/Players/Mid/M_ZYWIN.png' },
+    { name: 'Mirena', image: '/images/MCC/MCCS2Predictions/Players/Mid/M_Mirena.png' },
+  ],
+  ROAMER: [
+    { name: 'laytutu', image: '/images/MCC/MCCS2Predictions/Players/Roam/R_laytutu.png' },
+    { name: 'Lawrencio', image: '/images/MCC/MCCS2Predictions/Players/Roam/R_Lawrencio.png' },
+    { name: 'Alaskador', image: '/images/MCC/MCCS2Predictions/Players/Roam/R_Alaskador.png' },
+    { name: 'PACULAN', image: '/images/MCC/MCCS2Predictions/Players/Roam/R_PACULAN.png' },
+    { name: 'Jamyyyx', image: '/images/MCC/MCCS2Predictions/Players/Roam/R_Jamyyyx.png' },
+    { name: 'Clarencezzx', image: '/images/MCC/MCCS2Predictions/Players/Roam/R_Clarencezzx.png' },
+    { name: 'Syong', image: '/images/MCC/MCCS2Predictions/Players/Roam/R_Syong.png' },
+    { name: 'Ch4kwawa', image: '/images/MCC/MCCS2Predictions/Players/Roam/R_Ch4kwawa.png' },
+  ],
+};
+
 const roles = ['GOLD', 'JUNGLER', 'EXP', 'MIDDLE', 'ROAMER'];
-const basePlayers = Array(8).fill({
-  name: 'DAKI',
-  image: '/images/MCC/MCCS2Predictions/Player Card.png',
-});
 
 const CARD_WIDTH = typeof window !== 'undefined' && window.innerWidth >= 768 ? 110 : 115;
 const CARD_HEIGHT = 290;
@@ -80,7 +131,7 @@ function PlayerVoting({ selectedPlayers, setSelectedPlayers }) {
   const [shuffledPlayers, setShuffledPlayers] = useState([]);
 
   useEffect(() => {
-    setShuffledPlayers(roles.map(() => shuffleArray(basePlayers)));
+    setShuffledPlayers(roles.map(role => shuffleArray(playersByRole[role])));
   }, []);
 
   const selectPlayer = (roleIdx, playerIdx) => {
@@ -124,7 +175,7 @@ function PlayerVoting({ selectedPlayers, setSelectedPlayers }) {
       </span>
     </div>
 
-    <div className="w-full max-w-[90vw] md:max-w-none overflow-x-auto relative z-0 pb-2 custom-scrollbar">
+    <div className="w-full max-w-[90vw] md:max-w-none overflow-x-auto relative z-0 py-2 custom-scrollbar">
       <div className="flex flex-row gap-2 md:gap-4 md:justify-start pl-1 md:pl-0 md:mx-auto" style={{
         maxWidth: typeof window !== 'undefined' && window.innerWidth >= 768 ? '1200px' : 'none'
       }}>
@@ -135,7 +186,7 @@ function PlayerVoting({ selectedPlayers, setSelectedPlayers }) {
           return (
             <div
               key={playerIdx}
-              className={`relative rounded-2xl overflow-hidden flex flex-col items-center cursor-pointer transition-all duration-200 ${isSelected ? 'ring-4 ring-yellow-400' : ''}`}
+              className={`relative rounded-2xl flex flex-col items-center cursor-pointer transition-all duration-200 ${isSelected ? 'ring-4 ring-yellow-400' : ''}`}
               style={{
                 width: typeof window !== 'undefined' && window.innerWidth >= 768 ? CARD_WIDTH : CARD_WIDTH * 0.73,
                 height: typeof window !== 'undefined' && window.innerWidth >= 768 ? CARD_HEIGHT * 0.9 : CARD_HEIGHT * 0.65,
@@ -143,23 +194,26 @@ function PlayerVoting({ selectedPlayers, setSelectedPlayers }) {
                 opacity: isDimmed ? 0.5 : 1,
                 flexShrink: 0,
                 background: '#18181b',
+                padding: '2px',
               }}
               onClick={() => selectPlayer(roleIdx, playerIdx)}
             >
-              <div className="absolute top-2 right-2 z-10">
-                <CheckCircle size={typeof window !== 'undefined' && window.innerWidth >= 768 ? 32 : 20} className={`transition-opacity duration-300 ${isSelected ? 'opacity-100 text-yellow-400' : 'opacity-0'}`} />
-              </div>
-              <img
-                src={player.image}
-                alt={player.name}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'contain',
-                }}
-              />
-              {isDimmed && <div className="absolute inset-0 bg-black/60 z-10" />}
-            </div>
+                             <div className="w-full h-full rounded-xl overflow-hidden">
+                 <div className="absolute top-2 right-2 z-10">
+                   <CheckCircle size={typeof window !== 'undefined' && window.innerWidth >= 768 ? 32 : 20} className={`transition-opacity duration-300 ${isSelected ? 'opacity-100 text-yellow-400' : 'opacity-0'}`} />
+                 </div>
+                 <img
+                   src={player.image}
+                   alt={player.name}
+                   style={{
+                     width: '100%',
+                     height: '100%',
+                     objectFit: 'cover',
+                   }}
+                 />
+                 {isDimmed && <div className="absolute inset-0 bg-black/60 z-10" />}
+               </div>
+             </div>
           );
         })}
       </div>
