@@ -16,6 +16,7 @@ use App\Http\Controllers\VotingController;
 use App\Http\Controllers\BracketTeamController;
 use App\Http\Controllers\MlAuthController;
 use App\Http\Controllers\GoogleSheetController;
+use App\Http\Controllers\SpreadSheetAutomationController;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
@@ -42,6 +43,12 @@ Route::get('/schools/search', [SchoolController::class, 'search']);
 Route::get('/login', function () {
     return Inertia::render('Login/Login');
 })->name('login');
+// // Route::post('/login', [AuthController::class, 'login'])->name('login');
+
+// //LOGIN ROUTES
+// Route::get('/login2', function () {
+//     return Inertia::render('Login/Login2');
+// })->name('login');
 // Route::post('/login2', [AuthController::class, 'login'])->name('login2');
 
 //ACCOUNT REGISTRATION ROUTES
@@ -49,6 +56,21 @@ Route::get('/register', function () {
     return Inertia::render('Account Creation/Register');
 })->name('register');
 
+// //ACCOUNT REGISTRATION 2 ROUTES
+// Route::get('/register2', function () {
+//     return Inertia::render('Account Creation/Register2');
+// })->name('register');
+
+
+//EVENT  ROUTES
+Route::get('/Events', function () {
+    return Inertia::render('Events/Events');
+})->name('Events');
+
+//EVENT  ROUTES - MCC WATCHFEST REG
+Route::get('/MCCWatchFestReg', function () {
+    return Inertia::render('MCCWatchFest/MCCWatchFestReg');
+})->name('MCCWatchFestReg');
 
 //STUDENT PORTAL
 Route::get('/studentportal', function () {
@@ -56,6 +78,11 @@ Route::get('/studentportal', function () {
         'user' => Auth::user(),
     ]);
 })->middleware(['auth', 'verified'])->name('SLStudent');
+
+// // TEMPORARY STUDENT PORTAL ACCESS (NO AUTH)
+// Route::get('/studentportal', function () {
+//     return Inertia::render('Student Portal/SLStudent');
+// })->middleware(['auth', 'verified'])->name('SLStudent');
 
 // // TEMPORARY STUDENT PORTAL ACCESS (NO AUTH)
 // Route::get('/studentportal', function () {
@@ -152,6 +179,12 @@ Route::get('/soon', function () {
 
 // Google Sheet Routes
 Route::get('/google-sheet', [GoogleSheetController::class, 'exportToGoogleSheet'])->name('google-sheet.export');
+
+//SpreadSheet Automation Routes
+Route::get('/import-from-spreadsheet', [SpreadSheetAutomationController::class, 'importFromSpreadsheet'])->name('import-from-spreadsheet');
+
+// Spreadsheet Automation Routes
+Route::get('/spreadsheet/export-users', [SpreadSheetAutomationController::class, 'exportUsersToSpreadsheet'])->name('spreadsheet.export-users');
 //force logout
 Route::get('/force-logout', function () {
     Auth::logout();
@@ -277,15 +310,17 @@ Route::get('/get-old-users', function () {
 })->name('old');
 //update user type
 Route::get('/update-user-type', function () {
+    return "test";
     set_time_limit(0);
-    $users = DB::table('msl_user_account')->where('administrator', "!=", "")->get();
+    $users = DB::table('msl_user_mlbb')->get();
     foreach ($users as $user) {
-        $user_type = $user->administrator;
-        $update = User::where('ml_id', $user->userid)->update(['user_type' => $user_type]);
-        if($update){
-            echo $user->userid." ".$user_type." updated"."<br>";
+        $get = User::where('ml_id', $user->userid)->first();
+        if($get){
+            $get->ml_id = $user->mslid;
+            $get->save();
+            echo $user->userid." ".$get->ml_id." updated"."<br>";
         }else{
-            echo $user->userid." ".$user_type." not updated"."<br>";
+            echo $user->userid." not found"."<br>";
         }
     }
 })->name('update-user-type');

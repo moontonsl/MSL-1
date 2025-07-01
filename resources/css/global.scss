@@ -33,6 +33,26 @@
           inset: 0;
           background: linear-gradient(180deg, #0A0A0A 0%, rgba(10, 10, 10, 0.50) 25%, rgba(10, 10, 10, 0.20) 50%, rgba(10, 10, 10, 0.50) 75%, #0A0A0A 100%), url(/webbg2025.png) lightgray 50% / cover no-repeat;
       }
+
+      .mcc2_calendarBG {
+          position: absolute;
+          opacity: 0.5;
+          inset: 0;
+          background: linear-gradient(180deg, #0A0A0A 0%, rgba(10, 10, 10, 0.50) 25%, rgba(10, 10, 10, 0.20) 50%, rgba(10, 10, 10, 0.50) 75%, #0A0A0A 100%), url(/mcc2_calendarBG.png) lightgray 50% / cover no-repeat;
+      }
+
+      .mcc_watchfestBG {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            180deg,
+            rgba(10, 10, 10, 0) 0%, /* Fully transparent black at the very top */
+            rgba(10, 10, 10, 0.1) 20%, /* Slightly visible black */
+            rgba(10, 10, 10, 0.5) 60%, /* More noticeable black */
+            #0A0A0A 100% /* Solid dark black at the very bottom */
+          ),
+          url(/MCC2_BG.png) lightgray 50% / cover no-repeat;
+      }
   }
 
   footer {
