@@ -22,7 +22,7 @@ class SpreadSheetAutomationController extends Controller
         set_time_limit(0);
         try {
            
-            $spreadsheetId = "1Cg5qtopDU6GbSAmkgwdWIIomDa9LuyTxEkh3ZBqFnbU";
+            $spreadsheetId = "1216kHWU6fpbb_zDz6d2SKh9SZJjUqt0ObvxsdIDGQg0";
             $range = "Sheet1!A1";
 
             // 1. Get users data
@@ -36,7 +36,6 @@ class SpreadSheetAutomationController extends Controller
                 'ID',
                 'Name',
                 'Surname',
-                'Last Name',
                 'Suffix',
                 'Email',
                 'Username',
@@ -64,44 +63,43 @@ class SpreadSheetAutomationController extends Controller
                 'Proof of Enrollment',
                 'Email Verified At',
                 'Created At',
-                'Updated At'
+                'Updated At',
             ];
             
             // Add user data rows
             foreach ($users as $user) {
                 $data[] = [
-                    $user->id,
-                    $user->name,
-                    $user->surname,
-                    $user->lastName,
-                    $user->suffix,
-                    $user->email,
-                    $user->username,
-                    $user->ml_id,
-                    $user->ml_server,
-                    $user->ml_ign,
-                    $user->status,
-                    $user->user_type,
-                    $user->facebook_link,
-                    $user->birthday,
-                    $user->age,
-                    $user->gender,
-                    $user->contact_number,
-                    $user->course,
-                    $user->university,
-                    $user->year_level,
-                    $user->region,
-                    $user->island,
-                    $user->squadAbbreviation,
-                    $user->squadName,
-                    $user->inGameRole,
-                    $user->mainHero,
-                    $user->rank,
-                    $user->studentId,
-                    $user->proofOfEnrollment,
-                    $user->email_verified_at,
-                    $user->created_at,
-                    $user->updated_at
+                    $user->id ?? 'N/A',
+                    $user->name ?? 'N/A',
+                    $user->surname ?? 'N/A',
+                    $user->suffix ?? 'N/A',
+                    $user->email ?? 'N/A',
+                    $user->username ?? 'N/A',
+                    $user->ml_id ?? 'N/A',
+                    $user->ml_server ?? 'N/A',
+                    $user->ml_ign ?? 'N/A',
+                    $user->status ?? 'N/A',
+                    $user->user_type ?? 'N/A',
+                    $user->facebook_link ?? 'N/A',
+                    $user->birthday ?? 'N/A',
+                    $user->age ?? 'N/A',
+                    $user->gender ?? 'N/A',
+                    $user->contact_number ?? 'N/A',
+                    $user->course ?? 'N/A',
+                    $user->university ?? 'N/A',
+                    $user->year_level ?? 'N/A',
+                    $user->region ?? 'N/A',
+                    $user->island ?? 'N/A',
+                    $user->squadAbbreviation ?? 'N/A',
+                    $user->squadName ?? 'N/A',
+                    $user->inGameRole ?? 'N/A',
+                    $user->mainHero ?? 'N/A',
+                    $user->rank ?? 'N/A',
+                    $user->studentId ?? 'N/A',
+                    $user->proofOfEnrollment ?? 'N/A',
+                    $user->email_verified_at ?? 'N/A',
+                    $user->created_at ?? 'N/A',
+                    $user->updated_at ?? 'N/A'
                 ];
             }
 
@@ -133,6 +131,7 @@ class SpreadSheetAutomationController extends Controller
                 $body,
                 $params
             );
+                                                
 
             return response()->json([
                 'success' => true,
