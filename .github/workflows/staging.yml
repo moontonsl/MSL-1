@@ -1,10 +1,10 @@
-name: CI/CD Pipeline - Production
+name: CI/CD Pipeline - Staging
 
 on:
   push:
-    branches: [ main ]
+    branches: [ staging ]
   pull_request:
-    branches: [ main ]
+    branches: [ staging ]
 
 jobs:
   build-and-deploy:
@@ -47,11 +47,11 @@ jobs:
           port: 22
           script: |
             set -e
-            cd /home/moontonslph.org/laravel-app
+            cd ${{ secrets.VPS_DEPLOY_PATH }}
 
             git reset --hard
             git clean -fd
-            git pull origin main
+            git pull origin staging
 
             rm -rf node_modules package-lock.json
 
@@ -73,14 +73,14 @@ jobs:
 
             chmod -R 775 storage bootstrap/cache
             chown -R daemon:daemon storage bootstrap/cache
-            chmod -R 777 /home/moontonslph.org/laravel-app/storage /home/moontonslph.org/laravel-app/bootstrap/cache
+            chmod -R 777 /home/moontonslph.online/testsub/storage /home/moontonslph.online/testsub/bootstrap/cache
             php artisan up
             
             # Restart PM2 process
-            if pm2 list | grep -q "my-app"; then
-              pm2 reload my-app
+            if pm2 list | grep -q "staging-app"; then
+              pm2 reload staging-app
             else
-              pm2 start npm --name "my-app" -- run start
+              pm2 start npm --name "staging-app" -- run start
             fi
             
             echo "Deployment completed successfully"
