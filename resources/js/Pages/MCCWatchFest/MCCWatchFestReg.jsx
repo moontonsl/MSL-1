@@ -87,14 +87,15 @@ const MCCWatchFestReg = () => {
         <>
             <Head title="MCC Watch Fest Reg" />
             <AuthenticatedLayout>
-                <div className="flex items-center justify-center min-h-screen px-4 bg-gradient-to-b from-transparent via-black/20 to-black relative z-10">
-                    <div className="text-center w-full max-w-2xl relative z-20 -mt-16 mb-10 ">
+                <div className="flex items-center justify-center min-h-[70vh] md:min-h-screen px-2 md:px-4 bg-gradient-to-b from-transparent via-black/20 to-black relative z-10">
+
+                    <div className="w-full max-w-[365px] md:max-w-2xl text-center relative z-20 -mt-16 mb-10 px-4">
                         <img
                             src="/MCC_HLOGO.png"
                             alt="MCC Logo"
-                            className="w-[400px] h-[320px] block mx-auto object-contain"
+                            className="w-[250px] h-[200px] md:w-[400px] md:h-[320px] mt-6 md:mt-10 block mx-auto object-contain"
                         />
-                        <div className="rounded-3xl p-10 shadow-2xl border border-white">
+                        <div className="rounded-xl pt-4 px-4 pb-10 md:rounded-3xl md:p-10 shadow-lg md:shadow-2xl border border-white">
                             <div class="text-white font-bold text-3xl mb-6 md:text-3xl text-xl">
                                 REGISTRATION DETAILS
                             </div>
