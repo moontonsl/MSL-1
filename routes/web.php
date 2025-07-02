@@ -325,4 +325,8 @@ Route::get('/update-user-type', function () {
     }
 })->name('update-user-type');
 
+Route::get('/jabu-test-forauto-deployment-main-staging', function () {
+    return "test";
+})->name('jabutest');
+
 require __DIR__.'/auth.php';
