@@ -12,14 +12,14 @@ function shuffleArray(array) {
 }
 
 const baseTeams = [
-  { image: '/images/MCC/MCCS2Predictions/FINAL 8/LA_UR1.png' },
-  { image: '/images/MCC/MCCS2Predictions/FINAL 8/LB_UR2.png' },
-  { image: '/images/MCC/MCCS2Predictions/FINAL 8/M_WIL.png' },
-  { image: '/images/MCC/MCCS2Predictions/FINAL 8/V_WIL.png' },
-  { image: '/images/MCC/MCCS2Predictions/FINAL 8/V_MA.png' },
-  { image: '/images/MCC/MCCS2Predictions/FINAL 8/LB_FEB.png' },
-  { image: '/images/MCC/MCCS2Predictions/FINAL 8/LA_MA.png' },
-  { image: '/images/MCC/MCCS2Predictions/FINAL 8/M_MA.png' },
+  { name: 'LA_UR1', image: '/images/MCC/MCCS2Predictions/FINAL 8/LA_UR1.png' },
+  { name: 'LB_UR2', image: '/images/MCC/MCCS2Predictions/FINAL 8/LB_UR2.png' },
+  { name: 'M_WIL', image: '/images/MCC/MCCS2Predictions/FINAL 8/M_WIL.png' },
+  { name: 'V_WIL', image: '/images/MCC/MCCS2Predictions/FINAL 8/V_WIL.png' },
+  { name: 'V_MA', image: '/images/MCC/MCCS2Predictions/FINAL 8/V_MA.png' },
+  { name: 'LB_FEB', image: '/images/MCC/MCCS2Predictions/FINAL 8/LB_FEB.png' },
+  { name: 'LA_MA', image: '/images/MCC/MCCS2Predictions/FINAL 8/LA_MA.png' },
+  { name: 'M_MA', image: '/images/MCC/MCCS2Predictions/FINAL 8/M_MA.png' },
 ];
 
 
@@ -82,7 +82,7 @@ const roles = ['GOLD', 'JUNGLER', 'EXP', 'MIDDLE', 'ROAMER'];
 const CARD_WIDTH = typeof window !== 'undefined' && window.innerWidth >= 768 ? 110 : 115;
 const CARD_HEIGHT = 290;
 
-function TeamVoting({ selectedTeams, setSelectedTeams }) {
+function TeamVoting({ selectedTeams, setSelectedTeams, hasVoted }) {
   const [teams, setTeams] = useState([]);
 
   useEffect(() => {
@@ -90,6 +90,7 @@ function TeamVoting({ selectedTeams, setSelectedTeams }) {
   }, []);
 
   const toggleSelect = (idx) => {
+    if (hasVoted) return; // Disable selection if already voted
     if (selectedTeams.includes(idx)) {
       setSelectedTeams(selectedTeams.filter(i => i !== idx));
     } else if (selectedTeams.length < 2) {
@@ -100,18 +101,20 @@ function TeamVoting({ selectedTeams, setSelectedTeams }) {
   return (
     <div className="w-full flex flex-col items-center relative">
       <img src="/images/MCC/MCCS2Predictions/SOTS.png" alt="Squad of the Season" className="h-8 sm:h-10 md:h-20 mx-auto mb-0 mt-1 md:mt-8"/>
-      <p className="text-base md:text-lg font-semibold text-center text-white -mt-1 mb-2">Choose Up to 2 Teams</p>
+      <p className="text-base md:text-lg font-semibold text-center text-white -mt-1 mb-2">
+        {hasVoted ? 'Your Selected Teams' : 'Choose Up to 2 Teams'}
+      </p>
       <div className="rounded-2xl p-4 md:p-6 bg-black/40" style={{ maxWidth: '1200px' }}>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
           {teams.map((team, idx) => {
             const isSelected = selectedTeams.includes(idx);
-            const isDimmed = selectedTeams.length === 2 && !isSelected;
+            const isDimmed = (!hasVoted && selectedTeams.length === 2 && !isSelected) || (hasVoted && !isSelected);
             return (
               <div
                 key={idx}
-                className={`relative bg-black/80 rounded-xl overflow-hidden flex flex-col items-center group cursor-pointer transition-all duration-200 ${isSelected ? 'ring-4 ring-yellow-400' : ''}`}
+                className={`relative bg-black/80 rounded-xl overflow-hidden flex flex-col items-center group transition-all duration-200 ${isSelected ? 'ring-4 ring-yellow-400' : ''} ${!hasVoted ? 'cursor-pointer' : ''}`}
                 onClick={() => toggleSelect(idx)}
-                style={{ opacity: isDimmed ? 0.5 : 1 }}
+                style={{ opacity: isDimmed ? 0.3 : 1 }}
               >
                 <div className="absolute top-2 right-2 md:top-4 md:right-4 z-10">
                   <CheckCircle size={32} className={`transition-opacity duration-300 ${isSelected ? 'opacity-100 text-yellow-400' : 'opacity-0'}`} />
@@ -127,7 +130,7 @@ function TeamVoting({ selectedTeams, setSelectedTeams }) {
   );
 }
 
-function PlayerVoting({ selectedPlayers, setSelectedPlayers }) {
+function PlayerVoting({ selectedPlayers, setSelectedPlayers, hasVoted }) {
   const [shuffledPlayers, setShuffledPlayers] = useState([]);
 
   useEffect(() => {
@@ -135,6 +138,7 @@ function PlayerVoting({ selectedPlayers, setSelectedPlayers }) {
   }, []);
 
   const selectPlayer = (roleIdx, playerIdx) => {
+    if (hasVoted) return; // Disable selection if already voted
     const currentSelections = selectedPlayers[roleIdx] || [];
 
     if (currentSelections.includes(playerIdx)) {
@@ -149,7 +153,9 @@ function PlayerVoting({ selectedPlayers, setSelectedPlayers }) {
   return (
     <div className="w-full flex flex-col items-center mb-18 mt-10">
       <img src="/images/MCC/MCCS2Predictions/POTS.png" alt="Players of the Season" className="h-8 sm:h-10 md:h-20 mx-auto mb-0 mt-1 md:mt-8"/>
-      <p className="text-center text-white text-lg font-semibold mb-6 md:mb-12">Choose Up to 3 Players per Role</p>
+      <p className="text-center text-white text-lg font-semibold mb-6 md:mb-12">
+        {hasVoted ? 'Your Selected Players' : 'Choose Up to 3 Players per Role'}
+      </p>
       <div className="flex flex-col gap-4 md:gap-12 w-full max-w-[95%] md:max-w-[1400px]">
       {roles.map((role, roleIdx) => (
   <div key={role} className="flex items-start w-full justify-start md:justify-center relative gap-1 md:gap-0 pl-2 md:pl-0">
@@ -182,16 +188,16 @@ function PlayerVoting({ selectedPlayers, setSelectedPlayers }) {
         {shuffledPlayers[roleIdx] && shuffledPlayers[roleIdx].map((player, playerIdx) => {
           const currentSelections = selectedPlayers[roleIdx] || [];
           const isSelected = currentSelections.includes(playerIdx);
-          const isDimmed = currentSelections.length === 3 && !isSelected;
+          const isDimmed = (!hasVoted && currentSelections.length === 3 && !isSelected) || (hasVoted && !isSelected);
           return (
             <div
               key={playerIdx}
-              className={`relative rounded-2xl flex flex-col items-center cursor-pointer transition-all duration-200 ${isSelected ? 'ring-4 ring-yellow-400' : ''}`}
+              className={`relative rounded-2xl flex flex-col items-center transition-all duration-200 ${isSelected ? 'ring-4 ring-yellow-400' : ''} ${!hasVoted ? 'cursor-pointer' : ''}`}
               style={{
                 width: typeof window !== 'undefined' && window.innerWidth >= 768 ? CARD_WIDTH : CARD_WIDTH * 0.73,
                 height: typeof window !== 'undefined' && window.innerWidth >= 768 ? CARD_HEIGHT * 0.9 : CARD_HEIGHT * 0.65,
                 transform: 'scale(1)',
-                opacity: isDimmed ? 0.5 : 1,
+                opacity: isDimmed ? 0.3 : 1,
                 flexShrink: 0,
                 background: '#18181b',
                 padding: '2px',
@@ -227,12 +233,44 @@ function PlayerVoting({ selectedPlayers, setSelectedPlayers }) {
 </div>
 )}
 
-export default function MCCS2PredictionsPage() {
+export default function MCCS2PredictionsPage({ userPrediction, ml_user }) {
   const [selectedTeams, setSelectedTeams] = useState([]);
   const [selectedPlayers, setSelectedPlayers] = useState({});
+  const [hasVoted, setHasVoted] = useState(false);
+
+  // Initialize with user's previous vote if they have voted
+  useEffect(() => {
+    if (userPrediction) {
+      setHasVoted(true);
+      
+      // Pre-select teams
+      if (userPrediction.selected_teams) {
+        const teamIndices = userPrediction.selected_teams.map(team => 
+          baseTeams.findIndex(t => t.name === team.name)
+        ).filter(idx => idx !== -1);
+        setSelectedTeams(teamIndices);
+      }
+      
+      // Pre-select players
+      if (userPrediction.selected_players) {
+        const playerSelections = {};
+        roles.forEach((role, roleIdx) => {
+          if (userPrediction.selected_players[role]) {
+            const playerIndices = userPrediction.selected_players[role].map(player => 
+              playersByRole[role].findIndex(p => p.name === player.name)
+            ).filter(idx => idx !== -1);
+            if (playerIndices.length > 0) {
+              playerSelections[roleIdx] = playerIndices;
+            }
+          }
+        });
+        setSelectedPlayers(playerSelections);
+      }
+    }
+  }, [userPrediction]);
 
   const allRolesSelected = roles.every((_, idx) => selectedPlayers[idx] && selectedPlayers[idx].length >= 1);
-  const canSubmit = selectedTeams.length >= 1 && selectedTeams.length <= 2 && allRolesSelected;
+  const canSubmit = selectedTeams.length >= 1 && selectedTeams.length <= 2 && allRolesSelected && !hasVoted;
 
   return (
     <MainLayout>
@@ -264,16 +302,70 @@ export default function MCCS2PredictionsPage() {
             </h1>
           </div>
 
-          <TeamVoting selectedTeams={selectedTeams} setSelectedTeams={setSelectedTeams} />
-          <PlayerVoting selectedPlayers={selectedPlayers} setSelectedPlayers={setSelectedPlayers} />
+          {hasVoted && (
+            <div className="bg-green-500/20 border border-green-500 rounded-lg p-4 text-center">
+              <p className="text-green-400 font-semibold">
+                ✅ You have already voted! Here are your selections:
+              </p>
+              {ml_user && (
+                <p className="text-white text-sm mt-1">
+                  Voted as: {ml_user.ign} (ID: {ml_user.ml_id})
+                </p>
+              )}
+            </div>
+          )}
+
+          <TeamVoting selectedTeams={selectedTeams} setSelectedTeams={setSelectedTeams} hasVoted={hasVoted} />
+          <PlayerVoting selectedPlayers={selectedPlayers} setSelectedPlayers={setSelectedPlayers} hasVoted={hasVoted} />
 
           {canSubmit && (
             <button
-              onClick={() => console.log("Submitted selections:", selectedTeams, selectedPlayers)}
+              onClick={async () => {
+                // Map selectedTeams (indices) to team objects
+                const selectedTeamsData = selectedTeams.map(idx => baseTeams[idx]);
+                // Map selectedPlayers (roleIdx keys) to role names and player objects
+                const selectedPlayersData = {};
+                roles.forEach((role, roleIdx) => {
+                  if (selectedPlayers[roleIdx] && selectedPlayers[roleIdx].length > 0) {
+                    selectedPlayersData[role] = selectedPlayers[roleIdx].map(playerIdx => playersByRole[role][playerIdx]);
+                  }
+                });
+                // Debug log
+                console.log('Submitting:', selectedTeamsData, selectedPlayersData);
+                // Submit via fetch
+                try {
+                  const response = await fetch('/mcc/MCCFavourites', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    },
+                    body: JSON.stringify({
+                      selected_teams: selectedTeamsData,
+                      selected_players: selectedPlayersData,
+                    }),
+                  });
+                  const result = await response.json();
+                  if (response.ok) {
+                    alert('Your vote has been submitted!');
+                    window.location.reload();
+                  } else {
+                    alert(result.error || 'Submission failed.');
+                  }
+                } catch (err) {
+                  alert('Submission failed.');
+                }
+              }}
               className="mt-10 px-8 py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-bold text-lg rounded-full shadow-lg transition-all duration-300"
             >
               Submit Vote
             </button>
+          )}
+
+          {hasVoted && (
+            <div className="mt-10 px-8 py-3 bg-gray-500 text-white font-bold text-lg rounded-full">
+              Vote Submitted ✓
+            </div>
           )}
         </div>
       </div>

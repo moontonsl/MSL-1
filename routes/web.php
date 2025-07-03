@@ -23,6 +23,8 @@ use App\Http\Controllers\MlAuthController;
 use App\Http\Controllers\GoogleSheetController;
 use App\Http\Controllers\SpreadSheetAutomationController;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Mccs2PredictionsController;
+use App\Http\Controllers\GoogleSheetMCCS2Controller;
 
 Route::get('/', function () {
     return Inertia::render('Home/Home', [
@@ -186,9 +188,8 @@ Route::post('/ml/logout', [MlAuthController::class, 'logout'])->name('ml.logout'
 Route::get('/mcc/predictions', [VotingController::class, 'index'])->name('predictions.index');
 Route::post('/mcc/predictions', [VotingController::class, 'store'])->name('predictions.vote');
 
-Route::get('/mcc/MCCFavourites', function () {
-    return Inertia::render('MCC/MCCS2Predictions/index');
-});
+Route::get('/mcc/MCCFavourites', [Mccs2PredictionsController::class, 'show'])->name('mccs2predictions.show');
+Route::post('/mcc/MCCFavourites', [Mccs2PredictionsController::class, 'store'])->name('mccs2predictions.store');
 
 Route::get('/soon', function () {
     return Inertia::render('Soon/Soon');
@@ -196,6 +197,7 @@ Route::get('/soon', function () {
 
 // Google Sheet Routes
 Route::get('/google-sheet', [GoogleSheetController::class, 'exportToGoogleSheet'])->name('google-sheet.export');
+Route::get('/google-sheet-mccs2', [GoogleSheetMCCS2Controller::class, 'exportMCCS2PredictionsToGoogleSheet'])->name('google-sheet-mccs2.export');
 
 //SpreadSheet Automation Routes
 Route::get('/import-from-spreadsheet', [SpreadSheetAutomationController::class, 'importFromSpreadsheet'])->name('import-from-spreadsheet');
