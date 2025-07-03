@@ -22,7 +22,6 @@ const baseTeams = [
   { name: 'ATENEO ESPORTS', image: '/images/MCC/MCCS2Predictions/FINAL 8/M_MA.png' },
 ];
 
-
 // Player data organized by role
 const playersByRole = {
   GOLD: [
