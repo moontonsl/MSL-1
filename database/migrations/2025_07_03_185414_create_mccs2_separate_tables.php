@@ -42,4 +42,4 @@ return new class extends Migration
         Schema::dropIfExists('mccs2_player_predictions');
         Schema::dropIfExists('mccs2_team_predictions');
     }
-}; 
+};

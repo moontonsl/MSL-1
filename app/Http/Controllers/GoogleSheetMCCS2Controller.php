@@ -29,17 +29,31 @@ class GoogleSheetMCCS2Controller extends Controller
         $range = 'MCCS2Predictions'; 
 
         // 3. Run SQL Query
-        $results = DB::table('mccs2_predictions')
-            ->join('ml_users', 'mccs2_predictions.ml_id', '=', 'ml_users.ml_id')
+        $teamResults = DB::table('mccs2_team_predictions')
+            ->join('ml_users', 'mccs2_team_predictions.ml_id', '=', 'ml_users.ml_id')
             ->select(
-                'mccs2_predictions.ml_id', 
+                'mccs2_team_predictions.ml_id', 
                 'ml_users.server_id', 
                 'ml_users.ign',
-                'mccs2_predictions.selected_teams',
-                'mccs2_predictions.selected_players',
-                'mccs2_predictions.created_at'
+                'mccs2_team_predictions.selected_teams',
+                'mccs2_team_predictions.created_at as team_vote_date'
             )
             ->get();
+
+        $playerResults = DB::table('mccs2_player_predictions')
+            ->join('ml_users', 'mccs2_player_predictions.ml_id', '=', 'ml_users.ml_id')
+            ->select(
+                'mccs2_player_predictions.ml_id',
+                'ml_users.server_id',
+                'ml_users.ign',
+                'mccs2_player_predictions.role',
+                'mccs2_player_predictions.selected_players',
+                'mccs2_player_predictions.created_at as player_vote_date'
+            )
+            ->get();
+
+        // Group player results by ml_id
+        $playerResultsByUser = $playerResults->groupBy('ml_id');
 
         // 4. Prepare values for Google Sheets
         $values = [];
@@ -55,15 +69,13 @@ class GoogleSheetMCCS2Controller extends Controller
             'Selected Players (EXP)', 
             'Selected Players (MIDDLE)', 
             'Selected Players (ROAMER)', 
-            'Vote Date'
+            'Team Vote Date',
+            'Player Vote Date'
         ];
 
-        foreach ($results as $row) {
-            // Decode JSON data
-            $selectedTeams = json_decode($row->selected_teams, true);
-            $selectedPlayers = json_decode($row->selected_players, true);
-
-            // Format teams
+        foreach ($teamResults as $teamRow) {
+            // Decode team data
+            $selectedTeams = json_decode($teamRow->selected_teams, true);
             $teamsString = '';
             if ($selectedTeams) {
                 $teamNames = array_map(function($team) {
@@ -72,6 +84,9 @@ class GoogleSheetMCCS2Controller extends Controller
                 $teamsString = implode(', ', $teamNames);
             }
 
+            // Get player data for this user
+            $userPlayerResults = $playerResultsByUser->get($teamRow->ml_id, collect());
+            
             // Format players by role
             $goldPlayers = '';
             $junglerPlayers = '';
@@ -79,45 +94,45 @@ class GoogleSheetMCCS2Controller extends Controller
             $middlePlayers = '';
             $roamerPlayers = '';
 
-            if ($selectedPlayers) {
-                if (isset($selectedPlayers['GOLD'])) {
-                    $goldPlayers = implode(', ', array_map(function($player) {
+            foreach ($userPlayerResults as $playerRow) {
+                $selectedPlayers = json_decode($playerRow->selected_players, true);
+                if ($selectedPlayers) {
+                    $playerNames = implode(', ', array_map(function($player) {
                         return $player['name'] ?? 'Unknown';
-                    }, $selectedPlayers['GOLD']));
-                }
-                if (isset($selectedPlayers['JUNGLER'])) {
-                    $junglerPlayers = implode(', ', array_map(function($player) {
-                        return $player['name'] ?? 'Unknown';
-                    }, $selectedPlayers['JUNGLER']));
-                }
-                if (isset($selectedPlayers['EXP'])) {
-                    $expPlayers = implode(', ', array_map(function($player) {
-                        return $player['name'] ?? 'Unknown';
-                    }, $selectedPlayers['EXP']));
-                }
-                if (isset($selectedPlayers['MIDDLE'])) {
-                    $middlePlayers = implode(', ', array_map(function($player) {
-                        return $player['name'] ?? 'Unknown';
-                    }, $selectedPlayers['MIDDLE']));
-                }
-                if (isset($selectedPlayers['ROAMER'])) {
-                    $roamerPlayers = implode(', ', array_map(function($player) {
-                        return $player['name'] ?? 'Unknown';
-                    }, $selectedPlayers['ROAMER']));
+                    }, $selectedPlayers));
+                    
+                    switch ($playerRow->role) {
+                        case 'GOLD':
+                            $goldPlayers = $playerNames;
+                            break;
+                        case 'JUNGLER':
+                            $junglerPlayers = $playerNames;
+                            break;
+                        case 'EXP':
+                            $expPlayers = $playerNames;
+                            break;
+                        case 'MIDDLE':
+                            $middlePlayers = $playerNames;
+                            break;
+                        case 'ROAMER':
+                            $roamerPlayers = $playerNames;
+                            break;
+                    }
                 }
             }
 
             $values[] = [
-                $row->ml_id,
-                $row->server_id,
-                $row->ign,
+                $teamRow->ml_id,
+                $teamRow->server_id,
+                $teamRow->ign,
                 $teamsString,
                 $goldPlayers,
                 $junglerPlayers,
                 $expPlayers,
                 $middlePlayers,
                 $roamerPlayers,
-                $row->created_at
+                $teamRow->team_vote_date,
+                $userPlayerResults->first() ? $userPlayerResults->first()->player_vote_date : ''
             ];
         }
 
@@ -141,7 +156,7 @@ class GoogleSheetMCCS2Controller extends Controller
         return response()->json([
             'success' => true,
             'message' => '✅ MCCS2Predictions data exported to Google Sheets!',
-            'total_votes' => count($results)
+            'total_votes' => count($teamResults)
         ]);
     }
 }

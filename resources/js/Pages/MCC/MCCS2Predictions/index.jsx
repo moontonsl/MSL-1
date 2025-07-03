@@ -129,7 +129,7 @@ function TeamVoting({ selectedTeams, setSelectedTeams, hasVoted }) {
   );
 }
 
-function PlayerVoting({ selectedPlayers, setSelectedPlayers, hasVoted }) {
+function PlayerVoting({ selectedPlayers, setSelectedPlayers, hasVotedRoles, onSubmitRole }) {
   const [shuffledPlayers, setShuffledPlayers] = useState([]);
 
   useEffect(() => {
@@ -137,7 +137,7 @@ function PlayerVoting({ selectedPlayers, setSelectedPlayers, hasVoted }) {
   }, []);
 
   const selectPlayer = (roleIdx, playerIdx) => {
-    if (hasVoted) return; // Disable selection if already voted
+    if (hasVotedRoles[roles[roleIdx]]) return; // Disable selection if already voted
     const currentSelections = selectedPlayers[roleIdx] || [];
 
     if (currentSelections.includes(playerIdx)) {
@@ -149,125 +149,156 @@ function PlayerVoting({ selectedPlayers, setSelectedPlayers, hasVoted }) {
     }
   };
 
+  const canSubmitRole = (role) => {
+    const roleIdx = roles.indexOf(role);
+    const currentSelections = selectedPlayers[roleIdx] || [];
+    return currentSelections.length >= 1 && currentSelections.length <= 3 && !hasVotedRoles[role];
+  };
+
   return (
     <div className="w-full flex flex-col items-center mb-18 mt-10">
       <img src="/images/MCC/MCCS2Predictions/POTS.png" alt="Players of the Season" className="h-8 sm:h-10 md:h-20 mx-auto mb-0 mt-1 md:mt-8"/>
-      <p className="text-center text-white text-lg font-semibold mb-6 md:mb-12">
-        {hasVoted ? 'Your Selected Players' : 'Choose Up to 3 Players per Role'}
-      </p>
+      <p className="text-center text-white text-lg font-semibold mb-6 md:mb-12">Choose Up to 3 Players per Role</p>
       <div className="flex flex-col gap-4 md:gap-12 w-full max-w-[95%] md:max-w-[1400px]">
       {roles.map((role, roleIdx) => (
-  <div key={role} className="flex items-start w-full justify-start md:justify-center relative gap-1 md:gap-0 pl-2 md:pl-0">
-    <div
-      className="flex items-center justify-center bg-stone-900 flex-shrink-0 relative z-10 mr-2 md:mr-3"
-      style={{
-        width: typeof window !== 'undefined' && window.innerWidth >= 768 ? 56 : 35,
-        height: typeof window !== 'undefined' && window.innerWidth >= 768 ? CARD_HEIGHT * 0.9 : CARD_HEIGHT * 0.65,
-        borderRadius: '12px',
-        marginRight: typeof window !== 'undefined' && window.innerWidth >= 768 ? '0.75rem' : '0.75rem'
-      }}
-    >
-      <span
-        className="text-yellow-400 font-bold font-montserrat tracking-widest uppercase"
-        style={{
-          transform: 'rotate(-90deg)',
-          whiteSpace: 'nowrap',
-          letterSpacing: '0.15em',
-          fontSize: typeof window !== 'undefined' && window.innerWidth >= 768 ? '1.875rem' : '0.875rem'
-        }}
-      >
-        {role}
-      </span>
-    </div>
-
-    <div className="w-full max-w-[90vw] md:max-w-none overflow-x-auto relative z-0 py-2 custom-scrollbar">
-      <div className="flex flex-row gap-2 md:gap-4 md:justify-start pl-1 md:pl-0 md:mx-auto" style={{
-        maxWidth: typeof window !== 'undefined' && window.innerWidth >= 768 ? '1200px' : 'none'
-      }}>
-        {shuffledPlayers[roleIdx] && shuffledPlayers[roleIdx].map((player, playerIdx) => {
-          const currentSelections = selectedPlayers[roleIdx] || [];
-          const isSelected = currentSelections.includes(playerIdx);
-          const isDimmed = (!hasVoted && currentSelections.length === 3 && !isSelected) || (hasVoted && !isSelected);
-          return (
+        <div key={role} className="flex flex-col">
+          <div className="flex items-start w-full justify-start md:justify-center relative gap-1 md:gap-0 pl-2 md:pl-0">
             <div
-              key={playerIdx}
-              className={`relative rounded-2xl flex flex-col items-center transition-all duration-200 ${isSelected ? 'ring-4 ring-yellow-400' : ''} ${!hasVoted ? 'cursor-pointer' : ''}`}
+              className="flex items-center justify-center bg-stone-900 flex-shrink-0 relative z-10 mr-2 md:mr-3"
               style={{
-                width: typeof window !== 'undefined' && window.innerWidth >= 768 ? CARD_WIDTH : CARD_WIDTH * 0.73,
+                width: typeof window !== 'undefined' && window.innerWidth >= 768 ? 56 : 35,
                 height: typeof window !== 'undefined' && window.innerWidth >= 768 ? CARD_HEIGHT * 0.9 : CARD_HEIGHT * 0.65,
-                transform: 'scale(1)',
-                opacity: isDimmed ? 0.3 : 1,
-                flexShrink: 0,
-                background: '#18181b',
-                padding: '2px',
+                borderRadius: '12px',
+                marginRight: typeof window !== 'undefined' && window.innerWidth >= 768 ? '0.75rem' : '0.75rem'
               }}
-              onClick={() => selectPlayer(roleIdx, playerIdx)}
             >
-                             <div className="w-full h-full rounded-xl overflow-hidden">
-                 <div className="absolute top-2 right-2 z-10">
-                   <CheckCircle size={typeof window !== 'undefined' && window.innerWidth >= 768 ? 32 : 20} className={`transition-opacity duration-300 ${isSelected ? 'opacity-100 text-yellow-400' : 'opacity-0'}`} />
-                 </div>
-                 <img
-                   src={player.image}
-                   alt={player.name}
-                   style={{
-                     width: '100%',
-                     height: '100%',
-                     objectFit: 'cover',
-                   }}
-                 />
-                 {isDimmed && <div className="absolute inset-0 bg-black/60 z-10" />}
-               </div>
-             </div>
-          );
-        })}
-      </div>
-    </div>
+              <span
+                className="text-yellow-400 font-bold font-montserrat tracking-widest uppercase"
+                style={{
+                  transform: 'rotate(-90deg)',
+                  whiteSpace: 'nowrap',
+                  letterSpacing: '0.15em',
+                  fontSize: typeof window !== 'undefined' && window.innerWidth >= 768 ? '1.875rem' : '0.875rem'
+                }}
+              >
+                {role}
+              </span>
+            </div>
 
-      {/* White horizontal line (only in desktop view) */}
-      <div className="absolute left-0 right-0 -bottom-4 h-1 bg-white rounded-full w-full hidden md:block" style={{ maxWidth: '90%', margin: '0 auto' }} />
-    </div>
-  ))}
-</div>
-</div>
-)}
+            <div className="w-full max-w-[90vw] md:max-w-none overflow-x-auto relative z-0 py-2 custom-scrollbar">
+              <div className="flex flex-row gap-2 md:gap-4 md:justify-start pl-1 md:pl-0 md:mx-auto" style={{
+                maxWidth: typeof window !== 'undefined' && window.innerWidth >= 768 ? '1200px' : 'none'
+              }}>
+                {shuffledPlayers[roleIdx] && shuffledPlayers[roleIdx].map((player, playerIdx) => {
+                  const currentSelections = selectedPlayers[roleIdx] || [];
+                  const isSelected = currentSelections.includes(playerIdx);
+                  const isDimmed = (!hasVotedRoles[role] && currentSelections.length === 3 && !isSelected) || (hasVotedRoles[role] && !isSelected);
+                  return (
+                    <div
+                      key={playerIdx}
+                      className={`relative rounded-2xl flex flex-col items-center transition-all duration-200 ${isSelected ? 'ring-4 ring-yellow-400' : ''} ${!hasVotedRoles[role] ? 'cursor-pointer' : ''}`}
+                      style={{
+                        width: typeof window !== 'undefined' && window.innerWidth >= 768 ? CARD_WIDTH : CARD_WIDTH * 0.73,
+                        height: typeof window !== 'undefined' && window.innerWidth >= 768 ? CARD_HEIGHT * 0.9 : CARD_HEIGHT * 0.65,
+                        transform: 'scale(1)',
+                        opacity: isDimmed ? 0.3 : 1,
+                        flexShrink: 0,
+                        background: '#18181b',
+                        padding: '2px',
+                      }}
+                      onClick={() => selectPlayer(roleIdx, playerIdx)}
+                    >
+                                     <div className="w-full h-full rounded-xl overflow-hidden">
+                       <div className="absolute top-2 right-2 z-10">
+                         <CheckCircle size={typeof window !== 'undefined' && window.innerWidth >= 768 ? 32 : 20} className={`transition-opacity duration-300 ${isSelected ? 'opacity-100 text-yellow-400' : 'opacity-0'}`} />
+                       </div>
+                       <img
+                         src={player.image}
+                         alt={player.name}
+                         style={{
+                           width: '100%',
+                           height: '100%',
+                           objectFit: 'cover',
+                         }}
+                       />
+                       {isDimmed && <div className="absolute inset-0 bg-black/60 z-10" />}
+                     </div>
+                   </div>
+                  );
+                })}
+              </div>
+            </div>
 
-export default function MCCS2PredictionsPage({ userPrediction, ml_user }) {
+            {/* White horizontal line (only in desktop view) */}
+            <div className="absolute left-0 right-0 -bottom-4 h-1 bg-white rounded-full w-full hidden md:block" style={{ maxWidth: '90%', margin: '0 auto' }} />
+          </div>
+
+          {/* Submit button for this role */}
+          <div className="flex justify-center mt-4 md:mt-10">
+            {canSubmitRole(role) && (
+              <button
+                onClick={() => onSubmitRole(role)}
+                className="px-6 py-2 bg-yellow-400 hover:bg-yellow-500 text-black font-bold text-sm rounded-md shadow-lg transition-all duration-300 transform hover:scale-105"
+              >
+                Submit {role} Vote
+              </button>
+            )}
+
+            {hasVotedRoles[role] && (
+              <div className="px-6 py-2 bg-green-500 text-white font-bold text-sm rounded-md">
+                {role} Vote Submitted ✓
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+    </div>
+  );
+}
+
+export default function MCCS2PredictionsPage({ teamPrediction, roleVotes, ml_user }) {
   const [selectedTeams, setSelectedTeams] = useState([]);
   const [selectedPlayers, setSelectedPlayers] = useState({});
-  const [hasVoted, setHasVoted] = useState(false);
+  const [hasVotedTeams, setHasVotedTeams] = useState(false);
+  const [hasVotedRoles, setHasVotedRoles] = useState({});
   const [notification, setNotification] = useState(null);
 
-  // Initialize with user's previous vote if they have voted
+  // Initialize with user's previous votes
   useEffect(() => {
-    if (userPrediction) {
-      setHasVoted(true);
-      
-      // Pre-select teams
-      if (userPrediction.selected_teams) {
-        const teamIndices = userPrediction.selected_teams.map(team => 
+    // Check team votes
+    if (teamPrediction) {
+      setHasVotedTeams(true);
+      if (teamPrediction.selected_teams) {
+        const teamIndices = teamPrediction.selected_teams.map(team => 
           baseTeams.findIndex(t => t.name === team.name)
         ).filter(idx => idx !== -1);
         setSelectedTeams(teamIndices);
       }
-      
-      // Pre-select players
-      if (userPrediction.selected_players) {
-        const playerSelections = {};
-        roles.forEach((role, roleIdx) => {
-          if (userPrediction.selected_players[role]) {
-            const playerIndices = userPrediction.selected_players[role].map(player => 
-              playersByRole[role].findIndex(p => p.name === player.name)
-            ).filter(idx => idx !== -1);
-            if (playerIndices.length > 0) {
-              playerSelections[roleIdx] = playerIndices;
-            }
-          }
-        });
-        setSelectedPlayers(playerSelections);
-      }
     }
-  }, [userPrediction]);
+    
+    // Check player votes for each role
+    const roleVoteStatus = {};
+    const playerSelections = {};
+    roles.forEach((role, roleIdx) => {
+      const roleVote = roleVotes[role];
+      if (roleVote) {
+        roleVoteStatus[role] = true;
+        if (roleVote.selected_players) {
+          const playerIndices = roleVote.selected_players.map(player => 
+            playersByRole[role].findIndex(p => p.name === player.name)
+          ).filter(idx => idx !== -1);
+          if (playerIndices.length > 0) {
+            playerSelections[roleIdx] = playerIndices;
+          }
+        }
+      } else {
+        roleVoteStatus[role] = false;
+      }
+    });
+    setHasVotedRoles(roleVoteStatus);
+    setSelectedPlayers(playerSelections);
+  }, [teamPrediction, roleVotes]);
 
   // Auto-hide notification after 5 seconds
   useEffect(() => {
@@ -280,10 +311,71 @@ export default function MCCS2PredictionsPage({ userPrediction, ml_user }) {
   }, [notification]);
 
   const allRolesSelected = roles.every((_, idx) => selectedPlayers[idx] && selectedPlayers[idx].length >= 1);
-  const canSubmit = selectedTeams.length >= 1 && selectedTeams.length <= 2 && allRolesSelected && !hasVoted;
+  const canSubmitTeams = selectedTeams.length >= 1 && selectedTeams.length <= 2 && !hasVotedTeams;
 
   const showNotification = (type, message) => {
     setNotification({ type, message });
+  };
+
+  const submitTeamVote = async () => {
+    const selectedTeamsData = selectedTeams.map(idx => baseTeams[idx]);
+    
+    try {
+      const response = await fetch('/mcc/MCCFavourites/teams', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+        body: JSON.stringify({
+          selected_teams: selectedTeamsData,
+        }),
+      });
+      const result = await response.json();
+      if (response.ok) {
+        showNotification('success', '🎉 Your team vote has been submitted successfully!');
+        setHasVotedTeams(true);
+      } else {
+        showNotification('error', result.error || '❌ Team vote submission failed. Please try again.');
+      }
+    } catch (err) {
+      showNotification('error', '❌ Network error. Please check your connection and try again.');
+    }
+  };
+
+  const submitRoleVote = async (role) => {
+    const roleIdx = roles.indexOf(role);
+    const currentSelections = selectedPlayers[roleIdx] || [];
+    
+    if (currentSelections.length === 0) {
+      showNotification('error', `❌ Please select at least 1 ${role} player.`);
+      return;
+    }
+
+    const selectedPlayersData = currentSelections.map(playerIdx => playersByRole[role][playerIdx]);
+    
+    try {
+      const response = await fetch('/mcc/MCCFavourites/players', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+        body: JSON.stringify({
+          role: role,
+          selected_players: selectedPlayersData,
+        }),
+      });
+      const result = await response.json();
+      if (response.ok) {
+        showNotification('success', `🎉 Your ${role} player vote has been submitted successfully!`);
+        setHasVotedRoles(prev => ({ ...prev, [role]: true }));
+      } else {
+        showNotification('error', result.error || `❌ ${role} vote submission failed. Please try again.`);
+      }
+    } catch (err) {
+      showNotification('error', '❌ Network error. Please check your connection and try again.');
+    }
   };
 
   return (
@@ -370,73 +462,51 @@ export default function MCCS2PredictionsPage({ userPrediction, ml_user }) {
             </h1>
           </div>
 
-          {hasVoted && (
-            <div className="bg-green-500/20 border border-green-500 rounded-lg p-4 text-center">
-              <p className="text-green-400 font-semibold">
-                ✅ You have already voted! Here are your selections:
+          {ml_user && (
+            <div className="bg-gray-500/20 border border-yellow-500 rounded-lg p-4 text-center">
+              <p className="text-yellow-400 font-semibold">
+                👤 Voting as: {ml_user.ign} (ID: {ml_user.ml_id})
               </p>
-              {ml_user && (
-                <p className="text-white text-sm mt-1">
-                  Voted as: {ml_user.ign} (ID: {ml_user.ml_id})
-                </p>
-              )}
             </div>
           )}
 
-          <TeamVoting selectedTeams={selectedTeams} setSelectedTeams={setSelectedTeams} hasVoted={hasVoted} />
-          <PlayerVoting selectedPlayers={selectedPlayers} setSelectedPlayers={setSelectedPlayers} hasVoted={hasVoted} />
+          {/* Teams Section */}
+          <div className="w-full">
+            <TeamVoting 
+              selectedTeams={selectedTeams} 
+              setSelectedTeams={setSelectedTeams} 
+              hasVoted={hasVotedTeams} 
+            />
+            
+            {canSubmitTeams && (
+              <div className="flex justify-center mt-6">
+                <button
+                  onClick={submitTeamVote}
+                  className="px-8 py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-bold text-lg rounded-md shadow-lg transition-all duration-300 transform hover:scale-105"
+                >
+                  Submit Team Vote
+                </button>
+              </div>
+            )}
 
-          {canSubmit && (
-            <button
-              onClick={async () => {
-                // Map selectedTeams (indices) to team objects
-                const selectedTeamsData = selectedTeams.map(idx => baseTeams[idx]);
-                // Map selectedPlayers (roleIdx keys) to role names and player objects
-                const selectedPlayersData = {};
-                roles.forEach((role, roleIdx) => {
-                  if (selectedPlayers[roleIdx] && selectedPlayers[roleIdx].length > 0) {
-                    selectedPlayersData[role] = selectedPlayers[roleIdx].map(playerIdx => playersByRole[role][playerIdx]);
-                  }
-                });
-                // Debug log
-                console.log('Submitting:', selectedTeamsData, selectedPlayersData);
-                // Submit via fetch
-                try {
-                  const response = await fetch('/mcc/MCCFavourites', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    },
-                    body: JSON.stringify({
-                      selected_teams: selectedTeamsData,
-                      selected_players: selectedPlayersData,
-                    }),
-                  });
-                  const result = await response.json();
-                  if (response.ok) {
-                    showNotification('success', '🎉 Your vote has been submitted successfully! Thank you for participating!');
-                    setTimeout(() => {
-                      window.location.reload();
-                    }, 2000);
-                  } else {
-                    showNotification('error', result.error || '❌ Submission failed. Please try again.');
-                  }
-                } catch (err) {
-                  showNotification('error', '❌ Network error. Please check your connection and try again.');
-                }
-              }}
-              className="mt-10 px-8 py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-bold text-lg rounded-full shadow-lg transition-all duration-300 transform hover:scale-105"
-            >
-              Submit Vote
-            </button>
-          )}
+            {hasVotedTeams && (
+              <div className="flex justify-center mt-6">
+                <div className="px-8 py-3 bg-green-500 text-white font-bold text-lg rounded-md">
+                  Team Vote Submitted ✓
+                </div>
+              </div>
+            )}
+          </div>
 
-          {hasVoted && (
-            <div className="mt-10 px-8 py-3 bg-gray-500 text-white font-bold text-lg rounded-full">
-              Vote Submitted ✓
-            </div>
-          )}
+          {/* Players Section */}
+          <div className="w-full">
+            <PlayerVoting 
+              selectedPlayers={selectedPlayers} 
+              setSelectedPlayers={setSelectedPlayers} 
+              hasVotedRoles={hasVotedRoles}
+              onSubmitRole={submitRoleVote}
+            />
+          </div>
         </div>
       </div>
     </MainLayout>

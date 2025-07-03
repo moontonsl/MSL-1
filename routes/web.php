@@ -189,7 +189,8 @@ Route::get('/mcc/predictions', [VotingController::class, 'index'])->name('predic
 Route::post('/mcc/predictions', [VotingController::class, 'store'])->name('predictions.vote');
 
 Route::get('/mcc/MCCFavourites', [Mccs2PredictionsController::class, 'show'])->name('mccs2predictions.show');
-Route::post('/mcc/MCCFavourites', [Mccs2PredictionsController::class, 'store'])->name('mccs2predictions.store');
+Route::post('/mcc/MCCFavourites/teams', [Mccs2PredictionsController::class, 'storeTeams'])->name('mccs2predictions.storeTeams');
+Route::post('/mcc/MCCFavourites/players', [Mccs2PredictionsController::class, 'storePlayers'])->name('mccs2predictions.storePlayers');
 
 Route::get('/soon', function () {
     return Inertia::render('Soon/Soon');
