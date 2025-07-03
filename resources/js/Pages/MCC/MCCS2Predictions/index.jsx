@@ -236,6 +236,7 @@ export default function MCCS2PredictionsPage({ userPrediction, ml_user }) {
   const [selectedTeams, setSelectedTeams] = useState([]);
   const [selectedPlayers, setSelectedPlayers] = useState({});
   const [hasVoted, setHasVoted] = useState(false);
+  const [notification, setNotification] = useState(null);
 
   // Initialize with user's previous vote if they have voted
   useEffect(() => {
@@ -268,8 +269,22 @@ export default function MCCS2PredictionsPage({ userPrediction, ml_user }) {
     }
   }, [userPrediction]);
 
+  // Auto-hide notification after 5 seconds
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+
   const allRolesSelected = roles.every((_, idx) => selectedPlayers[idx] && selectedPlayers[idx].length >= 1);
   const canSubmit = selectedTeams.length >= 1 && selectedTeams.length <= 2 && allRolesSelected && !hasVoted;
+
+  const showNotification = (type, message) => {
+    setNotification({ type, message });
+  };
 
   return (
     <MainLayout>
@@ -288,7 +303,61 @@ export default function MCCS2PredictionsPage({ userPrediction, ml_user }) {
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: linear-gradient(90deg, #f59e0b, #d97706);
         }
+        .notification-enter {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        .notification-enter-active {
+          opacity: 1;
+          transform: translateY(0);
+          transition: all 0.3s ease-out;
+        }
+        .notification-exit {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        .notification-exit-active {
+          opacity: 0;
+          transform: translateY(-20px);
+          transition: all 0.3s ease-in;
+        }
       `}</style>
+      
+      {/* Notification Component */}
+      {notification && (
+        <div className={`fixed top-4 right-4 z-[9999] max-w-sm w-full ${notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white rounded-lg shadow-lg p-4 transform transition-all duration-300`}>
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              {notification.type === 'success' ? (
+                <svg className="h-6 w-6 text-green-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="h-6 w-6 text-red-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              )}
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium">
+                {notification.type === 'success' ? 'Success!' : 'Error!'}
+              </p>
+              <p className="text-sm opacity-90">{notification.message}</p>
+            </div>
+            <div className="ml-auto pl-3">
+              <button
+                onClick={() => setNotification(null)}
+                className="inline-flex text-white hover:text-gray-200 focus:outline-none"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div
         className="min-h-screen bg-no-repeat bg-cover bg-center bg-fixed w-full pb-32"
         style={{ backgroundImage: "url('/images/MCC/MCCS2Predictions/PredictionsBG.png')" }}
@@ -346,16 +415,18 @@ export default function MCCS2PredictionsPage({ userPrediction, ml_user }) {
                   });
                   const result = await response.json();
                   if (response.ok) {
-                    alert('Your vote has been submitted!');
-                    window.location.reload();
+                    showNotification('success', '🎉 Your vote has been submitted successfully! Thank you for participating!');
+                    setTimeout(() => {
+                      window.location.reload();
+                    }, 2000);
                   } else {
-                    alert(result.error || 'Submission failed.');
+                    showNotification('error', result.error || '❌ Submission failed. Please try again.');
                   }
                 } catch (err) {
-                  alert('Submission failed.');
+                  showNotification('error', '❌ Network error. Please check your connection and try again.');
                 }
               }}
-              className="mt-10 px-8 py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-bold text-lg rounded-full shadow-lg transition-all duration-300"
+              className="mt-10 px-8 py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-bold text-lg rounded-full shadow-lg transition-all duration-300 transform hover:scale-105"
             >
               Submit Vote
             </button>
