@@ -12,14 +12,14 @@ function shuffleArray(array) {
 }
 
 const baseTeams = [
-  { name: 'LA_UR1', image: '/images/MCC/MCCS2Predictions/FINAL 8/LA_UR1.png' },
-  { name: 'LB_UR2', image: '/images/MCC/MCCS2Predictions/FINAL 8/LB_UR2.png' },
-  { name: 'M_WIL', image: '/images/MCC/MCCS2Predictions/FINAL 8/M_WIL.png' },
-  { name: 'V_WIL', image: '/images/MCC/MCCS2Predictions/FINAL 8/V_WIL.png' },
-  { name: 'V_MA', image: '/images/MCC/MCCS2Predictions/FINAL 8/V_MA.png' },
-  { name: 'LB_FEB', image: '/images/MCC/MCCS2Predictions/FINAL 8/LB_FEB.png' },
-  { name: 'LA_MA', image: '/images/MCC/MCCS2Predictions/FINAL 8/LA_MA.png' },
-  { name: 'M_MA', image: '/images/MCC/MCCS2Predictions/FINAL 8/M_MA.png' },
+  { name: 'DLSU GREEN ACES', image: '/images/MCC/MCCS2Predictions/FINAL 8/LA_UR1.png' },
+  { name: 'LB_UNOVUS BRAVEHEARTSR2', image: '/images/MCC/MCCS2Predictions/FINAL 8/LB_UR2.png' },
+  { name: 'DEEA - AGILA', image: '/images/MCC/MCCS2Predictions/FINAL 8/M_WIL.png' },
+  { name: 'SVX FIDES', image: '/images/MCC/MCCS2Predictions/FINAL 8/V_WIL.png' },
+  { name: 'REKTIKANO ASTERIA', image: '/images/MCC/MCCS2Predictions/FINAL 8/V_MA.png' },
+  { name: 'ALANGILAN RED SPARTANS', image: '/images/MCC/MCCS2Predictions/FINAL 8/LB_FEB.png' },
+  { name: 'NU Bulldogs', image: '/images/MCC/MCCS2Predictions/FINAL 8/LA_MA.png' },
+  { name: 'ATENEO ESPORTS', image: '/images/MCC/MCCS2Predictions/FINAL 8/M_MA.png' },
 ];
 
 
