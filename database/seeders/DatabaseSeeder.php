@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             EducationLevelSeeder::class,
             ProgramSeeder::class,
+            AdminUserSeeder::class,
         ]);
     }
 }

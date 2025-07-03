@@ -1,5 +1,10 @@
 <?php
 
+// Include admin and auth routes
+require __DIR__.'/admin.php';
+require __DIR__.'/auth.php';
+
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SchoolUploadController;
 use App\Http\Controllers\SchoolController;
@@ -27,6 +32,18 @@ Route::get('/', function () {
     ]);
 });
 
+
+// Admin routes are defined in routes/admin.php
+
+// Event Management Routes
+Route::middleware(['auth:admin', 'admin'])->group(function () {
+    Route::get('/admin/events', [AdminController::class, 'manageEvents'])->name('admin.events');
+    Route::get('/admin/events/create', [AdminController::class, 'createEvent'])->name('admin.events.create');
+    Route::post('/admin/events', [AdminController::class, 'storeEvent'])->name('admin.events.store');
+    Route::get('/admin/events/{event}/edit', [AdminController::class, 'editEvent'])->name('admin.events.edit');
+    Route::put('/admin/events/{event}', [AdminController::class, 'updateEvent'])->name('admin.events.update');
+    Route::delete('/admin/events/{event}', [AdminController::class, 'deleteEvent'])->name('admin.events.delete');
+});
 
 Route::get('/notfound', function () {return Inertia::render('Errors/NotFound');})->name('notfound');
 
@@ -157,6 +174,12 @@ Route::get('/force-logout', function () {
     Auth::logout();
     return redirect()->route('login');
 })->name('force-logout');
+
+// Analytics API endpoint
+Route::get('/api/analytics/real-time', function () {
+    $analyticsService = app(\App\Services\AnalyticsService::class);
+    return response()->json($analyticsService->getRealTimeData());
+})->middleware(['auth:admin', 'admin']);
 
 Route::get('/get-old-users', function () {
     // Set to 0 for no time limit, essential for large migrations
