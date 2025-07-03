@@ -13,10 +13,10 @@ export default function MCCMAINPage() {
     };
 
     const navItems = [
-        { image: "/images/MCC/Overview.png", alt: "Tournament Structure", path: "https://www.facebook.com/share/1CRcwCMgjY/", isExternal: true },
+        { image: "/images/MCC/MCC_WFReg.png", alt: "Tournament Structure", path: "/MCCWatchFestReg", isExternal: true },
         { image: "/images/MCC/Rulebook.png", alt: "Rulebook", path: "https://mslphilippines.notion.site/MSL-Collegiate-Cup-S2-Rulebook-1356a35bd22f80bc80a2e84cd4280a48", isExternal: true },
         { image: "/images/MCC/Roadmap.png", alt: "Calendar", path: "/mcc/calendar", isExternal: false },
-        { image: "/images/MCC/Pred.png", alt: "Prediction", path: "/mcc/voting", isExternal: false }
+        { image: "/images/MCC/MCCFav.png", alt: "Prediction", path: "/mcc/voting", isExternal: false }
     ];
 
     return (
@@ -70,28 +70,37 @@ export default function MCCMAINPage() {
                     </div>
 
                     {/* Bottom logos */}
-                    <div className="flex justify-center items-center gap-6 md:gap-12 mt-6 md:mt-10 mb-2">
-                        <img
-                            src="/images/MCC/MLBB NEW LOGO.png"
-                            alt="MLBB Logo"
-                            className="h-[40px] md:h-[60px] object-contain"
-                        />
-                        <img
-                            src="/images/MCC/MSL LOGO.png"
-                            alt="MSL Logo"
-                            className="h-[40px] md:h-[60px] object-contain"
-                        />
-                        <img
-                            src="/images/MCC/SMARTLOGO.png"
-                            alt="Smart Logo"
-                            className="h-[40px] md:h-[60px] object-contain"
-                        />
-                        <img
-                            src="/images/MCC/OppoLogo.png"
-                            alt="Oppo Logo"
-                            className="h-[40px] md:h-[50px] object-contain"
-                        />
-                    </div>
+<div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-4 md:flex-nowrap md:gap-x-12 md:gap-y-0 mt-6 md:mt-10 mb-2">
+  <div className="w-[25%] xs:w-[18%] sm:w-[12%] md:w-auto flex justify-center">
+    <img
+      src="/images/MCC/MLBB NEW LOGO.png"
+      alt="MLBB Logo"
+      className="h-[40px] md:h-[60px] object-contain"
+    />
+  </div>
+  {/* <div className="w-[25%] xs:w-[18%] sm:w-[12%]  md:w-auto flex justify-center">
+    <img
+      src="/images/MCC/MSL LOGO.png"
+      alt="MSL Logo"
+      className="h-[40px] md:h-[60px] object-contain"
+    />
+  </div> */}
+  <div className="w-[25%] xs:w-[18%] sm:w-[12%]  md:w-auto flex justify-center">
+    <img
+      src="/images/MCC/SMARTLOGO.png"
+      alt="Smart Logo"
+      className="h-[40px] md:h-[60px] object-contain"
+    />
+  </div>
+  <div className="w-[25%] xs:w-[18%] sm:w-[12%]  md:w-auto flex justify-center">
+    <img
+      src="/images/MCC/OppoLogo.png"
+      alt="Oppo Logo"
+      className="h-[40px] md:h-[50px] object-contain"
+    />
+  </div>
+</div>
+
                 </div>
             </main>
 

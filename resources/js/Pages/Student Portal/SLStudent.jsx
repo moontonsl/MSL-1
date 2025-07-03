@@ -1,5 +1,5 @@
 import styles from "./SLStudent.module.scss";
-import {BadgeCheck} from 'lucide-react'; // No need for ArrowDownAZ, Funnel from image
+import {BadgeCheck} from 'lucide-react';
 
 import profilePic from "./assets/AccountImage.png";
 import rankPIC from "./assets/MythicIcon.png";
