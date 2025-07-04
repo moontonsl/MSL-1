@@ -1,5 +1,10 @@
 <?php
 
+// Include admin and auth routes
+require __DIR__.'/admin.php';
+require __DIR__.'/auth.php';
+
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SchoolUploadController;
 use App\Http\Controllers\SchoolController;
@@ -18,6 +23,8 @@ use App\Http\Controllers\MlAuthController;
 use App\Http\Controllers\GoogleSheetController;
 use App\Http\Controllers\SpreadSheetAutomationController;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Mccs2PredictionsController;
+use App\Http\Controllers\GoogleSheetMCCS2Controller;
 
 Route::get('/', function () {
     return Inertia::render('Home/Home', [
@@ -28,6 +35,18 @@ Route::get('/', function () {
     ]);
 });
 
+
+// Admin routes are defined in routes/admin.php
+
+// Event Management Routes
+Route::middleware(['auth:admin', 'admin'])->group(function () {
+    Route::get('/admin/events', [AdminController::class, 'manageEvents'])->name('admin.events');
+    Route::get('/admin/events/create', [AdminController::class, 'createEvent'])->name('admin.events.create');
+    Route::post('/admin/events', [AdminController::class, 'storeEvent'])->name('admin.events.store');
+    Route::get('/admin/events/{event}/edit', [AdminController::class, 'editEvent'])->name('admin.events.edit');
+    Route::put('/admin/events/{event}', [AdminController::class, 'updateEvent'])->name('admin.events.update');
+    Route::delete('/admin/events/{event}', [AdminController::class, 'deleteEvent'])->name('admin.events.delete');
+});
 
 Route::get('/notfound', function () {return Inertia::render('Errors/NotFound');})->name('notfound');
 
@@ -176,9 +195,9 @@ Route::post('/ml/logout', [MlAuthController::class, 'logout'])->name('ml.logout'
 Route::get('/mcc/predictions', [VotingController::class, 'index'])->name('predictions.index');
 Route::post('/mcc/predictions', [VotingController::class, 'store'])->name('predictions.vote');
 
-Route::get('/mcc/MCCFavourites', function () {
-    return Inertia::render('MCC/MCCS2Predictions/index');
-});
+Route::get('/mcc/MCCFavourites', [Mccs2PredictionsController::class, 'show'])->name('mccs2predictions.show');
+Route::post('/mcc/MCCFavourites/teams', [Mccs2PredictionsController::class, 'storeTeams'])->name('mccs2predictions.storeTeams');
+Route::post('/mcc/MCCFavourites/players', [Mccs2PredictionsController::class, 'storePlayers'])->name('mccs2predictions.storePlayers');
 
 Route::get('/soon', function () {
     return Inertia::render('Soon/Soon');
@@ -186,6 +205,7 @@ Route::get('/soon', function () {
 
 // Google Sheet Routes
 Route::get('/google-sheet', [GoogleSheetController::class, 'exportToGoogleSheet'])->name('google-sheet.export');
+Route::get('/google-sheet-mccs2', [GoogleSheetMCCS2Controller::class, 'exportMCCS2PredictionsToGoogleSheet'])->name('google-sheet-mccs2.export');
 
 //SpreadSheet Automation Routes
 Route::get('/import-from-spreadsheet', [SpreadSheetAutomationController::class, 'importFromSpreadsheet'])->name('import-from-spreadsheet');
@@ -197,6 +217,12 @@ Route::get('/force-logout', function () {
     Auth::logout();
     return redirect()->route('login');
 })->name('force-logout');
+
+// Analytics API endpoint
+Route::get('/api/analytics/real-time', function () {
+    $analyticsService = app(\App\Services\AnalyticsService::class);
+    return response()->json($analyticsService->getRealTimeData());
+})->middleware(['auth:admin', 'admin']);
 
 Route::get('/get-old-users', function () {
     // Set to 0 for no time limit, essential for large migrations
@@ -331,5 +357,9 @@ Route::get('/update-user-type', function () {
         }
     }
 })->name('update-user-type');
+
+Route::get('/jabu-test-forauto-deployment-main-staging', function () {
+    return "test";
+})->name('jabutest');
 
 require __DIR__.'/auth.php';

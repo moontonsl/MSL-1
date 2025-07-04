@@ -43,7 +43,7 @@ class MlAuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Welcome back, ' . $mlUser->ign . '!',
-            'redirect' => route('predictions.index')
+            'redirect' => route('mccs2predictions.show')
         ]);
     }
 
