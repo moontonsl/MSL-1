@@ -6,7 +6,9 @@ const Step4AccountCredentials = ({
   formData,
   handleInputChange,
   errorMessage,
-  setErrorMessage, // <-- Make sure this is passed as a prop from parent!
+  setErrorMessage,
+  successMessage, // <--- Add this prop
+  setSuccessMessage, // <--- Add this prop
   verificationCode,
   setVerificationCode
 }) => {
@@ -15,10 +17,10 @@ const Step4AccountCredentials = ({
   const [timer, setTimer] = useState(0);
   const timerRef = useRef(null);
 
+  const validateUsername = (username) => {
+    return /^[\x20-\x7E]{1,15}$/.test(username);
+  };
 
-const validateUsername = (username) => {
-  return /^[\x20-\x7E]{1,15}$/.test(username);
-};
   const handleUsernameChange = (e) => {
     const value = e.target.value;
     if (value === "" || validateUsername(value)) {
@@ -28,6 +30,7 @@ const validateUsername = (username) => {
       setErrorMessage && setErrorMessage("⚠️ Username not allowed or exceeds limits of characters.");
     }
   };
+
   const isFormValidForSendCode = () => {
     if (!formData.username || formData.username.trim() === "") return false;
     if (
@@ -42,6 +45,10 @@ const validateUsername = (username) => {
 
   const handleSendCode = () => {
     if (timer > 0) return;
+
+    // Clear any previous messages
+    setErrorMessage && setErrorMessage("");
+    setSuccessMessage && setSuccessMessage("");
 
     if (
       !formData.email ||
@@ -62,7 +69,6 @@ const validateUsername = (username) => {
       return;
     }
 
-    setErrorMessage && setErrorMessage("");
     setTimer(60);
     timerRef.current = setInterval(() => {
       setTimer((prev) => {
@@ -73,6 +79,7 @@ const validateUsername = (username) => {
         return prev - 1;
       });
     }, 1000);
+
     // Add code sending logic here
     fetch('/send-verification-code', {
       method: 'POST',
@@ -85,29 +92,28 @@ const validateUsername = (username) => {
       .then(response => response.json())
       .then(data => {
         if (data.message) {
-          // Optionally show a success message
-          setErrorMessage && setErrorMessage("✅ " + data.message);
+          setSuccessMessage && setSuccessMessage(`✅ ${data.message} Your code is: <span class="font-bold">${data.code}</span>`);
           setVerificationCode && setVerificationCode(data.code);
           console.log(data.code);
         }
       })
       .catch(error => {
         setErrorMessage && setErrorMessage("❌ Failed to send code. Please try again.");
-    });
+      });
   };
 
   useEffect(() => {
     return () => clearInterval(timerRef.current);
   }, []);
-  
+
   return (
     <div className="">
-        <h1 className={`${styles['title-register']} text-white mb-2 text-2xl md:text-[2.5rem]`}>
-          CREATE MSL ACCOUNT
-        </h1>
-        <h2 className={`${styles['subtitle-register']} text-white`}>
-          LOGIN DETAILS
-        </h2>
+      <h1 className={`${styles['title-register']} text-white mb-2 text-2xl md:text-[2.5rem]`}>
+        CREATE MSL ACCOUNT
+      </h1>
+      <h2 className={`${styles['subtitle-register']} text-white`}>
+        LOGIN DETAILS
+      </h2>
 
       {/* Dynamic Progress Bar for Step 4 */}
       {(() => {
@@ -138,134 +144,134 @@ const validateUsername = (username) => {
         );
       })()}
 
-<div className="flex flex-col mb-4 gap-4">
-  {/* Username */}
-  <div className="w-full">
-    <label htmlFor="username" className="block mb-1 text-white">
-      Username<span className={styles.required}> *</span>
-    </label>
-    <input
-      type="text"
-      id="username"
-      name="username"
-      value={formData.username}
-      onChange={handleUsernameChange}
-      maxLength={15}
-      autoComplete="off"
-      required
-      placeholder="e.g. Simoun"
-      className={`${styles['input-field-register']} w-full p-3 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
-    />
-  </div>
+      <div className="flex flex-col mb-4 gap-4">
+        {/* Username */}
+        <div className="w-full">
+          <label htmlFor="username" className="block mb-1 text-white">
+            Username<span className={styles.required}> *</span>
+          </label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            value={formData.username}
+            onChange={handleUsernameChange}
+            maxLength={15}
+            autoComplete="off"
+            required
+            placeholder="e.g. Simoun"
+            className={`${styles['input-field-register']} w-full p-3 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
+          />
+        </div>
 
-  {/* Password */}
-  <div className="w-full">
-    <label htmlFor="password" className="block mb-1 text-white">
-      Create a password<span className={styles.required}> *</span>
-    </label>
-    <div className="relative">
-      <input
-        type={showPassword ? "text" : "password"}
-        id="password"
-        name="password"
-        value={formData.password}
-        onChange={handleInputChange}
-        placeholder="must be 8 characters"
-        required
-        className={`${styles['input-field-register']} w-full p-3 pr-12 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
-      />
-      <button
-        type="button"
-        onClick={() => setShowPassword((v) => !v)}
-        className="absolute top-1/2 right-3 transform -translate-y-1/2 text-white"
-      >
-        {showPassword ? <EyeOff size={24} /> : <Eye size={24} />}
-      </button>
+        {/* Password */}
+        <div className="w-full">
+          <label htmlFor="password" className="block mb-1 text-white">
+            Create a password<span className={styles.required}> *</span>
+          </label>
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
+              placeholder="must be 8 characters"
+              required
+              className={`${styles['input-field-register']} w-full p-3 pr-12 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute top-1/2 right-3 transform -translate-y-1/2 text-white"
+            >
+              {showPassword ? <EyeOff size={24} /> : <Eye size={24} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Confirm Password */}
+        <div className="w-full">
+          <label htmlFor="confirmPassword" className="block mb-1 text-white">
+            Confirm password<span className={styles.required}> *</span>
+          </label>
+          <div className="relative">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              id="confirmPassword"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
+              placeholder="repeat password"
+              required
+              className={`${styles['input-field-register']} w-full p-3 pr-12 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword((v) => !v)}
+              className="absolute top-1/2 right-3 transform -translate-y-1/2 text-white"
+            >
+              {showConfirmPassword ? <EyeOff size={24} /> : <Eye size={24} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Email */}
+        <div className="w-full">
+          <label htmlFor="email" className="block mb-1 text-white">
+            Email Address<span className={styles.required}> *</span>
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              placeholder="e.g. crislbarra@gmail.com"
+              required
+              className={`${styles['input-field-register']} w-full p-3 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
+            />
+            <button
+              type="button"
+              onClick={handleSendCode}
+              disabled={timer > 0 || !isFormValidForSendCode()}
+              title={
+                !isFormValidForSendCode()
+                  ? "Fill out all fields correctly to enable"
+                  : timer > 0
+                  ? `Please wait ${timer}s before resending`
+                  : ""
+              }
+              className={`h-[48px] px-4 rounded-lg border text-sm min-w-[8rem] ${
+                timer > 0
+                  ? "bg-yellow-100 text-gray-500 border-yellow-400 cursor-not-allowed"
+                  : "bg-yellow-400 text-black border-yellow-500 hover:bg-yellow-300"
+              }`}
+            >
+              {timer > 0 ? `Resend in ${timer}s` : "Send Code"}
+            </button>
+          </div>
+        </div>
+
+        {/* Captcha */}
+        <div className="w-full">
+          <label htmlFor="captcha" className="block mb-1 text-white">
+            Code<span className={styles.required}> *</span>
+          </label>
+          <input
+            type="text"
+            id="captcha"
+            name="captcha"
+            value={formData.captcha}
+            onChange={handleInputChange}
+            placeholder="Enter the code"
+            required
+            className={`${styles['input-field-register']} w-full p-3 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
+          />
+        </div>
+      </div>
     </div>
-  </div>
-
-  {/* Confirm Password */}
-  <div className="w-full">
-    <label htmlFor="confirmPassword" className="block mb-1 text-white">
-      Confirm password<span className={styles.required}> *</span>
-    </label>
-    <div className="relative">
-      <input
-        type={showConfirmPassword ? "text" : "password"}
-        id="confirmPassword"
-        name="confirmPassword"
-        value={formData.confirmPassword}
-        onChange={handleInputChange}
-        placeholder="repeat password"
-        required
-        className={`${styles['input-field-register']} w-full p-3 pr-12 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
-      />
-      <button
-        type="button"
-        onClick={() => setShowConfirmPassword((v) => !v)}
-        className="absolute top-1/2 right-3 transform -translate-y-1/2 text-white"
-      >
-        {showConfirmPassword ? <EyeOff size={24} /> : <Eye size={24} />}
-      </button>
-    </div>
-  </div>
-
-{/* Email */}
-<div className="w-full">
-  <label htmlFor="email" className="block mb-1 text-white">
-    Email Address<span className={styles.required}> *</span>
-  </label>
-  <div className="flex items-center gap-2">
-    <input
-      type="email"
-      id="email"
-      name="email"
-      value={formData.email}
-      onChange={handleInputChange}
-      placeholder="e.g. crislbarra@gmail.com"
-      required
-      className={`${styles['input-field-register']} w-full p-3 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
-    />
-    <button
-      type="button"
-      onClick={handleSendCode}
-      disabled={timer > 0 || !isFormValidForSendCode()}
-      title={
-        !isFormValidForSendCode()
-          ? "Fill out all fields correctly to enable"
-          : timer > 0
-          ? `Please wait ${timer}s before resending`
-          : ""
-      }
-      className={`h-[48px] px-4 rounded-lg border text-sm min-w-[8rem] ${
-        timer > 0
-          ? "bg-yellow-100 text-gray-500 border-yellow-400 cursor-not-allowed"
-          : "bg-yellow-400 text-black border-yellow-500 hover:bg-yellow-300"
-      }`}
-    >
-      {timer > 0 ? `Resend in ${timer}s` : "Send Code"}
-    </button>
-  </div>
-</div>
-
-  {/* Captcha */}
-  <div className="w-full">
-    <label htmlFor="captcha" className="block mb-1 text-white">
-      Code<span className={styles.required}> *</span>
-    </label>
-    <input
-      type="text"
-      id="captcha"
-      name="captcha"
-      value={formData.captcha}
-      onChange={handleInputChange}
-      placeholder="Enter the code"
-      required
-      className={`${styles['input-field-register']} w-full p-3 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
-    />
-  </div>
-</div>
-</div>
   );
 };
 

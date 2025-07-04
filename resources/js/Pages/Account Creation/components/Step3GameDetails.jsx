@@ -328,7 +328,6 @@ const Step3GameDetails = ({
                     const pasted = e.clipboardData.getData("Text");
                     if (!/^\d+$/.test(pasted)) e.preventDefault();
                   }}
-                  onBlur={handleAnyInputBlur}
                   disabled
                 />
               </div>
@@ -357,7 +356,6 @@ const Step3GameDetails = ({
                     const pasted = e.clipboardData.getData("Text");
                     if (!/^\d+$/.test(pasted)) e.preventDefault();
                   }}
-                  onBlur={handleAnyInputBlur}
                   disabled
                 />
               </div>
@@ -430,7 +428,6 @@ const Step3GameDetails = ({
                     backgroundSize: '1em 1em',
                   }}
                   required
-                  onBlur={handleAnyInputBlur}
                 >
                   <option value="" disabled>
                     Select Ranking
@@ -464,7 +461,6 @@ const Step3GameDetails = ({
                     backgroundSize: '1em 1em',
                   }}
                   required
-                  onBlur={handleAnyInputBlur}
                 >
                   <option value="" disabled>
                     Select Role
@@ -496,7 +492,6 @@ const Step3GameDetails = ({
                     backgroundSize: '1em 1em',
                   }}
                   required
-                  onBlur={handleAnyInputBlur}
                 >
                   <option value="" disabled>
                     Select Hero

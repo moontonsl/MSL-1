@@ -79,6 +79,13 @@ Route::get('/studentportal', function () {
     ]);
 })->middleware(['auth', 'verified'])->name('SLStudent');
 
+
+//TEMPORARY LOGOUT CODES - PA CHECK PO B.E THANK YOU
+Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
+    // ->middleware('auth') // Ensure only authenticated users can log out
+    ->name('logout');
+
+
 // // TEMPORARY STUDENT PORTAL ACCESS (NO AUTH)
 // Route::get('/studentportal', function () {
 //     return Inertia::render('Student Portal/SLStudent');
