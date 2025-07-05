@@ -73,7 +73,7 @@ function Events() {
         <>
             <Head title="Events" />
             <AuthenticatedLayout>
-                <main className="relative text-center mb-12 pt-4">
+                <main className="relative text-center mb-12 pt-4 px-4 sm:px-4 md:px-6 lg:px-0 lg:mx-auto max-w-[1440px]">
                     {/* MSL Highlight Event Section */}
                     <section className="w-full flex flex-col items-center text-center mb-12">
                         <h2 className="text-white font-['Montserrat'] text-[28px] md:text-[40px] font-bold leading-[140%] mt-0 text-center mb-2 tracking-[-0.015em]">
@@ -86,64 +86,98 @@ function Events() {
 
                     {/* MSL Collegiate Cup (MCC) Section */}
                     <section
-                        className="mx-auto flex flex-col lg:flex-row justify-end items-start gap-5 flex-shrink-0 rounded-[30px] mt-[-30px] bg-[rgba(36,36,36,0.8)] shadow-[inset_-30px_-30px_80px_#141414,inset_30px_20px_100px_#0A0A0A,-30px_-30px_80px_rgba(255,255,255,0.14),30px_30px_80px_rgba(243,199,24,0.14)]"
-                        style={{ maxWidth: '1418px', width: '100%', minHeight: '460px', padding: '20px 30px' }}
+                    className="mx-auto flex flex-col lg:flex-row justify-end items-start gap-5 flex-shrink-0 rounded-[30px] mt-[-30px]
+                    bg-[rgba(36,36,36,0.8)] shadow-[inset_-30px_-30px_80px_#141414,inset_30px_20px_100px_#0A0A0A,-30px_-30px_80px_rgba(255,255,255,0.14),30px_30px_80px_rgba(243,199,24,0.14)]
+                    w-[calc(100%-20px)] mx-auto lg:w-full lg:max-w-[1418px] lg:mx-auto"
+                    style={{ maxWidth: '1418px', width: '100%', minHeight: '200px', padding: '20px 30px' }}
                     >
-                        {/* Second Div (Image) - Appears first on mobile (default order-1), last on desktop (lg:order-last) */}
-                        <div className="flex justify-center items-center flex-shrink-0 mt-4 lg:mt-0 w-full lg:w-auto order-1 lg:order-last">
-                            <div className="flex w-full md:w-[344.467px] p-2 md:p-[14.697px] flex-col justify-center items-center gap-2 md:gap-[7.349px]">
-                                <div className="flex p-1 md:p-[0px_22.046px] flex-col justify-center items-start gap-1 md:gap-[9.186px] self-stretch">
-                                    <img src="/mcclogo.png" alt="MCC Logo" className="w-full h-[200px] md:h-[350px] object-contain rounded-xl" />
-                                </div>
-                            </div>
+                    {/* TEXT + IMAGE ROW ONLY ON MOBILE */}
+                    <div className="flex flex-row lg:hidden items-center justify-between w-full mb-0 pb-0 gap-2 leading-none px-1">
+                    {/* Title Left - Larger Text */}
+                    <h3 className="text-white text-left font-['Montserrat'] text-[20px] font-bold leading-[130%] mb-0 pb-0">
+                        MSL Collegiate Cup (MCC)
+                    </h3>
+
+                    {/* Image Right - Shifted Slightly Left */}
+                    <img
+                        src="/mcclogo.png"
+                        alt="MCC Logo"
+                        className="w-[80px] h-[80px] object-contain rounded-xl mb-0 pb-0 translate-x-[-10px]"
+                    />
+                    </div>
+
+                    {/* DESKTOP LAYOUT: TITLE + IMAGE (unchanged) */}
+                    <div className="hidden lg:flex justify-between items-start w-full">
+                        {/* Text Content (left on desktop) */}
+                        <div className="flex flex-col justify-start items-start flex-1 p-0 h-auto lg:h-auto mt-0 order-2 lg:order-first">
+                        <h3 className="text-white text-left font-['Montserrat'] text-[40px] font-bold leading-[140%] w-full lg:w-[622px]">
+                            MSL Collegiate Cup (MCC)
+                        </h3>
+
+                        <div className="p-0 w-full">
+                            <h4 className="text-white text-left font-['Space_Grotesk'] text-[20px] font-bold leading-[140%]">What is MCC?</h4>
+                            <p className="text-white text-left font-['Space_Grotesk'] text-[18px] font-normal leading-[140%] lg:max-w-[1000px]">
+                            MSL Collegiate Cup (MCC) is a platform for collegiate players to showcase their skills in the national stage.
+                            MCC is a potential franchise that both promotes the participation of MSL Communities and accredited organizations.
+                            </p>
                         </div>
 
-                        {/* First Div (Text Content) - Appears second on mobile (default order-2), first on desktop (lg:order-first) */}
-                        <div className="flex flex-col justify-center items-start flex-1 p-0 h-auto lg:h-[395px] order-2 lg:order-first">
-                            <div className="flex p-1 md:p-2 items-start gap-1 md:gap-2">
-                                <h3 className="text-white text-left font-['Montserrat'] text-[22px] md:text-[40px] font-bold leading-[140%] w-full lg:w-[622px]">
-                                    MSL Collegiate Cup (MCC)
-                                </h3>
-                            </div>
-                            <div className="flex p-1 md:p-2 items-start gap-1 md:gap-2 self-stretch">
-                                <h4 className="text-white text-left font-['Space_Grotesk'] text-[16px] md:text-[20px] font-bold leading-[140%]">
-                                    What is MCC?
-                                </h4>
-                            </div>
-                            <div className="flex p-1 md:p-2 items-start gap-1 md:gap-2 self-stretch">
-                                <p className="text-white text-left font-['Space_Grotesk'] text-[14px] md:text-[18px] font-normal leading-[140%] w-full lg:w-[911px]">
-                                    MSL Collegiate Cup (MCC) is a platform for collegiate players to showcase their skills in the national
-                                    stage. MCC is a potential franchise that both promote the participation of the MSL Communities and
-                                    accredited organization across the country.
-                                </p>
-                            </div>
-                            <div className="flex p-1 md:p-2 items-start gap-1 md:gap-2 self-stretch">
-                                <h4 className="text-white text-left font-['Space_Grotesk'] text-[16px] md:text-[20px] font-bold leading-[140%]">
-                                    Who can join MCC?
-                                </h4>
-                            </div>
-                            <div className="flex p-1 md:p-2 items-start gap-1 md:gap-2 self-stretch">
-                                <p className="text-white text-left font-['Space_Grotesk'] text-[14px] md:text-[18px] font-normal leading-[140%] w-full lg:w-[911px]">
-                                    Aspiring Student-Gamers from MSL Communities and MSL Network Organizations are allowed to join.
-                                </p>
-                            </div>
-                            <div className="flex w-full lg:w-[944px] flex-col items-start mt-4">
-                                <div className="flex p-1 md:p-2 flex-col justify-center items-center gap-1 md:gap-2">
-                                    <div className="flex w-[150px] h-[45px] md:w-[190.451px] md:h-[57.713px] p-1 md:p-[5.771px] justify-center items-center gap-1 md:gap-[5.771px] rounded-[57.712px] border border-white bg-[rgba(255,255,255,0.05)] cursor-pointer">
-                                        <span className="text-white font-['Space_Grotesk'] text-base md:text-[18.468px] font-bold leading-[140%]">
-                                            Learn more
-                                        </span>
-                                    </div>
-                                </div>
+                        <div className="p-0 w-full">
+                            <h4 className="text-white text-left font-['Space_Grotesk'] text-[20px] font-bold leading-[140%]">Who can join MCC?</h4>
+                            <p className="text-white text-left font-['Space_Grotesk'] text-[18px] font-normal leading-[140%] lg:max-w-[900px]">
+                            Aspiring Student-Gamers from MSL Communities and MSL Network Organizations are allowed to join.
+                            </p>
+                        </div>
+
+                        <div className="mt-4">
+                            <div className="flex w-[190px] h-[58px] justify-center items-center gap-[5.7px] rounded-full border border-white bg-[rgba(255,255,255,0.05)] cursor-pointer">
+                            <span className="text-white font-['Space_Grotesk'] text-[18.5px] font-bold leading-[140%]">Learn more</span>
                             </div>
                         </div>
+                        </div>
+
+                        {/* Image (right on desktop) */}
+                        <div className="flex justify-center items-center flex-shrink-0 mt-0 lg:mt-0 w-full lg:w-auto order-1 lg:order-last">
+                        <div className="flex w-full md:w-[344.467px] p-[14.697px] flex-col justify-center items-center">
+                            <div className="flex p-[0px_22.046px] flex-col justify-center items-start gap-[9.186px] self-stretch">
+                            <img src="/mcclogo.png" alt="MCC Logo" className="w-full h-[250px] object-contain rounded-xl" />
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+
+                    {/* MOBILE BODY TEXT BELOW IMAGE + TITLE */}
+                    <div className="flex flex-col lg:hidden mt-[-10px] pt-0">
+
+                        <div className="p-1 w-full">
+                        <h4 className="text-white text-left font-['Space_Grotesk'] text-[13px] font-bold leading-[140%]">What is MCC?</h4>
+                        <p className="text-white text-left font-['Space_Grotesk'] text-[11px] font-normal leading-[140%]">
+                            MSL Collegiate Cup (MCC) is a platform for collegiate players to showcase their skills in the national stage.
+                            MCC is a potential franchise that promotes participation of the MSL Communities and accredited organizations.
+                        </p>
+                        </div>
+                        <div className="p-1 w-full">
+                        <h4 className="text-white text-left font-['Space_Grotesk'] text-[13px] font-bold leading-[140%]">Who can join MCC?</h4>
+                        <p className="text-white text-left font-['Space_Grotesk'] text-[11px] font-normal leading-[140%]">
+                            Aspiring Student-Gamers from MSL Communities and MSL Network Organizations are allowed to join.
+                        </p>
+                        </div>
+                        <div className="p-1 mt-2">
+                        <div className="flex w-[150px] h-[45px] justify-center items-center gap-1 rounded-full border border-white bg-[rgba(255,255,255,0.05)] cursor-pointer">
+                            <span className="text-white font-['Space_Grotesk'] text-base font-bold leading-[140%]">Learn more</span>
+                        </div>
+                        </div>
+                    </div>
                     </section>
+
+
+
 
                     {/* Other MSL Events Section */}
                     <section className="mx-auto flex flex-col items-center flex-shrink-0 py-8" style={{ maxWidth: '1418px' }}>
                         {/* Title */}
                         <div className="flex w-full px-4 lg:px-0 items-center gap-2 md:gap-9">
-                            <h2 className="text-white text-left font-['Montserrat'] text-[32px] md:text-[57.6px] font-bold leading-[140%] w-full">
+                            <h2 className="text-white text-left font-['Montserrat'] text-[30px] md:text-[57.6px] font-bold leading-[140%] w-full">
                                 OTHER MSL EVENTS
                             </h2>
                         </div>

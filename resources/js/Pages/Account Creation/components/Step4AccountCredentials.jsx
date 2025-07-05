@@ -92,7 +92,7 @@ const Step4AccountCredentials = ({
       .then(response => response.json())
       .then(data => {
         if (data.message) {
-          setSuccessMessage && setSuccessMessage(`✅ ${data.message} Your code is: <span class="font-bold">${data.code}</span>`);
+          setSuccessMessage && setSuccessMessage(`✅ ${data.message}</span>`);
           setVerificationCode && setVerificationCode(data.code);
           console.log(data.code);
         }

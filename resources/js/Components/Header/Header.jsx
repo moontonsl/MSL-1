@@ -115,13 +115,13 @@ const Header = () => {
                             // as={user ? "button" : "a"}
                         >
                             {/* Make icon bigger */}
-                            <MdAccountCircle size={48} /> {/* Increased size to 48 */}
+                            <MdAccountCircle size={40} />
                         </Link>
 
                         {/* Dropdown menu - only visible if user is logged in and isDropdownOpen is true */}
                         {user && isDropdownOpen && (
                             <div className={styles.dropdownMenu}>
-                                <Link
+                                {/*<LinkBA
                                     href="/profile"
                                     className={styles.dropdownItem}
                                     onClick={() => setIsDropdownOpen(false)} // Close dropdown on click
@@ -134,7 +134,7 @@ const Header = () => {
                                     onClick={() => setIsDropdownOpen(false)} // Close dropdown on click
                                 >
                                     SL Admin
-                                </Link>
+                                </Link>*/}
                                 <button
                                     onClick={handleLogout}
                                     className={styles.dropdownItem}
