@@ -28,11 +28,11 @@ const slides = [
 
 const positions = ["center", "left1", "left", "right", "right1"];
 const imageVariants = {
-  center: { x: "0%", scale: 1, zIndex: 5 },
-  left1: { x: "-50%", scale: 0.7, zIndex: 3 },
-  left: { x: "-90%", scale: 0.5, zIndex: 2 },
-  right: { x: "90%", scale: 0.5, zIndex: 1 },
-  right1: { x: "50%", scale: 0.7, zIndex: 3 },
+  center: { x: "0%", scale: 1, zIndex: 5, opacity: 1 },
+  left1: { x: "-50%", scale: 0.7, zIndex: 3, opacity: 1 },
+  left: { x: "-90%", scale: 0.5, zIndex: 2, opacity: 0 },
+  right: { x: "90%", scale: 0.5, zIndex: 1, opacity: 0 },
+  right1: { x: "50%", scale: 0.7, zIndex: 3, opacity: 1 },
 };
 
 export default function Highlights() {
@@ -58,22 +58,22 @@ export default function Highlights() {
   return (
     <div className="w-full max-w-[1900px] h-auto px-2 md:px-12 mx-auto">
       <h2 className="text-2xl xs:text-3xl md:text-5xl font-bold text-center mb-4 md:mb-10 text-white">MSL HIGHLIGHTS</h2>
-      <div className="relative flex items-center justify-center h-[220px] md:h-[600px] w-full overflow-hidden" style={{ minHeight: 220 }}>
+      <div className="relative flex items-center justify-center h-[200px] md:h-[400px] w-full overflow-hidden" style={{ minHeight: 200 }}>
           {slides.map((slide, index) => (
           <motion.div
               key={index}
-            className="absolute rounded-2xl md:rounded-[60px] overflow-hidden shadow-lg"
+            className="absolute rounded-2xl md:rounded-[40px] overflow-hidden shadow-lg"
             initial="center"
             animate={positions[positionIndexes[index]]}
             variants={imageVariants}
             transition={{ duration: 0.5 }}
             style={{
-              width: "90vw",
-              maxWidth: 370,
-              height: 180,
+              width: "80vw",
+              maxWidth: 320,
+              height: 160,
               top: 0,
-              // Enlarge for desktop
-              ...(window.innerWidth >= 768 ? { width: 1200, maxWidth: 1200, height: 600 } : {})
+              // Scaled down for desktop
+              ...(window.innerWidth >= 768 ? { width: 800, maxWidth: 800, height: 400 } : {})
             }}
             >
               <img 

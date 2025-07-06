@@ -18,7 +18,6 @@ export default function Articles() {
         <h2 className="text-2xl xs:text-3xl md:text-5xl font-bold text-white mb-4">
           NEWS AND ARTICLES
         </h2>
-        <div className="w-16 md:w-24 h-1 bg-[#F3C718] mx-auto"></div>
       </div>
 
       {/* Articles Grid */}
