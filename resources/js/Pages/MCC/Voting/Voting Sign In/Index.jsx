@@ -77,7 +77,7 @@ export default function VotingSignIn() {
 
                         <div className="flex justify-center items-center gap-6 md:gap-12 mt-6 md:mt-10 mb-2">
                             <img src="/images/MCC/SMARTLOGO.png" alt="Voting Sign In" className="w-32 h-auto mx-auto" />
-                            <img src="/images/MCC/OppoLOGO.png" alt="Voting Sign In" className="w-32 h-auto mx-auto" />
+                            <img src="/images/MCC/OppoLogo.png" alt="Voting Sign In" className="w-32 h-auto mx-auto" />
                         </div>
                     </div>
                 </main>

@@ -81,13 +81,7 @@ const roles = ['GOLD', 'JUNGLER', 'EXP', 'MIDDLE', 'ROAMER'];
 const CARD_WIDTH = typeof window !== 'undefined' && window.innerWidth >= 768 ? 110 : 115;
 const CARD_HEIGHT = 290;
 
-function TeamVoting({ selectedTeams, setSelectedTeams, hasVoted }) {
-  const [teams, setTeams] = useState([]);
-
-  useEffect(() => {
-    setTeams(shuffleArray(baseTeams));
-  }, []);
-
+function TeamVoting({ selectedTeams, setSelectedTeams, hasVoted, shuffledTeams }) {
   const toggleSelect = (idx) => {
     if (hasVoted) return; // Disable selection if already voted
     if (selectedTeams.includes(idx)) {
@@ -105,7 +99,7 @@ function TeamVoting({ selectedTeams, setSelectedTeams, hasVoted }) {
       </p>
       <div className="rounded-2xl p-4 md:p-6 bg-black/40" style={{ maxWidth: '1200px' }}>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-          {teams.map((team, idx) => {
+          {shuffledTeams.map((team, idx) => {
             const isSelected = selectedTeams.includes(idx);
             const isDimmed = (!hasVoted && selectedTeams.length === 2 && !isSelected) || (hasVoted && !isSelected);
             return (
@@ -129,13 +123,7 @@ function TeamVoting({ selectedTeams, setSelectedTeams, hasVoted }) {
   );
 }
 
-function PlayerVoting({ selectedPlayers, setSelectedPlayers, hasVotedRoles, onSubmitRole }) {
-  const [shuffledPlayers, setShuffledPlayers] = useState([]);
-
-  useEffect(() => {
-    setShuffledPlayers(roles.map(role => shuffleArray(playersByRole[role])));
-  }, []);
-
+function PlayerVoting({ selectedPlayers, setSelectedPlayers, hasVotedRoles, onSubmitRole, shuffledPlayers }) {
   const selectPlayer = (roleIdx, playerIdx) => {
     if (hasVotedRoles[roles[roleIdx]]) return; // Disable selection if already voted
     const currentSelections = selectedPlayers[roleIdx] || [];
@@ -263,15 +251,25 @@ export default function MCCS2PredictionsPage({ teamPrediction, roleVotes, ml_use
   const [hasVotedTeams, setHasVotedTeams] = useState(false);
   const [hasVotedRoles, setHasVotedRoles] = useState({});
   const [notification, setNotification] = useState(null);
+  const [shuffledTeams, setShuffledTeams] = useState([]);
+  const [shuffledPlayers, setShuffledPlayers] = useState([]);
+
+  // Initialize shuffled arrays once
+  useEffect(() => {
+    setShuffledTeams(shuffleArray(baseTeams));
+    setShuffledPlayers(roles.map(role => shuffleArray(playersByRole[role])));
+  }, []);
 
   // Initialize with user's previous votes
   useEffect(() => {
+    if (shuffledTeams.length === 0 || shuffledPlayers.length === 0) return;
+
     // Check team votes
     if (teamPrediction) {
       setHasVotedTeams(true);
       if (teamPrediction.selected_teams) {
         const teamIndices = teamPrediction.selected_teams.map(team => 
-          baseTeams.findIndex(t => t.name === team.name)
+          shuffledTeams.findIndex(t => t.name === team.name)
         ).filter(idx => idx !== -1);
         setSelectedTeams(teamIndices);
       }
@@ -286,7 +284,7 @@ export default function MCCS2PredictionsPage({ teamPrediction, roleVotes, ml_use
         roleVoteStatus[role] = true;
         if (roleVote.selected_players) {
           const playerIndices = roleVote.selected_players.map(player => 
-            playersByRole[role].findIndex(p => p.name === player.name)
+            shuffledPlayers[roleIdx].findIndex(p => p.name === player.name)
           ).filter(idx => idx !== -1);
           if (playerIndices.length > 0) {
             playerSelections[roleIdx] = playerIndices;
@@ -298,7 +296,7 @@ export default function MCCS2PredictionsPage({ teamPrediction, roleVotes, ml_use
     });
     setHasVotedRoles(roleVoteStatus);
     setSelectedPlayers(playerSelections);
-  }, [teamPrediction, roleVotes]);
+  }, [teamPrediction, roleVotes, shuffledTeams, shuffledPlayers]);
 
   // Auto-hide notification after 5 seconds
   useEffect(() => {
@@ -318,7 +316,7 @@ export default function MCCS2PredictionsPage({ teamPrediction, roleVotes, ml_use
   };
 
   const submitTeamVote = async () => {
-    const selectedTeamsData = selectedTeams.map(idx => baseTeams[idx]);
+    const selectedTeamsData = selectedTeams.map(idx => shuffledTeams[idx]);
     
     try {
       const response = await fetch('/mcc/MCCFavourites/teams', {
@@ -352,7 +350,7 @@ export default function MCCS2PredictionsPage({ teamPrediction, roleVotes, ml_use
       return;
     }
 
-    const selectedPlayersData = currentSelections.map(playerIdx => playersByRole[role][playerIdx]);
+    const selectedPlayersData = currentSelections.map(playerIdx => shuffledPlayers[roleIdx][playerIdx]);
     
     try {
       const response = await fetch('/mcc/MCCFavourites/players', {
@@ -476,6 +474,7 @@ export default function MCCS2PredictionsPage({ teamPrediction, roleVotes, ml_use
               selectedTeams={selectedTeams} 
               setSelectedTeams={setSelectedTeams} 
               hasVoted={hasVotedTeams} 
+              shuffledTeams={shuffledTeams}
             />
             
             {canSubmitTeams && (
@@ -505,6 +504,7 @@ export default function MCCS2PredictionsPage({ teamPrediction, roleVotes, ml_use
               setSelectedPlayers={setSelectedPlayers} 
               hasVotedRoles={hasVotedRoles}
               onSubmitRole={submitRoleVote}
+              shuffledPlayers={shuffledPlayers}
             />
           </div>
         </div>
