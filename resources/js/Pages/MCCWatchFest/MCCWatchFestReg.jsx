@@ -6,7 +6,7 @@ import styles from './MCCWatchFestReg.module.scss';
 const REGIONS = ["Luzon", "Visayas", "Mindanao"];
 
 const REGION_VENUE_MAP = {
-    Luzon: ["National University - Manila", "De La Salle University - Manila", "First Asia Institute of Technology and Humanities" , "Batangas State University - Alangilan"],
+    Luzon: ["North and Central Luzon Esports Council", "Colegio de Los Baños", "First Asia Institute of Technology and Humanities", "Batangas State University - Alangilan" ],
     Visayas: ["PHINMA – University of Iloilo", "University of St. La Salle - Bacolod City"],
     Mindanao: ["Ateneo de Davao University", "University of Southeastern Philippines - Obrero Campus"],
 };
