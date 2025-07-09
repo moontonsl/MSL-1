@@ -85,7 +85,7 @@ const MCCWatchFestReg = () => {
 
     return (
         <>
-            <Head title="MCC Watch Fest Reg" />
+            <Head title="MCC Watch Fest Registration" />
             <AuthenticatedLayout>
                 <div className="flex items-center justify-center min-h-[70vh] md:min-h-screen px-2 md:px-4 bg-gradient-to-b from-transparent via-black/20 to-black relative z-10">
 
