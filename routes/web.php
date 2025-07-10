@@ -46,6 +46,24 @@ Route::middleware(['auth:admin', 'admin'])->group(function () {
     Route::get('/admin/events/{event}/edit', [AdminController::class, 'editEvent'])->name('admin.events.edit');
     Route::put('/admin/events/{event}', [AdminController::class, 'updateEvent'])->name('admin.events.update');
     Route::delete('/admin/events/{event}', [AdminController::class, 'deleteEvent'])->name('admin.events.delete');
+    
+    // Analytics Routes
+    Route::get('/admin/analytics', function () {
+        $analyticsService = app(\App\Services\AnalyticsService::class);
+        $analytics = $analyticsService->getKeyMetrics();
+        $pageViewsData = $analyticsService->getPageViewsLast7Days();
+        $topPages = $analyticsService->getTopPages();
+        $realTimeData = $analyticsService->getRealTimeData();
+        
+        return Inertia::render('Admin/Analytics', [
+            'analytics' => [
+                'pageViews' => $pageViewsData,
+                'metrics' => $analytics,
+                'topPages' => $topPages,
+                'realTime' => $realTimeData
+            ]
+        ]);
+    })->name('admin.analytics');
 });
 
 Route::get('/notfound', function () {return Inertia::render('Errors/NotFound');})->name('notfound');

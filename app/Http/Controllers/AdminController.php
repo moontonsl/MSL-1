@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\News;
 use App\Models\Event;
 use App\Services\AnalyticsService;
+use App\Services\GoogleAnalyticsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -21,7 +22,7 @@ class AdminController extends Controller
 
     public function dashboard()
     {
-        // Get real analytics data
+        // Get real analytics data (with Google Analytics if available)
         $analytics = $this->analyticsService->getKeyMetrics();
         $pageViewsData = $this->analyticsService->getPageViewsLast7Days();
         $topPages = $this->analyticsService->getTopPages();

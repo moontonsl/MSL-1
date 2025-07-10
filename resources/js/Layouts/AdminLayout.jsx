@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { FaNewspaper, FaCalendar, FaUsers, FaTachometerAlt, FaSignOutAlt, FaBed, FaBook, FaConciergeBell, FaCog, FaTh, FaEllipsisH } from 'react-icons/fa';
 
 export default function AdminLayout({ children }) {
     const { auth } = usePage().props;
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const navigation = [
         { name: 'Dashboard', href: route('admin.dashboard'), routeName: 'admin.dashboard', icon: FaTh },
@@ -17,6 +18,11 @@ export default function AdminLayout({ children }) {
 
     return (
         <div className="min-h-screen flex bg-[var(--background-color)] relative">
+            {/* Mobile sidebar overlay */}
+            {sidebarOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-40 z-30 md:hidden" onClick={() => setSidebarOpen(false)}></div>
+            )}
+
             {/* Background noise effect */}
             <div 
                 className="fixed inset-0 opacity-5 pointer-events-none z-0"
@@ -27,7 +33,11 @@ export default function AdminLayout({ children }) {
             />
 
             {/* Sidebar */}
-            <div className="w-100 h-screen bg-[#212121] text-white flex flex-col shadow-lg rounded-br-3xl rounded-tr-3xl z-10 overflow-hidden">
+            <div
+                className={`fixed top-0 left-0 w-64 h-screen bg-[#212121] text-white flex flex-col shadow-lg rounded-br-3xl rounded-tr-3xl z-40 overflow-hidden overflow-y-auto transform transition-transform duration-300
+                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:z-10 md:block`}
+                style={{ borderTopRightRadius: '2rem', borderBottomRightRadius: '2rem' }}
+            >
                 <div className="p-6 flex items-center justify-start border-b border-[#4A4A60]">
                     <img src="/msl-logo.png" alt="MSL Logo" className="w-100 h-100" />
                 </div>
@@ -41,6 +51,7 @@ export default function AdminLayout({ children }) {
                                     ? 'bg-[#f0f0f0] text-[#2C2C3E] border-2 border-gray-200 shadow font-bold'
                                     : 'text-gray-300 hover:bg-[#4A4A60] hover:text-white'
                             }`}
+                            onClick={() => setSidebarOpen(false)}
                         >
                             <item.icon
                                 className={`mr-3 flex-shrink-0 h-5 w-5 transition-colors duration-200 ${
@@ -55,12 +66,13 @@ export default function AdminLayout({ children }) {
                 </nav>
 
                 {/* Logout Button */}
-                <div className="p-4">
+                <div className="p-4 mt-auto">
                     <Link
                         href={route('admin.logout')}
                         method="post"
                         as="button"
                         className="w-full flex items-center justify-start py-3 px-4 rounded-lg bg-[#f0f0f0] text-[#212121] font-medium hover:bg-[#4A4A60] hover:text-white transition-colors duration-200"
+                        onClick={() => setSidebarOpen(false)}
                     >
                         <FaSignOutAlt className="w-5 h-5 mr-2" />
                         Logout
@@ -69,12 +81,24 @@ export default function AdminLayout({ children }) {
             </div>
 
             {/* Main content area */}
-            <div className="flex-1 flex flex-col ml-0">
+            <div className="flex-1 flex flex-col md:ml-64">
                 {/* Top Navigation */}
                 <nav className="relative z-10 bg-white border-b border-gray-200 shadow-sm p-4" style={{marginLeft: -20,zIndex: 1}}>
                     <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex justify-between h-16 items-center">
                             <div className="flex items-center">
+                                {/* Hamburger for mobile */}
+                                {!sidebarOpen && (
+                                    <button
+                                        className="mr-3 p-2 rounded-md bg-[#212121] text-white md:hidden focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#212121]"
+                                        onClick={() => setSidebarOpen(true)}
+                                        aria-label="Open sidebar"
+                                    >
+                                        <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                                        </svg>
+                                    </button>
+                                )}
                                 <span className="text-gray-800 font-semibold text-xl">{activeNav ? activeNav.name : ''}</span>
                             </div>
                             <div className="flex items-center space-x-4">
