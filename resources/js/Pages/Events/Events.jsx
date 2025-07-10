@@ -107,7 +107,7 @@ function Events() {
                     </div>
 
                     {/* DESKTOP LAYOUT: TITLE + IMAGE (unchanged) */}
-                    <div className="hidden lg:flex justify-between items-start w-full">
+                    <div className="hidden lg:flex justify-between items-start w-full lg:p-5">
                         {/* Text Content (left on desktop) */}
                         <div className="flex flex-col justify-start items-start flex-1 p-0 h-auto lg:h-auto mt-0 order-2 lg:order-first">
                         <h3 className="text-white text-left font-['Montserrat'] text-[40px] font-bold leading-[140%] w-full lg:w-[622px]">
@@ -174,7 +174,7 @@ function Events() {
 
 
                     {/* Other MSL Events Section */}
-                    <section className="mx-auto flex flex-col items-center flex-shrink-0 py-8" style={{ maxWidth: '1418px' }}>
+                    <section className="mx-auto flex flex-col items-center flex-shrink-0 py-4" style={{ maxWidth: '1418px' }}>
                         {/* Title */}
                         <div className="flex w-full px-4 lg:px-0 items-center gap-2 md:gap-9">
                             <h2 className="text-white text-left font-['Montserrat'] text-[30px] md:text-[57.6px] font-bold leading-[140%] w-full">
@@ -183,13 +183,13 @@ function Events() {
                         </div>
 
                         {/* Cards Grid: 2 columns on mobile, 3 columns on desktop with centering for odd last card */}
-                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-8 lg:gap-y-5 justify-items-center w-full px-2 md:px-0 pt-8">
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-4 lg:gap-y-5 justify-items-center w-full px-2 md:px-0 pt-4">
                             {eventCards.map((card, index) => (
                                 <div
                                     key={index}
                                     className={`
                                         flex flex-col justify-center items-center rounded-xl bg-white shadow-[0px_0px_10.379px_-2.805px_#F2C21A] overflow-hidden w-full max-w-[463.68px]
-                                        h-[300px] md:h-[462.825px] /* Added these classes for responsive height control */
+                                        h-[180px] md:h-[462.825px]
                                         ${
                                             // Conditional centering for the last odd card on mobile only
                                             (eventCards.length % 2 === 1 && index === eventCards.length - 1)
@@ -199,21 +199,21 @@ function Events() {
                                     `}
                                 >
                                     <div
-                                        className="flex flex-col items-center flex-1 self-stretch bg-black bg-no-repeat bg-center bg-cover relative w-full h-[30%] md:h-[calc(462.825px-190.74px)] md:px-0 md:py-0"
-                                        style={{ backgroundImage: `url(${card.image})` }}
+                                    className="flex flex-col items-center flex-1 self-stretch bg-black bg-no-repeat bg-center bg-cover relative w-full h-[60px] md:h-[calc(462.825px-190.74px)] px-0 pt-2 md:pt-0"
+                                    style={{ backgroundImage: `url(${card.image})` }}
                                     >
-                                        <div className="absolute top-4 md:top-8 left-0 flex h-6 md:h-[42.075px] px-1 md:px-[9.35px] justify-center items-center gap-0.5 md:gap-[9.35px] rounded-r-lg md:rounded-r-[16.83px] bg-red-600">
-                                            <span className="text-white font-['Space_Grotesk'] text-xs md:text-lg font-bold">Recent</span>
-                                        </div>
+                                    <div className="absolute top-2 md:top-8 left-0 flex h-6 md:h-[42.075px] px-1 md:px-[9.35px] justify-center items-center gap-0.5 md:gap-[9.35px] rounded-r-lg md:rounded-r-[16.83px] bg-red-600">
+                                        <span className="text-white font-['Space_Grotesk'] text-xs md:text-lg font-bold">Recent</span>
                                     </div>
-                                    <div className="flex h-[70%] md:h-[190.74px] flex-col items-center bg-[#0A0A0A] p-2 w-full">
+                                    </div>
+                                    <div className="flex h-[50%] md:h-[190.74px] flex-col items-center bg-[#0A0A0A] p-1 w-full">
                                         <div className="p-1 md:p-[9.35px]">
-                                            <p className="text-[14px] md:text-[26.18px] font-bold text-center leading-tight">
+                                            <p className="text-[9.7px]  font-['Space_Grotesk'] md:text-[26.18px] font-bold text-center leading-tight">
                                                 {card.title}
                                             </p>
                                         </div>
                                         <div className="p-1 md:p-[9.35px]">
-                                            <p className="text-white font-['Space_Grotesk'] text-sm md:text-[21.505px] font-normal text-center">
+                                            <p className="text-white font-['Space_Grotesk'] text-[8.5px] md:text-[20.505px] font-normal text-center">
                                                 {card.description}
                                             </p>
                                         </div>
