@@ -66,7 +66,7 @@ export default function AdminLayout({ children }) {
                 </nav>
 
                 {/* Logout Button */}
-                <div className="p-4 mt-auto">
+                <div className="p-4 mt-auto bottom-0 absolute w-full">
                     <Link
                         href={route('admin.logout')}
                         method="post"
