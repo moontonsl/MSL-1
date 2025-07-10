@@ -18,7 +18,6 @@ export default function Articles() {
         <h2 className="text-2xl xs:text-3xl md:text-5xl font-bold text-white mb-4">
           NEWS AND ARTICLES
         </h2>
-        <div className="w-16 md:w-24 h-1 bg-[#F3C718] mx-auto"></div>
       </div>
 
       {/* Articles Grid */}
@@ -27,22 +26,26 @@ export default function Articles() {
           <Link
             key={article.id}
             href={article.link}
-            className="w-full bg-white rounded-2xl shadow-[0px_0px_8.7px_-2.3px_rgba(242,194,26,1.00)] flex flex-col justify-center items-center overflow-hidden hover:scale-[1.02] transition-transform duration-300"
+            className="w-full h-40 md:h-auto bg-white rounded-2xl md:rounded-2xl shadow-[0px_0px_8.7px_-2.3px_rgba(242,194,26,1.00)] flex flex-col justify-center items-center overflow-hidden hover:scale-[1.02] transition-transform duration-300"
           >
-            <div className="w-full aspect-[1.81/1] relative">
+            <div className="w-full flex-1 md:aspect-[1.81/1] relative">
               <img
                 src={article.image}
                 alt={article.title}
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="w-full bg-neutral-950 flex flex-col justify-start items-start p-3 md:p-4">
-              <h3 className="text-center w-full text-white text-base xs:text-lg md:text-xl font-bold leading-loose mb-1 md:mb-2">
-                {article.title}
-              </h3>
-              <p className="text-center w-full text-white text-xs xs:text-sm md:text-lg font-normal leading-relaxed">
-                {article.description}
-              </p>
+            <div className="w-full h-16 md:h-auto bg-neutral-950 flex flex-col justify-start items-start p-[2px] md:p-4">
+              <div className="w-full p-[2px] md:p-0 flex flex-col justify-center items-center md:mb-2">
+                <h3 className="text-center w-full text-white text-[8.95px] md:text-xl font-bold leading-[10px] md:leading-loose">
+                  {article.title}
+                </h3>
+              </div>
+              <div className="w-full flex-1 md:flex-none p-[2px] md:p-0 flex flex-col justify-start items-center">
+                <p className="w-full text-center text-white text-[7.36px] md:text-lg font-normal leading-[9px] md:leading-relaxed">
+                  {article.description}
+                </p>
+              </div>
             </div>
           </Link>
         ))}

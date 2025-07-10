@@ -6,7 +6,7 @@ import styles from './MCCWatchFestReg.module.scss';
 const REGIONS = ["Luzon", "Visayas", "Mindanao"];
 
 const REGION_VENUE_MAP = {
-    Luzon: ["National University - Manila", "De La Salle University - Manila", "First Asia Institute of Technology and Humanities" , "Batangas State University - Alangilan"],
+    Luzon: ["Pampanga - North and Central Luzon Esports Council", "Laguna State Polytechnic University", "First Asia Institute of Technology and Humanities", "Batangas State University - Alangilan" ],
     Visayas: ["PHINMA – University of Iloilo", "University of St. La Salle - Bacolod City"],
     Mindanao: ["Ateneo de Davao University", "University of Southeastern Philippines - Obrero Campus"],
 };
@@ -85,7 +85,7 @@ const MCCWatchFestReg = () => {
 
     return (
         <>
-            <Head title="MCC Watch Fest Reg" />
+            <Head title="MCC Watch Fest Registration" />
             <AuthenticatedLayout>
                 <div className="flex items-center justify-center min-h-[70vh] md:min-h-screen px-2 md:px-4 bg-gradient-to-b from-transparent via-black/20 to-black relative z-10">
 
