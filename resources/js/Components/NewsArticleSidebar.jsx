@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "@inertiajs/react";
 import { getRelatedArticles } from "../Data/newsData";
 
 export default function NewsArticleSidebar({ currentSlug, limit = 3 }) {
@@ -61,9 +62,13 @@ export default function NewsArticleSidebar({ currentSlug, limit = 3 }) {
             
             {/* View More Button */}
             <div className="self-stretch flex justify-center mt-2 lg:mt-4">
-                <button className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 lg:px-6 lg:py-3 rounded-full transition-colors duration-300 border border-gray-600 hover:border-blue-500 font-['Montserrat'] text-xs lg:text-base">
-                    View More Articles
-                </button>
+                <Link href="/news">
+                    <div className="w-64 h-14 p-1.5 bg-white/5 rounded-[57.71px] outline outline-[1.73px] outline-offset-[-1.73px] outline-white inline-flex justify-center items-center gap-1.5 overflow-hidden hover:bg-white/10 transition-all duration-300">
+                        <div className="justify-start text-white text-lg font-bold font-['Space_Grotesk'] leading-relaxed">
+                            View More Articles
+                        </div>
+                    </div>
+                </Link>
             </div>
         </div>
     );
