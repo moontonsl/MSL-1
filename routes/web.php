@@ -144,10 +144,7 @@ Route::prefix('mcc')->name('mcc.')->group(function () {
         return Inertia::render('MCC/Calendar/index');
     })->name('calendar');
 
-    // News Route
-    Route::get('/news', function () {
-        return Inertia::render('News/Index');
-    })->name('news');
+
 
     // Voting Routes
     Route::prefix('voting')->name('voting.')->group(function () {
