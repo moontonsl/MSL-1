@@ -166,6 +166,11 @@ Route::prefix('mcc')->name('mcc.')->group(function () {
 Route::get('/news', [NewsController::class, 'index'])->name('news.index');
 Route::get('/news-articles', [NewsController::class, 'getArticles'])->name('news.articles');
 
+// Individual News Pages
+Route::get('/news/stronger-ties-moonton-umak', function () {
+    return Inertia::render('Individual News Pages/Stronger Ties News/index');
+})->name('news.stronger-ties');
+
 // data count routes
 Route::get('/stats', function () {
     return [
