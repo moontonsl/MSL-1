@@ -14,6 +14,8 @@ export default function AdminLogin() {
     // Background carousel state
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const backgroundImages = [
+        '/images/heroes/yuzhong.png',
+        '/images/heroes/dyrroth.png',
     ];
 
     // Auto-rotate background images
