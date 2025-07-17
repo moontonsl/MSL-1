@@ -162,6 +162,25 @@ Route::prefix('mcc')->name('mcc.')->group(function () {
     });
 });
 
+// Resources Routes
+Route::prefix('resources')->name('resources.')->group(function () {
+    Route::get('/', function () {
+        return Inertia::render('Resources/index');
+    })->name('main');
+
+    Route::get('/campus', function () {
+        return Inertia::render('Resources/Campus/index');
+    })->name('campus');
+
+    Route::get('/directory', function () {
+        return Inertia::render('Resources/Directory/index');
+    })->name('directory');
+
+    Route::get('/assets', function () {
+        return Inertia::render('Resources/Assets/index');
+    })->name('assets');
+});
+
 // News Routes
 Route::get('/news', [NewsController::class, 'index'])->name('news.index');
 Route::get('/news-articles', [NewsController::class, 'getArticles'])->name('news.articles');
