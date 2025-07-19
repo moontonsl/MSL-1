@@ -253,6 +253,7 @@ export default function MCCS2PredictionsPage({ teamPrediction, roleVotes, ml_use
   const [notification, setNotification] = useState(null);
   const [shuffledTeams, setShuffledTeams] = useState([]);
   const [shuffledPlayers, setShuffledPlayers] = useState([]);
+  const [tournamentClosed, setTournamentClosed] = useState(true); // Set to true to close tournament
 
   // Initialize shuffled arrays once
   useEffect(() => {
@@ -411,6 +412,19 @@ export default function MCCS2PredictionsPage({ teamPrediction, roleVotes, ml_use
           transform: translateY(-20px);
           transition: all 0.3s ease-in;
         }
+        .voting-closed-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.8);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 50;
+          border-radius: inherit;
+        }
       `}</style>
       
       {/* Notification Component */}
@@ -469,15 +483,15 @@ export default function MCCS2PredictionsPage({ teamPrediction, roleVotes, ml_use
           )}
 
           {/* Teams Section */}
-          <div className="w-full">
+          <div className="w-full relative">
             <TeamVoting 
               selectedTeams={selectedTeams} 
               setSelectedTeams={setSelectedTeams} 
-              hasVoted={hasVotedTeams} 
+              hasVoted={hasVotedTeams || tournamentClosed} 
               shuffledTeams={shuffledTeams}
             />
             
-            {canSubmitTeams && (
+            {canSubmitTeams && !tournamentClosed && (
               <div className="flex justify-center mt-6">
                 <button
                   onClick={submitTeamVote}
@@ -495,17 +509,39 @@ export default function MCCS2PredictionsPage({ teamPrediction, roleVotes, ml_use
                 </div>
               </div>
             )}
+
+            {/* Voting Closed Overlay for Teams */}
+            {tournamentClosed && (
+              <div className="voting-closed-overlay">
+                <div className="text-center text-white">
+                  <div className="text-4xl mb-2">🔒</div>
+                  <h3 className="text-xl font-bold mb-2">Voting Closed</h3>
+                  <p className="text-sm opacity-80">Team voting has been closed for this tournament</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Players Section */}
-          <div className="w-full">
+          <div className="w-full relative">
             <PlayerVoting 
               selectedPlayers={selectedPlayers} 
               setSelectedPlayers={setSelectedPlayers} 
-              hasVotedRoles={hasVotedRoles}
+              hasVotedRoles={tournamentClosed ? roles.reduce((acc, role) => ({ ...acc, [role]: true }), {}) : hasVotedRoles}
               onSubmitRole={submitRoleVote}
               shuffledPlayers={shuffledPlayers}
             />
+
+            {/* Voting Closed Overlay for Players */}
+            {tournamentClosed && (
+              <div className="voting-closed-overlay">
+                <div className="text-center text-white">
+                  <div className="text-4xl mb-2">🔒</div>
+                  <h3 className="text-xl font-bold mb-2">Voting Closed</h3>
+                  <p className="text-sm opacity-80">Player voting has been closed for this tournament</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

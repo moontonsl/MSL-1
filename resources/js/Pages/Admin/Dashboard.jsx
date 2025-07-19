@@ -6,6 +6,7 @@ import { FaUsers, FaNewspaper, FaCalendar, FaChartLine, FaTrophy } from 'react-i
 export default function Dashboard({ pendingUsers, totalNews, upcomingEvents, analytics, tournaments }) {
     const [realTimeData, setRealTimeData] = useState(analytics?.realTime || {});
     const [lastUpdated, setLastUpdated] = useState(new Date());
+    const [showAllPages, setShowAllPages] = useState(false);
 
     // Real-time updates
     useEffect(() => {
@@ -248,15 +249,28 @@ export default function Dashboard({ pendingUsers, totalNews, upcomingEvents, ana
 
                             {/* Top Pages */}
                             <div>
-                                <h4 className="text-sm font-medium text-[var(--text-secondary)] mb-3">Top Pages</h4>
+                                <div className="flex items-center justify-between mb-3">
+                                    <h4 className="text-sm font-medium text-[var(--text-secondary)]">Top Pages</h4>
+                                    <button 
+                                        className="text-xs text-[var(--soft-green-400)] hover:underline"
+                                        onClick={() => setShowAllPages(!showAllPages)}
+                                    >
+                                        {showAllPages ? 'Show Top 3' : 'View All'}
+                                    </button>
+                                </div>
                                 <div className="space-y-2">
-                                    {analytics?.topPages?.slice(0, 3).map((page, index) => (
+                                    {analytics?.topPages?.slice(0, showAllPages ? 10 : 3).map((page, index) => (
                                         <div key={index} className="flex justify-between text-sm">
                                             <span className="text-[var(--text-primary)]">{page.page}</span>
                                             <span className="text-[var(--text-secondary)]">{page.views.toLocaleString()} views</span>
                                         </div>
                                     ))}
                                 </div>
+                                {analytics?.topPages?.length > 3 && !showAllPages && (
+                                    <div className="text-xs text-[var(--text-secondary)] mt-2">
+                                        +{analytics.topPages.length - 3} more pages tracked
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
