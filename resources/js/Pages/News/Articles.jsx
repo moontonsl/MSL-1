@@ -38,13 +38,13 @@ export default function Articles() {
             <div className="w-full h-16 md:h-auto bg-neutral-950 flex flex-col justify-start items-start p-[2px] md:p-4">
               <div className="w-full p-[2px] md:p-0 flex flex-col justify-center items-center md:mb-2">
                 <h3 className="text-center w-full text-white text-[8.95px] md:text-xl font-bold leading-[10px] md:leading-loose">
-                  {article.title}
-                </h3>
+                {article.title}
+              </h3>
               </div>
               <div className="w-full flex-1 md:flex-none p-[2px] md:p-0 flex flex-col justify-start items-center">
                 <p className="w-full text-center text-white text-[7.36px] md:text-lg font-normal leading-[9px] md:leading-relaxed">
-                  {article.description}
-                </p>
+                {article.description}
+              </p>
               </div>
             </div>
           </Link>

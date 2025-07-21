@@ -115,23 +115,23 @@ function Events() {
                         </h3>
 
                         <div className="p-0 w-full">
-                            <h4 className="text-white text-left font-['Space_Grotesk'] text-[20px] font-bold leading-[140%]">What is MCC?</h4>
-                            <p className="text-white text-left font-['Space_Grotesk'] text-[18px] font-normal leading-[140%] lg:max-w-[1000px]">
+                            <h4 className="text-white text-left font-['Space Grotesk'] text-[20px] font-bold leading-[140%]">What is MCC?</h4>
+                            <p className="text-white text-left font-['Space Grotesk'] text-[18px] font-normal leading-[140%] lg:max-w-[1000px]">
                             MSL Collegiate Cup (MCC) is a platform for collegiate players to showcase their skills in the national stage.
                             MCC is a potential franchise that both promotes the participation of MSL Communities and accredited organizations.
                             </p>
                         </div>
 
                         <div className="p-0 w-full">
-                            <h4 className="text-white text-left font-['Space_Grotesk'] text-[20px] font-bold leading-[140%]">Who can join MCC?</h4>
-                            <p className="text-white text-left font-['Space_Grotesk'] text-[18px] font-normal leading-[140%] lg:max-w-[900px]">
+                            <h4 className="text-white text-left font-['Space Grotesk'] text-[20px] font-bold leading-[140%]">Who can join MCC?</h4>
+                            <p className="text-white text-left font-['Space Grotesk'] text-[18px] font-normal leading-[140%] lg:max-w-[900px]">
                             Aspiring Student-Gamers from MSL Communities and MSL Network Organizations are allowed to join.
                             </p>
                         </div>
 
                         <div className="mt-4">
                             <div className="flex w-[190px] h-[58px] justify-center items-center gap-[5.7px] rounded-full border border-white bg-[rgba(255,255,255,0.05)] cursor-pointer">
-                            <span className="text-white font-['Space_Grotesk'] text-[18.5px] font-bold leading-[140%]">Learn more</span>
+                            <span className="text-white font-['Space Grotesk'] text-[18.5px] font-bold leading-[140%]">Learn more</span>
                             </div>
                         </div>
                         </div>
@@ -150,21 +150,21 @@ function Events() {
                     <div className="flex flex-col lg:hidden mt-[-10px] pt-0">
 
                         <div className="p-1 w-full">
-                        <h4 className="text-white text-left font-['Space_Grotesk'] text-[13px] font-bold leading-[140%]">What is MCC?</h4>
-                        <p className="text-white text-left font-['Space_Grotesk'] text-[11px] font-normal leading-[140%]">
+                        <h4 className="text-white text-left font-['Space Grotesk'] text-[13px] font-bold leading-[140%]">What is MCC?</h4>
+                        <p className="text-white text-left font-['Space Grotesk'] text-[11px] font-normal leading-[140%]">
                             MSL Collegiate Cup (MCC) is a platform for collegiate players to showcase their skills in the national stage.
                             MCC is a potential franchise that promotes participation of the MSL Communities and accredited organizations.
                         </p>
                         </div>
                         <div className="p-1 w-full">
-                        <h4 className="text-white text-left font-['Space_Grotesk'] text-[13px] font-bold leading-[140%]">Who can join MCC?</h4>
-                        <p className="text-white text-left font-['Space_Grotesk'] text-[11px] font-normal leading-[140%]">
+                        <h4 className="text-white text-left font-['Space Grotesk'] text-[13px] font-bold leading-[140%]">Who can join MCC?</h4>
+                        <p className="text-white text-left font-['Space Grotesk'] text-[11px] font-normal leading-[140%]">
                             Aspiring Student-Gamers from MSL Communities and MSL Network Organizations are allowed to join.
                         </p>
                         </div>
                         <div className="p-1 mt-2">
                         <div className="flex w-[150px] h-[45px] justify-center items-center gap-1 rounded-full border border-white bg-[rgba(255,255,255,0.05)] cursor-pointer">
-                            <span className="text-white font-['Space_Grotesk'] text-base font-bold leading-[140%]">Learn more</span>
+                            <span className="text-white font-['Space Grotesk'] text-base font-bold leading-[140%]">Learn more</span>
                         </div>
                         </div>
                     </div>
@@ -203,17 +203,17 @@ function Events() {
                                     style={{ backgroundImage: `url(${card.image})` }}
                                     >
                                     <div className="absolute top-2 md:top-8 left-0 flex h-6 md:h-[42.075px] px-1 md:px-[9.35px] justify-center items-center gap-0.5 md:gap-[9.35px] rounded-r-lg md:rounded-r-[16.83px] bg-red-600">
-                                        <span className="text-white font-['Space_Grotesk'] text-xs md:text-lg font-bold">Recent</span>
+                                        <span className="text-white font-['Space Grotesk'] text-xs md:text-lg font-bold">Recent</span>
                                     </div>
                                     </div>
                                     <div className="flex h-[50%] md:h-[190.74px] flex-col items-center bg-[#0A0A0A] p-1 w-full">
                                         <div className="p-1 md:p-[9.35px]">
-                                            <p className="text-[9.7px]  font-['Space_Grotesk'] md:text-[26.18px] font-bold text-center leading-tight">
+                                            <p className="text-[9.7px]  font-['Space Grotesk'] md:text-[26.18px] font-bold text-center leading-tight">
                                                 {card.title}
                                             </p>
                                         </div>
                                         <div className="p-1 md:p-[9.35px]">
-                                            <p className="text-white font-['Space_Grotesk'] text-[8.5px] md:text-[20.505px] font-normal text-center">
+                                            <p className="text-white font-['Space Grotesk'] text-[8.5px] md:text-[20.505px] font-normal text-center">
                                                 {card.description}
                                             </p>
                                         </div>
