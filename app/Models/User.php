@@ -46,7 +46,9 @@ class User extends Authenticatable
         'mainHero',
         'rank',
         'studentId',
-        'proofOfEnrollment'
+        'proofOfEnrollment',
+        'role',
+        'state'
     ];
 
     /**

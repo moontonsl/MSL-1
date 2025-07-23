@@ -23,7 +23,7 @@ class SpreadSheetAutomationController extends Controller
         try {
            
             $spreadsheetId = "1216kHWU6fpbb_zDz6d2SKh9SZJjUqt0ObvxsdIDGQg0";
-            $range = "Sheet1!A1";
+            $range = "Sheet1";
 
             // 1. Get users data
             $users = User::all();
@@ -61,6 +61,8 @@ class SpreadSheetAutomationController extends Controller
                 'Rank',
                 'Student ID',
                 'Proof of Enrollment',
+                'Role',
+                'State',
                 'Email Verified At',
                 'Created At',
                 'Updated At',
@@ -97,6 +99,8 @@ class SpreadSheetAutomationController extends Controller
                     $user->rank ?? 'N/A',
                     $user->studentId ?? 'N/A',
                     $user->proofOfEnrollment ?? 'N/A',
+                    $user->role ?? 'N/A',
+                    $user->state ?? 'N/A',
                     $user->email_verified_at ?? 'N/A',
                     $user->created_at ?? 'N/A',
                     $user->updated_at ?? 'N/A'
