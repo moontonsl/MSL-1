@@ -23,7 +23,7 @@ class SpreadSheetAutomationController extends Controller
         try {
            
             $spreadsheetId = "1216kHWU6fpbb_zDz6d2SKh9SZJjUqt0ObvxsdIDGQg0";
-            $range = "Sheet1";
+            $range = "MainDB!A1";
 
             // 1. Get users data
             $users = User::all();
