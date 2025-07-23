@@ -21,7 +21,7 @@ class SpreadSheetAutomationController extends Controller
     {
         set_time_limit(0);
         try {
-           
+           return "test";
             $spreadsheetId = "1216kHWU6fpbb_zDz6d2SKh9SZJjUqt0ObvxsdIDGQg0";
             $range = "MainDB!A1";
 
