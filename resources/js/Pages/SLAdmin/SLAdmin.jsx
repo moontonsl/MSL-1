@@ -4,9 +4,10 @@ import {BadgeCheck, ArrowDownAZ, Funnel} from 'lucide-react';
 import profilePic from "./assets/42ca9ea53c9f0acd1d273d2864b58719215b59f4.png"
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
 import TableComponent from "@/Pages/SLAdmin/components/TableComponent.jsx";
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 
 const SLAdmin = () => {
+    const { user, verified, new: newUsers, blocked } = usePage().props;
     return (
         <AuthenticatedLayout>
 
@@ -34,9 +35,11 @@ const SLAdmin = () => {
                         <div className="w-full flex flex-col justify-center gap-6 xl:gap-[32px]">
                             <div className="flex flex-col items-center md:items-start mb-6 md:mb-0">
 
-                                <h1 className="text-2xl font-semibold text-[clamp(1.75rem,3vw+1rem,4rem)] leading-[clamp(2rem,4vw+1rem,4.25rem)]">Rei Takahashi</h1>
+                                <h1 className="text-2xl font-semibold text-[clamp(1.75rem,3vw+1rem,4rem)] leading-[clamp(2rem,4vw+1rem,4.25rem)]">
+                                    {user.name} {user.surname}
+                                </h1>
                                 <div className="flex items-center gap-2 xl:text-[32px] xl:leading-[32px] mt-1">
-                                    <span>username</span>
+                                    <span>{user.username}</span>
                                     <BadgeCheck className={`text-[var(--border-brand-default)] w-[16px] xl:w-[32px]`}/>
                                 </div>
                             </div>
@@ -45,11 +48,15 @@ const SLAdmin = () => {
                             <div className="grid gap-1 lg:gap-2 mb-6 md:mb-0 lg:grid-cols-2">
                                 <div className="flex lg:flex-col">
                                     <div className="mr-2 opacity-50">Role:</div>
-                                    <div className="font-medium xl:text-2xl">Super Admin</div>
+                                    <div className="font-medium xl:text-2xl">
+                                        {user.role}
+                                    </div>
                                 </div>
                                 <div className="flex lg:flex-col">
                                     <div className="mr-2 opacity-50">Area:</div>
-                                    <div className="font-medium xl:text-2xl">Mindanao</div>
+                                    <div className="font-medium xl:text-2xl">
+                                        {user.island}
+                                    </div>
                                 </div>
                                 <div className="flex lg:flex-col">
                                     <div className="mr-2 opacity-50">YR. LVL:</div>
@@ -57,7 +64,9 @@ const SLAdmin = () => {
                                 </div>
                                 <div className="flex lg:flex-col">
                                     <div className="mr-2 opacity-50">Region:</div>
-                                    <div className="font-medium xl:text-2xl">Celestial Five</div>
+                                    <div className="font-medium xl:text-2xl">
+                                        {user.region}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -66,22 +75,30 @@ const SLAdmin = () => {
                         {/* institution */}
                         <div className="w-full flex flex-col justify-center">
                             <p className="opacity-50 mr-2">Your School/Institution:</p>
-                            <p className="font-medium xl:text-2xl">Central Mindanao University</p>
+                            <p className="font-medium xl:text-2xl">
+                                {user.university}
+                            </p>
 
 
                             {/* stats */}
                             <div className="grid grid-cols-3 gap-4 text-center md:text-left mt-6 xl:mt-[48px]">
                                 <div>
                                     <p className="opacity-50">Verified</p>
-                                    <p className="text-2xl xl:text-5xl font-semibold">12,255</p>
+                                    <p className="text-2xl xl:text-5xl font-semibold">
+                                        {verified}
+                                    </p>
                                 </div>
                                 <div>
                                     <p className="opacity-50">New</p>
-                                    <p className="text-2xl xl:text-5xl font-semibold">1,000</p>
+                                    <p className="text-2xl xl:text-5xl font-semibold">
+                                        {newUsers}
+                                    </p>
                                 </div>
                                 <div>
                                     <p className="opacity-50">Blocked</p>
-                                    <p className="text-2xl xl:text-5xl font-semibold">43</p>
+                                    <p className="text-2xl xl:text-5xl font-semibold">
+                                        {blocked}
+                                    </p>
                                 </div>
                             </div>
                         </div>
