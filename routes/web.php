@@ -686,7 +686,7 @@ Route::get('/get-acc', function () {
         echo "Total updated: " . $updateCount . "<br>";
         return "done";
    
-})->name('add-old-accounts');
+})->name('add-old-accounts-get');
 
 
 Route::get('/remove-users-no-proof-of-enrollment', function () {
