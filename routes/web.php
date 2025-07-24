@@ -69,7 +69,40 @@ Route::middleware(['auth:admin', 'admin'])->group(function () {
 Route::get('/notfound', function () {return Inertia::render('Errors/NotFound');})->name('notfound');
 
 // SL ADMIN ROUTES
-Route::get('/sl-admin', function () {return Inertia::render('SLAdmin/SLAdmin');})->name('sl-admin');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/sl-admin', function () {
+        $user = Auth::user();
+        
+        // Check if user has SL role
+        if ($user->role !== 'SL') {
+            return redirect()->route('dashboard')->with('error', 'Access denied. Only Student Leaders can access this page.');
+        }
+        $verified = User::where('state', 'Verified')->count();
+        $new      = User::where('state', 'New')->count();
+        $blocked  = User::where('state', 'Blocked')->count();
+        return Inertia::render('SLAdmin/SLAdmin',[
+            'user' => $user,
+            'verified' => $verified,
+            'new' => $new,
+            'blocked' => $blocked
+        ]);
+    })->name('sl-admin');
+});
+
+
+// Route::get('/sl-admin', function () {
+//     $user = Auth::user();
+    
+//     // Check if user is authenticated
+//     if (!$user) {
+//         return redirect()->route('login');
+//     }
+//     // Check if user has SL role
+//     if ($user->user_type !== 'SL') { // Assuming 'SL' is the role for Student Leaders
+//         return redirect()->route('dashboard')->with('error', 'Access denied. Only Student Leaders can access this page.');
+//     }
+//     return Inertia::render('SLAdmin/SLAdmin');
+// })->name('sl-admin');
 
 
 Route::inertia('/upload', 'SchoolUploader');
@@ -115,7 +148,6 @@ Route::get('/studentportal', function () {
         'user' => Auth::user(),
     ]);
 })->middleware(['auth', 'verified'])->name('SLStudent');
-
 
 //TEMPORARY LOGOUT CODES - PA CHECK PO B.E THANK YOU
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
@@ -379,5 +411,277 @@ Route::get('/update-user-type', function () {
 Route::get('/jabu-test-forauto-deployment-main-staging', function () {
     return "test";
 })->name('jabutest');
+Route::get('/add-old-accounts', function () {
+    set_time_limit(0);
+    $old_users = DB::table('msl_user_mlbb')->get();
+    $counte = 0;
+    $counto = 0;
+    foreach ($old_users as $old_user) {
+        $users = User::where('ml_id', $old_user->mslid)->where('ml_server', $old_user->mslserver)->first();
+        if($users){
+            echo $old_user->mslid." already exists"."<br>";
+            $counte++;
+        }else{
+            echo $old_user->mslid." not found"."<br>";
+            echo $old_user->userid." not found 1"."<br>";
+            $par = User::where('ml_id', $old_user->userid)->where('ml_server', $old_user->mslserver)->first();
+            if($par){
+                echo $par->email." found ".$old_user->mslid."<br>";
+                echo $old_user->userid." found"."<br>";
+            }else{
+                echo $old_user->userid." not found 2"."<br>";
+            }
+            $counto++;
+        }
+    }
+    echo "total: ".($counte+$counto)."<br>";
+    echo "existing: ".$counte." not found: ".$counto;
+    return "existing: ".$counte." not found: ".$counto;
+})->name('add-old-accounts');
+Route::get('/get-acc', function () {
+    // Set unlimited execution time and memory
+    set_time_limit(0);
+    ini_set('memory_limit', '-1');
+    ini_set('max_execution_time', 0);
+    
+    // Disable output buffering for real-time progress
+    if (ob_get_level()) {
+        ob_end_clean();
+    }
+    ob_implicit_flush(true);
+    
+    $name = "jabu";
+    $email = "jabu";
+    $password = "jabu";
+    $ml_id  = "jabu";
+    $ml_server  = "jabu";
+    $ml_ign = "jabu";
+    $username = "jabu";
+    $surname = "jabu";
+    $suffix = "jabu";
+    $birthday = "jabu";
+    $age = "jabu";
+    $gender = "jabu";
+    $contact_number = "jabu";
+    $facebook_link = "jabu";
+    $course = "jabu";
+    $university = "jabu";
+    $year_level = "jabu";
+    $studentId = "jabu";
+    $region = "jabu";
+    $island = "jabu";
+    $squadAbbreviation = "jabu";
+    $SquadName = "jabu";
+    $inGameRole = "jabu";
+    $mainHero = "jabu";
+    $rank = "jabu";
+    $role = "jabu";
+    $state = "jabu";
+    
+    $updateCount = 0;
+    $processedCount = 0;
+    $countExist = 0;
+    $countNot = 0;
+    // Use chunking to process data in smaller batches
+    DB::table('msl_user_mlbb')
+        ->orderBy('id') // Important: Must order by the chunking column
+        ->chunkById(500, function ($users_chunk) use (&$updateCount, &$processedCount) {
+                         foreach ($users_chunk as $user) {
+                 $processedCount++;
+                
+                 // Add progress indicator
+                 if ($processedCount % 500 == 0) {
+                     echo "Processed: " . $processedCount . " records<br>";
+                     // Flush output buffer t o show progress
+                     if (ob_get_level()) {
+                         ob_flush();
+                         flush();
+                     }
+                 }
+                 // Skip the problematic record 12909 for now
+                if ($user->id == 12909) {
+                    echo "SKIPPING problematic record 12909<br>";
+                    continue;
+                }
+                 // Skip if we're near the problematic record for debugging
+                 if ($processedCount >= 12790 && $processedCount <= 12795) {
+                     echo "DEBUG: Processing record " . $processedCount . " (ID: " . $user->id . ")<br>";
+                     echo "DEBUG: User data: " . json_encode($user) . "<br>";
+                 }
+                 
+                 // Skip the problematic record 12792 for now
+                 if ($processedCount == 12792) {
+                     echo "SKIPPING problematic record 12792<br>";
+                     continue;
+                 }
+                 
+                 try {
+                //ign mslid mslserver squad name squad1 squad2 rank ml role hero
+                $ml_ign             = isset($user->mslign) ? $user->mslign : "";
+                $ml_id              = isset($user->mslid) ? $user->mslid : "";
+                $ml_server          = isset($user->mslserver) ? $user->mslserver : "";
+                $squadName          = isset($user->mslsquad1) ? $user->mslsquad1 : "";
+                $squadAbbreviation  = isset($user->mslsquad2) ? $user->mslsquad2 : "";
+                $rank               = isset($user->mslrank) ? $user->mslrank : "";
+                $mainHero           = isset($user->mslhero) ? $user->mslhero : "";
+                $inGameRole         = isset($user->mslrole) ? $user->mslrole : "";
 
+                $basic = DB::table('msl_user_basic')->where('userid', $user->userid)->first();
+                $email              = isset($basic->email) ? $basic->email : "";
+                $username           = isset($basic->username) ? $basic->username : "";
+                $name               = isset($basic->givenname) ? $basic->givenname : "";
+                $surname            = isset($basic->surname) ? $basic->surname : "";
+                $suffix             = isset($basic->suffix) ? $basic->suffix : "";
+                $birthday           = isset($basic->birthday) ? $basic->birthday : "";
+                $age                = isset($basic->age) ? $basic->age : "";
+                if($basic->age == "" || $basic->age == "null"){
+                    $age = 0;
+                }else{
+                    $age = $age;
+                }
+                if($basic->gender == "Empty" || $basic->gender == "null"){
+                    $gender = "other";
+                }else{
+                    $gender = $basic->gender;
+                }
+                $contact_number     = isset($basic->contact) ? $basic->contact : "";
+                
+                $account = DB::table('msl_user_account')->where('userid', $user->userid)->first();
+
+                $password = isset($account->password) ? $account->password : "";
+                $facebook_link = isset($account->facebook) ? $account->facebook : "";
+                $state = isset($account->state) ? $account->state : "";
+                $role = isset($account->administrator) ? $account->administrator : "user";
+
+                $school = DB::table('msl_user_school')->where('userid', $user->userid)->first();
+
+                $course = isset($school->schoolcourse) ? $school->schoolcourse : "";
+                $university = isset($school->schoolname) ? $school->schoolname : "";
+                $year_level = isset($school->schoolyear) ? $school->schoolyear : "";
+                $studentId = isset($school->schoolid) ? $school->schoolid : "";
+                $region = isset($school->schoolregion) ? $school->schoolregion : "";
+                $island = isset($school->schoolarea) ? $school->schoolarea : "";
+                
+                // Create data array for User model
+                $userData = [
+                    'name'       => isset($name) ? $name : "waley",
+                    'email'      => isset($email) ? $email : "waley",
+                    'password'   => isset($password) ? $password : "waley",
+                    'ml_id'      => isset($ml_id) ? $ml_id : "waley",
+                    'ml_server'  => isset($ml_server) ? $ml_server : "waley",
+                    'ml_ign'     => isset($ml_ign) ? $ml_ign : "waley",
+                    'username'   => isset($username) ? $username : "waley",
+                    'surname'    => isset($surname) ? $surname : "waley",
+                    'suffix'     => isset($suffix) ? $suffix : "waley",
+                    'birthday'   => isset($birthday) ? $birthday : "waley",
+                    'age'        => isset($age) ? $age : 0,
+                    'gender'     => isset($gender) ? $gender : "waley",
+                    'contact_number' => isset($contact_number) ? $contact_number : "waley",
+                    'facebook_link'  => isset($facebook_link) ? $facebook_link : "waley",
+                    'course'         => isset($course) ? $course : "waley",
+                    'university'     => isset($university) ? $university : "waley",
+                    'year_level'     => isset($year_level) ? $year_level : "waley",
+                    'studentId'      => isset($studentId) ? $studentId : "waley",
+                    'region'         => isset($region) ? $region : "waley",
+                    'island'         => isset($island) ? $island : "waley",
+                    'squadAbbreviation' => isset($squadAbbreviation) ? $squadAbbreviation : "waley",
+                    'squadName'         => isset($squadName) ? $squadName : "waley",
+                    'inGameRole'        => isset($inGameRole) ? $inGameRole : "waley",
+                    'mainHero'          => isset($mainHero) ? $mainHero : "waley",
+                    'rank'              => isset($rank) ? $rank : "waley",
+                    'role'              => isset($role) ? $role : "waley",
+                    'state'             => isset($state) ? $state : "waley", 
+                ];
+                
+                $ifmlexist = User::where('ml_id', $ml_id)->where('ml_server', $ml_server)->first();
+                if($ifmlexist){
+                    echo "[".$user->id."] ML ID and ML Server Already exist<br>";
+                    echo "ml_id: ".$ml_id."<br>"; 
+                    echo "ml_server: ".$ml_server."<br>";
+                    echo "email: ".$email."<br>";
+                    echo "username: ".$username."<br>";
+                    echo "name: ".$name."<br>";
+                    echo "surname: ".$surname."<br>";
+                }else{
+                    
+                    $ifemail = User::where('email', $email)->first();
+                    $ifusername = User::where('username', $username)->first();
+                    if($ifemail || $ifusername){
+                        echo "[".$user->id."] ML ID and ML Not Found But Email and Username Already exist<br>";
+                        echo "ml_id: ".$ml_id."<br>"; 
+                        echo "ml_server: ".$ml_server."<br>";
+                        echo "email: ".$email."<br>";
+                        echo "username: ".$username."<br>";
+                        echo "name: ".$name."<br>";
+                        echo "surname: ".$surname."<br>";
+                    }else{
+                        // here mag insert
+                        $create = User::create($userData);
+                        if($create){
+                            echo "[".$user->id."] Inserted<br>";
+                            echo "ml_id: ".$ml_id."<br>"; 
+                            echo "ml_server: ".$ml_server."<br>";
+                            echo "email: ".$email."<br>";
+                            echo "username: ".$username."<br>";
+                            echo "name: ".$name."<br>";
+                            echo "surname: ".$surname."<br>";
+
+                        }else{
+                            echo "[".$user->id."] Not Inserted<br>";
+                            echo "ml_id: ".$ml_id."<br>"; 
+                            echo "ml_server: ".$ml_server."<br>";
+                            echo "email: ".$email."<br>";
+                            echo "username: ".$username."<br>";
+                            echo "name: ".$name."<br>";
+                            echo "surname: ".$surname."<br>";
+                        }
+                    }
+                }
+                echo "====================<br>";
+                 // Option 1: Create new user (will fail if ml_id already exists)
+                //  User::create($userData);
+ 
+                 // Option 2: Update or create user (recommended)
+                 // User::updateOrCreate(
+                 //     ['ml_id' => $ml_id], // Unique key to check
+                 //     $userData // Data to insert/update
+                 // );
+ 
+                 // echo "Processed user: " . $ml_id . "<br>";
+                 
+                 $updateCount++;
+                //  echo $updateCount." bilang <br>";
+                 
+                 } catch (Exception $e) {
+                    echo "Facebook link too long ".$facebook_link."<br>";
+                    // echo "ERROR at record " . $processedCount . " (ID: " . $user->id . "): " . $e->getMessage() . "<br>";
+                    echo "Skipping this record and continuing...<br>";
+                    continue; // Skip this record and continue with next
+                 }
+             }
+        }, 'id'); // Close the chunking function
+        
+        echo "Total processed: " . $processedCount . "<br>";
+        echo "Total updated: " . $updateCount . "<br>";
+        return "done";
+   
+})->name('add-old-accounts');
+
+Route::get('/remove-users-no-proof-of-enrollment', function () {
+    set_time_limit(0);
+    
+    // Count users before deletion
+    $usersBefore = User::where('proofOfEnrollment', NULL)->count();
+    
+    // Delete users where proofOfEnrollment is null
+    $deletedCount = User::where('proofOfEnrollment', NULL)->delete();
+    
+    echo "Users before deletion: " . $usersBefore . "<br>";
+    echo "Users deleted: " . $deletedCount . "<br>";
+    echo "Operation completed successfully!";
+
+
+    
+    return "Users deleted: " . $deletedCount;
+})->name('remove-users-no-proof');
 require __DIR__.'/auth.php';
