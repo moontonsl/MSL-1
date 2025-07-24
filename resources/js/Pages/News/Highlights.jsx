@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -50,6 +50,7 @@ export default function Highlights() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
+  const [isPaused, setIsPaused] = useState(false);
 
   // Minimum swipe distance (in px)
   const minSwipeDistance = 50;
@@ -69,6 +70,17 @@ export default function Highlights() {
     });
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
   };
+
+  // Auto-scroll functionality
+  useEffect(() => {
+    if (!isPaused) {
+      const interval = setInterval(() => {
+        handleNext();
+      }, 3000); // Move every 3 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [isPaused, currentSlide]);
 
   const onTouchStart = (e) => {
     setTouchEnd(null); // otherwise the swipe is fired even with usual touch events
@@ -95,13 +107,15 @@ export default function Highlights() {
 
   return (
     <div className="w-full max-w-[1900px] h-auto px-2 md:px-12 mx-auto">
-      <h2 className="text-2xl xs:text-3xl md:text-5xl font-bold text-center mb-4 md:mb-10 text-white">MSL HIGHLIGHTS</h2>
+      <h2 className="text-2xl xs:text-3xl md:text-5xl font-bold text-center mb-4 md:mb-10 text-white font-montserrat">MSL HIGHLIGHTS</h2>
       <div 
         className="relative flex items-center justify-center h-[200px] md:h-[400px] w-full overflow-hidden" 
         style={{ minHeight: 200 }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
       >
         {slides.map((slide, index) => (
           <motion.div
@@ -129,10 +143,10 @@ export default function Highlights() {
             {/* Overlay for center and adjacent slides */}
             {positionIndexes[index] === 0 || positionIndexes[index] === 1 || positionIndexes[index] === 4 ? (
               <div className="absolute bottom-0 left-0 right-0 p-2 md:p-6 bg-gradient-to-t from-black/80 to-transparent">
-                <h3 className="text-xs xs:text-sm md:text-xl font-semibold text-white mb-1 md:mb-2">
+                <h3 className="text-xs xs:text-sm md:text-xl font-semibold text-white mb-1 md:mb-2 font-montserrat">
                   {slide.title}
                 </h3>
-                <p className="text-[10px] xs:text-xs md:text-sm text-white/90">
+                <p className="text-[10px] xs:text-xs md:text-sm text-white/90 font-montserrat">
                   {slide.author} - {slide.date}
                 </p>
               </div>
