@@ -20,7 +20,7 @@ export default function NewsPage() {
       <main className="flex-grow">
         <div className="w-full min-h-screen bg-black"
           style={{
-            backgroundImage: "url('/images/MCC/News/NewsBG.png')",
+            backgroundImage: "url('/images/MCC/News/VoteBG.png')",
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundAttachment: "fixed"
