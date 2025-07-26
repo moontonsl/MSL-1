@@ -5,9 +5,16 @@ import profilePic from "./assets/42ca9ea53c9f0acd1d273d2864b58719215b59f4.png"
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
 import TableComponent from "@/Pages/SLAdmin/components/TableComponent.jsx";
 import { Head, usePage } from '@inertiajs/react';
+import React, { useState } from 'react';
 
 const SLAdmin = () => {
     const { user, verified, new: newUsers, blocked } = usePage().props;
+    const [selectedTab, setSelectedTab] = useState('New');
+    const tabOptions = [
+        { label: 'Pending Approval', value: 'New' },
+        { label: 'Master List', value: 'Verified' },
+        { label: 'Blocked', value: 'Blocked' },
+    ];
     return (
         <AuthenticatedLayout>
 
@@ -110,7 +117,15 @@ const SLAdmin = () => {
                         <div className={`${styles.tableHeader} py-[12px] gap-[12px] md:gap-0 grid md:grid-cols-[50%_50%] lg:grid-cols-[60%_40%] xl:grid-cols-[70%_30%] items-center`}>
                             <div className="w-[90vw] sm:w-full overflow-x-auto custom-scrollbar">
                                 <div className="flex space-x-4 py-2 whitespace-nowrap">
-                                    <span className="cursor-pointer">Student Approval</span>
+                                    {tabOptions.map(tab => (
+                                        <span
+                                            key={tab.value}
+                                            className={`cursor-pointer ${selectedTab === tab.value ? 'font-bold text-white' : 'opacity-50'}`}
+                                            onClick={() => setSelectedTab(tab.value)}
+                                        >
+                                            {tab.label}
+                                        </span>
+                                    ))}
                                     <span className="opacity-50 cursor-pointer">Create Tournament</span>
                                     <span className="opacity-50 cursor-pointer">Tournament Bracket</span>
                                 </div>
@@ -129,7 +144,7 @@ const SLAdmin = () => {
                                 </div>
                             </div>
                         </div>
-                        <TableComponent/>
+                        <TableComponent stateFilter={selectedTab} />
 
                     </div>
                 </div>

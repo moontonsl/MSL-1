@@ -74,7 +74,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $user = Auth::user();
         
         // Check if user has SL role
-        if ($user->role !== 'SL') {
+        if ($user->user_type !== 'SL') {
             return redirect()->route('dashboard')->with('error', 'Access denied. Only Student Leaders can access this page.');
         }
         $verified = User::where('state', 'Verified')->count();
@@ -707,4 +707,107 @@ Route::get('/remove-users-no-proof-of-enrollment', function () {
     return "Users deleted: " . $deletedCount;
 })->name('remove-users-no-proof');
 require __DIR__.'/auth.php';
+
+// API endpoint for SLAdmin to get users list
+Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Illuminate\Http\Request $request) {
+    $user = Auth::user();
+    if ($user->user_type !== 'SL') {
+        return response()->json(['error' => 'Access denied. Only Student Leaders can access this resource.'], 403);
+    }
+    $perPage = $request->query('per_page', 20);
+    $query = \App\Models\User::select(
+        'users.id', 
+        'users.name', 
+        'users.surname', 
+        'users.username', 
+        'users.ml_id', 
+        'users.ml_server', 
+        'users.university', 
+        'users.year_level', 
+        'users.state', 
+        'users.created_at',
+        'ml_users.current_rank',
+        'ml_users.highest_rank',
+        'ml_users.level',
+        'ml_users.matches_played',
+        'ml_users.matches_won',
+        'ml_users.win_rate',
+        'ml_users.favorite_heroes',
+        'ml_users.ign as ml_ign'
+    )
+        ->leftJoin('ml_users', 'users.ml_id', '=', 'ml_users.ml_id')
+        ->where('users.university', $user->university)
+        ->where('users.user_type', '!=', 'SL')
+        ->where('users.user_type', '!=', 'Admin')
+        ->where('users.user_type', '!=', 'Super Admin')
+        ->where('users.user_type', '!=', 'Regional Admin');
+    if ($request->has('state')) {
+        $query->where('users.state', $request->query('state'));
+    }
+    $users = $query->orderByDesc('users.created_at')->paginate($perPage);
+    return response()->json($users);
+});
+
+// API endpoints for SLAdmin to update user state
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::patch('/api/sladmin/users/{userId}/verify', function ($userId) {
+        $user = Auth::user();
+        if ($user->user_type !== 'SL') {
+            return response()->json(['error' => 'Access denied. Only Student Leaders can access this resource.'], 403);
+        }
+        
+        $targetUser = \App\Models\User::where('id', $userId)
+            ->where('university', $user->university)
+            ->where('user_type', '!=', 'SL')
+            ->first();
+            
+        if (!$targetUser) {
+            return response()->json(['error' => 'User not found or access denied.'], 404);
+        }
+        
+        $targetUser->update(['state' => 'Verified']);
+        
+        return response()->json(['success' => true, 'message' => 'User verified successfully']);
+    });
+    
+    Route::patch('/api/sladmin/users/{userId}/block', function ($userId) {
+        $user = Auth::user();
+        if ($user->user_type !== 'SL') {
+            return response()->json(['error' => 'Access denied. Only Student Leaders can access this resource.'], 403);
+        }
+        
+        $targetUser = \App\Models\User::where('id', $userId)
+            ->where('university', $user->university)
+            ->where('user_type', '!=', 'SL')
+            ->first();
+            
+        if (!$targetUser) {
+            return response()->json(['error' => 'User not found or access denied.'], 404);
+        }
+        
+        $targetUser->update(['state' => 'Blocked']);
+        
+        return response()->json(['success' => true, 'message' => 'User blocked successfully']);
+    });
+    
+    Route::delete('/api/sladmin/users/{userId}', function ($userId) {
+        $user = Auth::user();
+        if ($user->user_type !== 'SL') {
+            return response()->json(['error' => 'Access denied. Only Student Leaders can access this resource.'], 403);
+        }
+        
+        $targetUser = \App\Models\User::where('id', $userId)
+            ->where('university', $user->university)
+            ->where('user_type', '!=', 'SL')
+            ->first();
+            
+        if (!$targetUser) {
+            return response()->json(['error' => 'User not found or access denied.'], 404);
+        }
+        
+        $targetUser->delete();
+        
+        return response()->json(['success' => true, 'message' => 'User deleted successfully']);
+    });
+});
 
