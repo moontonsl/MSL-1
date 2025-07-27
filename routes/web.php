@@ -309,8 +309,9 @@ Route::get('/update-user-state', function () {
         $user = User::where('ml_id', $acc->idid)->first();
         if(!empty($user->id)){
             echo "meon ".$user->ml_id."<br>";
-            echo "meon ".$acc->idid."<br>";
-            // $user->save();
+            echo "meon ".$acc->statee."<br>";
+            $user->state = $acc->statee;
+            $user->save();
         }else{
             // echo "wala ".$user->ml_id."<br>";
             echo "wala ".$acc->idid."<br>";
