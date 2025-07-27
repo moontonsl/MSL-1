@@ -296,22 +296,22 @@ Route::get('/api/analytics/real-time', function () {
 })->middleware(['auth:admin', 'admin']);
 
 //update user state
-Route::get('/update-user-state', function () {
+Route::get('/update-user-role', function () {
     
     set_time_limit(0);
     $count = 0;
-    $account = DB::table('msl_user_account')
+    $account = DB::table('msl_user_account')->where('administrator', '!=', '')
     ->join('msl_user_mlbb', 'msl_user_account.userid', '=', 'msl_user_mlbb.userid')
-    ->select('msl_user_account.state as statee', 'msl_user_mlbb.mslid as idid')
+    ->select('msl_user_account.administrator as adminn', 'msl_user_mlbb.mslid as idid')
     ->get();
     // dd($account);
     foreach($account as $acc){
         $user = User::where('ml_id', $acc->idid)->first();
         if(!empty($user->id)){
             echo "meon ".$user->ml_id."<br>";
-            echo "meon ".$acc->statee."<br>";
-            $user->state = $acc->statee;
-            $user->save();
+            echo "meon ".$acc->adminn."<br>";
+            // $user->role = $acc->adminn;
+            // $user->save();
         }else{
             // echo "wala ".$user->ml_id."<br>";
             echo "wala ".$acc->idid."<br>";
