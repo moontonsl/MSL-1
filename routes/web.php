@@ -310,8 +310,8 @@ Route::get('/update-user-role', function () {
         if(!empty($user->id)){
             echo "meon ".$user->ml_id."<br>";
             echo "meon ".$acc->adminn."<br>";
-            // $user->role = $acc->adminn;
-            // $user->save();
+            $user->role = $acc->adminn;
+            $user->save();
         }else{
             // echo "wala ".$user->ml_id."<br>";
             echo "wala ".$acc->idid."<br>";
