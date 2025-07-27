@@ -19,7 +19,33 @@ class SpreadSheetAutomationController extends Controller
      */
     public function exportUsersToSpreadsheet(Request $request)
     {
-        set_time_limit(0);
+        set_time_limit(0); 
+        try {
+            // Test if file exists
+            $credentialPath = storage_path('app/googlecred/laravel-sheet-key.json');
+            if (!file_exists($credentialPath)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Credentials file not found at: ' . $credentialPath
+                ]);
+            }
+            
+            // Test if file is readable
+            if (!is_readable($credentialPath)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Credentials file not readable'
+                ]);
+            }
+            
+            // Continue with your existing code...
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
         try {
             
             $spreadsheetId = "1216kHWU6fpbb_zDz6d2SKh9SZJjUqt0ObvxsdIDGQg0";
