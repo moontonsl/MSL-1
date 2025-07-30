@@ -15,24 +15,24 @@ export default function MCCNewsIndividualPageColumnDescription() {
             {/* Article Content */}
             <div className="flex flex-col gap-6">
                 {/* Title */}
-                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight font-montserrat">
+                <h1 className="text-2xl md:text-3xl lg:text-5xl font-bold text-white leading-tight font-montserrat">
                     Stronger Ties: Moonton Philippines, UMAK Seals Partnership
                 </h1>
                 
                 {/* Subtitle */}
-                <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed font-montserrat">
+                <p className="text-sm md:text-base lg:text-xl text-gray-300 leading-relaxed font-montserrat">
                     Renewed and empowered – linkage has been created as University of Makati (UMaK) and Moonton Philippines
                     Technologies, Inc. ties close connection, pursuant to knowledge acquisition and innovation of
                     industry-university endeavors.
                 </p>
                 
                 {/* Author and Date */}
-                <p className="text-xs sm:text-sm md:text-base text-gray-400 italic font-montserrat">
+                <p className="text-xs md:text-sm lg:text-base text-gray-400 italic font-montserrat">
                     By Nestor T. Quilop III • December 17, 2024
                 </p>
                 
                 {/* Article Body */}
-                <div className="text-sm sm:text-base md:text-lg text-gray-200 leading-relaxed space-y-4 font-montserrat">                  
+                <div className="text-xs md:text-sm lg:text-lg text-gray-200 leading-relaxed space-y-4 font-montserrat">                  
                     <p>
                         Through a memorandum of understanding (MOU) that was signed last November 27, 2024, both parties (UMaK and
                         Moonton) sealed great opportunities to secure outstanding partnership benefits with a promise of mutual
