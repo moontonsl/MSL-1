@@ -21,12 +21,12 @@ export default function NewsArticleSidebar({ currentSlug, limit = 3 }) {
                         </div>
                         <div className="flex-1 p-1 inline-flex flex-col justify-between items-start gap-2 overflow-hidden">
                             <div className="self-stretch flex-1 flex flex-col justify-start items-start gap-1 overflow-hidden">
-                                <div className="self-stretch text-white text-lg font-bold font-['Montserrat'] leading-tight hover:text-blue-400 transition-colors">
+                                <div className="self-stretch text-white text-sm md:text-base lg:text-lg font-bold font-['Montserrat'] leading-tight hover:text-blue-400 transition-colors">
                                     {article.title}
                                 </div>
                             </div>
                             <div className="self-stretch flex flex-col justify-end items-start gap-1 overflow-hidden mt-auto">
-                                <div className="text-white text-base font-light font-['Montserrat'] leading-snug">
+                                <div className="text-white text-xs md:text-sm lg:text-base font-light font-['Montserrat'] leading-snug">
                                     {article.date}
                                 </div>
                             </div>
@@ -48,10 +48,10 @@ export default function NewsArticleSidebar({ currentSlug, limit = 3 }) {
                                 />
                             </div>
                             <div className="flex flex-col gap-1">
-                                <div className="text-white text-xs font-bold font-['Montserrat'] leading-tight hover:text-blue-400 transition-colors line-clamp-3">
+                                <div className="text-white text-xs md:text-sm lg:text-base font-bold font-['Montserrat'] leading-tight hover:text-blue-400 transition-colors line-clamp-3">
                                     {article.title}
                                 </div>
-                                <div className="text-white text-xs font-light font-['Montserrat'] leading-snug opacity-80">
+                                <div className="text-white text-[10px] md:text-xs lg:text-sm font-light font-['Montserrat'] leading-snug opacity-80">
                                     {article.date}
                                 </div>
                             </div>
@@ -64,7 +64,7 @@ export default function NewsArticleSidebar({ currentSlug, limit = 3 }) {
             <div className="self-stretch flex justify-center mt-2 lg:mt-4">
                 <Link href="/news">
                     <div className="w-64 h-14 p-1.5 bg-white/5 rounded-[57.71px] outline outline-[1.73px] outline-offset-[-1.73px] outline-white inline-flex justify-center items-center gap-1.5 overflow-hidden hover:bg-white/10 transition-all duration-300">
-                        <div className="justify-start text-white text-lg font-bold font-['Space_Grotesk'] leading-relaxed">
+                        <div className="justify-start text-white text-sm md:text-base lg:text-lg font-bold font-['Space_Grotesk'] leading-relaxed">
                             View More Articles
                         </div>
                     </div>
