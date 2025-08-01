@@ -33,14 +33,29 @@ class PasswordResetLinkController extends Controller
             'email' => 'required|email',
         ]);
 
+        // Add rate limiting: 1 request per minute per email
+
+        // Rate limiting check
+        $key = 'password_reset_' . $request->email;
+        $attempts = cache()->get($key, 0);
+        
+        if ($attempts >= 1) {
+            throw ValidationException::withMessages([
+                'email' => ['Please wait 1 minute before requesting another password reset link.'],
+            ]);
+        }
+
         // We will send the password reset link to this user. Once we have attempted
         // to send the link, we will examine the response then see the message we
         // need to show to the user. Finally, we'll send out a proper response.
         $status = Password::sendResetLink(
             $request->only('email')
-        );
+        );  
 
         if ($status == Password::RESET_LINK_SENT) {
+            // Increment attempt counter and set 1 minute expiration
+            cache()->put($key, $attempts + 1, now()->addMinute());
+            
             return back()->with('status', __($status));
         }
 
