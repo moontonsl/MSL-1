@@ -49,7 +49,9 @@ class User extends Authenticatable
         'studentId',
         'proofOfEnrollment',
         'role',
-        'state'
+        'state',
+        'verified_by',
+        'verified_date'
     ];
 
     /**
