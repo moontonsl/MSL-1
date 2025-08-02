@@ -66,6 +66,8 @@ class SpreadSheetAutomationController extends Controller
                 'Email Verified At',
                 'Created At',
                 'Updated At',
+                'verified_by',
+                'verified_date',
             ];
             
             // 1. Get users data in chunks to avoid memory issues
@@ -105,7 +107,9 @@ class SpreadSheetAutomationController extends Controller
                         $user->state ?? 'N/A',
                         $user->email_verified_at ?? 'N/A',
                         $user->created_at ?? 'N/A',
-                        $user->updated_at ?? 'N/A'
+                        $user->updated_at ?? 'N/A',
+                        $user->verified_by ?? 'N/A',
+                        $user->verified_date ?? 'N/A'
                     ];
                 }
             });
