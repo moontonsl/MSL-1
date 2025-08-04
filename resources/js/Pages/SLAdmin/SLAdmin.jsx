@@ -1,5 +1,5 @@
 import styles from "./SLAdmin.module.scss";
-import {BadgeCheck, ArrowDownAZ, Funnel} from 'lucide-react';
+import {BadgeCheck, ArrowDownAZ, Funnel, Search} from 'lucide-react';
 
 import profilePic from "./assets/42ca9ea53c9f0acd1d273d2864b58719215b59f4.png"
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
@@ -8,10 +8,12 @@ import { Head, usePage } from '@inertiajs/react';
 import React, { useState } from 'react';
 
 const SLAdmin = () => {
-    const { user, verified, new: newUsers, blocked } = usePage().props;
+    const { user, verified, new: newUsers, renewed, blocked } = usePage().props;
     const [selectedTab, setSelectedTab] = useState('New');
+    const [searchQuery, setSearchQuery] = useState('');
     const tabOptions = [
         { label: 'Pending Approval', value: 'New' },
+        { label: 'Renewal Required', value: 'Renew' },
         { label: 'Master List', value: 'Verified' },
         { label: 'Blocked', value: 'Blocked' },
     ];
@@ -88,7 +90,7 @@ const SLAdmin = () => {
 
 
                             {/* stats */}
-                            <div className="grid grid-cols-3 gap-4 text-center md:text-left mt-6 xl:mt-[48px]">
+                            <div className="grid grid-cols-4 gap-4 text-center md:text-left mt-6 xl:mt-[48px]">
                                 <div>
                                     <p className="opacity-50">Verified</p>
                                     <p className="text-2xl xl:text-5xl font-semibold">
@@ -99,6 +101,12 @@ const SLAdmin = () => {
                                     <p className="opacity-50">New</p>
                                     <p className="text-2xl xl:text-5xl font-semibold">
                                         {newUsers}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="opacity-50">Renewal</p>
+                                    <p className="text-2xl xl:text-5xl font-semibold">
+                                        {renewed}
                                     </p>
                                 </div>
                                 <div>
@@ -132,19 +140,19 @@ const SLAdmin = () => {
                             </div>
 
                             <div className="flex gap-[20px] items-center w-full justify-center md:justify-end">
-                                <input
-                                    className={`${styles.slInput} w-full md:max-w-[214px]`}
-                                    type="text"
-                                    placeholder="Search students..."
-                                />
-
-                                <div className="flex gap-[12px]">
-                                    <ArrowDownAZ className="cursor-pointer"/>
-                                    <Funnel className="cursor-pointer"/>
+                                <div className="relative w-full md:max-w-[214px]">
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-4 h-4" />
+                                    <input
+                                        className={`bg-[#2a2a2a] w-full rounded-md pl-10 pr-3 py-2 border border-neutral-800 text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-transparent`}
+                                        type="text"
+                                        placeholder="Search students..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                    />
                                 </div>
                             </div>
                         </div>
-                        <TableComponent stateFilter={selectedTab} />
+                        <TableComponent stateFilter={selectedTab} searchQuery={searchQuery} />
 
                     </div>
                 </div>

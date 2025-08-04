@@ -26,11 +26,11 @@ export default function PendingUsers({ users }) {
                 <div className="relative bg-[var(--background-glass-effect)] backdrop-blur-[20px] p-6 border-[var(--border-glass-effect)]">
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center space-x-3">
-                            <div className="w-12 h-12 rounded-xl bg-[#212121] flex items-center justify-center shadow-lg">
-                                <FaUser className="w-6 h-6 text-[#f0f0f0]" />
+                            <div className="inline-flex items-center justify-center h-20 w-20 bg-gray-500/20 rounded-2xl">
+                                <img src="/MSL_LOGO.png" alt="MSL Logo" className="h-20 w-20"/>
                             </div>
                             <div>
-                                <h3 className="text-xl font-semibold text-[#212121]">
+                                <h3 className="text-xl font-semibold text-[#212121] mt-6">
                                     Pending Users
                                 </h3>
                                 <p className="text-[#212121]">

@@ -36,8 +36,19 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
-        // return redirect()->intended(route('dashboard', absolute: false));
-        // return redirect()->intended(route('profile', absolute: false));
+        
+        $user = Auth::user();
+        
+        // Check user state and redirect accordingly
+        if (in_array($user->role, ['SL', 'Regional Admin', 'Admin', 'Super Admin'])) {
+            // Admin users go to their respective dashboards
+            if ($user->role === 'SL' || $user->role === 'Regional Admin') {
+                return redirect()->intended(route('sl-admin', absolute: false));
+            }
+            return redirect()->intended(route('dashboard', absolute: false));
+        }
+        
+        // Regular users go to student portal (middleware will handle state-based redirects)
         return redirect()->intended(route('SLStudent', absolute: false));
     }
 

@@ -49,7 +49,9 @@ class User extends Authenticatable
         'studentId',
         'proofOfEnrollment',
         'role',
-        'state'
+        'state',
+        'verified_by',
+        'verified_date'
     ];
 
     /**
@@ -71,7 +73,24 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'verified_date' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the user who verified this user
+     */
+    public function verifier()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    /**
+     * Get the users verified by this user
+     */
+    public function verifiedUsers()
+    {
+        return $this->hasMany(User::class, 'verified_by');
     }
 }
