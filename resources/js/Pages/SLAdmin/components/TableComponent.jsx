@@ -32,10 +32,15 @@ const TableComponent = ({ stateFilter, searchQuery }) => {
             const response = await fetch(url);
             if (!response.ok) throw new Error('Failed to fetch users');
             const data = await response.json();
+            console.log('Fetched users data:', data);
+            if (data.data && data.data.length > 0) {
+                console.log('First user sample:', data.data[0]);
+            }
             setUsers(data.data || []);
             setTotalPages(data.last_page || 1);
             setCurrentPage(data.current_page || 1);
         } catch (error) {
+            console.error('Error fetching users:', error);
             setUsers([]);
             setTotalPages(1);
         } finally {
@@ -61,6 +66,9 @@ const TableComponent = ({ stateFilter, searchQuery }) => {
     useEffect(() => {
         if (showModal && selectedUser) {
             console.log('Selected user:', selectedUser);
+            console.log('User name:', selectedUser.name);
+            console.log('User surname:', selectedUser.surname);
+            console.log('User email:', selectedUser.email);
         }
     }, [showModal, selectedUser]);
 
@@ -306,7 +314,7 @@ const TableComponent = ({ stateFilter, searchQuery }) => {
                             </svg>
                         </button>
                         <div className="flex flex-col items-center md:items-start w-full md:w-1/3 mb-4 md:mb-0 bg-[#1a1a1a] rounded-lg px-10">
-                            <span className="top-2 left-1/2 -translate-x-1/2 bg-black text-yellow-400 font-bold px-6 py-1 rounded-lg text-lg whitespace-nowrap shadow">{selectedUser.state}</span>
+                            <span className="top-2 md:left-1/2  md:-translate-x-1/2 bg-black text-yellow-400 font-bold px-6 py-1 rounded-lg text-lg whitespace-nowrap shadow ">{selectedUser.state}</span>
                             <div className="relative mb-6 flex flex-col items-center w-full justify-center">
                                 <div className="rounded-full border-4 border-yellow-400 p-1 bg-gradient-to-tr from-[#D4AF37] to-[#FFFACD] mx-auto">
                                     <img src={avatar} alt="avatar" className="w-28 h-28 sm:w-56 sm:h-56 rounded-full object-cover" />
@@ -314,55 +322,55 @@ const TableComponent = ({ stateFilter, searchQuery }) => {
                             </div>
                             <div className="mt-2 w-full">
                                 <div className="text-gray-600 text-sm">Full Name:</div>
-                                <div className="font-bold text-lg mb-2 break-words">{Array.isArray(selectedUser.name) ? selectedUser.name.join('') : selectedUser.name || '-'} {Array.isArray(selectedUser.surname) ? selectedUser.surname.join('') : selectedUser.surname || '-'}</div>
+                                <div className="font-bold text-lg mb-2 break-words">{selectedUser.name || '-'} {selectedUser.surname || '-'}</div>
                                 <div className="text-gray-600 text-sm">School Name:</div>
-                                <div className="font-bold text-lg mb-2 break-words">{Array.isArray(selectedUser.university) ? selectedUser.university.join('') : selectedUser.university || '-'}</div>
+                                <div className="font-bold text-lg mb-2 break-words">{selectedUser.university || '-'}</div>
                                 <div className="text-gray-600 text-sm">Year Level:</div>
-                                <div className="font-bold text-lg break-words">{Array.isArray(selectedUser.year_level) ? selectedUser.year_level.join('') : selectedUser.year_level || '-'}</div>
+                                <div className="font-bold text-lg break-words">{selectedUser.year_level || '-'}</div>
                                 <br />
                             </div>
                         </div>
                         <div className="flex-1 flex flex-col justify-between w-full md:w-2/3 bg-[#1a1a1a] rounded-lg p-4">
                             <div>
                                 <div className="text-gray-600 text-sm">Username:</div>
-                                <div className="font-bold text-lg mb-2 break-words">{Array.isArray(selectedUser.username) ? selectedUser.username.join('') : selectedUser.username || '-'}</div>
+                                <div className="font-bold text-lg mb-2 break-words">{selectedUser.username || '-'}</div>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 mb-6">
                                 <div>
                                     <div className="text-gray-600 text-sm">MLBB ID:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{Array.isArray(selectedUser.ml_id) ? selectedUser.ml_id.join('') : selectedUser.ml_id || '-'}</div>
+                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.ml_id || '-'}</div>
                                 </div>
                                 <div>
                                     <div className="text-gray-600 text-sm">MLBB Server:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{Array.isArray(selectedUser.ml_server) ? selectedUser.ml_server.join('') : selectedUser.ml_server || '-'}</div>
+                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.ml_server || '-'}</div>
                                 </div>
                                 <div>
                                     <div className="text-gray-600 text-sm">MLBB IGN:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{Array.isArray(selectedUser.ml_ign) ? selectedUser.ml_ign.join('') : selectedUser.ml_ign || '-'}</div>
+                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.ml_ign || '-'}</div>
                                 </div>
                                 <div>
                                     <div className="text-gray-600 text-sm">Email:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{Array.isArray(selectedUser.email) ? selectedUser.email.join('') : selectedUser.email || '-'}</div>
+                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.email || '-'}</div>
                                 </div>
                                 <div>
                                     <div className="text-gray-600 text-sm">Contact Number:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{Array.isArray(selectedUser.contact_number) ? selectedUser.contact_number.join('') : selectedUser.contact_number || '-'}</div>
+                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.contact_number || '-'}</div>
                                 </div>
                                 <div>
                                     <div className="text-gray-600 text-sm">Course:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{Array.isArray(selectedUser.course) ? selectedUser.course.join('') : selectedUser.course || '-'}</div>
+                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.course || '-'}</div>
                                 </div>
                                 <div>
                                     <div className="text-gray-600 text-sm">Student ID:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{Array.isArray(selectedUser.studentId) ? selectedUser.studentId.join('') : selectedUser.studentId || '-'}</div>
+                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.studentId || '-'}</div>
                                 </div>
                                 <div>
                                     <div className="text-gray-600 text-sm">Region:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{Array.isArray(selectedUser.region) ? selectedUser.region.join('') : selectedUser.region || '-'}</div>
+                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.region || '-'}</div>
                                 </div>
                                 <div>
                                     <div className="text-gray-600 text-sm">Island:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{Array.isArray(selectedUser.island) ? selectedUser.island.join('') : selectedUser.island || '-'}</div>
+                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.island || '-'}</div>
                                 </div>
                                 <div>
                                     <div className="text-gray-600 text-sm">Date Joined:</div>
