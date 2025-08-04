@@ -43,7 +43,6 @@ class SpreadSheetAutomationController extends Controller
                 'ML Server',
                 'ML IGN',
                 'Status',
-                'User Type',
                 'Facebook Link',
                 'Birthday',
                 'Age',
@@ -66,6 +65,8 @@ class SpreadSheetAutomationController extends Controller
                 'Email Verified At',
                 'Created At',
                 'Updated At',
+                'verified_by',
+                'verified_date',
             ];
             
             // 1. Get users data in chunks to avoid memory issues
@@ -83,7 +84,6 @@ class SpreadSheetAutomationController extends Controller
                         $user->ml_server ?? 'N/A',
                         $user->ml_ign ?? 'N/A',
                         $user->status ?? 'N/A',
-                        $user->user_type ?? 'N/A',
                         $user->facebook_link ?? 'N/A',
                         $user->birthday ?? 'N/A',
                         $user->age ?? 'N/A',
@@ -105,7 +105,9 @@ class SpreadSheetAutomationController extends Controller
                         $user->state ?? 'N/A',
                         $user->email_verified_at ?? 'N/A',
                         $user->created_at ?? 'N/A',
-                        $user->updated_at ?? 'N/A'
+                        $user->updated_at ?? 'N/A',
+                        $user->verified_by ?? 'N/A',
+                        $user->verified_date ?? 'N/A'
                     ];
                 }
             });
