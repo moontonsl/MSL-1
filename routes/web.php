@@ -35,6 +35,11 @@ Route::get('/', function () {
     ]);
 });
 
+// About Page Route
+Route::get('/about', function () {
+    return Inertia::render('About Page/index');
+})->name('about');
+
 
 // Admin routes are defined in routes/admin.php
 
