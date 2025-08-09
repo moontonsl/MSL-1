@@ -137,6 +137,11 @@ Route::get('/Events', function () {
     return Inertia::render('Events/Events');
 })->name('Events');
 
+//PROGRAMS  ROUTES
+Route::get('/Programs', function () {
+    return Inertia::render('Programs/Programs');
+})->name('Programs');
+
 //EVENT  ROUTES - MCC WATCHFEST REG
 Route::get('/MCCWatchFestReg', function () {
     return Inertia::render('MCCWatchFest/MCCWatchFestReg');
