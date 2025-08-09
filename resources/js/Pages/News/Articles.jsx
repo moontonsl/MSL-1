@@ -30,11 +30,11 @@ export default function Articles() {
             className="w-full h-40 md:h-64 bg-black rounded-2xl overflow-hidden hover:scale-[1.02] transition-transform duration-300 relative group"
           >
             {/* Background Image */}
-            <img
-              src={article.image}
-              alt={article.title}
+              <img
+                src={article.image}
+                alt={article.title}
               className="w-full h-full object-cover absolute inset-0"
-            />
+              />
             
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>

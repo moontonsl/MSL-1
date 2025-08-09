@@ -36,36 +36,36 @@ export default function ResourcesPage() {
                     <div className="w-full max-w-[1200px] mx-auto px-2 md:px-6">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
                             {resourceItems.map((item, idx) => (
-                                item.isExternal ? (
-                                    <a
-                                        key={idx}
-                                        href={item.path}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
+                            item.isExternal ? (
+                                <a
+                                    key={idx}
+                                    href={item.path}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                         className="transform transition-all duration-300 hover:scale-105 flex items-center justify-center"
-                                    >
-                                        <img
-                                            src={item.image}
-                                            alt={item.alt}
+                                >
+                                    <img
+                                        src={item.image}
+                                        alt={item.alt}
                                             className="w-full h-auto object-contain rounded-lg shadow-lg hover:shadow-2xl min-h-[120px] md:min-h-[200px]"
-                                        />
-                                    </a>
-                                ) : (
-                                    <Link
-                                        key={idx}
-                                        href={item.path}
+                                    />
+                                </a>
+                            ) : (
+                                <Link
+                                    key={idx}
+                                    href={item.path}
                                         className="transform transition-all duration-300 hover:scale-105 flex items-center justify-center"
-                                    >
-                                        <img
-                                            src={item.image}
-                                            alt={item.alt}
+                                >
+                                    <img
+                                        src={item.image}
+                                        alt={item.alt}
                                             className="w-full h-auto object-contain rounded-lg shadow-lg hover:shadow-2xl min-h-[120px] md:min-h-[200px]"
-                                        />
-                                    </Link>
-                                )
-                            ))}
-                        </div>
-                    </div>
+                                    />
+                                </Link>
+                            )
+                        ))}
+  </div>
+</div>
                 </div>
             </main>
 
