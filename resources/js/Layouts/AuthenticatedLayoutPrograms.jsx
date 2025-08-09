@@ -9,7 +9,9 @@ export default function AuthenticatedLayout({children}) {
             <Header/>
             <main>
                 <div className="webBG"/>
-                {children}
+                <div className="flex justify-center w-full">
+                    {children}
+                </div>
             </main>
             <Footer/>
             <Toaster
