@@ -50,6 +50,7 @@ class User extends Authenticatable
         'proofOfEnrollment',
         'role',
         'state',
+        'blocked_reason',
         'verified_by',
         'verified_date'
     ];

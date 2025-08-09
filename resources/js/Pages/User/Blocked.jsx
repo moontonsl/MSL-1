@@ -42,6 +42,23 @@ const Blocked = () => {
                             </div>
                         </div>
 
+                        {/* Blocked Reason */}
+                        {user.blocked_reason && (
+                            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-6 mb-8">
+                                <div className="flex items-start space-x-4">
+                                    <Ban className="w-6 h-6 text-red-400 mt-1 flex-shrink-0" />
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-red-400 mb-2">
+                                            Reason for Blocking
+                                        </h3>
+                                        <p className="text-gray-300 leading-relaxed bg-red-500/20 p-4 rounded-lg border border-red-500/30">
+                                            {user.blocked_reason}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* User Info */}
                         <div className="bg-white/5 rounded-xl p-6 mb-8">
                             <h3 className="text-lg font-semibold text-white mb-4">Account Details</h3>

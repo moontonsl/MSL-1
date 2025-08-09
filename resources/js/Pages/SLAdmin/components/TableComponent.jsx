@@ -5,7 +5,7 @@ import avatar from '../assets/42ca9ea53c9f0acd1d273d2864b58719215b59f4.png';
 import Modal from '@/Components/Modal.jsx';
 import Toast from '@/Components/Toast.jsx';
 
-const TableComponent = ({ stateFilter, searchQuery }) => {
+const TableComponent = ({ stateFilter, searchQuery, user }) => {
     const [users, setUsers] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -17,6 +17,8 @@ const TableComponent = ({ stateFilter, searchQuery }) => {
     const [showAttachmentModal, setShowAttachmentModal] = useState(false);
     const [attachmentUrl, setAttachmentUrl] = useState('');
     const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+    const [showBlockModal, setShowBlockModal] = useState(false);
+    const [blockReason, setBlockReason] = useState('');
     const ITEMS_PER_PAGE = 20;
 
     const fetchUsers = async (page = 1) => {
@@ -134,13 +136,14 @@ const TableComponent = ({ stateFilter, searchQuery }) => {
         setToast({ show: false, message: '', type: 'info' });
     };
 
-    const handleAction = async (action, userId) => {
+    const handleAction = async (action, userId, reason = null) => {
         setActionLoading(true);
         setError('');
         
         try {
             let url;
             let method;
+            let body = {};
             
             switch (action) {
                 case 'verify':
@@ -150,6 +153,7 @@ const TableComponent = ({ stateFilter, searchQuery }) => {
                 case 'block':
                     url = `/api/sladmin/users/${userId}/block`;
                     method = 'PATCH';
+                    body = { reason: reason };
                     break;
                 case 'renew':
                     url = `/api/sladmin/users/${userId}/renew`;
@@ -169,6 +173,7 @@ const TableComponent = ({ stateFilter, searchQuery }) => {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
+                body: Object.keys(body).length > 0 ? JSON.stringify(body) : undefined,
             });
             
             const data = await response.json();
@@ -179,7 +184,9 @@ const TableComponent = ({ stateFilter, searchQuery }) => {
             
             //Close modal and refresh user list
             setShowModal(false);
+            setShowBlockModal(false);
             setSelectedUser(null);
+            setBlockReason('');
             fetchUsers(currentPage);
             
             //success toast
@@ -199,6 +206,19 @@ const TableComponent = ({ stateFilter, searchQuery }) => {
         }
     };
 
+    const handleBlockUser = () => {
+        if (!selectedUser) {
+            setError('No user selected for blocking.');
+            return;
+        }
+        if (!blockReason.trim()) {
+            setError('Please provide a reason for blocking the user.');
+            return;
+        }
+        const userId = selectedUser.id; // Store the ID before calling handleAction
+        handleAction('block', userId, blockReason.trim());
+    };
+
     return (
         <>
             <div className="overflow-x-auto rounded-lg border border-neutral-800 bg-[#1a1a1a] text-white shadow custom-scrollbar">
@@ -206,11 +226,10 @@ const TableComponent = ({ stateFilter, searchQuery }) => {
                     <thead className="bg-[#2a2a2a] text-xs uppercase text-gray-400">
                     <tr>
                         <th className="px-4 py-3 text-left">MSL Account</th>
-                        <th className="px-4 py-3 text-left hidden md:table-cell">Fullname</th>
                         <th className="px-4 py-3 text-left hidden md:table-cell">School / Institution</th>
                         <th className="px-4 py-3 text-left hidden md:table-cell">Year Level</th>
                         <th className="px-4 py-3 text-left hidden md:table-cell">Status</th>
-                        <th className="px-4 py-3 text-left">Details</th>
+                        <th className="px-4 py-3 text-center">Details</th>
                     </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-700">
@@ -232,14 +251,14 @@ const TableComponent = ({ stateFilter, searchQuery }) => {
                                 </div>
 
                                 <div>
+                                    <div className="text-xs text-gray-200 font-bold">{item.name} {item.surname}</div>
                                     <div className="text-xs text-gray-400">IGN: {item.ml_ign}</div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="text-xs text-gray-400">{item.ml_id} ({item.ml_server}) |</div>
+                                    <div className="flex-col items-center gap-2 md:flex-row">
+                                        <div className="text-xs text-gray-400">{item.ml_id} ({item.ml_server})</div>
                                         <span className="text-xs text-blue-400 cursor-pointer">Facebook</span>
                                     </div>
                                 </div>
                             </td>
-                            <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell">{item.name} {item.surname}</td>
                             <td className="px-4 py-3 hidden md:table-cell">{item.university}</td>
                             <td className="px-4 py-3 hidden md:table-cell">{item.year_level}</td>
                             <td className="px-4 py-3 hidden md:table-cell">
@@ -255,7 +274,7 @@ const TableComponent = ({ stateFilter, searchQuery }) => {
                     {item.state}
                   </span>
                             </td>
-                            <td className="px-4 py-3">
+                            <td className="px-4 py-3 text-center">
                                 <button className="rounded bg-white px-4 py-1.5 text-sm font-semibold text-black hover:bg-gray-200 whitespace-nowrap" onClick={() => openModal(item)}>
                                     View Profile
                                 </button>
@@ -314,8 +333,9 @@ const TableComponent = ({ stateFilter, searchQuery }) => {
                             </svg>
                         </button>
                         <div className="flex flex-col items-center md:items-start w-full md:w-1/3 mb-4 md:mb-0 bg-[#1a1a1a] rounded-lg px-10">
-                            <span className="top-2 md:left-1/2  md:-translate-x-1/2 bg-black text-yellow-400 font-bold px-6 py-1 rounded-lg text-lg whitespace-nowrap shadow ">{selectedUser.state}</span>
-                            <div className="relative mb-6 flex flex-col items-center w-full justify-center">
+                            <span className={`absolute left-0 -translate-x-0 bg-black font-bold px-6 py-1 rounded-lg text-lg whitespace-nowrap shadow ${selectedUser.state === 'Verified' ? 'text-green-400' : 'text-yellow-400'}`}>{selectedUser.state}</span>
+                            <br />
+                            <div className="relative mt-10 mb-6 flex flex-col items-center w-full justify-center">
                                 <div className="rounded-full border-4 border-yellow-400 p-1 bg-gradient-to-tr from-[#D4AF37] to-[#FFFACD] mx-auto">
                                     <img src={avatar} alt="avatar" className="w-28 h-28 sm:w-56 sm:h-56 rounded-full object-cover" />
                                 </div>
@@ -392,6 +412,14 @@ const TableComponent = ({ stateFilter, searchQuery }) => {
                                         </div>
                                     </div>
                                 )}
+                                {selectedUser.state === 'Blocked' && selectedUser.blocked_reason && (
+                                    <div className="col-span-2">
+                                        <div className="text-gray-600 text-sm">Blocked Reason:</div>
+                                        <div className="font-bold text-lg mb-2 break-words text-red-400 bg-red-500/10 p-3 rounded-lg border border-red-500/30">
+                                            {selectedUser.blocked_reason}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <div className="w-full flex flex-col sm:flex-row flex-wrap justify-between items-center gap-2 sm:gap-4 mt-4">
                                 <div className="flex gap-2 w-full sm:w-auto justify-center sm:justify-start">
@@ -427,18 +455,24 @@ const TableComponent = ({ stateFilter, searchQuery }) => {
                                     )}
                                     <button 
                                         className="bg-yellow-400 text-black px-4 py-2 rounded font-semibold w-full sm:w-auto disabled:opacity-50"
-                                        onClick={() => handleAction('block', selectedUser.id)}
+                                        onClick={() => {
+                                            setShowBlockModal(true);
+                                            setBlockReason('');
+                                            setError('');
+                                        }}
                                         disabled={actionLoading}
                                     >
                                         {actionLoading ? 'Processing...' : 'Block'}
                                     </button>
-                                    <button 
-                                        className="bg-red-600 text-white px-4 py-2 rounded font-semibold w-full sm:w-auto disabled:opacity-50"
-                                        onClick={() => handleAction('delete', selectedUser.id)}
-                                        disabled={actionLoading}
-                                    >
-                                        {actionLoading ? 'Processing...' : 'Delete'}
-                                    </button>
+                                    {user?.role === 'Super Admin' && (
+                                        <button 
+                                            className="bg-red-600 text-white px-4 py-2 rounded font-semibold w-full sm:w-auto disabled:opacity-50"
+                                            onClick={() => handleAction('delete', selectedUser.id)}
+                                            disabled={actionLoading}
+                                        >
+                                            {actionLoading ? 'Processing...' : 'Delete'}
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                             {error && (
@@ -450,6 +484,97 @@ const TableComponent = ({ stateFilter, searchQuery }) => {
                     </div>
                 )}
             </Modal>
+            
+            {/* Block User Modal */}
+            {showBlockModal && createPortal(
+                <div className="fixed inset-0 z-[70] bg-[#fff]/50 flex items-center justify-center p-4" style={{ pointerEvents: 'auto' }}>
+                    <div 
+                        className="absolute inset-0 bg-black/80" 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowBlockModal(false);
+                        }}
+                    ></div>
+                    <div 
+                        className="relative bg-black text-white p-6 rounded-lg max-w-md w-full mx-4" 
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ pointerEvents: 'auto' }}
+                    >
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold">Block User</h3>
+                            <button 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowBlockModal(false);
+                                }}
+                                className="text-white hover:text-gray-300 text-2xl font-bold"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        
+                        {selectedUser && (
+                            <div className="mb-6">
+                                <p className="text-gray-300 mb-2">
+                                    You are about to block <span className="font-semibold text-white">{selectedUser.name} {selectedUser.surname}</span>
+                                </p>
+                                <p className="text-gray-400 text-sm">
+                                    This action will prevent the user from accessing the platform. Please provide a reason for blocking.
+                                </p>
+                            </div>
+                        )}
+                        
+                        <div className="mb-6">
+                            <label htmlFor="blockReason" className="block text-sm font-medium text-gray-300 mb-2">
+                                Reason for Blocking *
+                            </label>
+                            <textarea
+                                id="blockReason"
+                                value={blockReason}
+                                onChange={(e) => setBlockReason(e.target.value)}
+                                className="w-full px-3 py-2 bg-[#2a2a2a] border border-neutral-700 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                                placeholder="Enter the reason for blocking this user..."
+                                rows={4}
+                                maxLength={1000}
+                            />
+                            <div className="text-xs text-gray-400 mt-1">
+                                {blockReason.length}/1000 characters
+                            </div>
+                        </div>
+                        
+                        {error && (
+                            <div className="mb-4 p-3 bg-red-600 text-white rounded text-center">
+                                {error}
+                            </div>
+                        )}
+                        
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowBlockModal(false);
+                                }}
+                                className="px-4 py-2 bg-gray-600 text-white rounded font-semibold hover:bg-gray-700"
+                                disabled={actionLoading}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleBlockUser();
+                                }}
+                                className="px-4 py-2 bg-yellow-400 text-black rounded font-semibold hover:bg-yellow-500 disabled:opacity-50"
+                                disabled={actionLoading || !blockReason.trim()}
+                            >
+                                {actionLoading ? 'Processing...' : 'Block User'}
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+            
             {/* Attachment Modal  */}
             {showAttachmentModal && createPortal(
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">

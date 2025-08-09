@@ -72,9 +72,9 @@ Route::get('/notfound', function () {return Inertia::render('Errors/NotFound');}
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/sl-admin', function () {
         $user = Auth::user();
-        // Check if user has SL role
-        if ($user->role !== 'SL' && $user->role !== 'Regional Admin') {
-            return redirect()->route('dashboard')->with('error', 'Access denied. Only Student Leaders can access this page.');
+        // Check if user has SL, Regional Admin, or Super Admin role
+        if ($user->role !== 'SL' && $user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+            return redirect()->route('dashboard')->with('error', 'Access denied. Only Student Leaders, Regional Admins, and Super Admins can access this page.');
         }
         $verified = User::where('state', 'Verified')->count();
         $new      = User::where('state', 'New')->count();
@@ -403,8 +403,8 @@ require __DIR__.'/auth.php';
 // API endpoint for SLAdmin and Regional Admin to get users list
 Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Illuminate\Http\Request $request) {
     $user = Auth::user();
-    if ($user->role !== 'SL' && $user->role !== 'Regional Admin') {
-        return response()->json(['error' => 'Access denied. Only Student Leaders and Regional Admins can access this resource.'], 403);
+    if ($user->role !== 'SL' && $user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+        return response()->json(['error' => 'Access denied. Only Student Leaders, Regional Admins, and Super Admins can access this resource.'], 403);
     }
     $perPage = $request->query('per_page', 20);
     $query = \App\Models\User::select(
@@ -423,6 +423,7 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
         'users.university', 
         'users.year_level', 
         'users.state', 
+        'users.blocked_reason',
         'users.verified_by',
         'users.verified_date',
         'users.proofOfEnrollment',
@@ -447,6 +448,7 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
     } elseif ($user->role === 'Regional Admin') {
         $query->where('users.region', $user->region);
     }
+    // Super Admin can view all users (no filtering applied)
     
     $query->where('users.role', '!=', 'SL')
         ->where('users.role', '!=', 'Admin')
@@ -479,8 +481,8 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/api/sladmin/users/{userId}/verify', function ($userId) {
         $user = Auth::user();
-        if ($user->role !== 'SL' && $user->role !== 'Regional Admin') {
-            return response()->json(['error' => 'Access denied. Only Student Leaders and Regional Admins can access this resource.'], 403);
+        if ($user->role !== 'SL' && $user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Access denied. Only Student Leaders, Regional Admins, and Super Admins can access this resource.'], 403);
         }
         
         $query = \App\Models\User::where('id', $userId)->where('role', '!=', 'SL');
@@ -490,6 +492,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         } elseif ($user->role === 'Regional Admin') {
             $query->where('region', $user->region);
         }
+        // Super Admin can verify any user (no additional filtering)
         
         $targetUser = $query->first();
             
@@ -506,11 +509,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return response()->json(['success' => true, 'message' => 'User verified successfully']);
     });
     
-    Route::patch('/api/sladmin/users/{userId}/block', function ($userId) {
+    Route::patch('/api/sladmin/users/{userId}/block', function ($userId, \Illuminate\Http\Request $request) {
         $user = Auth::user();
-        if ($user->role !== 'SL' && $user->role !== 'Regional Admin') {
-            return response()->json(['error' => 'Access denied. Only Student Leaders and Regional Admins can access this resource.'], 403);
+        if ($user->role !== 'SL' && $user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Access denied. Only Student Leaders, Regional Admins, and Super Admins can access this resource.'], 403);
         }
+        
+        $request->validate([
+            'reason' => 'required|string|max:1000',
+        ]);
         
         $query = \App\Models\User::where('id', $userId)->where('role', '!=', 'SL');
         
@@ -519,6 +526,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         } elseif ($user->role === 'Regional Admin') {
             $query->where('region', $user->region);
         }
+        // Super Admin can block any user (no additional filtering)
         
         $targetUser = $query->first();
             
@@ -526,24 +534,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return response()->json(['error' => 'User not found or access denied.'], 404);
         }
         
-        $targetUser->update(['state' => 'Blocked']);
+        $targetUser->update([
+            'state' => 'Blocked',
+            'blocked_reason' => $request->reason
+        ]);
         
         return response()->json(['success' => true, 'message' => 'User blocked successfully']);
     });
     
     Route::delete('/api/sladmin/users/{userId}', function ($userId) {
         $user = Auth::user();
-        if ($user->role !== 'SL' && $user->role !== 'Regional Admin') {
-            return response()->json(['error' => 'Access denied. Only Student Leaders and Regional Admins can access this resource.'], 403);
+        if ($user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Access denied. Only Super Admins can delete users.'], 403);
         }
         
         $query = \App\Models\User::where('id', $userId)->where('role', '!=', 'SL');
         
-        if ($user->role === 'SL') {
-            $query->where('university', $user->university);
-        } elseif ($user->role === 'Regional Admin') {
-            $query->where('region', $user->region);
-        }
+        // Super Admin can delete any user (no additional filtering)
         
         $targetUser = $query->first();
             
@@ -558,8 +565,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     Route::patch('/api/sladmin/users/{userId}/renew', function ($userId) {
         $user = Auth::user();
-        if ($user->role !== 'SL' && $user->role !== 'Regional Admin') {
-            return response()->json(['error' => 'Access denied. Only Student Leaders and Regional Admins can access this resource.'], 403);
+        if ($user->role !== 'SL' && $user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Access denied. Only Student Leaders, Regional Admins, and Super Admins can access this resource.'], 403);
         }
         
         $query = \App\Models\User::where('id', $userId)->where('role', '!=', 'SL');
@@ -569,6 +576,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         } elseif ($user->role === 'Regional Admin') {
             $query->where('region', $user->region);
         }
+        // Super Admin can renew any user (no additional filtering)
         
         $targetUser = $query->first();
             

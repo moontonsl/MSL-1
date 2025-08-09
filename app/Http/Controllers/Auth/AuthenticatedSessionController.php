@@ -42,7 +42,7 @@ class AuthenticatedSessionController extends Controller
         // Check user state and redirect accordingly
         if (in_array($user->role, ['SL', 'Regional Admin', 'Admin', 'Super Admin'])) {
             // Admin users go to their respective dashboards
-            if ($user->role === 'SL' || $user->role === 'Regional Admin') {
+            if (in_array($user->role, ['SL', 'Regional Admin', 'Super Admin'])) {
                 return redirect()->intended(route('sl-admin', absolute: false));
             }
             return redirect()->intended(route('dashboard', absolute: false));

@@ -152,7 +152,7 @@ const SLAdmin = () => {
                                 </div>
                             </div>
                         </div>
-                        <TableComponent stateFilter={selectedTab} searchQuery={searchQuery} />
+                        <TableComponent stateFilter={selectedTab} searchQuery={searchQuery} user={user} />
 
                     </div>
                 </div>
