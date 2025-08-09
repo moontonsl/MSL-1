@@ -35,6 +35,11 @@ Route::get('/', function () {
     ]);
 });
 
+// About Page Route
+Route::get('/about', function () {
+    return Inertia::render('About Page/index');
+})->name('about');
+
 
 // Admin routes are defined in routes/admin.php
 
@@ -137,6 +142,11 @@ Route::get('/register', function () {
 Route::get('/Events', function () {
     return Inertia::render('Events/Events');
 })->middleware(['auth', 'verified', \App\Http\Middleware\CheckUserState::class])->name('Events');
+
+//PROGRAMS  ROUTES
+Route::get('/Programs', function () {
+    return Inertia::render('Programs/Programs');
+})->name('Programs');
 
 //EVENT  ROUTES - MCC WATCHFEST REG
 Route::get('/MCCWatchFestReg', function () {

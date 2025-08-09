@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -50,6 +50,7 @@ export default function Highlights() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
+  const [isPaused, setIsPaused] = useState(false);
 
   // Minimum swipe distance (in px)
   const minSwipeDistance = 50;
@@ -69,6 +70,17 @@ export default function Highlights() {
     });
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
   };
+
+  // Auto-scroll functionality
+  useEffect(() => {
+    if (!isPaused) {
+      const interval = setInterval(() => {
+        handleNext();
+      }, 3000); // Move every 3 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [isPaused, currentSlide]);
 
   const onTouchStart = (e) => {
     setTouchEnd(null); // otherwise the swipe is fired even with usual touch events
@@ -95,13 +107,15 @@ export default function Highlights() {
 
   return (
     <div className="w-full max-w-[1900px] h-auto px-2 md:px-12 mx-auto">
-      <h2 className="text-2xl xs:text-3xl md:text-5xl font-bold text-center mb-4 md:mb-10 text-white">MSL HIGHLIGHTS</h2>
+      <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold text-center mb-4 md:mb-10 text-white font-montserrat">MSL HIGHLIGHTS</h2>
       <div 
         className="relative flex items-center justify-center h-[200px] md:h-[400px] w-full overflow-hidden" 
         style={{ minHeight: 200 }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
       >
         {slides.map((slide, index) => (
           <motion.div
@@ -129,10 +143,10 @@ export default function Highlights() {
             {/* Overlay for center and adjacent slides */}
             {positionIndexes[index] === 0 || positionIndexes[index] === 1 || positionIndexes[index] === 4 ? (
               <div className="absolute bottom-0 left-0 right-0 p-2 md:p-6 bg-gradient-to-t from-black/80 to-transparent">
-                <h3 className="text-xs xs:text-sm md:text-xl font-semibold text-white mb-1 md:mb-2">
+                <h3 className="text-sm md:text-lg lg:text-xl font-semibold text-white mb-1 md:mb-2 font-montserrat">
                   {slide.title}
                 </h3>
-                <p className="text-[10px] xs:text-xs md:text-sm text-white/90">
+                <p className="text-xs md:text-sm lg:text-base text-white/90 font-montserrat">
                   {slide.author} - {slide.date}
                 </p>
               </div>
@@ -141,14 +155,14 @@ export default function Highlights() {
         ))}
       </div>
       {/* Navigation Controls Below Carousel */}
-      <div className="flex items-center justify-center gap-4 mt-1 md:mt-4">
+      <div className="hidden md:flex items-center justify-center gap-4 mt-2">
         <button
           onClick={handleBack}
-          className="bg-white/10 hover:bg-white/20 text-white p-2 md:p-3 rounded-full backdrop-blur-sm transition-colors"
+          className="bg-white/10 hover:bg-white/20 text-white p-1.5 md:p-2 rounded-full backdrop-blur-sm transition-colors"
         >
-          <ChevronLeft size={20} className="md:size-8" />
+          <ChevronLeft size={16} className="md:size-6" />
         </button>
-        <div className="flex gap-1 md:gap-4 px-2 py-1 md:px-4 md:py-2 rounded-full">
+        <div className="flex gap-1 md:gap-2 px-2 py-1 md:px-4 md:py-2 rounded-full">
           {slides.map((_, idx) => (
             <button
               key={idx}
@@ -159,17 +173,17 @@ export default function Highlights() {
               }}
               className={`rounded-full transition-all ${
                 currentSlide === idx
-                  ? "w-3 h-3 md:w-6 md:h-6 bg-yellow-400"
-                  : "w-2 h-2 md:w-4 md:h-4 bg-white/50 hover:bg-white/70"
+                  ? "w-2 h-2 md:w-3 md:h-3 bg-yellow-400"
+                  : "w-1.5 h-1.5 md:w-2 md:h-2 bg-white/50 hover:bg-white/70"
               }`}
             />
           ))}
         </div>
         <button
           onClick={handleNext}
-          className="bg-white/10 hover:bg-white/20 text-white p-2 md:p-3 rounded-full backdrop-blur-sm transition-colors"
+          className="bg-white/10 hover:bg-white/20 text-white p-1.5 md:p-2 rounded-full backdrop-blur-sm transition-colors"
         >
-          <ChevronRight size={20} className="md:size-8" />
+          <ChevronRight size={16} className="md:size-6" />
         </button>
       </div>
     </div>
