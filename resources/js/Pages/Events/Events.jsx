@@ -110,7 +110,7 @@ function Events() {
                     <div className="hidden lg:flex justify-between items-start w-full lg:p-5">
                         {/* Text Content (left on desktop) */}
                         <div className="flex flex-col justify-start items-start flex-1 p-0 h-auto lg:h-auto mt-0 order-2 lg:order-first">
-                        <h3 className="text-white text-left font-['Montserrat'] text-[40px] font-bold leading-[140%] w-full lg:w-[622px]">
+                        <h3 className="text-white text-left font-['Montserrat'] text-[30px] font-bold leading-[140%] w-full lg:w-[622px]">
                             MSL Collegiate Cup (MCC)
                         </h3>
 
@@ -122,7 +122,7 @@ function Events() {
                             </p>
                         </div>
 
-                        <div className="p-0 w-full">
+                        <div className="p-0 pt-2 w-full">
                             <h4 className="text-white text-left font-['Space Grotesk'] text-[20px] font-bold leading-[140%]">Who can join MCC?</h4>
                             <p className="text-white text-left font-['Space Grotesk'] text-[18px] font-normal leading-[140%] lg:max-w-[900px]">
                             Aspiring Student-Gamers from MSL Communities and MSL Network Organizations are allowed to join.
@@ -177,7 +177,7 @@ function Events() {
                     <section className="mx-auto flex flex-col items-center flex-shrink-0 py-4" style={{ maxWidth: '1418px' }}>
                         {/* Title */}
                         <div className="flex w-full px-4 lg:px-0 items-center gap-2 md:gap-9">
-                            <h2 className="text-white text-left font-['Montserrat'] text-[30px] md:text-[57.6px] font-bold leading-[140%] w-full">
+                            <h2 className="text-white text-left font-['Montserrat'] text-[20px] md:text-[30px] font-bold leading-[140%] w-full">
                                 OTHER MSL EVENTS
                             </h2>
                         </div>
@@ -208,7 +208,7 @@ function Events() {
                                     </div>
                                     <div className="flex h-[50%] md:h-[190.74px] flex-col items-center bg-[#0A0A0A] p-1 w-full">
                                         <div className="p-1 md:p-[9.35px]">
-                                            <p className="text-[9.7px]  font-['Space Grotesk'] md:text-[26.18px] font-bold text-center leading-tight">
+                                            <p className="text-[9px]  font-['Space Grotesk'] md:text-[26.18px] font-bold text-center leading-tight">
                                                 {card.title}
                                             </p>
                                         </div>
