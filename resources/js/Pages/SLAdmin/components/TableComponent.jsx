@@ -433,7 +433,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                     >
                                         {selectedUser.proofOfEnrollment ? 'View Attachment' : 'No Attachment'}
                                     </button>
-                                    {(stateFilter === 'Verified' || stateFilter === 'Renew') && (
+                                    {(stateFilter === 'Verified' || stateFilter === 'Renew' ||stateFilter === 'New') && (
                                         <button 
                                             className="bg-white text-black px-4 py-2 rounded font-semibold w-full sm:w-auto disabled:opacity-50"
                                             onClick={() => handleAction('renew', selectedUser.id)}
@@ -489,7 +489,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             {showBlockModal && createPortal(
                 <div className="fixed inset-0 z-[70] bg-[#fff]/50 flex items-center justify-center p-4" style={{ pointerEvents: 'auto' }}>
                     <div 
-                        className="absolute inset-0 bg-black/80" 
+                        className="absolute inset-0 bg-black/50" 
                         onClick={(e) => {
                             e.stopPropagation();
                             setShowBlockModal(false);
