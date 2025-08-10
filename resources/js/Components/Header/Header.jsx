@@ -7,7 +7,7 @@ import { MdAccountCircle } from "react-icons/md";
 // Navigation links array (only main nav links)
 const navLinks = [
     { name: 'Events', href: '/mcc' },
-    { name: 'Program', href: '/soon' },
+    { name: 'Program', href: '/Programs' },
     { name: 'Resources', href: '/soon' },
     { name: 'News', href: '/news' },
 ];
@@ -118,28 +118,29 @@ const Header = () => {
                             <MdAccountCircle size={40} />
                         </Link>
 
-                        {/* Dropdown menu - only visible if user is logged in and isDropdownOpen is true */}
                         {user && isDropdownOpen && (
                             <div className={styles.dropdownMenu}>
-                                {/*<LinkBA
-                                    href="/profile"
+                                <Link
+                                    href="/studentportal"
                                     className={styles.dropdownItem}
-                                    onClick={() => setIsDropdownOpen(false)} // Close dropdown on click
+                                    onClick={() => setIsDropdownOpen(false)} 
                                 >
                                     Profile
                                 </Link>
-                                <Link
-                                    href="/sl-admin"
-                                    className={styles.dropdownItem}
-                                    onClick={() => setIsDropdownOpen(false)} // Close dropdown on click
-                                >
-                                    SL Admin
-                                </Link>*/}
+                                {(user.role === 'SL' || user.role === 'Super Admin' || user.role === 'Regional Admin') && (
+                                    <Link
+                                        href="/sl-admin"
+                                        className={styles.dropdownItem}
+                                        onClick={() => setIsDropdownOpen(false)}
+                                    >
+                                        SL Admin
+                                    </Link>
+                                )}
                                 <button
                                     onClick={handleLogout}
                                     className={styles.dropdownItem}
                                 >
-                                    Log out
+                                    Log out 
                                 </button>
                             </div>
                         )}

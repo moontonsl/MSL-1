@@ -238,7 +238,7 @@ console.log(formData);
                             Login
                         </button>
                         <p className="footer-text-login text-white text-center mt-4 text-sm">
-                            <a href="/forgotpassword" className="forgot-password-link-login text-[#f1c40f] no-underline hover:underline">
+                            <a href="/forgot-password" className="forgot-password-link-login text-[#f1c40f] no-underline hover:underline">
                                 Forgot Password
                             </a>
                             <br />

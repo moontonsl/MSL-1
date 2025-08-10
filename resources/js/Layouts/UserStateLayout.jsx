@@ -1,17 +1,11 @@
-// resources/js/Layouts/MainLayout.jsx
-import {Footer, Header} from '@/Components/index.js';
 import {Toaster} from 'react-hot-toast';
 
-
-export default function AuthenticatedLayout({children}) {
+export default function UserStateLayout({children}) {
     return (
         <div className="app">
-            <Header/>
             <main>
-                <div className="webBG"/>
                 {children}
             </main>
-            <Footer/>
             <Toaster
                 position="top-right"
                 toastOptions={{
@@ -24,4 +18,4 @@ export default function AuthenticatedLayout({children}) {
             />
         </div>
     );
-}
+} 

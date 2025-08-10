@@ -6,11 +6,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Auth\Passwords\CanResetPassword;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, CanResetPassword;
 
     /**
      * The attributes that are mass assignable.
@@ -46,7 +47,12 @@ class User extends Authenticatable
         'mainHero',
         'rank',
         'studentId',
-        'proofOfEnrollment'
+        'proofOfEnrollment',
+        'role',
+        'state',
+        'blocked_reason',
+        'verified_by',
+        'verified_date'
     ];
 
     /**
@@ -68,7 +74,24 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'verified_date' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the user who verified this user
+     */
+    public function verifier()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    /**
+     * Get the users verified by this user
+     */
+    public function verifiedUsers()
+    {
+        return $this->hasMany(User::class, 'verified_by');
     }
 }
