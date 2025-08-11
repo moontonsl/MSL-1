@@ -21,7 +21,7 @@ const Programs = () => {
                     {/* Title Section */}
                     <div className="flex flex-col pt-2 items-start h-[60px] lg:h-[166px] w-full self-stretch">
                         <div className="flex h-[29.524px] lg:h-[81px] py-[5.467px] lg:py-[15px] justify-center items-end self-stretch">
-                            <h1 className="text-white font-montserrat text-[24px] lg:text-[40px] font-bold leading-[8.748px] lg:leading-[60%]">
+                            <h1 className="text-yellow-500 font-montserrat text-[24px] lg:text-[40px] font-bold leading-[8.748px] lg:leading-[60%]">
                                 MSL PROGRAMS
                             </h1>
                         </div>
@@ -55,7 +55,7 @@ const Programs = () => {
                                     style={{ backgroundImage: `url(${program.img})` }}
                                 />
                                 <div className="flex flex-col justify-between flex-1 p-[3.645px] lg:p-[10px] gap-[10px]">
-                                    <h3 className="text-white text-center font-montserrat text-[20px] lg:text-[30px] font-bold leading-[140%]">
+                                    <h3 className="text-yellow-500 text-center font-montserrat text-[20px] lg:text-[30px] font-bold leading-[140%]">
                                         {program.title}
                                     </h3>
                                     <p className="text-white font-montserrat text-[12px] lg:text-[16px] font-medium leading-[18px] lg:leading-[24px] line-clamp-4">
@@ -110,7 +110,7 @@ const Programs = () => {
                                     style={{ backgroundImage: `url(${program.img})` }}
                                 />
                                 <div className="flex flex-col justify-between flex-1 p-[3.645px] lg:p-[10px] gap-[10px]">
-                                    <h3 className="text-white text-center font-montserrat text-[20px] lg:text-[30px] font-bold leading-[140%]">
+                                    <h3 className="text-yellow-500 text-center font-montserrat text-[20px] lg:text-[30px] font-bold leading-[140%]">
                                         {program.title}
                                     </h3>
                                     <p className="text-white font-montserrat text-[12px] lg:text-[16px] font-medium leading-[18px] lg:leading-[24px] line-clamp-4">

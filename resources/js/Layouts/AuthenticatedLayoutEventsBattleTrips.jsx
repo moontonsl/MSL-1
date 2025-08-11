@@ -2,16 +2,13 @@
 import {Footer, Header} from '@/Components/index.js';
 import {Toaster} from 'react-hot-toast';
 
-
-export default function AuthenticatedLayout({children}) {
+export default function AuthenticatedLayoutEventsWatchFest({children}) {
     return (
         <div className="app">
             <Header/>
             <main>
                 <div className="battleTripsBG"/>
-                <div className="flex justify-center w-full">
-                    {children}
-                </div>
+                {children}
             </main>
             <Footer/>
             <Toaster
