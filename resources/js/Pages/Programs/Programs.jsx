@@ -19,7 +19,7 @@ const Programs = () => {
                 <main className="relative text-center w-full lg:max-w-[1440px] mb-12">
 
                     {/* Title Section */}
-                    <div className="flex flex-col items-start h-[60px] lg:h-[166px] w-full self-stretch">
+                    <div className="flex flex-col pt-2 items-start h-[60px] lg:h-[166px] w-full self-stretch">
                         <div className="flex h-[29.524px] lg:h-[81px] py-[5.467px] lg:py-[15px] justify-center items-end self-stretch">
                             <h1 className="text-white font-montserrat text-[24px] lg:text-[40px] font-bold leading-[8.748px] lg:leading-[60%]">
                                 MSL PROGRAMS
@@ -62,10 +62,23 @@ const Programs = () => {
                                         {program.desc}
                                     </p>
                                     <div className="flex justify-end">
-                                        <button className="flex px-[10px] lg:px-[20px] py-[5px] lg:py-[12px] rounded-[10.935px] lg:rounded-[30px] bg-[#303030]">
-                                            <span className="text-white font-inter text-[10px] lg:text-[16px] font-semibold leading-[14px] lg:leading-[24px]">
-                                                Read More
-                                            </span>
+                                        <button
+                                        className="
+                                            flex px-[10px] lg:px-[20px] py-[5px] lg:py-[12px]
+                                            rounded-[10.935px] lg:rounded-[30px]
+                                            bg-[#303030] hover:bg-yellow-500
+                                            transition-colors duration-300
+                                        "
+                                        >
+                                        <span
+                                            className="
+                                            text-white hover:text-black
+                                            font-inter text-[10px] lg:text-[16px]
+                                            font-semibold leading-[14px] lg:leading-[24px]
+                                            "
+                                        >
+                                            Read More
+                                        </span>
                                         </button>
                                     </div>
                                 </div>
@@ -104,9 +117,16 @@ const Programs = () => {
                                         {program.desc}
                                     </p>
                                     <div className="flex justify-end">
-                                        <button className="flex px-[10px] lg:px-[20px] py-[5px] lg:py-[12px] rounded-[10.935px] lg:rounded-[30px] bg-[#303030]">
-                                            <span className="text-white font-inter text-[10px] lg:text-[16px] font-semibold leading-[14px] lg:leading-[24px]">
-                                                Read More
+                                        <button
+                                            className="
+                                            flex px-[10px] lg:px-[20px] py-[5px] lg:py-[12px]
+                                            rounded-[10.935px] lg:rounded-[30px]
+                                            bg-[#303030] hover:bg-yellow-500
+                                            transition-colors duration-300
+                                            "
+                                        >
+                                            <span className="text-white hover:text-black font-inter text-[10px] lg:text-[16px] font-semibold leading-[14px] lg:leading-[24px]">
+                                            Read More
                                             </span>
                                         </button>
                                     </div>
