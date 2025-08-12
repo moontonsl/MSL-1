@@ -1,13 +1,13 @@
 // resources/js/Layouts/MainLayout.jsx
 import {Footer, Header} from '@/Components/index.js';
 import {Toaster} from 'react-hot-toast';
+import styles from './AuthenticatedLayoutEventsBattleTrips.module.scss';
 
 export default function AuthenticatedLayoutEventsWatchFest({children}) {
     return (
-        <div className="app">
+        <div className={`${styles.battleTripsBG} app`}>
             <Header/>
-            <main>
-                <div className="battleTripsBG"/>
+            <main className={styles.mainContent}>
                 {children}
             </main>
             <Footer/>
@@ -24,3 +24,5 @@ export default function AuthenticatedLayoutEventsWatchFest({children}) {
         </div>
     );
 }
+
+
