@@ -27,3 +27,21 @@
 .glow-white {
   text-shadow: 0 0 4px white, 0 0 8px white, 0 0 12px white;
 }
+
+
+@media (max-width: 640px) {
+  .inputField {
+    font-size: 0.75rem;   /* smaller text */
+    padding: 0.5rem 0.75rem; /* reduce padding */
+  }
+
+  .inputField select {
+    background-size: 0.75rem; /* smaller arrow */
+  }
+}
+
+.inputField {
+  width: 100%;
+  max-width: 100%; /* don’t exceed parent width */
+  box-sizing: border-box;
+}

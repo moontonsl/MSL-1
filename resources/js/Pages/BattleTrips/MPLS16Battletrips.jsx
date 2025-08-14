@@ -22,23 +22,32 @@ const MPL16Battletrips = () => {
     community: "",
     smartSubscriber: "",
     smartAnswer: "",
+    joinMPLGroup: "",
+    likeMPLPage: "",
+    likeMSLPage: "",
+    likeCHPage: "",
   });
 
   const [showModal, setShowModal] = useState(false);
   const [showError, setShowError] = useState(false);
   const [errorVisible, setErrorVisible] = useState(false);
+  const [activeModal, setActiveModal] = useState(null);
+
+  // New missing message state
+  const [missingMessage, setMissingMessage] = useState("");
+  const [showMissingMessage, setShowMissingMessage] = useState(false);
 
   useEffect(() => {
     if (showError) {
       setErrorVisible(true);
-      const timer = setTimeout(() => setShowError(false), 3000); // Auto-hide after 3s
+      const timer = setTimeout(() => setShowError(false), 3000);
       return () => clearTimeout(timer);
     }
   }, [showError]);
 
   useEffect(() => {
     if (!showError) {
-      const timer = setTimeout(() => setErrorVisible(false), 500); // Match fade-out duration
+      const timer = setTimeout(() => setErrorVisible(false), 500);
       return () => clearTimeout(timer);
     }
   }, [showError]);
@@ -46,6 +55,31 @@ const MPL16Battletrips = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "joinMPLGroup" && value === "No") {
+      setActiveModal({
+        title: "Join the MPL Facebook Community",
+        link: "https://www.facebook.com/groups/mplphilippinesofficial/?ref=share&mibextid=NSMWBT",
+      });
+    }
+    if (name === "likeMPLPage" && value === "No") {
+      setActiveModal({
+        title: "Like the MPL Page",
+        link: "https://www.facebook.com/share/171Rpf73QJ/",
+      });
+    }
+    if (name === "likeMSLPage" && value === "No") {
+      setActiveModal({
+        title: "Like the MSL Page",
+        link: "https://www.facebook.com/share/1ZrTg5hGG6/",
+      });
+    }
+    if (name === "likeCHPage" && value === "No") {
+      setActiveModal({
+        title: "Like the CH Page",
+        link: "https://www.facebook.com/share/1LAUXewtSG/",
+      });
+    }
   };
 
   const handleNumericChange = (e, field) => {
@@ -56,8 +90,33 @@ const MPL16Battletrips = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    const missingActions = [];
     if (form.smartSubscriber !== "Yes" && form.smartSubscriber !== "No") {
       setShowError(true);
+      return;
+    }
+    if (form.joinMPLGroup === "No" || form.joinMPLGroup === "") {
+      missingActions.push("join MPL Group first");
+    }
+    if (form.likeMPLPage === "No" || form.likeMPLPage === "") {
+      missingActions.push("like MPL Page first");
+    }
+    if (form.likeMSLPage === "No" || form.likeMSLPage === "") {
+      missingActions.push("like MSL Page first");
+    }
+    if (form.likeCHPage === "No" || form.likeCHPage === "") {
+      missingActions.push("like CH Page first");
+    }
+
+    if (missingActions.length > 0) {
+      const message = `Please ${missingActions.join(", ")}.`;
+      setMissingMessage(message);
+      setShowMissingMessage(true);
+
+      setTimeout(() => {
+        setShowMissingMessage(false);
+      }, 10000); // disappear after 10s
+
       return;
     }
 
@@ -74,6 +133,10 @@ const MPL16Battletrips = () => {
     formData.append("entry.1099317544", form.validIdLink);
     formData.append("entry.110160603", form.community);
     formData.append("entry.2019885045", form.smartSubscriber);
+    formData.append("entry.1868428261", form.joinMPLGroup);
+    formData.append("entry.1359360008", form.likeMPLPage);
+    formData.append("entry.1034932619", form.likeMSLPage);
+    formData.append("entry.690530889", form.likeCHPage);
 
     fetch(
       "https://docs.google.com/forms/d/1KKpGYy7xF5lAJ7NUV_w_FyMxEh6Pyewz6uVEeYWSTqM/formResponse",
@@ -99,6 +162,10 @@ const MPL16Battletrips = () => {
           community: "",
           smartSubscriber: "",
           smartAnswer: "",
+          joinMPLGroup: "",
+          likeMPLPage: "",
+          likeMSLPage: "",
+          likeCHPage: "",
         });
       })
       .catch((error) => {
@@ -117,7 +184,7 @@ const MPL16Battletrips = () => {
       </Helmet>
 
       <AuthenticatedLayout>
-        <div className="flex items-center justify-center min-h-[70vh] md:min-h-screen px-2 md:px-4">
+        <div className="flex items-center justify-center min-h-[30vh] md:min-h-screen px-0 md:px-4">
           <div className="w-full max-w-[365px] md:max-w-2xl text-center relative z-20 -mt-16 mb-10 px-4">
             <img
               src="/BTLogo.png"
@@ -132,7 +199,7 @@ const MPL16Battletrips = () => {
             </div>
 
             <img
-              src="/mcclogo.png"
+              src="/BTW1 Minigame.png"
               alt="Second Image Description"
               className="w-[200px] h-auto md:w-[300px] mx-auto mb-6 object-contain"
             />
@@ -260,9 +327,66 @@ const MPL16Battletrips = () => {
                   ))}
                 </select>
 
+                <select
+                  name="joinMPLGroup"
+                  value={form.joinMPLGroup}
+                  onChange={handleChange}
+                  required
+                  className={styles.inputField}
+                >
+                  <option value="" disabled>
+                    Are you a member of the MPL Facebook Community?
+                  </option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+
+                <select
+                  name="likeMPLPage"
+                  value={form.likeMPLPage}
+                  onChange={handleChange}
+                  required
+                  className={styles.inputField}
+                >
+                  <option value="" disabled>
+                    Did you already like the MPL Page?
+                  </option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+
+                <select
+                  name="likeMSLPage"
+                  value={form.likeMSLPage}
+                  onChange={handleChange}
+                  required
+                  className={styles.inputField}
+                >
+                  <option value="" disabled>
+                    Did you already like the MSL Page?
+                  </option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+
+                <select
+                  name="likeCHPage"
+                  value={form.likeCHPage}
+                  onChange={handleChange}
+                  required
+                  className={styles.inputField}
+                >
+                  <option value="" disabled>
+                    Did you already like the CH Page?
+                  </option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+
                 <div className="text-black font-semibold mb-2">
                   Are you a Smart Subscriber?
                 </div>
+
                 <div className="flex justify-center gap-4 mb-4">
                   <button
                     type="button"
@@ -299,15 +423,22 @@ const MPL16Battletrips = () => {
                     No
                   </button>
                 </div>
+                
+                {/* New friendly error message */}
+                {showMissingMessage && (
+                  <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded-md text-sm mb-4 transition-opacity duration-500 ease-in-out">
+                    {missingMessage}
+                  </div>
+                )}
 
                 {errorVisible && (
-                  <p
-                    className={`text-red-500 text-sm mb-2 transition-opacity duration-500 ease-in-out ${
+                  <div
+                    className={`bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded-md text-sm mb-4 transition-opacity duration-500 ease-in-out ${
                       showError ? "opacity-100" : "opacity-0"
                     }`}
                   >
                     Please select either "Yes" or "No" for Smart Subscriber.
-                  </p>
+                  </div>
                 )}
 
                 <button
@@ -322,8 +453,14 @@ const MPL16Battletrips = () => {
         </div>
 
         {showModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-black text-white p-8 rounded-2xl shadow-xl text-center min-w-64 border border-white">
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={() => setShowModal(false)}
+          >
+            <div
+              className="bg-black text-white p-8 rounded-2xl shadow-xl text-center min-w-64 border border-white"
+              onClick={(e) => e.stopPropagation()}
+            >
               <h2 className="text-xl font-semibold mb-4">
                 Registration Submitted Successfully!
               </h2>
@@ -333,6 +470,30 @@ const MPL16Battletrips = () => {
               >
                 Close
               </button>
+            </div>
+          </div>
+        )}
+
+        {activeModal && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={() => setActiveModal(null)}
+          >
+            <div
+              className="bg-black text-white p-8 rounded-2xl shadow-xl text-center min-w-64 border border-white"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="text-xl font-semibold mb-4">
+                {activeModal.title}
+              </h2>
+              <a
+                href={activeModal.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 px-6 py-2 rounded-lg border-none bg-yellow-300 text-gray-800 font-bold cursor-pointer text-base inline-block"
+              >
+                Go
+              </a>
             </div>
           </div>
         )}
