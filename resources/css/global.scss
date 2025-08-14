@@ -31,9 +31,22 @@
           position: absolute;
           opacity: 0.5;
           inset: 0;
-          background: linear-gradient(180deg, #0A0A0A 0%, rgba(10, 10, 10, 0.50) 25%, rgba(10, 10, 10, 0.20) 50%, rgba(10, 10, 10, 0.50) 75%, #0A0A0A 100%), url(/webbg2025.png) lightgray 50% / cover no-repeat;
+          background: 
+          linear-gradient(180deg, #0A0A0A 0%, rgba(10, 10, 10, 0.50) 25%, rgba(10, 10, 10, 0.20) 50%, rgba(10, 10, 10, 0.50) 75%, #0A0A0A 100%), 
+          url(/webbg2025.png) lightgray 50% / cover no-repeat;
       }
 
+      .battleTripsBG {
+        position: absolute;
+        inset: 0;
+        background-image: url(/MPLS16_BG.png);
+        background-repeat: no-repeat;
+        background-size: cover; /* fill without distortion, may crop */
+        background-position: center;
+        background-color: lightgray; /* fallback color */
+      }
+
+      
       .mcc2_calendarBG {
           position: absolute;
           opacity: 0.5;
