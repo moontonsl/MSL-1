@@ -138,6 +138,8 @@ const MPL16Battletrips = () => {
     formData.append("entry.1034932619", form.likeMSLPage);
     formData.append("entry.690530889", form.likeCHPage);
 
+    formData.append("entry.369093009", form.minigameanswer);
+
     fetch(
       "https://docs.google.com/forms/d/1KKpGYy7xF5lAJ7NUV_w_FyMxEh6Pyewz6uVEeYWSTqM/formResponse",
       {
@@ -166,6 +168,7 @@ const MPL16Battletrips = () => {
           likeMPLPage: "",
           likeMSLPage: "",
           likeCHPage: "",
+          minigameanswer: "",
         });
       })
       .catch((error) => {
@@ -423,6 +426,16 @@ const MPL16Battletrips = () => {
                     No
                   </button>
                 </div>
+
+                <input
+                  type="text"
+                  name="minigameanswer"
+                  placeholder="What is your answer in our Mini-Game?"
+                  value={form.minigameanswer}
+                  onChange={handleChange}
+                  required
+                  className={styles.inputField}
+                />
                 
                 {/* New friendly error message */}
                 {showMissingMessage && (
