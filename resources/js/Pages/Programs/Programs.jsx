@@ -15,7 +15,7 @@ const Programs = () => {
             <Head title="MSL Programs" />
             
             {/* Main Container - Mobile First */}
-            <div className="flex flex-col items-center w-[355px] lg:w-[1920px] lg:px-[150px]">
+            <div className="flex flex-col items-center w-full max-w-[1920px] lg:px-[150px] mx-auto overflow-x-hidden">
                 <main className="relative text-center w-full lg:max-w-[1440px] mb-12">
 
                     {/* Title Section */}

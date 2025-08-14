@@ -125,7 +125,7 @@ const MPL16Battletrips = () => {
               className="w-[250px] h-[200px] md:w-[400px] md:h-[320px] mt-6 md:mt-5 block mx-auto object-contain"
             />
 
-            <div className="text-black mt-[-50px] mb-4 text-lg md:text-xl font-medium pt-4 md:pt-0">
+            <div className="text-black mt-[-50px] mb-4 text-[7px] md:text-xl font-medium pt-4 md:pt-0 leading-tight md:leading-normal [text-shadow:_0_0_6px_#fff,_0_0_12px_rgba(255,255,255,.85)]">
               The MPL Battle Trips is an 8-week event where fans of MLBB from
               around the Philippines will be given a chance to visit the MPL PH
               venue and enjoy the MLBB Events.
