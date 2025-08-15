@@ -81,10 +81,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
         if ($user->role !== 'SL' && $user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
             return redirect()->route('dashboard')->with('error', 'Access denied. Only Student Leaders, Regional Admins, and Super Admins can access this page.');
         }
-        $verified = User::where('state', 'Verified')->count();
-        $new      = User::where('state', 'New')->count();
-        $renewed  = User::where('state', 'Renew')->count();
-        $blocked  = User::where('state', 'Blocked')->count();
+
+        // Build query based on user role
+        $query = User::query();
+
+        if ($user->role === 'SL') {
+            // SL can only see data within their university
+            $query->where('university', $user->university);
+        } elseif ($user->role === 'Regional Admin') {
+            // Regional Admin can see data within their region
+            $query->where('region', $user->region);
+        }
+        // Super Admin can see all data (no additional where clause needed)
+
+        $verified = (clone $query)->where('state', 'Verified')->count();
+        $new      = (clone $query)->where('state', 'New')->count();
+        $renewed  = (clone $query)->where('state', 'Renew')->count();
+        $blocked  = (clone $query)->where('state', 'Blocked')->count();
+
         return Inertia::render('SLAdmin/SLAdmin',[
             'user' => $user,
             'verified' => $verified,
