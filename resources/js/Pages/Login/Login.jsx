@@ -240,6 +240,9 @@ console.log(formData);
                         <p className="footer-text-login text-white text-center mt-4 text-sm">
                             <a href="/forgot-password" className="forgot-password-link-login text-[#f1c40f] no-underline hover:underline">
                                 Forgot Password
+                            </a> / {' '}
+                            <a href="/forgot-username" className="forgot-password-link-login text-[#f1c40f] no-underline hover:underline">
+                                Forgot Username
                             </a>
                             <br />
                             Don't have an account?{' '}

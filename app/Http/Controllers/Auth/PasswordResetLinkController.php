@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\User;
 
 class PasswordResetLinkController extends Controller
 {
@@ -62,5 +64,29 @@ class PasswordResetLinkController extends Controller
         throw ValidationException::withMessages([
             'email' => [trans($status)],
         ]);
+    }
+    public function forgotUsername(): Response
+    {
+        return Inertia::render('Auth/ForgotUsername', [
+            'status' => session('status'),
+        ]);
+    }
+    public function forgotUsernameLink(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return back()->with('status', 'Email not found');
+        }
+        $username = $user->username;
+        $email = $user->email;
+        $subject = 'Your username has been recovered';
+        $body = 'Your username is: ' . $username;
+        Mail::to($email)->send(new \App\Mail\UsernameRecovery($username, $email, $subject, $body));
+        return back()->with('status', 'Please check your email for your username.');
     }
 }
