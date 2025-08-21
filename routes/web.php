@@ -120,22 +120,10 @@ Route::get('/login', function () {
 })->name('login');
 // // Route::post('/login', [AuthController::class, 'login'])->name('login');
 
-// //LOGIN ROUTES
-// Route::get('/login2', function () {
-//     return Inertia::render('Login/Login2');
-// })->name('login');
-// Route::post('/login2', [AuthController::class, 'login'])->name('login2');
-
 //ACCOUNT REGISTRATION ROUTES
 Route::get('/register', function () {
     return Inertia::render('Account Creation/Register');
 })->name('register');
-
-// //ACCOUNT REGISTRATION 2 ROUTES
-// Route::get('/register2', function () {
-//     return Inertia::render('Account Creation/Register2');
-// })->name('register');
-
 
 //EVENT  ROUTES
 Route::get('/Events', function () {
@@ -146,6 +134,16 @@ Route::get('/Events', function () {
 Route::get('/Programs', function () {
     return Inertia::render('Programs/Programs');
 })->name('Programs');
+
+//TERMS AND CONDITIONS ROUTES
+Route::get('/TermsAndConditions', function () {
+    return Inertia::render('TermsAndConditions/TermsAndConditions');
+})->name('TermsAndConditions');
+
+//PRIVACY AND POLICY ROUTES
+Route::get('/PrivacyPolicy', function () {
+    return Inertia::render('PrivacyPolicy/PrivacyPolicy');
+})->name('PrivacyPolicy');
 
 //PROGRAMS  ROUTES
 Route::get('/MPLS16Battletrips', function () {
@@ -169,18 +167,6 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     // ->middleware('auth') // Ensure only authenticated users can log out
     ->name('logout');
 
-
-// // TEMPORARY STUDENT PORTAL ACCESS (NO AUTH)
-// Route::get('/studentportal', function () {
-//     return Inertia::render('Student Portal/SLStudent');
-// })->middleware(['auth', 'verified'])->name('SLStudent');
-
-// // TEMPORARY STUDENT PORTAL ACCESS (NO AUTH)
-// Route::get('/studentportal', function () {
-//     return Inertia::render('Student Portal/SLStudent');
-// })->name('SLStudent');
-
-
 // MCC Routes
 Route::prefix('mcc')->name('mcc.')->group(function () {
     Route::get('/', function () {
@@ -190,8 +176,6 @@ Route::prefix('mcc')->name('mcc.')->group(function () {
     Route::get('/calendar', function () {
         return Inertia::render('MCC/Calendar/index');
     })->name('calendar');
-
-
 
     // Voting Routes
     Route::prefix('voting')->name('voting.')->group(function () {
