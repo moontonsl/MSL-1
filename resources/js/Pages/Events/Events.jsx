@@ -199,25 +199,40 @@ function Events() {
                                     `}
                                 >
                                     <div
-                                    className="flex flex-col items-center flex-1 self-stretch bg-black bg-no-repeat bg-center bg-cover relative w-full h-[60px] md:h-[calc(462.825px-190.74px)] px-0 pt-2 md:pt-0"
-                                    style={{ backgroundImage: `url(${card.image})` }}
-                                    >
-                                    <div className="absolute top-2 md:top-8 left-0 flex h-6 md:h-[42.075px] px-1 md:px-[9.35px] justify-center items-center gap-0.5 md:gap-[9.35px] rounded-r-lg md:rounded-r-[16.83px] bg-red-600">
-                                        <span className="text-white font-['Space Grotesk'] text-xs md:text-lg font-bold">Recent</span>
-                                    </div>
-                                    </div>
-                                    <div className="flex h-[50%] md:h-[190.74px] flex-col items-center bg-[#0A0A0A] p-1 w-full">
-                                        <div className="p-1 md:p-[9.35px]">
-                                            <p className="text-[9px]  font-['Space Grotesk'] md:text-[26.18px] font-bold text-center leading-tight">
-                                                {card.title}
+                                            className="
+                                                flex flex-col items-center flex-1 self-stretch
+                                                bg-black bg-no-repeat bg-center relative
+                                                h-[40px] md:h-[calc(462.825px-190.74px)]
+                                                px-0 pt-1 md:pt-0
+                                                bg-contain md:bg-cover
+                                                p-[10px] md:p-0
+                                            "
+                                            style={{
+                                                backgroundImage: `url(${card.image})`,
+                                                backgroundSize: '85%', // smaller on mobile
+                                                backgroundRepeat: 'no-repeat',
+                                                backgroundPosition: 'center'
+                                                }}
+                                            >
+
+
+                                        <div className="absolute top-3 md:top-8 left-0 flex h-5 md:h-[42.075px] px-0.5 md:px-[9.35px] justify-center items-center gap-0.5 md:gap-[9.35px] rounded-r-md md:rounded-r-[16.83px] bg-red-600">
+                                            <span className="text-white font-['Space Grotesk'] text-[10px] md:text-lg font-bold">Recent</span>
+                                        </div>
+                                        </div>
+
+                                        <div className="flex h-[50%] md:h-[190.74px] flex-col items-center bg-[#0A0A0A] md:p-3 w-full">
+                                        <div className="p-0.5 md:p-[9.35px]">
+                                            <p className="text-[8px] md:text-[26.18px] font-['Space Grotesk'] font-bold text-center leading-tight">
+                                            {card.title}
                                             </p>
                                         </div>
-                                        <div className="p-1 md:p-[9.35px]">
-                                            <p className="text-white font-['Space Grotesk'] text-[8.5px] md:text-[20.505px] font-normal text-center">
+                                        <div className="p-1 px-5 md:p-[9.35px]">
+                                            <p className="text-white font-['Space Grotesk'] text-[8.5px] md:text-[20.505px] font-normal text-center leading-tight md:leading-snug">
                                                 {card.description}
                                             </p>
+                                            </div>
                                         </div>
-                                    </div>
                                 </div>
                             ))}
                         </div>

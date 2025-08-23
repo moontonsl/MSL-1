@@ -82,7 +82,7 @@ const Step3GameDetails = ({
           const mlIdExists = await checkMlIdExists(data.roleId || '');
           console.log('ML ID Exists:', mlIdExists);
           if (mlIdExists) {
-            setLocalError("⚠️ ML Account already used. Please use a different ML Account.");
+            setErrorMessage(`⚠️ ML Account: The ML Account has already been taken.`);
             setIsMlIdValid(false);
             handleInputChange({ target: { name: 'ign', value: '' } });
             handleInputChange({ target: { name: 'level', value: '' } });
@@ -90,7 +90,7 @@ const Step3GameDetails = ({
             handleInputChange({ target: { name: 'userId', value: '' } });
             handleInputChange({ target: { name: 'serverId', value: '' } });
             handleInputChange({ target: { name: 'avatar', value: '' } });
-            
+            console.log(localError);
             setTimeout(() => {
               setIsBlurred(false);
             }, 1000);
