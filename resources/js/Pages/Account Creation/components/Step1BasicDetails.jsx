@@ -57,7 +57,7 @@ const Step1BasicDetails = ({
     if (age < 16) {
       setErrorMessage('⚠️ Age not allowed. Must be 16 or above.');
       handleInputChange(e);
-      handleInputChange({ target: { name: 'age', value: "test2" } });
+      handleInputChange({ target: { name: 'age', value: "" } });
       return;
     }
 
