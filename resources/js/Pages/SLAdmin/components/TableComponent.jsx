@@ -9,6 +9,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
     const [users, setUsers] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [totalUsers, setTotalUsers] = useState(0);
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
@@ -19,6 +20,12 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
     const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
     const [showBlockModal, setShowBlockModal] = useState(false);
     const [blockReason, setBlockReason] = useState('');
+    const [zoomLevel, setZoomLevel] = useState(1);
+    const [pan, setPan] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+    const [fileExists, setFileExists] = useState(true);
+    const [showNoAttachmentAlert, setShowNoAttachmentAlert] = useState(false);
     const ITEMS_PER_PAGE = 20;
 
     const fetchUsers = async (page = 1) => {
@@ -41,6 +48,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             setUsers(data.data || []);
             setTotalPages(data.last_page || 1);
             setCurrentPage(data.current_page || 1);
+            setTotalUsers(data.total || 0);
         } catch (error) {
             console.error('Error fetching users:', error);
             setUsers([]);
@@ -114,18 +122,71 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
         setSelectedUser(null);
     };
 
-    const handleViewAttachment = (proofOfEnrollment) => {
+    const handleViewAttachment = async (proofOfEnrollment) => {
         if (proofOfEnrollment) {
-           
             const fullUrl = `/storage/${proofOfEnrollment}`;
-            setAttachmentUrl(fullUrl);
-            setShowAttachmentModal(true);
+            
+            // Check if file exists on server
+            try {
+                const response = await fetch(fullUrl, { method: 'HEAD' });
+                if (response.ok) {
+                    setFileExists(true);
+                    setAttachmentUrl(fullUrl);
+                    setShowAttachmentModal(true);
+                } else {
+                    setFileExists(false);
+                    setAttachmentUrl(fullUrl);
+                    setShowAttachmentModal(true);
+                }
+            } catch (error) {
+                console.error('Error checking file:', error);
+                setFileExists(false);
+                setAttachmentUrl(fullUrl);
+                setShowAttachmentModal(true);
+            }
         }
     };
 
     const closeAttachmentModal = () => {
         setShowAttachmentModal(false);
         setAttachmentUrl('');
+        // Reset zoom and pan when closing modal
+        setZoomLevel(1);
+        setPan({ x: 0, y: 0 });
+        setIsDragging(false);
+        setFileExists(true);
+    };
+
+    // Zoom and Pan handlers for images
+    const handleWheel = (e) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.25 : 0.25;
+        setZoomLevel(prev => {
+            const newZoom = Math.max(0.5, Math.min(3, prev + delta));
+            return newZoom;
+        });
+    };
+
+    const handleMouseDown = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+        setDragStart({
+            x: e.clientX - pan.x,
+            y: e.clientY - pan.y
+        });
+    };
+
+    const handleMouseMove = (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        setPan({
+            x: e.clientX - dragStart.x,
+            y: e.clientY - dragStart.y
+        });
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
     };
 
     const showToast = (message, type = 'info') => {
@@ -134,6 +195,14 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
 
     const hideToast = () => {
         setToast({ show: false, message: '', type: 'info' });
+    };
+
+    const handleVerifyAttempt = (user) => {
+        if (!user.proofOfEnrollment) {
+            setShowNoAttachmentAlert(true);
+            return false;
+        }
+        return true;
     };
 
     const handleAction = async (action, userId, reason = null) => {
@@ -147,6 +216,11 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             
             switch (action) {
                 case 'verify':
+                    // Additional check for proof of enrollment before making the API call
+                    const targetUser = users.find(u => u.id === userId);
+                    if (targetUser && !targetUser.proofOfEnrollment) {
+                        throw new Error('Cannot verify user without proof of enrollment. The user must upload their proof of enrollment document first.');
+                    }
                     url = `/api/sladmin/users/${userId}/verify`;
                     method = 'PATCH';
                     break;
@@ -176,10 +250,25 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                 body: Object.keys(body).length > 0 ? JSON.stringify(body) : undefined,
             });
             
-            const data = await response.json();
+            // Check if response is JSON before trying to parse it
+            const contentType = response.headers.get('content-type');
+            let data;
+            
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+            } else {
+                // If not JSON, get the text to see what the server returned
+                const textResponse = await response.text();
+                console.error('Server returned non-JSON response:', textResponse);
+                throw new Error('Server returned an invalid response. Please try again or contact support.');
+            }
             
             if (!response.ok) {
-                throw new Error(data.error || 'Action failed');
+                // Special handling for verification without attachment
+                if (action === 'verify' && response.status === 400 && data.error && data.error.includes('proof of enrollment')) {
+                    throw new Error('Verification failed: User must upload proof of enrollment before verification.');
+                }
+                throw new Error(data.error || data.message || 'Action failed');
             }
             
             //Close modal and refresh user list
@@ -199,8 +288,17 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             showToast(actionMessages[action] || 'Action completed successfully', 'success');
             
         } catch (err) {
-            setError(err.message);
-            showToast(err.message, 'error');
+            console.error('Action error:', err);
+            let errorMessage = 'An unexpected error occurred. Please try again.';
+            
+            if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your connection and try again.';
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+            
+            setError(errorMessage);
+            showToast(errorMessage, 'error');
         } finally {
             setActionLoading(false);
         }
@@ -221,6 +319,30 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
 
     return (
         <>
+            {/* Summary Section */}
+            {users.length > 0 && (
+                <div className="mb-4 p-4 bg-neutral-800 rounded-lg border border-neutral-700">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className="text-white">
+                                <span className="font-semibold">Students:</span> {totalUsers}
+                            </div>
+                            {(() => {
+                                const usersWithoutAttachment = users.filter(user => !user.proofOfEnrollment && (user.state === 'New' || user.state === 'Renew'));
+                                return usersWithoutAttachment.length > 0 ? (
+                                    <div className="text-red-400">
+                                        <span className="font-semibold">Users Missing Attachments (Current Page):</span> {usersWithoutAttachment.length}
+                                    </div>
+                                ) : null;
+                            })()}
+                        </div>
+                        <div className="text-sm text-gray-400">
+                            Users without proof of enrollment cannot be verified • Showing page {currentPage} of {totalPages}
+                        </div>
+                    </div>
+                </div>
+            )}
+            
             <div className="overflow-x-auto rounded-lg border border-neutral-800 bg-[#1a1a1a] text-white shadow custom-scrollbar">
                 <table className="min-w-full table-auto text-sm">
                     <thead className="bg-[#2a2a2a] text-xs uppercase text-gray-400">
@@ -262,22 +384,31 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                             <td className="px-4 py-3 hidden md:table-cell">{item.university}</td>
                             <td className="px-4 py-3 hidden md:table-cell">{item.year_level}</td>
                             <td className="px-4 py-3 hidden md:table-cell">
-                  <span
-                      className={`rounded px-2 py-1 text-xs font-medium ${
-                          item.state === 'Verified'
-                              ? 'bg-green-600/10 text-green-400'
-                              : item.state === 'Blocked'
-                                  ? 'bg-red-600/10 text-red-400'
-                                  : 'bg-yellow-600/10 text-yellow-400'
-                      }`}
-                  >
-                    {item.state}
-                  </span>
+                                <div className="flex flex-col gap-1">
+                                    <span
+                                        className={`rounded px-2 py-1 text-xs font-medium ${
+                                            item.state === 'Verified'
+                                                ? 'bg-green-600/10 text-green-400'
+                                                : item.state === 'Blocked'
+                                                    ? 'bg-red-600/10 text-red-400'
+                                                    : 'bg-yellow-600/10 text-yellow-400'
+                                        }`}
+                                    >
+                                        {item.state}
+                                    </span>
+                                    {!item.proofOfEnrollment && (item.state === 'New' || item.state === 'Renew') && (
+                                        <span className="rounded px-2 py-1 text-xs font-medium bg-red-600/10 text-red-400 border border-red-500/30">
+                                            ⚠️ No Attachment
+                                        </span>
+                                    )}
+                                </div>
                             </td>
                             <td className="px-4 py-3 text-center">
-                                <button className="rounded bg-white px-4 py-1.5 text-sm font-semibold text-black hover:bg-gray-200 whitespace-nowrap" onClick={() => openModal(item)}>
-                                    View Profile
-                                </button>
+                                <div className="flex flex-col sm:flex-row items-center gap-2">
+                                    <button className="rounded bg-white px-4 py-1.5 text-sm font-semibold text-black hover:bg-gray-200 whitespace-nowrap" onClick={() => openModal(item)}>
+                                        View Profile
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     ))}
@@ -420,6 +551,17 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                         </div>
                                     </div>
                                 )}
+                                
+                                {/* Attachment Warning */}
+                                {!selectedUser.proofOfEnrollment && (selectedUser.state === 'New' || selectedUser.state === 'Renew') && (
+                                    <div className="col-span-2 mb-4">
+                                        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="font-semibold text-red-400">Student has not uploaded proof of enrollment</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <div className="w-full flex flex-col sm:flex-row flex-wrap justify-between items-center gap-2 sm:gap-4 mt-4">
                                 <div className="flex gap-2 w-full sm:w-auto justify-center sm:justify-start">
@@ -446,9 +588,18 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                 <div className="flex gap-2 w-full sm:w-auto justify-center sm:justify-end mt-2 sm:mt-0">
                                     {(stateFilter === 'New' || stateFilter === 'Renew') && (
                                     <button 
-                                        className="bg-green-500 text-white px-4 py-2 rounded font-semibold w-full sm:w-auto disabled:opacity-50"
-                                        onClick={() => handleAction('verify', selectedUser.id)}
-                                        disabled={actionLoading}
+                                        className={`px-4 py-2 rounded font-semibold w-full sm:w-auto disabled:opacity-50 ${
+                                            !selectedUser.proofOfEnrollment 
+                                                ? 'bg-gray-500 text-gray-300 cursor-not-allowed' 
+                                                : 'bg-green-500 text-white hover:bg-green-600'
+                                        }`}
+                                        onClick={() => {
+                                            if (handleVerifyAttempt(selectedUser)) {
+                                                handleAction('verify', selectedUser.id);
+                                            }
+                                        }}
+                                        disabled={actionLoading || !selectedUser.proofOfEnrollment}
+                                        title={!selectedUser.proofOfEnrollment ? 'Cannot verify without proof of enrollment' : 'Verify this student'}
                                     >
                                         {actionLoading ? 'Processing...' : 'Verify'}
                                     </button>
@@ -579,39 +730,183 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             {showAttachmentModal && createPortal(
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/80" onClick={closeAttachmentModal}></div>
-                    <div className="relative bg-black text-white p-4 rounded-lg max-w-[90vw] max-h-[90vh] overflow-auto">
+                    <div className="relative bg-black text-white p-4 rounded-lg max-w-[95vw] w-[800px] max-h-[90vh] overflow-auto border border-neutral-700">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-xl font-bold">Proof of Enrollment</h3>
-                            <button 
-                                onClick={closeAttachmentModal}
-                                className="text-white hover:text-gray-300 text-2xl font-bold ml-4"
-                            >
-                                ×
-                            </button>
+                            <div className="flex items-center gap-2">
+                                {/* Zoom Controls */}
+                                <div className="flex items-center gap-2 bg-neutral-800/50 rounded-lg px-3 py-1 border border-neutral-700">
+                                    <button 
+                                        onClick={() => setZoomLevel(prev => Math.max(0.5, prev - 0.25))}
+                                        className="text-white hover:text-blue-400 transition-colors p-1 rounded hover:bg-neutral-700"
+                                        title="Zoom Out"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+                                        </svg>
+                                    </button>
+                                    <span className="text-sm text-gray-300 min-w-[3rem] text-center">
+                                        {Math.round(zoomLevel * 100)}%
+                                    </span>
+                                    <button 
+                                        onClick={() => setZoomLevel(prev => Math.min(3, prev + 0.25))}
+                                        className="text-white hover:text-blue-400 transition-colors p-1 rounded hover:text-blue-400 transition-colors p-1 rounded hover:bg-neutral-700"
+                                        title="Zoom In"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                                        </svg>
+                                    </button>
+                                    <button 
+                                        onClick={() => setZoomLevel(1)}
+                                        className="text-white hover:text-green-400 transition-colors p-1 rounded hover:bg-neutral-700 text-xs"
+                                        title="Reset Zoom"
+                                    >
+                                        Reset
+                                    </button>
+                                </div>
+                                <button 
+                                    onClick={closeAttachmentModal}
+                                    className="text-white hover:text-gray-300 text-2xl font-bold ml-4"
+                                >
+                                    ×
+                                </button>
+                            </div>
                         </div>
-                        <div className="flex justify-center">
-                            <img 
-                                src={attachmentUrl} 
-                                alt="Proof of Enrollment" 
-                                className="max-w-full max-h-[70vh] object-contain rounded-lg"
-                                onError={(e) => {
-                                    e.target.style.display = 'none';
-                                    e.target.nextSibling.style.display = 'block';
-                                }}
-                            />
+                        <div className="flex justify-center overflow-hidden w-full">
+                            {!fileExists ? (
+                                // File not found message
+                                <div className="text-center p-8 text-red-400 bg-red-500/10 rounded-lg border border-red-500/30 w-full">
+                                    <svg className="w-16 h-16 mx-auto mb-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    <p className="text-xl font-semibold mb-2">File Not Found</p>
+                                    <div className="flex flex-col items-center">
+                                        <p className="text-sm text-red-300">The proof of enrollment file could not be located on the server.</p>
+                                    </div>
+                                </div>
+                            ) : attachmentUrl.toLowerCase().endsWith('.pdf') ? (
+                                // PDF Viewer with Zoom
+                                <div className="relative w-full h-[75vh] overflow-auto">
+                                    <iframe
+                                        src={`${attachmentUrl}#toolbar=0&navpanes=0&scrollbar=0&zoom=${Math.round(zoomLevel * 100)}`}
+                                        className="w-full h-full rounded-lg border border-neutral-700"
+                                        title="Proof of Enrollment PDF"
+                                        style={{
+                                            transform: `scale(${zoomLevel})`,
+                                            transformOrigin: 'top left',
+                                            width: `${100 / zoomLevel}%`,
+                                            height: `${100 / zoomLevel}%`
+                                        }}
+                                        onError={(e) => {
+                                            e.target.style.display = 'none';
+                                            e.target.nextSibling.style.display = 'block';
+                                        }}
+                                    />
+                                </div>
+                            ) : (
+                                // Image Viewer with Zoom and Pan
+                                <div 
+                                    className="relative overflow-hidden rounded-lg border border-neutral-700 w-full"
+                                    style={{ 
+                                        height: '75vh',
+                                        cursor: isDragging ? 'grabbing' : 'grab'
+                                    }}
+                                    onMouseDown={handleMouseDown}
+                                    onMouseMove={handleMouseMove}
+                                    onMouseUp={handleMouseUp}
+                                    onMouseLeave={handleMouseUp}
+                                    onWheel={handleWheel}
+                                >
+                                    <img 
+                                        src={attachmentUrl} 
+                                        alt="Proof of Enrollment" 
+                                        className="transition-transform duration-200 ease-out"
+                                        style={{
+                                            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoomLevel})`,
+                                            transformOrigin: 'center',
+                                            width: '100%',
+                                            height: '100%',
+                                            objectFit: 'contain'
+                                        }}
+                                        onError={(e) => {
+                                            e.target.style.display = 'none';
+                                            e.target.nextSibling.style.display = 'block';
+                                        }}
+                                    />
+                                </div>
+                            )}
+                            
+                            {/* File not found message */}
                             <div 
-                                className="hidden text-center p-8 text-gray-400"
+                                className="hidden text-center p-8 text-red-400 bg-red-500/10 rounded-lg border border-red-500/30"
                                 style={{ display: 'none' }}
                             >
-                                <p className="text-lg mb-2">Image could not be loaded</p>
-                                <p className="text-sm">The proof of enrollment image may be missing or corrupted.</p>
-                                <p className="text-xs mt-2">Path: {attachmentUrl}</p>
+                                <svg className="w-16 h-16 mx-auto mb-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <p className="text-xl font-semibold mb-2">File Not Found</p>
+                                <p className="text-sm text-red-300">The proof of enrollment file could not be located on the server.</p>
+                                <p className="text-xs text-red-400 mt-2">Path: {attachmentUrl}</p>
                             </div>
                         </div>
                     </div>
                 </div>,
                 document.body
             )}
+            
+            {/* No Attachment Alert Modal */}
+            {showNoAttachmentAlert && createPortal(
+                <div className="fixed inset-0 z-[80] bg-[#fff]/50 flex items-center justify-center p-4" style={{ pointerEvents: 'auto' }}>
+                    <div 
+                        className="absolute inset-0 bg-black/50" 
+                        onClick={() => setShowNoAttachmentAlert(false)}
+                    ></div>
+                    <div 
+                        className="relative bg-black text-white p-6 rounded-lg max-w-md w-full mx-4 border border-neutral-700" 
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ pointerEvents: 'auto' }}
+                    >
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold text-red-400">⚠️ Verification Blocked</h3>
+                            <button 
+                                onClick={() => setShowNoAttachmentAlert(false)}
+                                className="text-white hover:text-gray-300 text-2xl font-bold"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        
+                        <div className="mb-6">
+                            <div className="text-center mb-4">
+                                <svg className="w-16 h-16 mx-auto mb-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <p className="text-gray-300 mb-3 text-center">
+                                <span className="font-semibold text-white">{selectedUser?.name} {selectedUser?.surname}</span> cannot be verified at this time.
+                            </p>
+                            <p className="text-red-300 text-sm text-center">
+                                <strong>Reason:</strong> No proof of enrollment document has been uploaded.
+                            </p>
+                            <p className="text-gray-400 text-sm text-center mt-3">
+                                The student must upload their proof of enrollment before they can be verified.
+                            </p>
+                        </div>
+                        
+                        <div className="flex justify-end">
+                            <button 
+                                onClick={() => setShowNoAttachmentAlert(false)}
+                                className="bg-neutral-700 hover:bg-neutral-600 text-white px-4 py-2 rounded font-semibold transition-colors"
+                            >
+                                Understood
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+            
             <Toast
                 message={toast.message}
                 type={toast.type}

@@ -513,6 +513,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return response()->json(['error' => 'User not found or access denied.'], 404);
         }
         
+        // Check if user has proof of enrollment before allowing verification
+        if (!$targetUser->proofOfEnrollment) {
+            return response()->json(['error' => 'Cannot verify user without proof of enrollment. The user must upload their proof of enrollment document first.'], 400);
+        }
+        
         $targetUser->update([
             'state' => 'Verified',
             'verified_by' => $user->id,
