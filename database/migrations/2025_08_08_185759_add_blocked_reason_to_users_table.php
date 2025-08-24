@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->text('blocked_reason')->nullable()->after('state');
+            $table->text('blocked_reason')->nullable()->after('status');
         });
     }
 
