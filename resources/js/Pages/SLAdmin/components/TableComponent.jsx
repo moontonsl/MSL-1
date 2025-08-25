@@ -452,185 +452,284 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             )}
 
             {/* User Details Modal */}
-            <Modal show={showModal} maxWidth="70vw" onClose={closeModal}>
+            <Modal show={showModal} maxWidth="80vw" onClose={closeModal}>
                 {selectedUser && (
-                    <div className="bg-black text-white p-4 sm:p-4 flex flex-col md:flex-row gap-4 md:gap-4 min-h-[400px] max-h-[80vh] overflow-y-auto relative">
+                    <div className="bg-gradient-to-br from-[#000] via-gray-800 to-black text-white p-2 sm:p-8 min-h-[600px] max-h-[90vh] overflow-y-auto relative rounded-md">
+                        {/* Close Button */}
                         <button 
                             onClick={closeModal}
-                            className="bg-black rounded-md p-1 absolute top-4 right-4 text-white hover:text-gray-300 text-xl z-10"
+                            className="absolute top-4 right-4 z-10 p-2 rounded-full bg-gray-800/50 hover:bg-gray-700/70 transition-all duration-200 text-gray-300 hover:text-white"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-x-square-fill" viewBox="0 0 16 16">
-                                <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm3.354 4.646L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 1 1 .708-.708"/>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="bi bi-x" viewBox="0 0 16 16">
+                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.646 2.647a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
                             </svg>
                         </button>
-                        <div className="flex flex-col items-center md:items-start w-full md:w-1/3 mb-4 md:mb-0 bg-[#1a1a1a] rounded-lg px-10">
-                            <span className={`absolute left-0 -translate-x-0 bg-black font-bold px-6 py-1 rounded-lg text-lg whitespace-nowrap shadow ${selectedUser.state === 'Verified' ? 'text-green-400' : 'text-yellow-400'}`}>{selectedUser.state}</span>
-                            <br />
-                            <div className="relative mt-10 mb-6 flex flex-col items-center w-full justify-center">
-                                <div className="rounded-full border-4 border-yellow-400 p-1 bg-gradient-to-tr from-[#D4AF37] to-[#FFFACD] mx-auto">
-                                    <img src={avatar} alt="avatar" className="w-28 h-28 sm:w-56 sm:h-56 rounded-full object-cover" />
-                                </div>
-                            </div>
-                            <div className="mt-2 w-full">
-                                <div className="text-gray-600 text-sm">Full Name:</div>
-                                <div className="font-bold text-lg mb-2 break-words">{selectedUser.name || '-'} {selectedUser.surname || '-'}</div>
-                                <div className="text-gray-600 text-sm">School Name:</div>
-                                <div className="font-bold text-lg mb-2 break-words">{selectedUser.university || '-'}</div>
-                                <div className="text-gray-600 text-sm">Year Level:</div>
-                                <div className="font-bold text-lg break-words">{selectedUser.year_level || '-'}</div>
-                                <br />
-                            </div>
-                        </div>
-                        <div className="flex-1 flex flex-col justify-between w-full md:w-2/3 bg-[#1a1a1a] rounded-lg p-4">
-                            <div>
-                                <div className="text-gray-600 text-sm">Username:</div>
-                                <div className="font-bold text-lg mb-2 break-words">{selectedUser.username || '-'}</div>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 mb-6">
-                                <div>
-                                    <div className="text-gray-600 text-sm">MLBB ID:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.ml_id || '-'}</div>
-                                </div>
-                                <div>
-                                    <div className="text-gray-600 text-sm">MLBB Server:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.ml_server || '-'}</div>
-                                </div>
-                                <div>
-                                    <div className="text-gray-600 text-sm">MLBB IGN:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.ml_ign || '-'}</div>
-                                </div>
-                                <div>
-                                    <div className="text-gray-600 text-sm">Email:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.email || '-'}</div>
-                                </div>
-                                <div>
-                                    <div className="text-gray-600 text-sm">Contact Number:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.contact_number || '-'}</div>
-                                </div>
-                                <div>
-                                    <div className="text-gray-600 text-sm">Course:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.course || '-'}</div>
-                                </div>
-                                <div>
-                                    <div className="text-gray-600 text-sm">Student ID:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.studentId || '-'}</div>
-                                </div>
-                                <div>
-                                    <div className="text-gray-600 text-sm">Region:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.region || '-'}</div>
-                                </div>
-                                <div>
-                                    <div className="text-gray-600 text-sm">Island:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.island || '-'}</div>
-                                </div>
-                                <div>
-                                    <div className="text-gray-600 text-sm">Date Joined:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.created_at ? new Date(selectedUser.created_at).toLocaleDateString() : '-'}</div>
-                                </div>
-                                {selectedUser.verified_by && (
-                                    <div>
-                                        <div className="text-gray-600 text-sm">Verified By:</div>
-                                        <div className="font-bold text-lg mb-2 break-words">
-                                            {selectedUser.verifier_name ? `${selectedUser.verifier_name} ${selectedUser.verifier_surname}` : 'Unknown'}
+
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            {/* Profile Card */}
+                            <div className="lg:col-span-1">
+                                <div className="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 h-fit">
+                                    {/* Avatar Section */}
+                                    <div className="text-center mb-2">
+                                        <div className="relative inline-block">
+                                            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-400 rounded-full blur-lg opacity-30 animate-pulse"></div>
+                                            <div className="relative rounded-full border-4 border-yellow-400 p-2 bg-gradient-to-tr from-yellow-400 to-yellow-300">
+                                                <img 
+                                                    src={avatar} 
+                                                    alt="avatar" 
+                                                    className="w-32 h-32 rounded-full object-cover shadow-2xl" 
+                                                />
+                                            </div>
                                         </div>
+                                        
+                                        
                                     </div>
-                                )}
-                                {selectedUser.verified_date && (
-                                    <div>
-                                        <div className="text-gray-600 text-sm">Verified Date:</div>
-                                        <div className="font-bold text-lg mb-2 break-words">
-                                            {new Date(selectedUser.verified_date).toLocaleDateString()} at {new Date(selectedUser.verified_date).toLocaleTimeString()}
+
+                                    {/* Basic Info */}
+                                    <div className="space-y-4">
+                                        <div className="text-center">
+                                            <h3 className="text-xl font-bold text-white mb-1">
+                                                {selectedUser.name || '-'} {selectedUser.surname || '-'}
+                                            </h3>
+                                            <div className="flex items-center justify-center gap-2">
+                                                <p className="text-gray-400 text-sm">@{selectedUser.username || '-'}</p>
+                                                <div className="inline-flex items-center gap-1">
+                                                    <div className={`w-2 h-2 rounded-full ${selectedUser.state === 'Verified' ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'}`}></div>
+                                                    <span className={`font-semibold text-xs uppercase tracking-wider ${selectedUser.state === 'Verified' ? 'text-green-400' : 'text-yellow-400'}`}>
+                                                        {selectedUser.state}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
-                                {selectedUser.state === 'Blocked' && selectedUser.blocked_reason && (
-                                    <div className="col-span-2">
-                                        <div className="text-gray-600 text-sm">Blocked Reason:</div>
-                                        <div className="font-bold text-lg mb-2 break-words text-red-400 bg-red-500/10 p-3 rounded-lg border border-red-500/30">
-                                            {selectedUser.blocked_reason}
-                                        </div>
-                                    </div>
-                                )}
-                                
-                                {/* Attachment Warning */}
-                                {!selectedUser.proofOfEnrollment && (selectedUser.state === 'New' || selectedUser.state === 'Renew') && (
-                                    <div className="col-span-2 mb-4">
-                                        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <span className="font-semibold text-red-400">Student has not uploaded proof of enrollment</span>
+                                        
+                                        <div className="space-y-3">
+                                            <div className="bg-gray-700/30 rounded-lg p-3">
+                                                <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">School</div>
+                                                <div className="font-medium text-white">{selectedUser.university || '-'}</div>
+                                            </div>
+                                            
+                                            <div className="bg-gray-700/30 rounded-lg p-3">
+                                                <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Year Level</div>
+                                                <div className="font-medium text-white">{selectedUser.year_level || '-'}</div>
+                                            </div>
+                                            
+                                            <div className="bg-gray-700/30 rounded-lg p-3">
+                                                <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Course</div>
+                                                <div className="font-medium text-white">{selectedUser.course || '-'}</div>
                                             </div>
                                         </div>
                                     </div>
-                                )}
-                            </div>
-                            <div className="w-full flex flex-col sm:flex-row flex-wrap justify-between items-center gap-2 sm:gap-4 mt-4">
-                                <div className="flex gap-2 w-full sm:w-auto justify-center sm:justify-start">
-                                    <button 
-                                        className="bg-white text-black px-4 py-2 rounded font-semibold w-full sm:w-auto disabled:opacity-50"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleViewAttachment(selectedUser.proofOfEnrollment);
-                                        }}
-                                        disabled={!selectedUser.proofOfEnrollment}
-                                    >
-                                        {selectedUser.proofOfEnrollment ? 'View Attachment' : 'No Attachment'}
-                                    </button>
-                                    {(stateFilter === 'Verified' || stateFilter === 'Renew' ||stateFilter === 'New') && (
-                                        <button 
-                                            className="bg-white text-black px-4 py-2 rounded font-semibold w-full sm:w-auto disabled:opacity-50"
-                                            onClick={() => handleAction('renew', selectedUser.id)}
-                                            disabled={actionLoading}
-                                        >
-                                            {actionLoading ? 'Processing...' : 'Renew'}
-                                        </button>
-                                    )}
-                                </div>
-                                <div className="flex gap-2 w-full sm:w-auto justify-center sm:justify-end mt-2 sm:mt-0">
-                                    {(stateFilter === 'New' || stateFilter === 'Renew') && (
-                                    <button 
-                                        className={`px-4 py-2 rounded font-semibold w-full sm:w-auto disabled:opacity-50 ${
-                                            !selectedUser.proofOfEnrollment 
-                                                ? 'bg-gray-500 text-gray-300 cursor-not-allowed' 
-                                                : 'bg-green-500 text-white hover:bg-green-600'
-                                        }`}
-                                        onClick={() => {
-                                            if (handleVerifyAttempt(selectedUser)) {
-                                                handleAction('verify', selectedUser.id);
-                                            }
-                                        }}
-                                        disabled={actionLoading || !selectedUser.proofOfEnrollment}
-                                        title={!selectedUser.proofOfEnrollment ? 'Cannot verify without proof of enrollment' : 'Verify this student'}
-                                    >
-                                        {actionLoading ? 'Processing...' : 'Verify'}
-                                    </button>
-                                    )}
-                                    <button 
-                                        className="bg-yellow-400 text-black px-4 py-2 rounded font-semibold w-full sm:w-auto disabled:opacity-50"
-                                        onClick={() => {
-                                            setShowBlockModal(true);
-                                            setBlockReason('');
-                                            setError('');
-                                        }}
-                                        disabled={actionLoading}
-                                    >
-                                        {actionLoading ? 'Processing...' : 'Block'}
-                                    </button>
-                                    {user?.role === 'Super Admin' && (
-                                        <button 
-                                            className="bg-red-600 text-white px-4 py-2 rounded font-semibold w-full sm:w-auto disabled:opacity-50"
-                                            onClick={() => handleAction('delete', selectedUser.id)}
-                                            disabled={actionLoading}
-                                        >
-                                            {actionLoading ? 'Processing...' : 'Delete'}
-                                        </button>
-                                    )}
                                 </div>
                             </div>
-                            {error && (
-                                <div className="w-full mt-4 p-3 bg-red-600 text-white rounded text-center">
-                                    {error}
+
+                            {/* Details Section */}
+                            <div className="lg:col-span-2">
+                                <div className="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
+                                    <h4 className="text-lg font-semibold text-white mb-6 border-b border-gray-700/50 pb-3">Student Information</h4>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {/* MLBB Information */}
+                                        <div className="space-y-4">
+                                            <h5 className="text-sm font-medium text-yellow-400 uppercase tracking-wider">Mobile Legends</h5>
+                                            <div className="space-y-3">
+                                                <div className="bg-gray-700/20 rounded-lg p-3">
+                                                    <div className="text-gray-400 text-xs mb-1">MLBB ID</div>
+                                                    <div className="font-medium text-white">{selectedUser.ml_id || '-'}</div>
+                                                </div>
+                                                <div className="bg-gray-700/20 rounded-lg p-3">
+                                                    <div className="text-gray-400 text-xs mb-1">Server</div>
+                                                    <div className="font-medium text-white">{selectedUser.ml_server || '-'}</div>
+                                                </div>
+                                                <div className="bg-gray-700/20 rounded-lg p-3">
+                                                    <div className="text-gray-400 text-xs mb-1">IGN</div>
+                                                    <div className="font-medium text-white">{selectedUser.ml_ign || '-'}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Contact Information */}
+                                        <div className="space-y-4">
+                                            <h5 className="text-sm font-medium text-blue-400 uppercase tracking-wider">Contact Details</h5>
+                                            <div className="space-y-3">
+                                                <div className="bg-gray-700/20 rounded-lg p-3">
+                                                    <div className="text-gray-400 text-xs mb-1">Email</div>
+                                                    <div className="font-medium text-white break-words">{selectedUser.email || '-'}</div>
+                                                </div>
+                                                <div className="bg-gray-700/20 rounded-lg p-3">
+                                                    <div className="text-gray-400 text-xs mb-1">Phone</div>
+                                                    <div className="font-medium text-white">{selectedUser.contact_number || '-'}</div>
+                                                </div>
+                                                <div className="bg-gray-700/20 rounded-lg p-3">
+                                                    <div className="text-gray-400 text-xs mb-1">Student ID</div>
+                                                    <div className="font-medium text-white">{selectedUser.studentId || '-'}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Location Information */}
+                                        <div className="space-y-4 md:col-span-2">
+                                            <h5 className="text-sm font-medium text-green-400 uppercase tracking-wider">Location</h5>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                <div className="bg-gray-700/20 rounded-lg p-3">
+                                                    <div className="text-gray-400 text-xs mb-1">Region</div>
+                                                    <div className="font-medium text-white">{selectedUser.region || '-'}</div>
+                                                </div>
+                                                <div className="bg-gray-700/20 rounded-lg p-3">
+                                                    <div className="text-gray-400 text-xs mb-1">Island</div>
+                                                    <div className="font-medium text-white">{selectedUser.island || '-'}</div>
+                                                </div>
+                                                <div className="bg-gray-700/20 rounded-lg p-3">
+                                                    <div className="text-gray-400 text-xs mb-1">Joined</div>
+                                                    <div className="font-medium text-white">
+                                                        {selectedUser.created_at ? new Date(selectedUser.created_at).toLocaleDateString() : '-'}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Verification Details */}
+                                        {(selectedUser.verified_by || selectedUser.verified_date) && (
+                                            <div className="space-y-4 md:col-span-2">
+                                                <h5 className="text-sm font-medium text-purple-400 uppercase tracking-wider">Verification Details</h5>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    {selectedUser.verified_by && (
+                                                        <div className="bg-gray-700/20 rounded-lg p-3">
+                                                            <div className="text-gray-400 text-xs mb-1">Verified By</div>
+                                                            <div className="font-medium text-white">
+                                                                {selectedUser.verifier_name ? `${selectedUser.verifier_name} ${selectedUser.verifier_surname}` : 'Unknown'}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {selectedUser.verified_date && (
+                                                        <div className="bg-gray-700/20 rounded-lg p-3">
+                                                            <div className="text-gray-400 text-xs mb-1">Verified On</div>
+                                                            <div className="font-medium text-white">
+                                                                {new Date(selectedUser.verified_date).toLocaleDateString()} at {new Date(selectedUser.verified_date).toLocaleTimeString()}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Blocked Reason */}
+                                        {selectedUser.state === 'Blocked' && selectedUser.blocked_reason && (
+                                            <div className="md:col-span-2">
+                                                <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                                                        <span className="font-semibold text-red-400 text-sm uppercase tracking-wider">Blocked Reason</span>
+                                                    </div>
+                                                    <div className="text-red-300">{selectedUser.blocked_reason}</div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Attachment Warning */}
+                                        {!selectedUser.proofOfEnrollment && (selectedUser.state === 'New' || selectedUser.state === 'Renew') && (
+                                            <div className="md:col-span-2">
+                                                <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                                        </svg>
+                                                        <span className="font-semibold text-red-400">No Proof of Enrollment Uploaded</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="mt-8 pt-6 border-t border-gray-700/50">
+                                        <div className="flex flex-col sm:flex-row gap-3 justify-between items-stretch sm:items-center">
+                                            {/* Left Side Actions */}
+                                            <div className="flex flex-col sm:flex-row gap-3">
+                                                <button 
+                                                    className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none ${
+                                                        selectedUser.proofOfEnrollment 
+                                                            ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                                                            : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                                    }`}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleViewAttachment(selectedUser.proofOfEnrollment);
+                                                    }}
+                                                    disabled={!selectedUser.proofOfEnrollment}
+                                                >
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                                                        </svg>
+                                                        {selectedUser.proofOfEnrollment ? 'View Attachment' : 'No Attachment'}
+                                                    </div>
+                                                </button>
+                                                
+                                                {(stateFilter === 'Verified' || stateFilter === 'Renew' || stateFilter === 'New') && (
+                                                    <button 
+                                                        className="px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
+                                                        onClick={() => handleAction('renew', selectedUser.id)}
+                                                        disabled={actionLoading}
+                                                    >
+                                                        {actionLoading ? 'Processing...' : 'Renew'}
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            {/* Right Side Actions */}
+                                            <div className="flex flex-col sm:flex-row gap-3">
+                                                {(stateFilter === 'New' || stateFilter === 'Renew') && (
+                                                    <button 
+                                                        className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none ${
+                                                            !selectedUser.proofOfEnrollment 
+                                                                ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                                                                : 'bg-green-600 hover:bg-green-700 text-white'
+                                                        }`}
+                                                        onClick={() => {
+                                                            if (handleVerifyAttempt(selectedUser)) {
+                                                                handleAction('verify', selectedUser.id);
+                                                            }
+                                                        }}
+                                                        disabled={actionLoading || !selectedUser.proofOfEnrollment}
+                                                        title={!selectedUser.proofOfEnrollment ? 'Cannot verify without proof of enrollment' : 'Verify this student'}
+                                                    >
+                                                        {actionLoading ? 'Processing...' : 'Verify'}
+                                                    </button>
+                                                )}
+                                                
+                                                <button 
+                                                    className="px-6 py-3 bg-red-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
+                                                    onClick={() => {
+                                                        setShowBlockModal(true);
+                                                        setBlockReason('');
+                                                        setError('');
+                                                    }}
+                                                    disabled={actionLoading}
+                                                >
+                                                    Block User
+                                                </button>
+                                                
+                                                {user?.role === 'Super Admin' && (
+                                                    <button 
+                                                        className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
+                                                        onClick={() => handleAction('delete', selectedUser.id)}
+                                                        disabled={actionLoading}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Error Display */}
+                                    {error && (
+                                        <div className="mt-4 p-4 bg-red-600/20 border border-red-500/30 text-red-300 rounded-lg text-center">
+                                            {error}
+                                        </div>
+                                    )}
                                 </div>
-                            )}
+                            </div>
                         </div>
                     </div>
                 )}
