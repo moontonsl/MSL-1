@@ -827,7 +827,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             
             {/* Attachment Modal  */}
             {showAttachmentModal && createPortal(
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/80" onClick={closeAttachmentModal}></div>
                     <div className="relative bg-black text-white p-4 rounded-lg max-w-[95vw] w-[800px] max-h-[90vh] overflow-auto border border-neutral-700">
                         <div className="flex justify-between items-center mb-4">
