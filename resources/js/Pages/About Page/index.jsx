@@ -20,7 +20,7 @@ export default function ABOUTPage() {
                     }}
                 >
                     <div className="min-h-screen bg-black/70">
-                        <div className="container mx-auto px-4 py-8 md:py-16">
+                        <div className="mx-auto max-w-[1200px] px-4 py-8 md:py-16">
                             
                             {/* Hero Section */}
                             <div className="flex flex-col lg:grid lg:grid-cols-2 gap-8 lg:gap-12 items-center mb-12 md:mb-20">
@@ -80,14 +80,14 @@ export default function ABOUTPage() {
                                 </div>
 
                                 {/* Desktop Layout */}
-                                <div className="hidden lg:flex lg:flex-row gap-8 justify-center items-center">
+                                <div className="hidden lg:grid lg:grid-cols-2 gap-8 items-stretch">
                                     {/* Our Mission */}
-                                    <div className="w-[820px] h-80 px-9 py-4 bg-black rounded-[30px] shadow-[0px_0px_10px_-2.809999942779541px_rgba(242,194,26,1.00)] flex flex-col justify-start items-start relative">
+                                    <div className="w-full h-full min-h-[20rem] px-9 py-4 bg-black rounded-[30px] shadow-[0px_0px_10px_-2.809999942779541px_rgba(242,194,26,1.00)] flex flex-col justify-start items-start relative">
                                         <div className="self-stretch inline-flex justify-start items-center overflow-hidden mb-2">
                                             <div className="text-center justify-start text-white text-3xl font-bold font-['Montserrat'] leading-10">Our Mission</div>
                                         </div>
                                         <div className="self-stretch flex-1 py-2.5 inline-flex justify-start items-start gap-2.5">
-                                            <div className="w-[620px] justify-start text-white text-base font-medium font-['Montserrat'] leading-relaxed">To empower and unite student leaders across the Philippines through the power of gaming. We strive to create a safe and inclusive community where students can develop their leadership skills, collaborate with one another, and inspire positive change in their schools and communities.</div>
+                                            <div className="w-full justify-start text-white text-base font-medium font-['Montserrat'] leading-relaxed">To empower and unite student leaders across the Philippines through the power of gaming. We strive to create a safe and inclusive community where students can develop their leadership skills, collaborate with one another, and inspire positive change in their schools and communities.</div>
                                         </div>
                                         <img 
                                             src="/images/About Page/Shiny_Harper 1.png" 
@@ -97,12 +97,12 @@ export default function ABOUTPage() {
                                     </div>
 
                                     {/* Our Vision */}
-                                    <div className="w-[820px] h-80 px-9 py-4 bg-black rounded-[30px] shadow-[0px_0px_10px_-2.809999942779541px_rgba(242,194,26,1.00)] flex flex-col justify-start items-start relative">
+                                    <div className="w-full h-full min-h-[20rem] px-9 py-4 bg-black rounded-[30px] shadow-[0px_0px_10px_-2.809999942779541px_rgba(242,194,26,1.00)] flex flex-col justify-start items-start relative">
                                         <div className="self-stretch inline-flex justify-start items-center overflow-hidden mb-2">
                                             <div className="text-center justify-start text-white text-3xl font-bold font-['Montserrat'] leading-10">Our Vision</div>
                                         </div>
                                         <div className="self-stretch flex-1 py-2.5 inline-flex justify-start items-start gap-2.5">
-                                            <div className="w-[620px] justify-start text-white text-base font-medium font-['Montserrat'] leading-relaxed">Creating positive change among young leaders and esports gamers in the Philippines through mobile gaming. We advocate a future where students from all walks of life can come together to share their passions, build their skills, and create meaningful impact in their communities. We strive to be a catalyst for change, leveraging the power of gaming to connect people and inspire them to take action on issues that matter, from social responsibilities to leadership. Through collective effort, we aim to cultivate a generation of socially responsible and compassionate leaders and gamers.</div>
+                                            <div className="w-full justify-start text-white text-base font-medium font-['Montserrat'] leading-relaxed">Creating positive change among young leaders and esports gamers in the Philippines through mobile gaming. We advocate a future where students from all walks of life can come together to share their passions, build their skills, and create meaningful impact in their communities. We strive to be a catalyst for change, leveraging the power of gaming to connect people and inspire them to take action on issues that matter, from social responsibilities to leadership. Through collective effort, we aim to cultivate a generation of socially responsible and compassionate leaders and gamers.</div>
                                         </div>
                                         <img 
                                             src="/images/About Page/Let21 1.png" 
@@ -168,20 +168,20 @@ export default function ABOUTPage() {
                                     </div>
                                 </div>
 
-                                {/* Desktop: 1x4 Row */}
-                                <div className="hidden lg:block w-full max-w-[1620px]">
-                                    <div className="w-full h-96 px-11 py-2 inline-flex justify-center items-center overflow-hidden">
-                                        <div className="w-96 h-96 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
-                                            <img className="w-96 h-96 object-contain" src="/images/About Page/GAD.png" alt="General Affairs Department" />
+                                {/* Desktop: 1x4 Row centered within max width */}
+                                <div className="hidden lg:block w-full">
+                                    <div className="mx-auto max-w-[1200px] h-80 px-4 py-2 grid grid-cols-4 gap-8 place-items-center">
+                                        <div className="w-64 h-64 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
+                                            <img className="w-64 h-64 object-contain" src="/images/About Page/GAD.png" alt="General Affairs Department" />
                                         </div>
-                                        <div className="w-96 h-96 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
-                                            <img className="w-96 h-96 object-contain" src="/images/About Page/CD.png" alt="Campuses Department" />
+                                        <div className="w-64 h-64 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
+                                            <img className="w-64 h-64 object-contain" src="/images/About Page/CD.png" alt="Campuses Department" />
                                         </div>
-                                        <div className="w-96 h-96 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
-                                            <img className="w-96 h-96 object-contain" src="/images/About Page/CSMD.png" alt="Contents and Social Media Department" />
+                                        <div className="w-64 h-64 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
+                                            <img className="w-64 h-64 object-contain" src="/images/About Page/CSMD.png" alt="Contents and Social Media Department" />
                                         </div>
-                                        <div className="w-96 h-96 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
-                                            <img className="w-96 h-96 object-contain" src="/images/About Page/PD.png" alt="Partnerships Department" />
+                                        <div className="w-64 h-64 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
+                                            <img className="w-64 h-64 object-contain" src="/images/About Page/PD.png" alt="Partnerships Department" />
                                         </div>
                                     </div>
                                 </div>
