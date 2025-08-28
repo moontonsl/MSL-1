@@ -48,12 +48,17 @@ const experienceItems = [
 
 const ExperienceSection = () => {
     return (
-        <section className={`py-10 bg-[#FFBD30] text-black ${styles.experienceSection}`}>
-            <div className={styles.expBackground}/>
-            <div className="container mx-auto w-[90vw] md:px-4 relative z-10">
+        <section className={`relative py-10 bg-neutral-950/20 overflow-hidden ${styles.experienceSection}`}>
+  {/* Background Image / Graphic */}
+  <div className={styles.expBackground} />
+  {/* Blur + dim overlay */}
+  <div className={styles.expBlurOverlay} />
+
+{/* Overlay Content */}
+<div className="container mx-auto w-[90vw] md:px-4 relative z-10">
 
                 <div className="text-center mb-10 text-white">
-                    <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
+                    <h2 className="text-[24px] md:text-[32px] lg:text-[40px] font-bold tracking-tight">
                         LEAD TO EXPERIENCE!
                     </h2>
                     <p className="max-w-2xl mx-auto mt-4 text-sm md:text-base">
@@ -94,22 +99,16 @@ const ExperienceSection = () => {
                 >
                     {experienceItems.map((item, index) => (
                         <SwiperSlide key={index}>
-                            <div className={`p-1 rounded-xl bg-[#FFBD30]`}>
-                                <article className="text-white rounded-lg overflow-hidden">
-                                    <div className="bg-black">
-                                        <img
-                                            src={item.img}
-                                            alt={item.title}
-                                            className="w-full aspect-[1/1] object-cover"
-                                            loading="lazy"
-                                        />
-
-                                    </div>
-                                    <div className="p-2 text-center bg-[#FFBD30] h-20 flex items-center">
-                                        <h3 className="font-bold text-base leading-tight uppercase text-black line-clamp-3">{item.title}</h3>
-                                    </div>
-                                </article>
-                            </div>
+                            <article className={styles.expCard}>
+                                <div className={styles.expImageWrap}>
+                                    <img
+                                        src={item.img}
+                                        alt={item.title}
+                                        loading="lazy"
+                                    />
+                                </div>
+                                <h3 className={styles.expCardTitle}>{item.title}</h3>
+                            </article>
                         </SwiperSlide>
                     ))}
                 </Swiper>
