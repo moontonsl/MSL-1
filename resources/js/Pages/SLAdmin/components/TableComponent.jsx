@@ -9,6 +9,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
     const [users, setUsers] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [totalUsers, setTotalUsers] = useState(0);
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
@@ -19,6 +20,12 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
     const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
     const [showBlockModal, setShowBlockModal] = useState(false);
     const [blockReason, setBlockReason] = useState('');
+    const [zoomLevel, setZoomLevel] = useState(1);
+    const [pan, setPan] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+    const [fileExists, setFileExists] = useState(true);
+    const [showNoAttachmentAlert, setShowNoAttachmentAlert] = useState(false);
     const ITEMS_PER_PAGE = 20;
 
     const fetchUsers = async (page = 1) => {
@@ -41,6 +48,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             setUsers(data.data || []);
             setTotalPages(data.last_page || 1);
             setCurrentPage(data.current_page || 1);
+            setTotalUsers(data.total || 0);
         } catch (error) {
             console.error('Error fetching users:', error);
             setUsers([]);
@@ -114,18 +122,71 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
         setSelectedUser(null);
     };
 
-    const handleViewAttachment = (proofOfEnrollment) => {
+    const handleViewAttachment = async (proofOfEnrollment) => {
         if (proofOfEnrollment) {
-           
             const fullUrl = `/storage/${proofOfEnrollment}`;
-            setAttachmentUrl(fullUrl);
-            setShowAttachmentModal(true);
+            
+            // Check if file exists on server
+            try {
+                const response = await fetch(fullUrl, { method: 'HEAD' });
+                if (response.ok) {
+                    setFileExists(true);
+                    setAttachmentUrl(fullUrl);
+                    setShowAttachmentModal(true);
+                } else {
+                    setFileExists(false);
+                    setAttachmentUrl(fullUrl);
+                    setShowAttachmentModal(true);
+                }
+            } catch (error) {
+                console.error('Error checking file:', error);
+                setFileExists(false);
+                setAttachmentUrl(fullUrl);
+                setShowAttachmentModal(true);
+            }
         }
     };
 
     const closeAttachmentModal = () => {
         setShowAttachmentModal(false);
         setAttachmentUrl('');
+        // Reset zoom and pan when closing modal
+        setZoomLevel(1);
+        setPan({ x: 0, y: 0 });
+        setIsDragging(false);
+        setFileExists(true);
+    };
+
+    // Zoom and Pan handlers for images
+    const handleWheel = (e) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.25 : 0.25;
+        setZoomLevel(prev => {
+            const newZoom = Math.max(0.5, Math.min(3, prev + delta));
+            return newZoom;
+        });
+    };
+
+    const handleMouseDown = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+        setDragStart({
+            x: e.clientX - pan.x,
+            y: e.clientY - pan.y
+        });
+    };
+
+    const handleMouseMove = (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        setPan({
+            x: e.clientX - dragStart.x,
+            y: e.clientY - dragStart.y
+        });
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
     };
 
     const showToast = (message, type = 'info') => {
@@ -134,6 +195,14 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
 
     const hideToast = () => {
         setToast({ show: false, message: '', type: 'info' });
+    };
+
+    const handleVerifyAttempt = (user) => {
+        if (!user.proofOfEnrollment) {
+            setShowNoAttachmentAlert(true);
+            return false;
+        }
+        return true;
     };
 
     const handleAction = async (action, userId, reason = null) => {
@@ -147,6 +216,11 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             
             switch (action) {
                 case 'verify':
+                    // Additional check for proof of enrollment before making the API call
+                    const targetUser = users.find(u => u.id === userId);
+                    if (targetUser && !targetUser.proofOfEnrollment) {
+                        throw new Error('Cannot verify user without proof of enrollment. The user must upload their proof of enrollment document first.');
+                    }
                     url = `/api/sladmin/users/${userId}/verify`;
                     method = 'PATCH';
                     break;
@@ -176,10 +250,25 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                 body: Object.keys(body).length > 0 ? JSON.stringify(body) : undefined,
             });
             
-            const data = await response.json();
+            // Check if response is JSON before trying to parse it
+            const contentType = response.headers.get('content-type');
+            let data;
+            
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+            } else {
+                // If not JSON, get the text to see what the server returned
+                const textResponse = await response.text();
+                console.error('Server returned non-JSON response:', textResponse);
+                throw new Error('Server returned an invalid response. Please try again or contact support.');
+            }
             
             if (!response.ok) {
-                throw new Error(data.error || 'Action failed');
+                // Special handling for verification without attachment
+                if (action === 'verify' && response.status === 400 && data.error && data.error.includes('proof of enrollment')) {
+                    throw new Error('Verification failed: User must upload proof of enrollment before verification.');
+                }
+                throw new Error(data.error || data.message || 'Action failed');
             }
             
             //Close modal and refresh user list
@@ -199,8 +288,17 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             showToast(actionMessages[action] || 'Action completed successfully', 'success');
             
         } catch (err) {
-            setError(err.message);
-            showToast(err.message, 'error');
+            console.error('Action error:', err);
+            let errorMessage = 'An unexpected error occurred. Please try again.';
+            
+            if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your connection and try again.';
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+            
+            setError(errorMessage);
+            showToast(errorMessage, 'error');
         } finally {
             setActionLoading(false);
         }
@@ -221,6 +319,30 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
 
     return (
         <>
+            {/* Summary Section */}
+            {users.length > 0 && (
+                <div className="mb-4 p-4 bg-neutral-800 rounded-lg border border-neutral-700">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className="text-white">
+                                <span className="font-semibold">Students:</span> {totalUsers}
+                            </div>
+                            {(() => {
+                                const usersWithoutAttachment = users.filter(user => !user.proofOfEnrollment && (user.state === 'New' || user.state === 'Renew'));
+                                return usersWithoutAttachment.length > 0 ? (
+                                    <div className="text-red-400">
+                                        <span className="font-semibold">Users Missing Attachments (Current Page):</span> {usersWithoutAttachment.length}
+                                    </div>
+                                ) : null;
+                            })()}
+                        </div>
+                        <div className="text-sm text-gray-400">
+                            Users without proof of enrollment cannot be verified • Showing page {currentPage} of {totalPages}
+                        </div>
+                    </div>
+                </div>
+            )}
+            
             <div className="overflow-x-auto rounded-lg border border-neutral-800 bg-[#1a1a1a] text-white shadow custom-scrollbar">
                 <table className="min-w-full table-auto text-sm">
                     <thead className="bg-[#2a2a2a] text-xs uppercase text-gray-400">
@@ -262,22 +384,31 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                             <td className="px-4 py-3 hidden md:table-cell">{item.university}</td>
                             <td className="px-4 py-3 hidden md:table-cell">{item.year_level}</td>
                             <td className="px-4 py-3 hidden md:table-cell">
-                  <span
-                      className={`rounded px-2 py-1 text-xs font-medium ${
-                          item.state === 'Verified'
-                              ? 'bg-green-600/10 text-green-400'
-                              : item.state === 'Blocked'
-                                  ? 'bg-red-600/10 text-red-400'
-                                  : 'bg-yellow-600/10 text-yellow-400'
-                      }`}
-                  >
-                    {item.state}
-                  </span>
+                                <div className="flex flex-col gap-1">
+                                    <span
+                                        className={`rounded px-2 py-1 text-xs font-medium ${
+                                            item.state === 'Verified'
+                                                ? 'bg-green-600/10 text-green-400'
+                                                : item.state === 'Blocked'
+                                                    ? 'bg-red-600/10 text-red-400'
+                                                    : 'bg-yellow-600/10 text-yellow-400'
+                                        }`}
+                                    >
+                                        {item.state}
+                                    </span>
+                                    {!item.proofOfEnrollment && (item.state === 'New' || item.state === 'Renew') && (
+                                        <span className="rounded px-2 py-1 text-xs font-medium bg-red-600/10 text-red-400 border border-red-500/30">
+                                            ⚠️ No Attachment
+                                        </span>
+                                    )}
+                                </div>
                             </td>
                             <td className="px-4 py-3 text-center">
-                                <button className="rounded bg-white px-4 py-1.5 text-sm font-semibold text-black hover:bg-gray-200 whitespace-nowrap" onClick={() => openModal(item)}>
-                                    View Profile
-                                </button>
+                                <div className="flex flex-col sm:flex-row items-center gap-2">
+                                    <button className="rounded bg-white px-4 py-1.5 text-sm font-semibold text-black hover:bg-gray-200 whitespace-nowrap" onClick={() => openModal(item)}>
+                                        View Profile
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     ))}
@@ -321,165 +452,284 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             )}
 
             {/* User Details Modal */}
-            <Modal show={showModal} maxWidth="70vw" onClose={closeModal}>
+            <Modal show={showModal} maxWidth="80vw" onClose={closeModal}>
                 {selectedUser && (
-                    <div className="bg-black text-white p-4 sm:p-4 flex flex-col md:flex-row gap-4 md:gap-4 min-h-[400px] max-h-[80vh] overflow-y-auto relative">
+                    <div className="bg-gradient-to-br from-[#000] via-gray-800 to-black text-white p-2 sm:p-8 min-h-[600px] max-h-[90vh] overflow-y-auto relative rounded-md">
+                        {/* Close Button */}
                         <button 
                             onClick={closeModal}
-                            className="bg-black rounded-md p-1 absolute top-4 right-4 text-white hover:text-gray-300 text-xl z-10"
+                            className="absolute top-4 right-4 z-10 p-2 rounded-full bg-gray-800/50 hover:bg-gray-700/70 transition-all duration-200 text-gray-300 hover:text-white"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-x-square-fill" viewBox="0 0 16 16">
-                                <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm3.354 4.646L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 1 1 .708-.708"/>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="bi bi-x" viewBox="0 0 16 16">
+                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.646 2.647a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
                             </svg>
                         </button>
-                        <div className="flex flex-col items-center md:items-start w-full md:w-1/3 mb-4 md:mb-0 bg-[#1a1a1a] rounded-lg px-10">
-                            <span className={`absolute left-0 -translate-x-0 bg-black font-bold px-6 py-1 rounded-lg text-lg whitespace-nowrap shadow ${selectedUser.state === 'Verified' ? 'text-green-400' : 'text-yellow-400'}`}>{selectedUser.state}</span>
-                            <br />
-                            <div className="relative mt-10 mb-6 flex flex-col items-center w-full justify-center">
-                                <div className="rounded-full border-4 border-yellow-400 p-1 bg-gradient-to-tr from-[#D4AF37] to-[#FFFACD] mx-auto">
-                                    <img src={avatar} alt="avatar" className="w-28 h-28 sm:w-56 sm:h-56 rounded-full object-cover" />
-                                </div>
-                            </div>
-                            <div className="mt-2 w-full">
-                                <div className="text-gray-600 text-sm">Full Name:</div>
-                                <div className="font-bold text-lg mb-2 break-words">{selectedUser.name || '-'} {selectedUser.surname || '-'}</div>
-                                <div className="text-gray-600 text-sm">School Name:</div>
-                                <div className="font-bold text-lg mb-2 break-words">{selectedUser.university || '-'}</div>
-                                <div className="text-gray-600 text-sm">Year Level:</div>
-                                <div className="font-bold text-lg break-words">{selectedUser.year_level || '-'}</div>
-                                <br />
-                            </div>
-                        </div>
-                        <div className="flex-1 flex flex-col justify-between w-full md:w-2/3 bg-[#1a1a1a] rounded-lg p-4">
-                            <div>
-                                <div className="text-gray-600 text-sm">Username:</div>
-                                <div className="font-bold text-lg mb-2 break-words">{selectedUser.username || '-'}</div>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 mb-6">
-                                <div>
-                                    <div className="text-gray-600 text-sm">MLBB ID:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.ml_id || '-'}</div>
-                                </div>
-                                <div>
-                                    <div className="text-gray-600 text-sm">MLBB Server:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.ml_server || '-'}</div>
-                                </div>
-                                <div>
-                                    <div className="text-gray-600 text-sm">MLBB IGN:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.ml_ign || '-'}</div>
-                                </div>
-                                <div>
-                                    <div className="text-gray-600 text-sm">Email:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.email || '-'}</div>
-                                </div>
-                                <div>
-                                    <div className="text-gray-600 text-sm">Contact Number:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.contact_number || '-'}</div>
-                                </div>
-                                <div>
-                                    <div className="text-gray-600 text-sm">Course:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.course || '-'}</div>
-                                </div>
-                                <div>
-                                    <div className="text-gray-600 text-sm">Student ID:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.studentId || '-'}</div>
-                                </div>
-                                <div>
-                                    <div className="text-gray-600 text-sm">Region:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.region || '-'}</div>
-                                </div>
-                                <div>
-                                    <div className="text-gray-600 text-sm">Island:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.island || '-'}</div>
-                                </div>
-                                <div>
-                                    <div className="text-gray-600 text-sm">Date Joined:</div>
-                                    <div className="font-bold text-lg mb-2 break-words">{selectedUser.created_at ? new Date(selectedUser.created_at).toLocaleDateString() : '-'}</div>
-                                </div>
-                                {selectedUser.verified_by && (
-                                    <div>
-                                        <div className="text-gray-600 text-sm">Verified By:</div>
-                                        <div className="font-bold text-lg mb-2 break-words">
-                                            {selectedUser.verifier_name ? `${selectedUser.verifier_name} ${selectedUser.verifier_surname}` : 'Unknown'}
+
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            {/* Profile Card */}
+                            <div className="lg:col-span-1">
+                                <div className="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 h-fit">
+                                    {/* Avatar Section */}
+                                    <div className="text-center mb-2">
+                                        <div className="relative inline-block">
+                                            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-400 rounded-full blur-lg opacity-30 animate-pulse"></div>
+                                            <div className="relative rounded-full border-4 border-yellow-400 p-2 bg-gradient-to-tr from-yellow-400 to-yellow-300">
+                                                <img 
+                                                    src={avatar} 
+                                                    alt="avatar" 
+                                                    className="w-32 h-32 rounded-full object-cover shadow-2xl" 
+                                                />
+                                            </div>
+                                        </div>
+                                        
+                                        
+                                    </div>
+
+                                    {/* Basic Info */}
+                                    <div className="space-y-4">
+                                        <div className="text-center">
+                                            <h3 className="text-xl font-bold text-white mb-1">
+                                                {selectedUser.name || '-'} {selectedUser.surname || '-'}
+                                            </h3>
+                                            <div className="flex items-center justify-center gap-2">
+                                                <p className="text-gray-400 text-sm">@{selectedUser.username || '-'}</p>
+                                                <div className="inline-flex items-center gap-1">
+                                                    <div className={`w-2 h-2 rounded-full ${selectedUser.state === 'Verified' ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'}`}></div>
+                                                    <span className={`font-semibold text-xs uppercase tracking-wider ${selectedUser.state === 'Verified' ? 'text-green-400' : 'text-yellow-400'}`}>
+                                                        {selectedUser.state}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="space-y-3">
+                                            <div className="bg-gray-700/30 rounded-lg p-3">
+                                                <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">School</div>
+                                                <div className="font-medium text-white">{selectedUser.university || '-'}</div>
+                                            </div>
+                                            
+                                            <div className="bg-gray-700/30 rounded-lg p-3">
+                                                <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Year Level</div>
+                                                <div className="font-medium text-white">{selectedUser.year_level || '-'}</div>
+                                            </div>
+                                            
+                                            <div className="bg-gray-700/30 rounded-lg p-3">
+                                                <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Course</div>
+                                                <div className="font-medium text-white">{selectedUser.course || '-'}</div>
+                                            </div>
                                         </div>
                                     </div>
-                                )}
-                                {selectedUser.verified_date && (
-                                    <div>
-                                        <div className="text-gray-600 text-sm">Verified Date:</div>
-                                        <div className="font-bold text-lg mb-2 break-words">
-                                            {new Date(selectedUser.verified_date).toLocaleDateString()} at {new Date(selectedUser.verified_date).toLocaleTimeString()}
-                                        </div>
-                                    </div>
-                                )}
-                                {selectedUser.state === 'Blocked' && selectedUser.blocked_reason && (
-                                    <div className="col-span-2">
-                                        <div className="text-gray-600 text-sm">Blocked Reason:</div>
-                                        <div className="font-bold text-lg mb-2 break-words text-red-400 bg-red-500/10 p-3 rounded-lg border border-red-500/30">
-                                            {selectedUser.blocked_reason}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="w-full flex flex-col sm:flex-row flex-wrap justify-between items-center gap-2 sm:gap-4 mt-4">
-                                <div className="flex gap-2 w-full sm:w-auto justify-center sm:justify-start">
-                                    <button 
-                                        className="bg-white text-black px-4 py-2 rounded font-semibold w-full sm:w-auto disabled:opacity-50"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleViewAttachment(selectedUser.proofOfEnrollment);
-                                        }}
-                                        disabled={!selectedUser.proofOfEnrollment}
-                                    >
-                                        {selectedUser.proofOfEnrollment ? 'View Attachment' : 'No Attachment'}
-                                    </button>
-                                    {(stateFilter === 'Verified' || stateFilter === 'Renew' ||stateFilter === 'New') && (
-                                        <button 
-                                            className="bg-white text-black px-4 py-2 rounded font-semibold w-full sm:w-auto disabled:opacity-50"
-                                            onClick={() => handleAction('renew', selectedUser.id)}
-                                            disabled={actionLoading}
-                                        >
-                                            {actionLoading ? 'Processing...' : 'Renew'}
-                                        </button>
-                                    )}
-                                </div>
-                                <div className="flex gap-2 w-full sm:w-auto justify-center sm:justify-end mt-2 sm:mt-0">
-                                    {(stateFilter === 'New' || stateFilter === 'Renew') && (
-                                    <button 
-                                        className="bg-green-500 text-white px-4 py-2 rounded font-semibold w-full sm:w-auto disabled:opacity-50"
-                                        onClick={() => handleAction('verify', selectedUser.id)}
-                                        disabled={actionLoading}
-                                    >
-                                        {actionLoading ? 'Processing...' : 'Verify'}
-                                    </button>
-                                    )}
-                                    <button 
-                                        className="bg-yellow-400 text-black px-4 py-2 rounded font-semibold w-full sm:w-auto disabled:opacity-50"
-                                        onClick={() => {
-                                            setShowBlockModal(true);
-                                            setBlockReason('');
-                                            setError('');
-                                        }}
-                                        disabled={actionLoading}
-                                    >
-                                        {actionLoading ? 'Processing...' : 'Block'}
-                                    </button>
-                                    {user?.role === 'Super Admin' && (
-                                        <button 
-                                            className="bg-red-600 text-white px-4 py-2 rounded font-semibold w-full sm:w-auto disabled:opacity-50"
-                                            onClick={() => handleAction('delete', selectedUser.id)}
-                                            disabled={actionLoading}
-                                        >
-                                            {actionLoading ? 'Processing...' : 'Delete'}
-                                        </button>
-                                    )}
                                 </div>
                             </div>
-                            {error && (
-                                <div className="w-full mt-4 p-3 bg-red-600 text-white rounded text-center">
-                                    {error}
+
+                            {/* Details Section */}
+                            <div className="lg:col-span-2">
+                                <div className="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
+                                    <h4 className="text-lg font-semibold text-white mb-6 border-b border-gray-700/50 pb-3">Student Information</h4>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {/* MLBB Information */}
+                                        <div className="space-y-4">
+                                            <h5 className="text-sm font-medium text-yellow-400 uppercase tracking-wider">Mobile Legends</h5>
+                                            <div className="space-y-3">
+                                                <div className="bg-gray-700/20 rounded-lg p-3">
+                                                    <div className="text-gray-400 text-xs mb-1">MLBB ID</div>
+                                                    <div className="font-medium text-white">{selectedUser.ml_id || '-'}</div>
+                                                </div>
+                                                <div className="bg-gray-700/20 rounded-lg p-3">
+                                                    <div className="text-gray-400 text-xs mb-1">Server</div>
+                                                    <div className="font-medium text-white">{selectedUser.ml_server || '-'}</div>
+                                                </div>
+                                                <div className="bg-gray-700/20 rounded-lg p-3">
+                                                    <div className="text-gray-400 text-xs mb-1">IGN</div>
+                                                    <div className="font-medium text-white">{selectedUser.ml_ign || '-'}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Contact Information */}
+                                        <div className="space-y-4">
+                                            <h5 className="text-sm font-medium text-blue-400 uppercase tracking-wider">Contact Details</h5>
+                                            <div className="space-y-3">
+                                                <div className="bg-gray-700/20 rounded-lg p-3">
+                                                    <div className="text-gray-400 text-xs mb-1">Email</div>
+                                                    <div className="font-medium text-white break-words">{selectedUser.email || '-'}</div>
+                                                </div>
+                                                <div className="bg-gray-700/20 rounded-lg p-3">
+                                                    <div className="text-gray-400 text-xs mb-1">Phone</div>
+                                                    <div className="font-medium text-white">{selectedUser.contact_number || '-'}</div>
+                                                </div>
+                                                <div className="bg-gray-700/20 rounded-lg p-3">
+                                                    <div className="text-gray-400 text-xs mb-1">Student ID</div>
+                                                    <div className="font-medium text-white">{selectedUser.studentId || '-'}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Location Information */}
+                                        <div className="space-y-4 md:col-span-2">
+                                            <h5 className="text-sm font-medium text-green-400 uppercase tracking-wider">Location</h5>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                <div className="bg-gray-700/20 rounded-lg p-3">
+                                                    <div className="text-gray-400 text-xs mb-1">Region</div>
+                                                    <div className="font-medium text-white">{selectedUser.region || '-'}</div>
+                                                </div>
+                                                <div className="bg-gray-700/20 rounded-lg p-3">
+                                                    <div className="text-gray-400 text-xs mb-1">Island</div>
+                                                    <div className="font-medium text-white">{selectedUser.island || '-'}</div>
+                                                </div>
+                                                <div className="bg-gray-700/20 rounded-lg p-3">
+                                                    <div className="text-gray-400 text-xs mb-1">Joined</div>
+                                                    <div className="font-medium text-white">
+                                                        {selectedUser.created_at ? new Date(selectedUser.created_at).toLocaleDateString() : '-'}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Verification Details */}
+                                        {(selectedUser.verified_by || selectedUser.verified_date) && (
+                                            <div className="space-y-4 md:col-span-2">
+                                                <h5 className="text-sm font-medium text-purple-400 uppercase tracking-wider">Verification Details</h5>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    {selectedUser.verified_by && (
+                                                        <div className="bg-gray-700/20 rounded-lg p-3">
+                                                            <div className="text-gray-400 text-xs mb-1">Verified By</div>
+                                                            <div className="font-medium text-white">
+                                                                {selectedUser.verifier_name ? `${selectedUser.verifier_name} ${selectedUser.verifier_surname}` : 'Unknown'}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {selectedUser.verified_date && (
+                                                        <div className="bg-gray-700/20 rounded-lg p-3">
+                                                            <div className="text-gray-400 text-xs mb-1">Verified On</div>
+                                                            <div className="font-medium text-white">
+                                                                {new Date(selectedUser.verified_date).toLocaleDateString()} at {new Date(selectedUser.verified_date).toLocaleTimeString()}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Blocked Reason */}
+                                        {selectedUser.state === 'Blocked' && selectedUser.blocked_reason && (
+                                            <div className="md:col-span-2">
+                                                <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                                                        <span className="font-semibold text-red-400 text-sm uppercase tracking-wider">Blocked Reason</span>
+                                                    </div>
+                                                    <div className="text-red-300">{selectedUser.blocked_reason}</div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Attachment Warning */}
+                                        {!selectedUser.proofOfEnrollment && (selectedUser.state === 'New' || selectedUser.state === 'Renew') && (
+                                            <div className="md:col-span-2">
+                                                <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                                        </svg>
+                                                        <span className="font-semibold text-red-400">No Proof of Enrollment Uploaded</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="mt-8 pt-6 border-t border-gray-700/50">
+                                        <div className="flex flex-col sm:flex-row gap-3 justify-between items-stretch sm:items-center">
+                                            {/* Left Side Actions */}
+                                            <div className="flex flex-col sm:flex-row gap-3">
+                                                <button 
+                                                    className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none ${
+                                                        selectedUser.proofOfEnrollment 
+                                                            ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                                                            : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                                    }`}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleViewAttachment(selectedUser.proofOfEnrollment);
+                                                    }}
+                                                    disabled={!selectedUser.proofOfEnrollment}
+                                                >
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                                                        </svg>
+                                                        {selectedUser.proofOfEnrollment ? 'View Attachment' : 'No Attachment'}
+                                                    </div>
+                                                </button>
+                                                
+                                                {(stateFilter === 'Verified' || stateFilter === 'Renew' || stateFilter === 'New') && (
+                                                    <button 
+                                                        className="px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
+                                                        onClick={() => handleAction('renew', selectedUser.id)}
+                                                        disabled={actionLoading}
+                                                    >
+                                                        {actionLoading ? 'Processing...' : 'Renew'}
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            {/* Right Side Actions */}
+                                            <div className="flex flex-col sm:flex-row gap-3">
+                                                {(stateFilter === 'New' || stateFilter === 'Renew') && (
+                                                    <button 
+                                                        className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none ${
+                                                            !selectedUser.proofOfEnrollment 
+                                                                ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                                                                : 'bg-green-600 hover:bg-green-700 text-white'
+                                                        }`}
+                                                        onClick={() => {
+                                                            if (handleVerifyAttempt(selectedUser)) {
+                                                                handleAction('verify', selectedUser.id);
+                                                            }
+                                                        }}
+                                                        disabled={actionLoading || !selectedUser.proofOfEnrollment}
+                                                        title={!selectedUser.proofOfEnrollment ? 'Cannot verify without proof of enrollment' : 'Verify this student'}
+                                                    >
+                                                        {actionLoading ? 'Processing...' : 'Verify'}
+                                                    </button>
+                                                )}
+                                                
+                                                <button 
+                                                    className="px-6 py-3 bg-red-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
+                                                    onClick={() => {
+                                                        setShowBlockModal(true);
+                                                        setBlockReason('');
+                                                        setError('');
+                                                    }}
+                                                    disabled={actionLoading}
+                                                >
+                                                    Block User
+                                                </button>
+                                                
+                                                {user?.role === 'Super Admin' && (
+                                                    <button 
+                                                        className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
+                                                        onClick={() => handleAction('delete', selectedUser.id)}
+                                                        disabled={actionLoading}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Error Display */}
+                                    {error && (
+                                        <div className="mt-4 p-4 bg-red-600/20 border border-red-500/30 text-red-300 rounded-lg text-center">
+                                            {error}
+                                        </div>
+                                    )}
                                 </div>
-                            )}
+                            </div>
                         </div>
                     </div>
                 )}
@@ -577,41 +827,185 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             
             {/* Attachment Modal  */}
             {showAttachmentModal && createPortal(
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/80" onClick={closeAttachmentModal}></div>
-                    <div className="relative bg-black text-white p-4 rounded-lg max-w-[90vw] max-h-[90vh] overflow-auto">
+                    <div className="relative bg-black text-white p-4 rounded-lg max-w-[95vw] w-[800px] max-h-[90vh] overflow-auto border border-neutral-700">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-xl font-bold">Proof of Enrollment</h3>
-                            <button 
-                                onClick={closeAttachmentModal}
-                                className="text-white hover:text-gray-300 text-2xl font-bold ml-4"
-                            >
-                                ×
-                            </button>
+                            <div className="flex items-center gap-2">
+                                {/* Zoom Controls */}
+                                <div className="flex items-center gap-2 bg-neutral-800/50 rounded-lg px-3 py-1 border border-neutral-700">
+                                    <button 
+                                        onClick={() => setZoomLevel(prev => Math.max(0.5, prev - 0.25))}
+                                        className="text-white hover:text-blue-400 transition-colors p-1 rounded hover:bg-neutral-700"
+                                        title="Zoom Out"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+                                        </svg>
+                                    </button>
+                                    <span className="text-sm text-gray-300 min-w-[3rem] text-center">
+                                        {Math.round(zoomLevel * 100)}%
+                                    </span>
+                                    <button 
+                                        onClick={() => setZoomLevel(prev => Math.min(3, prev + 0.25))}
+                                        className="text-white hover:text-blue-400 transition-colors p-1 rounded hover:text-blue-400 transition-colors p-1 rounded hover:bg-neutral-700"
+                                        title="Zoom In"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                                        </svg>
+                                    </button>
+                                    <button 
+                                        onClick={() => setZoomLevel(1)}
+                                        className="text-white hover:text-green-400 transition-colors p-1 rounded hover:bg-neutral-700 text-xs"
+                                        title="Reset Zoom"
+                                    >
+                                        Reset
+                                    </button>
+                                </div>
+                                <button 
+                                    onClick={closeAttachmentModal}
+                                    className="text-white hover:text-gray-300 text-2xl font-bold ml-4"
+                                >
+                                    ×
+                                </button>
+                            </div>
                         </div>
-                        <div className="flex justify-center">
-                            <img 
-                                src={attachmentUrl} 
-                                alt="Proof of Enrollment" 
-                                className="max-w-full max-h-[70vh] object-contain rounded-lg"
-                                onError={(e) => {
-                                    e.target.style.display = 'none';
-                                    e.target.nextSibling.style.display = 'block';
-                                }}
-                            />
+                        <div className="flex justify-center overflow-hidden w-full">
+                            {!fileExists ? (
+                                // File not found message
+                                <div className="text-center p-8 text-red-400 bg-red-500/10 rounded-lg border border-red-500/30 w-full">
+                                    <svg className="w-16 h-16 mx-auto mb-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    <p className="text-xl font-semibold mb-2">File Not Found</p>
+                                    <div className="flex flex-col items-center">
+                                        <p className="text-sm text-red-300">The proof of enrollment file could not be located on the server.</p>
+                                    </div>
+                                </div>
+                            ) : attachmentUrl.toLowerCase().endsWith('.pdf') ? (
+                                // PDF Viewer with Zoom
+                                <div className="relative w-full h-[75vh] overflow-auto">
+                                    <iframe
+                                        src={`${attachmentUrl}#toolbar=0&navpanes=0&scrollbar=0&zoom=${Math.round(zoomLevel * 100)}`}
+                                        className="w-full h-full rounded-lg border border-neutral-700"
+                                        title="Proof of Enrollment PDF"
+                                        style={{
+                                            transform: `scale(${zoomLevel})`,
+                                            transformOrigin: 'top left',
+                                            width: `${100 / zoomLevel}%`,
+                                            height: `${100 / zoomLevel}%`
+                                        }}
+                                        onError={(e) => {
+                                            e.target.style.display = 'none';
+                                            e.target.nextSibling.style.display = 'block';
+                                        }}
+                                    />
+                                </div>
+                            ) : (
+                                // Image Viewer with Zoom and Pan
+                                <div 
+                                    className="relative overflow-hidden rounded-lg border border-neutral-700 w-full"
+                                    style={{ 
+                                        height: '75vh',
+                                        cursor: isDragging ? 'grabbing' : 'grab'
+                                    }}
+                                    onMouseDown={handleMouseDown}
+                                    onMouseMove={handleMouseMove}
+                                    onMouseUp={handleMouseUp}
+                                    onMouseLeave={handleMouseUp}
+                                    onWheel={handleWheel}
+                                >
+                                    <img 
+                                        src={attachmentUrl} 
+                                        alt="Proof of Enrollment" 
+                                        className="transition-transform duration-200 ease-out"
+                                        style={{
+                                            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoomLevel})`,
+                                            transformOrigin: 'center',
+                                            width: '100%',
+                                            height: '100%',
+                                            objectFit: 'contain'
+                                        }}
+                                        onError={(e) => {
+                                            e.target.style.display = 'none';
+                                            e.target.nextSibling.style.display = 'block';
+                                        }}
+                                    />
+                                </div>
+                            )}
+                            
+                            {/* File not found message */}
                             <div 
-                                className="hidden text-center p-8 text-gray-400"
+                                className="hidden text-center p-8 text-red-400 bg-red-500/10 rounded-lg border border-red-500/30"
                                 style={{ display: 'none' }}
                             >
-                                <p className="text-lg mb-2">Image could not be loaded</p>
-                                <p className="text-sm">The proof of enrollment image may be missing or corrupted.</p>
-                                <p className="text-xs mt-2">Path: {attachmentUrl}</p>
+                                <svg className="w-16 h-16 mx-auto mb-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <p className="text-xl font-semibold mb-2">File Not Found</p>
+                                <p className="text-sm text-red-300">The proof of enrollment file could not be located on the server.</p>
+                                <p className="text-xs text-red-400 mt-2">Path: {attachmentUrl}</p>
                             </div>
                         </div>
                     </div>
                 </div>,
                 document.body
             )}
+            
+            {/* No Attachment Alert Modal */}
+            {showNoAttachmentAlert && createPortal(
+                <div className="fixed inset-0 z-[80] bg-[#fff]/50 flex items-center justify-center p-4" style={{ pointerEvents: 'auto' }}>
+                    <div 
+                        className="absolute inset-0 bg-black/50" 
+                        onClick={() => setShowNoAttachmentAlert(false)}
+                    ></div>
+                    <div 
+                        className="relative bg-black text-white p-6 rounded-lg max-w-md w-full mx-4 border border-neutral-700" 
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ pointerEvents: 'auto' }}
+                    >
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold text-red-400">⚠️ Verification Blocked</h3>
+                            <button 
+                                onClick={() => setShowNoAttachmentAlert(false)}
+                                className="text-white hover:text-gray-300 text-2xl font-bold"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        
+                        <div className="mb-6">
+                            <div className="text-center mb-4">
+                                <svg className="w-16 h-16 mx-auto mb-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <p className="text-gray-300 mb-3 text-center">
+                                <span className="font-semibold text-white">{selectedUser?.name} {selectedUser?.surname}</span> cannot be verified at this time.
+                            </p>
+                            <p className="text-red-300 text-sm text-center">
+                                <strong>Reason:</strong> No proof of enrollment document has been uploaded.
+                            </p>
+                            <p className="text-gray-400 text-sm text-center mt-3">
+                                The student must upload their proof of enrollment before they can be verified.
+                            </p>
+                        </div>
+                        
+                        <div className="flex justify-end">
+                            <button 
+                                onClick={() => setShowNoAttachmentAlert(false)}
+                                className="bg-neutral-700 hover:bg-neutral-600 text-white px-4 py-2 rounded font-semibold transition-colors"
+                            >
+                                Understood
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+            
             <Toast
                 message={toast.message}
                 type={toast.type}

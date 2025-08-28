@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\User; // Added this import for User model
 
 class ProfileController extends Controller
 {
@@ -43,21 +44,66 @@ class ProfileController extends Controller
     /**
      * Delete the user's account.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request)
     {
-        $request->validate([
-            'password' => ['required', 'current_password'],
-        ]);
+        try {
+            $request->validate([
+                'password' => ['required', 'current_password'],
+            ]);
 
-        $user = $request->user();
+            $user = $request->user();
+            
+            if (!$user) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
 
-        Auth::logout();
+            // Log the deletion attempt
+            \Log::info('Attempting to delete user account', ['user_id' => $user->id, 'email' => $user->email]);
 
-        $user->delete();
+            // Handle relationships before deletion to avoid foreign key constraints
+            // Clear verified_by references to this user
+            User::where('verified_by', $user->id)->update(['verified_by' => null]);
+            
+            // Delete the user
+            $deleted = $user->delete();
+            
+            if (!$deleted) {
+                \Log::error('Failed to delete user account', ['user_id' => $user->id]);
+                return response()->json(['error' => 'Failed to delete account'], 500);
+            }
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+            // Log successful deletion
+            \Log::info('User account deleted successfully', ['user_id' => $user->id]);
 
-        return Redirect::to('/');
+            // Logout and clear session
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            // Return JSON response instead of redirecting
+            // This allows the frontend to handle the redirect after showing success modal
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'Account deleted successfully',
+                    'deleted' => true
+                ]);
+            }
+
+            // Fallback redirect for non-AJAX requests
+            return Redirect::to('/');
+            
+        } catch (\Exception $e) {
+            \Log::error('Error deleting user account', [
+                'user_id' => $request->user()?->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            if ($request->wantsJson()) {
+                return response()->json(['error' => 'Failed to delete account: ' . $e->getMessage()], 500);
+            }
+            
+            return Redirect::back()->withErrors(['error' => 'Failed to delete account']);
+        }
     }
 }

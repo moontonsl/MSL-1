@@ -47,7 +47,17 @@ const UploadPage = () => {
 
         const formData = new FormData();
         formData.append('proofOfEnrollment', file);
-        formData.append('_token', document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '');
+        
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        formData.append('_token', csrfToken);
+        
+        // Debug logging
+        console.log('File details:', {
+            name: file.name,
+            size: file.size,
+            type: file.type
+        });
+        console.log('CSRF Token present:', !!csrfToken);
 
         try {
             const response = await fetch('/api/user/upload-proof', {
@@ -55,7 +65,18 @@ const UploadPage = () => {
                 body: formData
             });
 
-            const data = await response.json();
+            // Check if response is JSON before trying to parse it
+            const contentType = response.headers.get('content-type');
+            let data;
+            
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+            } else {
+                // If not JSON, get the text to see what the server returned
+                const textResponse = await response.text();
+                console.error('Server returned non-JSON response:', textResponse);
+                throw new Error('Server returned an invalid response. Please try again or contact support.');
+            }
 
             if (response.ok) {
                 setSuccess('Document uploaded successfully! Redirecting to waiting page...');
@@ -70,11 +91,30 @@ const UploadPage = () => {
                 }, 2000);
             } else {
                 console.error('Upload failed:', data);
-                setError(data.error || 'Upload failed. Please try again.');
+                // Handle specific error cases
+                if (response.status === 413) {
+                    setError('File is too large. Please ensure it\'s under 2MB.');
+                } else if (response.status === 422) {
+                    setError(data.error || 'Invalid file format. Please use JPEG, PNG, GIF, or PDF.');
+                } else if (response.status === 403) {
+                    setError('Upload not allowed for your current account status.');
+                } else if (response.status === 401) {
+                    setError('Please log in again to continue.');
+                } else {
+                    setError(data.error || `Upload failed (${response.status}). Please try again.`);
+                }
             }
         } catch (err) {
-            console.error('Network error:', err);
-            setError('Network error. Please check your connection and try again.');
+            console.error('Upload error:', err);
+            let errorMessage = 'An unexpected error occurred. Please try again.';
+            
+            if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your connection and try again.';
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+            
+            setError(errorMessage);
         } finally {
             setUploading(false);
         }
