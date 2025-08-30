@@ -143,7 +143,7 @@ Route::get('/register', function () {
 //EVENT  ROUTES
 Route::get('/Events', function () {
     return Inertia::render('Events/Events');
-})->middleware(['auth', 'verified', \App\Http\Middleware\CheckUserState::class])->name('Events');
+})->name('Events');
 
 //PROGRAMS  ROUTES
 Route::get('/Programs', function () {
