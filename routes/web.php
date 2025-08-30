@@ -135,6 +135,11 @@ Route::get('/Programs', function () {
     return Inertia::render('Programs/Programs');
 })->name('Programs');
 
+//BUFFS AND SUPPORT  ROUTES
+Route::get('/BuffsAndSupport', function () {
+    return Inertia::render('BuffsAndSupport/BuffsAndSupport');
+})->name('BuffsAndSupport');
+
 //TERMS AND CONDITIONS ROUTES
 Route::get('/TermsAndConditions', function () {
     return Inertia::render('TermsAndConditions/TermsAndConditions');
