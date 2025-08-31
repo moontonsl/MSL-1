@@ -143,12 +143,17 @@ Route::get('/register', function () {
 //EVENT  ROUTES
 Route::get('/Events', function () {
     return Inertia::render('Events/Events');
-})->middleware(['auth', 'verified', \App\Http\Middleware\CheckUserState::class])->name('Events');
+})->name('Events');
 
 //PROGRAMS  ROUTES
 Route::get('/Programs', function () {
     return Inertia::render('Programs/Programs');
 })->name('Programs');
+
+//BUFFS AND SUPPORT  ROUTES
+Route::get('/BuffsAndSupport', function () {
+    return Inertia::render('BuffsAndSupport/BuffsAndSupport');
+})->name('BuffsAndSupport');
 
 //TERMS AND CONDITIONS ROUTES
 Route::get('/TermsAndConditions', function () {
