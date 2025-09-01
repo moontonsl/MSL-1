@@ -209,7 +209,7 @@ const BuffsAndSupport = () => {
                         </ul>
 
                         {/* Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="flex flex-col sm:flex-row gap-3 text-center sm:text-left">
                             <a
                             href="#"
                             className="px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-300 text-black rounded-xl font-bold font-['Montserrat'] shadow-md hover:scale-105 transition"
