@@ -202,7 +202,7 @@ const MPL16Battletrips = () => {
             </div>
 
             <img
-              src="/battle trips mini game.png"
+              src="/battle trips mini game.jpg"
               alt="Second Image Description"
               className="w-[200px] h-auto md:w-[300px] mx-auto mb-6 object-contain"
             />
