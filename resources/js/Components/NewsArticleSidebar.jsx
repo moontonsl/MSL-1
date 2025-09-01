@@ -163,6 +163,7 @@ export default function NewsArticleSidebar({ currentSlug, limit = 3 }) {
                 <Link href="/news">
                     <div className="w-64 h-14 p-1.5 bg-white/5 rounded-[57.71px] outline outline-[1.73px] outline-offset-[-1.73px] outline-white inline-flex justify-center items-center gap-1.5 overflow-hidden hover:bg-white/10 transition-all duration-300">
                         <div className="justify-start text-white text-lg font-bold font-['Space_Grotesk'] leading-relaxed">
+                        <div className="justify-start text-white text-lg font-bold font-['Space_Grotesk'] leading-relaxed">
                             View More Articles
                         </div>
                     </div>
