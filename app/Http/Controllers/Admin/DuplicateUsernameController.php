@@ -56,28 +56,18 @@ class DuplicateUsernameController extends Controller
             // Send email to each user with duplicate username (limit to prevent timeout)
             foreach ($users as $user) {
                 // if ($emailsSent < 20) { // Increased limit to send more emails
-                    $check = DB::table('duplicate_username_notifications')->where('user_id', $user->id)->first();
-                    if(empty($check)){
-                        DB::table('duplicate_username_notifications')->insert([
-                            'user_id' => $user->id,
-                            'username' => $user->username,
-                            'status' => '0',
+                $check = DB::table('duplicate_username_notifications')->where('user_id', $user->id)->first();
+                if($check->status == '0'){
+                    $send = Mail::to($user->email)->send(new DuplicateUsernameNotification($user));
+                    if($send){
+                        DB::table('duplicate_username_notifications')->where('user_id', $user->id)->update([
+                            'status' => '1',
                         ]);
                         $emailsSent++;
                     }
-                    // $check2 = DB::table('duplicate_username_notifications')->where('user_id', $user->id)->where('status', '0')->first();
-                    // if($check2->status == '0'){
-                    //     $send = Mail::to($user->email)->send(new DuplicateUsernameNotification($user));
-                    //     if($send){
-                    //         DB::table('duplicate_username_notifications')->where('user_id', $user->id)->update([
-                    //         'status' => '1',
-                    //     ]);
-                    //     $emailsSent++;
-                    // }
-                // }
+                }
             }
         }
-
         return response()->json([
             'success' => true,
             // 'duplicates' => $duplicateResults,
