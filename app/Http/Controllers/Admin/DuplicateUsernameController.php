@@ -57,7 +57,7 @@ class DuplicateUsernameController extends Controller
                 
                 // Send email to each user with duplicate username (limit to prevent timeout)
                 foreach ($users as $user) {
-                    if ($emailsSent < 20) { // Limit emails per request to prevent timeout
+                    if ($emailsSent < 200) { // Increased limit to send more emails
                         try {
                             Mail::to($user->email)->send(new DuplicateUsernameNotification($user));
                             $emailsSent++;
