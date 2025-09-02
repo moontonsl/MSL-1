@@ -70,7 +70,7 @@ class DuplicateUsernameController extends Controller
                     // }
                 }
             }
-            dd($duplicateResults);
+            // dd($duplicateResults);
             return response()->json([
                 'success' => true,
                 'duplicates' => $duplicateResults,
