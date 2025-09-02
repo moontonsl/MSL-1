@@ -309,12 +309,14 @@ Route::prefix('resources')->name('resources.')->group(function () {
 // News Routes
 Route::get('/news', [NewsController::class, 'index'])->name('news.index');
 Route::get('/news-articles', [NewsController::class, 'getArticles'])->name('news.articles');
-
+Route::get('/news-highlights', [NewsController::class, 'getHighlights'])->name('news.highlights');
+Route::get('/news-related', [NewsController::class, 'getRelatedArticles'])->name('news.related');
 // Individual News Pages
 Route::get('/news/stronger-ties-moonton-umak', function () {
     return Inertia::render('Individual News Pages/Stronger Ties News/index');
 })->name('news.stronger-ties');
 
+Route::get('/news/{canonical}', [NewsController::class, 'show'])->name('news.show');
 // data count routes
 Route::get('/stats', function () {
     return [
