@@ -40,6 +40,11 @@ Route::get('/about', function () {
     return Inertia::render('About Page/index');
 })->name('about');
 
+// Campus Tournament Page
+Route::get('/campus-tournament', function () {
+    return Inertia::render('Campus Tournament/index');
+})->name('campus.tournament');
+
 
 // Admin routes are defined in routes/admin.php
 
