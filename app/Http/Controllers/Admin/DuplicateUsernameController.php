@@ -49,7 +49,7 @@ class DuplicateUsernameController extends Controller
                 
                 // Send email to each user with duplicate username
                 foreach ($users as $user) {
-                    if($user->username == "jabilatt"){
+                    if($user->username == "usernametest"){
                         echo "dito jabilat ". "<br>";
                         try {
                             echo "meron";
