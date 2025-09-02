@@ -41,7 +41,7 @@ Route::get('/about', function () {
 })->name('about');
 
 // Campus Tournament Page
-Route::get('/campus-tournament', function () {
+Route::get('/CampusTournament', function () {
     return Inertia::render('Campus Tournament/index');
 })->name('campus.tournament');
 
