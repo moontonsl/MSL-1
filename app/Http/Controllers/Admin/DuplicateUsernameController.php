@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\DuplicateUsernameNotification;
+use Illuminate\Support\Facades\DB;
 
 class DuplicateUsernameController extends Controller
 {
@@ -16,66 +17,64 @@ class DuplicateUsernameController extends Controller
     public function checkDuplicates(): JsonResponse
     {
         // Increase time limit to prevent timeout
-        set_time_limit(300); // 5 minutes
+        set_time_limit(0); // 5 minutes
         
         try {
-            // Use chunking to handle large datasets and prevent timeouts
+            // Use SQL to find all duplicate usernames across the entire database
+            $duplicateUsernames = DB::select("
+                SELECT username, COUNT(*) as duplicate_count
+                FROM users 
+                WHERE username IS NOT NULL 
+                AND username != ''
+                GROUP BY username 
+                HAVING COUNT(*) > 1
+                ORDER BY duplicate_count DESC
+            ");
+            
             $duplicateResults = [];
             $emailsSent = 0;
-            $processedUsers = 0;
+            $totalDuplicateUsers = 0;
             
-            // Process users in chunks to avoid memory issues and timeouts
-            User::select('id', 'name', 'surname', 'username', 'email')
-                ->whereNotNull('username')
-                ->where('username', '!=', '')
-                ->chunk(500, function ($users) use (&$duplicateResults, &$emailsSent, &$processedUsers) {
-                    $processedUsers += $users->count();
-                    
-                    // Group users by username to find duplicates
-                    $usernameGroups = $users->groupBy('username');
-                    
-                    // Filter only groups with more than one user (duplicates)
-                    $duplicates = $usernameGroups->filter(function ($group) {
-                        return $group->count() > 1;
-                    });
-                    
-                    foreach ($duplicates as $username => $users) {
-                        $duplicateResults[] = [
-                            'username' => $username,
-                            'count' => $users->count(),
-                            'users' => $users->map(function ($user) {
-                                return [
-                                    'id' => $user->id,
-                                    'name' => $user->name . ' ' . $user->surname,
-                                    'email' => $user->email,
-                                ];
-                            })->toArray()
+            foreach ($duplicateUsernames as $duplicate) {
+                // Get all users with this duplicate username
+                $users = User::where('username', $duplicate->username)
+                    ->select('id', 'name', 'surname', 'username', 'email')
+                    ->get();
+                
+                $duplicateResults[] = [
+                    'username' => $duplicate->username,
+                    'count' => $duplicate->duplicate_count,
+                    'users' => $users->map(function ($user) {
+                        return [
+                            'id' => $user->id,
+                            'name' => $user->name . ' ' . $user->surname,
+                            'email' => $user->email,
                         ];
-                        
-                        // Send email to each user with duplicate username (limit to prevent timeout)
-                        foreach ($users as $user) {
-                            if ($emailsSent < 20) { // Limit emails per request to prevent timeout
-                                if($user->username == "usernametest"){
-                                    echo "dito jabilat ". "<br>";
-                                    try {
-                                        Mail::to($user->email)->send(new DuplicateUsernameNotification($user));
-                                        $emailsSent++;
-                                    } catch (\Exception $e) {
-                                        \Log::error('Failed to send duplicate username email to: ' . $user->email . ' - ' . $e->getMessage());
-                                    }
-                                }
-                               
-                            }
-                        }
-                    }
-                });
+                    })->toArray()
+                ];
+                
+                $totalDuplicateUsers += $duplicate->duplicate_count;
+                
+                // Send email to each user with duplicate username (limit to prevent timeout)
+                foreach ($users as $user) {
+                    // if ($emailsSent < 20) { // Limit emails per request to prevent timeout
+                    //     try {
+                    //         Mail::to($user->email)->send(new DuplicateUsernameNotification($user));
+                    //         $emailsSent++;
+                    //     } catch (\Exception $e) {
+                    //         \Log::error('Failed to send duplicate username email to: ' . $user->email . ' - ' . $e->getMessage());
+                    //     }
+                    // }
+                }
+            }
 
             return response()->json([
                 'success' => true,
-                'duplicates' => $duplicateResults,
+                // 'duplicates' => $duplicateResults,
+                'total_duplicate_usernames' => count($duplicateUsernames),
+                'total_duplicate_users' => $totalDuplicateUsers,
                 'emails_sent' => $emailsSent,
-                'processed_users' => $processedUsers,
-                'message' => 'Found ' . count($duplicateResults) . ' duplicate username(s) and sent ' . $emailsSent . ' notification email(s). Processed ' . $processedUsers . ' users.'
+                'message' => 'Found ' . count($duplicateUsernames) . ' duplicate username(s) affecting ' . $totalDuplicateUsers . ' users and sent ' . $emailsSent . ' notification email(s).'
             ]);
 
         } catch (\Exception $e) {
