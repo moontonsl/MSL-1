@@ -49,17 +49,13 @@ class DuplicateUsernameController extends Controller
                 
                 // Send email to each user with duplicate username
                 foreach ($users as $user) {
-                    if($user->username == "usernametest"){
-                        echo "dito jabilat ". "<br>";
-                        try {
-                            echo "meron";
-                            Mail::to($user->email)->send(new DuplicateUsernameNotification($user));
-                            $emailsSent++;
-                        } catch (\Exception $e) {
-                            echo "wala";
-                            // Log email sending errors but continue processing
-                            // \Log::error('Failed to send duplicate username email to: ' . $user->email . ' - ' . $e->getMessage());
-                        }
+                    try {
+                        Mail::to($user->email)->send(new DuplicateUsernameNotification($user));
+                        $emailsSent++;
+                    } catch (\Exception $e) {
+                        echo "wala";
+                        // Log email sending errors but continue processing
+                        // \Log::error('Failed to send duplicate username email to: ' . $user->email . ' - ' . $e->getMessage());
                     }
                     // try {
                     //     Mail::to($user->email)->send(new DuplicateUsernameNotification($user));
