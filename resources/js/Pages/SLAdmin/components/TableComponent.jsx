@@ -28,7 +28,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
     const [showNoAttachmentAlert, setShowNoAttachmentAlert] = useState(false);
     const ITEMS_PER_PAGE = 20;
 
-    const fetchUsers = async (page = 1) => {
+    const fetchUsers = async (page = 1, retryCount = 0) => {
         setLoading(true);
         try {
             let url = `/api/sladmin/users?page=${page}&per_page=${ITEMS_PER_PAGE}`;
@@ -38,19 +38,93 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             if (searchQuery && searchQuery.trim()) {
                 url += `&search=${encodeURIComponent(searchQuery.trim())}`;
             }
+            
             const response = await fetch(url);
-            if (!response.ok) throw new Error('Failed to fetch users');
+            
+            // Check response status first
+            if (!response.ok) {
+                let errorMessage = `Server error: ${response.status} ${response.statusText}`;
+                
+                // Try to get more specific error information
+                try {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const errorData = await response.json();
+                        errorMessage = errorData.error || errorData.message || errorMessage;
+                    } else {
+                        const textResponse = await response.text();
+                        console.error('Non-JSON error response:', textResponse);
+                        if (textResponse.includes('html') || textResponse.includes('<!DOCTYPE')) {
+                            errorMessage = 'Server returned HTML instead of data. This usually means a server error occurred.';
+                        } else {
+                            errorMessage = `Server response: ${textResponse.substring(0, 200)}...`;
+                        }
+                    }
+                } catch (parseError) {
+                    console.error('Error parsing error response:', parseError);
+                }
+                
+                throw new Error(errorMessage);
+            }
+            
+            // Check content type before parsing
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const textResponse = await response.text();
+                console.error('Expected JSON but got:', contentType, textResponse.substring(0, 200));
+                throw new Error('Server returned invalid data format. Expected JSON but got: ' + contentType);
+            }
+            
             const data = await response.json();
             console.log('Fetched users data:', data);
+            
+            // Validate data structure
+            if (!data || typeof data !== 'object') {
+                throw new Error('Server returned invalid data structure');
+            }
+            
             if (data.data && data.data.length > 0) {
                 console.log('First user sample:', data.data[0]);
             }
+            
             setUsers(data.data || []);
             setTotalPages(data.last_page || 1);
             setCurrentPage(data.current_page || 1);
             setTotalUsers(data.total || 0);
+            
         } catch (error) {
             console.error('Error fetching users:', error);
+            
+            // Retry logic for temporary server issues
+            if (retryCount < 2 && (
+                error.message.includes('Server error: 500') ||
+                error.message.includes('Server error: 502') ||
+                error.message.includes('Server error: 503') ||
+                error.message.includes('Server error: 504') ||
+                error.message.includes('HTML instead of data')
+            )) {
+                console.log(`Retrying fetchUsers (attempt ${retryCount + 1})...`);
+                setTimeout(() => {
+                    fetchUsers(page, retryCount + 1);
+                }, 2000 * (retryCount + 1)); // Exponential backoff: 2s, 4s
+                return;
+            }
+            
+            // Show user-friendly error message
+            let errorMessage = 'Failed to load users. ';
+            if (error.message.includes('Server error:')) {
+                errorMessage += error.message;
+            } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+                errorMessage += 'Network error. Please check your connection.';
+            } else if (error.message.includes('invalid data format')) {
+                errorMessage += 'Server returned invalid data. Please try again.';
+            } else if (error.message.includes('HTML instead of data')) {
+                errorMessage += 'Server error occurred. Please try again in a few moments.';
+            } else {
+                errorMessage += error.message;
+            }
+            
+            showToast(errorMessage, 'error');
             setUsers([]);
             setTotalPages(1);
         } finally {
@@ -114,6 +188,17 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
     };
 
     const openModal = (user) => {
+        // Log user data for debugging
+        console.log('Opening modal for user:', {
+            id: user.id,
+            name: user.name,
+            surname: user.surname,
+            email: user.email,
+            state: user.state,
+            hasProofOfEnrollment: !!user.proofOfEnrollment,
+            dataKeys: Object.keys(user)
+        });
+        
         setSelectedUser(user);
         setShowModal(true);
     };
@@ -250,25 +335,64 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                 body: Object.keys(body).length > 0 ? JSON.stringify(body) : undefined,
             });
             
-            // Check if response is JSON before trying to parse it
+            console.log(`Action ${action} response:`, {
+                status: response.status,
+                statusText: response.statusText,
+                contentType: response.headers.get('content-type'),
+                url: url,
+                userId: userId
+            });
+            
+            // Check response status first
+            if (!response.ok) {
+                let errorMessage = `Server error: ${response.status} ${response.statusText}`;
+                let data = null;
+                
+                // Try to get more specific error information
+                try {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        data = await response.json();
+                        errorMessage = data.error || data.message || errorMessage;
+                    } else {
+                        const textResponse = await response.text();
+                        console.error('Non-JSON error response:', textResponse);
+                        
+                        if (textResponse.includes('html') || textResponse.includes('<!DOCTYPE')) {
+                            errorMessage = 'Server returned HTML instead of data. This usually means a server error occurred.';
+                        } else if (textResponse.includes('error') || textResponse.includes('Error')) {
+                            errorMessage = `Server error: ${textResponse.substring(0, 200)}...`;
+                        } else {
+                            errorMessage = `Server response: ${textResponse.substring(0, 200)}...`;
+                        }
+                    }
+                } catch (parseError) {
+                    console.error('Error parsing error response:', parseError);
+                }
+                
+                // Special handling for verification without attachment
+                if (action === 'verify' && response.status === 400 && data?.error && data.error.includes('proof of enrollment')) {
+                    throw new Error('Verification failed: User must upload proof of enrollment before verification.');
+                }
+                
+                throw new Error(errorMessage);
+            }
+            
+            // Check content type before parsing success response
             const contentType = response.headers.get('content-type');
             let data;
             
-            if (contentType && contentType.includes('application/json')) {
-                data = await response.json();
-            } else {
-                // If not JSON, get the text to see what the server returned
+            if (!contentType || !contentType.includes('application/json')) {
                 const textResponse = await response.text();
-                console.error('Server returned non-JSON response:', textResponse);
-                throw new Error('Server returned an invalid response. Please try again or contact support.');
+                console.error('Expected JSON but got:', contentType, textResponse.substring(0, 200));
+                throw new Error('Server returned invalid data format. Expected JSON but got: ' + contentType);
             }
             
-            if (!response.ok) {
-                // Special handling for verification without attachment
-                if (action === 'verify' && response.status === 400 && data.error && data.error.includes('proof of enrollment')) {
-                    throw new Error('Verification failed: User must upload proof of enrollment before verification.');
-                }
-                throw new Error(data.error || data.message || 'Action failed');
+            data = await response.json();
+            
+            // Validate data structure
+            if (!data || typeof data !== 'object') {
+                throw new Error('Server returned invalid data structure');
             }
             
             //Close modal and refresh user list
@@ -289,10 +413,24 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             
         } catch (err) {
             console.error('Action error:', err);
+            console.error('Error details:', {
+                name: err.name,
+                message: err.message,
+                stack: err.stack,
+                action: action,
+                userId: userId
+            });
+            
             let errorMessage = 'An unexpected error occurred. Please try again.';
             
             if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
                 errorMessage = 'Network error. Please check your connection and try again.';
+            } else if (err.message.includes('Server error:')) {
+                errorMessage = err.message;
+            } else if (err.message.includes('invalid data format')) {
+                errorMessage = 'Server returned invalid data. Please try again.';
+            } else if (err.message.includes('HTML instead of data')) {
+                errorMessage = 'Server error occurred. Please try again in a few moments.';
             } else if (err.message) {
                 errorMessage = err.message;
             }

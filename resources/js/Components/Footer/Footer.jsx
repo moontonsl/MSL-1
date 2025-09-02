@@ -7,9 +7,9 @@ const navSections = [
     {
         title: 'Explore',
         links: [
-            { label: 'Events', href: '/events' },
+            { label: 'Events', href: '/Events' },
             { label: 'News', href: '/news' },
-            { label: 'Program', href: '/program' },
+            { label: 'Program', href: '/Programs' },
             { label: 'Resources', href: '/resources' }
         ]
     },
