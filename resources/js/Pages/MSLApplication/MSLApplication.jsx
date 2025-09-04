@@ -57,7 +57,7 @@ const MSLApplication = () => {
             */}
             <section
                 className="relative flex flex-col lg:flex-row px-4 justify-center items-center gap-6 lg:gap-10 self-stretch 
-                            bg-[url('mslapplication-hanzo.png')] bg-cover bg-center 
+                            bg-[url('/mslapplication-hanzo.png')] bg-cover bg-center 
                             lg:bg-none bg-[rgba(12,12,12,0.20)] backdrop-blur-md py-6 sm:py-8 lg:py-1"
                 >
 
@@ -67,7 +67,7 @@ const MSLApplication = () => {
                 {/* Desktop-only image */}
                 <div className="hidden lg:flex w-[781px] h-[585px] justify-center items-end p-2">
                     <img
-                    src="mslapplication-hanzo.png"
+                    src="/mslapplication-hanzo.png"
                     alt="MSL Students"
                     className="w-[640px] h-[576px] object-cover rounded-lg"
                     />
@@ -151,7 +151,7 @@ const MSLApplication = () => {
             <section
             className="relative flex flex-col lg:flex-row justify-center items-center h-auto lg:h-[650px] w-full 
                         bg-[rgba(12,12,12,0.20)] backdrop-blur-md px-4 sm:px-6 lg:px-12 py-10 
-                        bg-[url('mslapplication-silvanna.png')] bg-cover 
+                        bg-[url('/mslapplication-silvanna.png')] bg-cover 
                         bg-[position:70%_center] lg:bg-none"
             >
 
@@ -191,7 +191,7 @@ const MSLApplication = () => {
                     {/* RIGHT SIDE - IMAGE (desktop only) */}
                     <div className="hidden lg:flex justify-end items-start w-full max-w-[769px] h-[559px]">
                     <img
-                        src="mslapplication-silvanna.png"
+                        src="/mslapplication-silvanna.png"
                         alt="MSL Students"
                         className="w-[969px] h-[559px] object-cover rounded-lg"
                     />
