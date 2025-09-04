@@ -142,9 +142,8 @@ Route::get('/register', function () {
 })->name('register');
 
 //EVENT  ROUTES
-Route::get('/Events', function () {
-    return Inertia::render('Events/Events');
-})->name('Events');
+Route::get('/Events', [\App\Http\Controllers\EventsController::class, 'index'])->name('Events');
+Route::get('/Events/{event}', [\App\Http\Controllers\EventsController::class, 'show'])->name('Events.show');
 
 //PROGRAMS  ROUTES
 Route::get('/Programs', function () {
