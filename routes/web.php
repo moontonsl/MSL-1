@@ -140,6 +140,12 @@ Route::get('/BuffsAndSupport', function () {
     return Inertia::render('BuffsAndSupport/BuffsAndSupport');
 })->name('BuffsAndSupport');
 
+//MSL APPLICATION ROUTES
+Route::get('/MSLApplication', function () {
+    return Inertia::render('MSLApplication/MSLApplication');
+})->name('MSLApplication');
+
+
 //TERMS AND CONDITIONS ROUTES
 Route::get('/TermsAndConditions', function () {
     return Inertia::render('TermsAndConditions/TermsAndConditions');
