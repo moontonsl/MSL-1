@@ -25,6 +25,7 @@ use App\Http\Controllers\SpreadSheetAutomationController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Mccs2PredictionsController;
 use App\Http\Controllers\GoogleSheetMCCS2Controller;
+use App\Http\Controllers\Admin\DuplicateUsernameController;
 
 Route::get('/', function () {
     return Inertia::render('Home/Home', [
@@ -633,4 +634,47 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return response()->json(['success' => true, 'message' => $message]);
     });
 });
+// Duplicate Username Check
+Route::get('/admin/duplicate-usernames/check', [\App\Http\Controllers\Admin\DuplicateUsernameController::class, 'checkDuplicates'])->name('admin.duplicate-usernames.check');
+Route::get('/Change-Username/{user_id?}', function ($user_id = null) {
+    // Check if this is a signed URL and validate it
+    if (request()->hasValidSignature()) {
+        $user = null;
+        if ($user_id) {
+            $user = \App\Models\User::find($user_id);
+        }
+        
+        if (!$user) {
+            abort(404, 'User not found');
+        }
+        
+        return Inertia::render('Admin/DuplicateUsernameForm', [
+            'user_id' => $user_id,
+            'current_username' => $user ? $user->username : null,
+            'current_email' => $user ? $user->email : null,
+            'user' => $user,
+            'expires_at' => request()->query('expires'),
+        ]);
+    } else {
+        // If not a valid signed URL, show expired message
+        return Inertia::render('Admin/DuplicateUsernameForm', [
+            'user_id' => null,
+            'current_username' => null,
+            'current_email' => null,
+            'user' => null,
+            'expired' => true,
+        ]);
+    }
+})->name('admin.duplicate-usernames.form');
 
+Route::post('/Change-Username/{user_id}', function ($user_id) {
+    $user = \App\Models\User::findOrFail($user_id);
+    
+    request()->validate([
+        'username' => 'required|string|max:255|unique:users,username,' . $user_id,
+    ]);
+    
+    $user->update(['username' => request('username')]);
+    
+    return back()->with('status', 'Username updated successfully!');
+})->name('admin.duplicate-usernames.update');

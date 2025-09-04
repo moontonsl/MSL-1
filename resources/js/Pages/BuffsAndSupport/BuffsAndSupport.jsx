@@ -25,7 +25,7 @@ const BuffsAndSupport = () => {
             <AuthenticatedLayout>
                 {/* --- Buffs & Support Page Content --- */}
                 <header className="bg-gradient-to-r from-[#F2C21A] to-yellow-600 text-black font-['Montserrat']">
-                    <div className="max-w-6xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-10 items-center">
+                    <div className="max-w-6xl mx-auto px-6 py-10 sm:py-16 md:py-20 grid md:grid-cols-2 gap-10 items-center">
                         <div>
                             {/* TITLE */}
                             <h1 className="font-bold mb-4 text-[24px] sm:text-[32px] lg:text-[40px] leading-tight text-center">
@@ -209,7 +209,7 @@ const BuffsAndSupport = () => {
                         </ul>
 
                         {/* Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="flex flex-col sm:flex-row gap-3 text-center sm:text-left">
                             <a
                             href="#"
                             className="px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-300 text-black rounded-xl font-bold font-['Montserrat'] shadow-md hover:scale-105 transition"
