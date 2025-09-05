@@ -41,4 +41,7 @@ Route::middleware(['auth:admin', 'admin'])->group(function () {
     // Settings Management
     Route::get('/admin/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('admin.settings');
     Route::post('/admin/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update']);
+
+    // Duplicate Username Check
+    Route::get('/admin/duplicate-usernames/check', [\App\Http\Controllers\Admin\DuplicateUsernameController::class, 'checkDuplicates'])->name('admin.duplicate-usernames.check');
 });

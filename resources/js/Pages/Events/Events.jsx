@@ -1,73 +1,9 @@
 import React from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutEvents.jsx";
 import styles from './events.module.scss';
 
-function Events() {
-    // Dummy array for cards to demonstrate the layout.
-    const eventCards = [
-        {
-            title: "MPL S15 University Watch Fest",
-            description: "The MPL PH Watch Fest is an event where students come together to experience the thrilling action of MLBB Tournaments.",
-            image: "/frame292.png",
-            isRecent: true,
-        },
-        {
-            title: "MPL S15 University Watch Fest",
-            description: "The MPL PH Watch Fest is an event where students come together to experience the thrilling action of MLBB Tournaments.",
-            image: "/frame292.png",
-            isRecent: true,
-        },
-        {
-            title: "MPL S15 University Watch Fest",
-            description: "The MPL PH Watch Fest is an event where students come together to experience the thrilling action of MLBB Tournaments.",
-            image: "/frame292.png",
-            isRecent: true,
-        },
-        {
-            title: "MPL S15 University Watch Fest",
-            description: "The MPL PH Watch Fest is an event where students come together to experience the thrilling action of MLBB Tournaments.",
-            image: "/frame292.png",
-            isRecent: true,
-        },
-        {
-            title: "MPL S15 University Watch Fest",
-            description: "The MPL PH Watch Fest is an event where students come together to experience the thrilling action of MLBB Tournaments.",
-            image: "/frame292.png",
-            isRecent: true,
-        },
-        {
-            title: "MPL S15 University Watch Fest",
-            description: "The MPL PH Watch Fest is an event where students come together to experience the thrilling action of MLBB Tournaments.",
-            image: "/frame292.png",
-            isRecent: true,
-        },
-        {
-            title: "MPL S15 University Watch Fest",
-            description: "The MPL PH Watch Fest is an event where students come together to experience the thrilling action of MLBB Tournaments.",
-            image: "/frame292.png",
-            isRecent: true,
-        },
-        {
-            title: "MPL S15 University Watch Fest",
-            description: "The MPL PH Watch Fest is an event where students come together to experience the thrilling action of MLBB Tournaments.",
-            image: "/frame292.png",
-            isRecent: true,
-        },
-        {
-            title: "MPL S15 University Watch Fest",
-            description: "The MPL PH Watch Fest is an event where students come together to experience the thrilling action of MLBB Tournaments.",
-            image: "/frame292.png",
-            isRecent: true,
-        },
-        // Added one more card for testing odd/even scenarios
-        {
-            title: "MPL S15 University Watch Fest",
-            description: "The MPL PH Watch Fest is an event where students come together to experience the thrilling action of MLBB Tournaments.",
-            image: "/frame292.png",
-            isRecent: true,
-        },
-    ];
+function Events({ events = [] }) {
 
     return (
         <>
@@ -130,9 +66,11 @@ function Events() {
                         </div>
 
                         <div className="mt-4">
-                            <div className="flex w-[190px] h-[58px] justify-center items-center gap-[5.7px] rounded-full border border-white bg-[rgba(255,255,255,0.05)] cursor-pointer">
-                            <span className="text-white font-['Space Grotesk'] text-[18.5px] font-bold leading-[140%]">Learn more</span>
-                            </div>
+                            <Link href="/mcc">
+                                <div className="flex w-[190px] h-[58px] justify-center items-center gap-[5.7px] rounded-full border border-white bg-[rgba(255,255,255,0.05)] cursor-pointer hover:bg-[rgba(255,255,255,0.1)] transition-all duration-300">
+                                <span className="text-white font-['Space Grotesk'] text-[18.5px] font-bold leading-[140%]">Learn more</span>
+                                </div>
+                            </Link>
                         </div>
                         </div>
 
@@ -163,9 +101,11 @@ function Events() {
                         </p>
                         </div>
                         <div className="p-1 mt-2">
-                        <div className="flex w-[150px] h-[45px] justify-center items-center gap-1 rounded-full border border-white bg-[rgba(255,255,255,0.05)] cursor-pointer">
-                            <span className="text-white font-['Space Grotesk'] text-base font-bold leading-[140%]">Learn more</span>
-                        </div>
+                        <Link href="/mcc">
+                            <div className="flex w-[150px] h-[45px] justify-center items-center gap-1 rounded-full border border-white bg-[rgba(255,255,255,0.05)] cursor-pointer hover:bg-[rgba(255,255,255,0.1)] transition-all duration-300">
+                                <span className="text-white font-['Space Grotesk'] text-base font-bold leading-[140%]">Learn more</span>
+                            </div>
+                        </Link>
                         </div>
                     </div>
                     </section>
@@ -184,15 +124,15 @@ function Events() {
 
                         {/* Cards Grid: 2 columns on mobile, 3 columns on desktop with centering for odd last card */}
                         <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-4 lg:gap-y-5 justify-items-center w-full px-2 md:px-0 pt-4">
-                            {eventCards.map((card, index) => (
+                            {events.map((event, index) => (
+                                <Link href={`/Events/${event.id}`} key={event.id}>
                                 <div
-                                    key={index}
                                     className={`
-                                        flex flex-col justify-center items-center rounded-xl bg-white shadow-[0px_0px_10.379px_-2.805px_#F2C21A] overflow-hidden w-full max-w-[463.68px]
-                                        h-[180px] md:h-[462.825px]
+                                        flex flex-col justify-center items-center bg-[rgba(36,36,36,0.8)] shadow-[inset_-30px_-30px_80px_#141414,inset_30px_20px_100px_#0A0A0A,-30px_-30px_80px_rgba(255,255,255,0.14),30px_30px_80px_rgba(243,199,24,0.14)] overflow-hidden w-full max-w-[463.68px]
+                                        h-[180px] md:h-[462.825px] cursor-pointer hover:shadow-[inset_-30px_-30px_80px_#141414,inset_30px_20px_100px_#0A0A0A,-30px_-30px_80px_rgba(255,255,255,0.2),30px_30px_80px_rgba(243,199,24,0.2)] transition-all duration-300
                                         ${
                                             // Conditional centering for the last odd card on mobile only
-                                            (eventCards.length % 2 === 1 && index === eventCards.length - 1)
+                                            (events.length % 2 === 1 && index === events.length - 1)
                                             ? 'col-span-1 mx-auto' 
                                             : ''
                                         }
@@ -201,14 +141,14 @@ function Events() {
                                     <div
                                             className="
                                                 flex flex-col items-center flex-1 self-stretch
-                                                bg-black bg-no-repeat bg-center relative
-                                                h-[40px] md:h-[calc(462.825px-190.74px)]
+                                                bg-no-repeat bg-center relative
+                                                h-[80px] md:h-[280px]
                                                 px-0 pt-1 md:pt-0
                                                 bg-contain md:bg-cover
                                                 p-[10px] md:p-0
                                             "
                                             style={{
-                                                backgroundImage: `url(${card.image})`,
+                                                backgroundImage: `url(/images/MCC/Events/${event.event_logo})`,
                                                 backgroundSize: '85%', // smaller on mobile
                                                 backgroundRepeat: 'no-repeat',
                                                 backgroundPosition: 'center'
@@ -217,23 +157,24 @@ function Events() {
 
 
                                         <div className="absolute top-3 md:top-8 left-0 flex h-5 md:h-[42.075px] px-0.5 md:px-[9.35px] justify-center items-center gap-0.5 md:gap-[9.35px] rounded-r-md md:rounded-r-[16.83px] bg-red-600">
-                                            <span className="text-white font-['Space Grotesk'] text-[10px] md:text-lg font-bold">Recent</span>
+                                            <span className="text-white font-['Space Grotesk'] text-[10px] md:text-lg font-bold">{event.event_state}</span>
                                         </div>
                                         </div>
 
-                                        <div className="flex h-[50%] md:h-[190.74px] flex-col items-center bg-[#0A0A0A] md:p-3 w-full">
-                                        <div className="p-0.5 md:p-[9.35px]">
-                                            <p className="text-[8px] md:text-[26.18px] font-['Space Grotesk'] font-bold text-center leading-tight">
-                                            {card.title}
+                                        <div className="flex h-[100px] md:h-[182px] flex-col items-center w-full">
+                                        <div className="pt-0">
+                                            <p className="text-white text-[8px] md:text-[26.18px] font-['Space Grotesk'] font-bold text-center leading-tight">
+                                            {event.event_title}
                                             </p>
                                         </div>
-                                        <div className="p-1 px-5 md:p-[9.35px]">
+                                        <div className="pt-2 px-2">
                                             <p className="text-white font-['Space Grotesk'] text-[8.5px] md:text-[20.505px] font-normal text-center leading-tight md:leading-snug">
-                                                {card.description}
+                                                {event.event_subtitle}
                                             </p>
                                             </div>
                                         </div>
                                 </div>
+                                </Link>
                             ))}
                         </div>
                     </section>
