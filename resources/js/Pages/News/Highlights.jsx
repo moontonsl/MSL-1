@@ -107,9 +107,9 @@ export default function Highlights() {
 
   return (
     <div className="w-full max-w-[1900px] h-auto px-2 md:px-12 mx-auto">
-      <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold text-center mb-4 md:mb-10 text-white font-montserrat">MSL HIGHLIGHTS</h2>
+      <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold text-center mb-3 md:mb-10 text-white font-montserrat">MSL HIGHLIGHTS</h2>
       <div 
-        className="relative flex items-center justify-center h-[200px] md:h-[400px] w-full overflow-hidden" 
+        className="relative flex items-center justify-center h-[200px] md:h-[400px] w-full overflow-hidden"
         style={{ minHeight: 200 }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
@@ -155,7 +155,7 @@ export default function Highlights() {
         ))}
       </div>
       {/* Navigation Controls Below Carousel */}
-      <div className="hidden md:flex items-center justify-center gap-4 mt-2">
+      <div className="hidden md:flex items-center justify-center gap-4 mt-0.5">
         <button
           onClick={handleBack}
           className="bg-white/10 hover:bg-white/20 text-white p-1.5 md:p-2 rounded-full backdrop-blur-sm transition-colors"

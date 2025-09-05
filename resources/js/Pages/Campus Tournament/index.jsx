@@ -6,17 +6,17 @@ function InputGroup({ label, placeholder, subtext }) {
     return (
         <div className="w-full">
             {label && (
-                <label className="block text-[12px] md:text-sm text-white/70 font-medium mb-1">
+                <label className="block text-[12px] md:text-sm text-white/70 font-medium mb-1 font-['Montserrat']">
                     {label}
                 </label>
             )}
             <input
                 type="text"
-                className="w-full rounded-full border border-white/30 bg-transparent text-white placeholder-white/40 px-4 py-2.5 focus:outline-none focus:border-yellow-400/60"
+                className="w-full rounded-full border border-white/30 bg-transparent text-white placeholder-white/40 px-4 py-2.5 focus:outline-none focus:border-yellow-400/60 font-['Montserrat']"
                 placeholder={placeholder || label}
             />
             {subtext && (
-                <p className="text-[10px] text-white/60 mt-1">{subtext}</p>
+                <p className="text-[10px] text-white/60 mt-1 font-['Montserrat']">{subtext}</p>
             )}
         </div>
     );
@@ -36,7 +36,7 @@ export default function CampusTournament() {
             >
                 <div className="absolute inset-0 bg-black/45" />
 
-                <div className="relative max-w-3xl mx-auto px-4">
+                <div className="relative max-w-3xl mx-auto px-4 font-['Montserrat']">
                     <div className="flex flex-col items-center gap-2 md:gap-3 mb-6 md:mb-8">
                         <img
                             src="/images/About Page/SL Logo.png"
@@ -46,6 +46,10 @@ export default function CampusTournament() {
                         <h1 className="text-white font-bold font-['Montserrat'] tracking-tight text-[24px] md:text-[32px] lg:text-[40px]">
                             CAMPUS TOURNAMENT
                         </h1>
+                        <p className="text-white/80 font-['Montserrat'] text-[14px] md:text-[16px] lg:text-[16px] text-center max-w-2xl">
+                            Campus Tournament is a local campus event where student players compete every two weeks
+                            for diamond rewards.
+                        </p>
                     </div>
 
                     <div className="bg-neutral-900/70 rounded-xl border border-white/10 shadow-xl backdrop-blur p-4 md:p-6">
