@@ -99,13 +99,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $new      = (clone $query)->where('state', 'New')->count();
         $renewed  = (clone $query)->where('state', 'Renew')->count();
         $blocked  = (clone $query)->where('state', 'Blocked')->count();
+        
+        //Student Leader para sa Regional Admin role
+        $studentLeaders = 0;
+        if ($user->role === 'Regional Admin') {
+            $studentLeaders = User::where('role', 'SL')->where('region', $user->region)->count();
+        }
 
         return Inertia::render('SLAdmin/SLAdmin',[
             'user' => $user,
             'verified' => $verified,
             'new' => $new,
             'renewed' => $renewed,
-            'blocked' => $blocked
+            'blocked' => $blocked,
+            'studentLeaders' => $studentLeaders
         ]);
     })->name('sl-admin');
 });
@@ -470,12 +477,20 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
     }
     // Super Admin can view all users (no filtering applied)
     
-    $query->where('users.role', '!=', 'SL')
-        ->where('users.role', '!=', 'Admin')
-        ->where('users.role', '!=', 'Super Admin')
-        ->where('users.role', '!=', 'Regional Admin');
-    if ($request->has('state')) {
-        $query->where('users.state', $request->query('state'));
+    // Handle Student Leader filtering
+    if ($request->has('state') && $request->query('state') === 'StudentLeaders') {
+        // Show only Student Leaders (SL role) for Regional Admin
+        $query->where('users.role', 'SL');
+    } else {
+        // Regular filtering - exclude admin roles
+        $query->where('users.role', '!=', 'SL')
+            ->where('users.role', '!=', 'Admin')
+            ->where('users.role', '!=', 'Super Admin')
+            ->where('users.role', '!=', 'Regional Admin');
+        
+        if ($request->has('state')) {
+            $query->where('users.state', $request->query('state'));
+        }
     }
     
     // Add search functionality
@@ -632,6 +647,58 @@ Route::middleware(['auth', 'verified'])->group(function () {
         }
         
         return response()->json(['success' => true, 'message' => $message]);
+    });
+    
+    //Pang promote sa student to SL
+    Route::patch('/api/sladmin/users/{userId}/promote', function ($userId) {
+        $user = Auth::user();
+        if ($user->role !== 'Regional Admin') {
+            return response()->json(['error' => 'Access denied. Only Regional Admins can promote users to Student Leader.'], 403);
+        }
+        
+        $query = \App\Models\User::where('id', $userId)
+            ->where('role', '!=', 'SL')
+            ->where('role', '!=', 'Admin')
+            ->where('role', '!=', 'Super Admin')
+            ->where('role', '!=', 'Regional Admin')
+            ->where('region', $user->region)
+            ->where('state', 'Verified'); // Only promote verified users
+        
+        $targetUser = $query->first();
+            
+        if (!$targetUser) {
+            return response()->json(['error' => 'User not found, not verified, or access denied.'], 404);
+        }
+        
+        $targetUser->update([
+            'role' => 'SL'
+        ]);
+        
+        return response()->json(['success' => true, 'message' => 'User promoted to Student Leader successfully']);
+    });
+    
+    //pang demote ng student leader
+    Route::patch('/api/sladmin/users/{userId}/demote', function ($userId) {
+        $user = Auth::user();
+        if ($user->role !== 'Regional Admin') {
+            return response()->json(['error' => 'Access denied. Only Regional Admins can demote Student Leaders.'], 403);
+        }
+        
+        $query = \App\Models\User::where('id', $userId)
+            ->where('role', 'SL')
+            ->where('region', $user->region);
+        
+        $targetUser = $query->first();
+            
+        if (!$targetUser) {
+            return response()->json(['error' => 'Student Leader not found or access denied.'], 404);
+        }
+        
+        $targetUser->update([
+            'role' => 'user' 
+        ]);
+        
+        return response()->json(['success' => true, 'message' => 'Student Leader demoted successfully']);
     });
 });
 // Duplicate Username Check
