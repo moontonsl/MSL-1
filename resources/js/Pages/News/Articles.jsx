@@ -34,7 +34,7 @@ export default function Articles() {
     return (
       <div className="flex flex-col items-center justify-center w-full py-6 md:py-16">
         <div className="mb-6 md:mb-16 text-center">
-          <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold text-white mb-4 font-montserrat">
+          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-white mb-4 font-montserrat">
             NEWS AND ARTICLES
           </h2>
         </div>
@@ -53,7 +53,7 @@ export default function Articles() {
     return (
       <div className="flex flex-col items-center justify-center w-full py-6 md:py-16">
         <div className="mb-6 md:mb-16 text-center">
-          <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold text-white mb-4 font-montserrat">
+          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-white mb-4 font-montserrat">
             NEWS AND ARTICLES
           </h2>
         </div>
@@ -85,10 +85,10 @@ export default function Articles() {
   const displayArticles = articles.length > 0 ? articles : fallbackArticles;
 
   return (
-    <div className="flex flex-col items-center justify-center w-full py-6 md:py-16">
+    <div className="flex flex-col items-center justify-center w-full py-1 md:py-16 -mt-6 md:mt-0">
       {/* Title Section */}
-      <div className="mb-6 md:mb-16 text-center">
-        <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold text-white mb-4 font-montserrat">
+      <div className="mb-2 md:mb-16 text-center">
+        <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-white mb-1 md:mb-4 font-montserrat">
           NEWS AND ARTICLES
         </h2>
       </div>

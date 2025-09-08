@@ -41,6 +41,11 @@ Route::get('/about', function () {
     return Inertia::render('About Page/index');
 })->name('about');
 
+// Campus Tournament Page
+Route::get('/CampusTournament', function () {
+    return Inertia::render('Campus Tournament/index');
+})->name('campus.tournament');
+
 
 // Admin routes are defined in routes/admin.php
 
@@ -161,6 +166,12 @@ Route::get('/Programs', function () {
 Route::get('/BuffsAndSupport', function () {
     return Inertia::render('BuffsAndSupport/BuffsAndSupport');
 })->name('BuffsAndSupport');
+
+//MSL APPLICATION ROUTES
+Route::get('/MSLApplication', function () {
+    return Inertia::render('MSLApplication/MSLApplication');
+})->name('MSLApplication');
+
 
 //TERMS AND CONDITIONS ROUTES
 Route::get('/TermsAndConditions', function () {
