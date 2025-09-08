@@ -3,6 +3,8 @@ import { Head } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutEventsBattleTrips.jsx";
 import { Helmet } from "react-helmet";
 import styles from "./MPLS16Battletrips.module.scss";
+import ImageModal from "./ImageModal";
+import { motion, AnimatePresence } from "framer-motion";
 
 const SCHOOL_AREAS = ["Luzon", "Visayas", "Mindanao"];
 const COMMUNITIES = ["Moonton Student Leader", "Community Heroes"];
@@ -201,11 +203,7 @@ const MPL16Battletrips = () => {
               venue and enjoy the MLBB Events.
             </div>
 
-            <img
-              src="/battle trips mini game.jpg"
-              alt="Second Image Description"
-              className="w-[200px] h-auto md:w-[300px] mx-auto mb-6 object-contain"
-            />
+            <ImageModal />
 
             <div className="rounded-xl pt-4 px-4 pb-10 md:rounded-3xl md:p-10 shadow-lg md:shadow-2xl border border-black bg-white">
               <div className="text-black font-bold text-lg md:text-3xl mb-4 md:mb-6">
