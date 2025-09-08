@@ -22,10 +22,10 @@ function InputGroup({ label, placeholder, subtext }) {
     );
 }
 
-export default function CampusTournament() {
+export default function TeamRegistration() {
     return (
         <MainLayout>
-            <Head title="Campus Tournament" />
+            <Head title="Team Registration" />
             <section
                 className="relative min-h-[calc(100vh-160px)] py-8 md:py-12"
                 style={{
@@ -68,7 +68,6 @@ export default function CampusTournament() {
                         </div>
 
                         <form className="space-y-4">
-                            <InputGroup label="School Name" />
 
                             <InputGroup
                                 label="Captain"
