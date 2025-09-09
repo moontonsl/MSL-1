@@ -41,10 +41,26 @@ Route::get('/about', function () {
     return Inertia::render('About Page/index');
 })->name('about');
 
-// Campus Tournament Page
+// Campus Tournament listing/management page
 Route::get('/CampusTournament', function () {
-    return Inertia::render('Campus Tournament/index');
+    return Inertia::render('Campus Tournament/CampusTournament');
 })->name('campus.tournament');
+Route::get('/campustournament', function () {
+    return Inertia::render('Campus Tournament/CampusTournament');
+});
+
+// Team Registration page
+Route::get('/TeamRegistration', function () {
+    return Inertia::render('Campus Tournament/TeamRegistration');
+})->name('campus.teamregistration');
+Route::get('/teamregistration', function () {
+    return Inertia::render('Campus Tournament/TeamRegistration');
+});
+
+// Captain Registration page
+Route::get('/CaptainRegistration', function () {
+    return Inertia::render('Campus Tournament/CaptainRegistration');
+})->name('campus.captainregistration');
 
 
 // Admin routes are defined in routes/admin.php
