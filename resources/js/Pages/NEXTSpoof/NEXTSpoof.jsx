@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Head } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutNEXTSpoof";
 import { Helmet } from "react-helmet";
+import MechanicsModal from "./MechanicsModal"; // <- adjust path if needed
 
 export default function NEXTSpoof({ auth }) {
   const [form, setForm] = useState({
@@ -14,7 +15,10 @@ export default function NEXTSpoof({ auth }) {
     chsl: "",
   });
 
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(false); // submission success modal
+  const [showMechanicsModal, setShowMechanicsModal] = useState(false); // mechanics modal
+  const [mechanicsChecked, setMechanicsChecked] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleChange = (e) => {
     setForm({
@@ -25,6 +29,12 @@ export default function NEXTSpoof({ auth }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (!mechanicsChecked) {
+      setErrorMsg("Please check the mechanics first.");
+      setTimeout(() => setErrorMsg(""), 5000);
+      return;
+    }
 
     const formURL =
       "https://docs.google.com/forms/d/e/1FAIpQLSemum0YfeNTpfdPIZx-KTJG2_9Xh3MtqCwJ8t_Gdt4-tYSdFQ/formResponse";
@@ -44,7 +54,7 @@ export default function NEXTSpoof({ auth }) {
       mode: "no-cors",
     })
       .then(() => {
-        setShowModal(true); // Show modal instead of alert
+        setShowModal(true); // show success modal
         setForm({
           fullName: "",
           mlbbId: "",
@@ -54,6 +64,8 @@ export default function NEXTSpoof({ auth }) {
           entryLink: "",
           chsl: "",
         });
+        // Optionally uncheck mechanics if you want the user to re-open it next time:
+        // setMechanicsChecked(false);
       })
       .catch((err) => console.error("Error submitting form:", err));
   };
@@ -75,7 +87,7 @@ export default function NEXTSpoof({ auth }) {
           alt="NEXTSpoof Logo"
           className="w-[250px] h-[200px] md:w-[400px] md:h-[320px] mt-0 block mx-auto object-contain"
           style={{
-            filter: "drop-shadow(0 0 10px white) drop-shadow(0 0 20px white)"
+            filter: "drop-shadow(0 0 10px white) drop-shadow(0 0 20px white)",
           }}
         />
 
@@ -128,6 +140,41 @@ export default function NEXTSpoof({ auth }) {
               </select>
             </div>
 
+            {/* Mechanics agreement */}
+            <div className="flex flex-col items-center">
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  checked={mechanicsChecked}
+                  onChange={() => {
+                    // If not yet checked, open modal (checking is only via modal Done)
+                    if (!mechanicsChecked) {
+                      setShowMechanicsModal(true);
+                    } else {
+                      // allow unchecking if user wants to revoke agreement
+                      setMechanicsChecked(false);
+                    }
+                  }}
+                  className="w-5 h-5 cursor-pointer"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowMechanicsModal(true)}
+                  className="text-sm text-black underline"
+                >
+                  {mechanicsChecked
+                    ? "I have read and understood the mechanics, and I agree on it."
+                    : "Please read the Mechanics"}
+                </button>
+              </div>
+
+              {errorMsg && (
+                <div className="mt-2 w-full px-3 py-2 border border-red-500 bg-red-50 text-red-600 text-sm rounded-xl shadow-md text-center">
+                  {errorMsg}
+                </div>
+              )}
+            </div>
+
             <button
               type="submit"
               className="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-black font-semibold rounded-xl shadow-lg hover:opacity-90 transition"
@@ -137,7 +184,7 @@ export default function NEXTSpoof({ auth }) {
           </form>
         </div>
 
-        {/* Modal */}
+        {/* Submission Modal */}
         {showModal && (
           <div
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
@@ -158,6 +205,16 @@ export default function NEXTSpoof({ auth }) {
               </button>
             </div>
           </div>
+        )}
+
+        {/* Mechanics modal (separate component) */}
+        {showMechanicsModal && (
+          <MechanicsModal
+            onClose={() => setShowMechanicsModal(false)}
+            onDone={() => {
+              setMechanicsChecked(true);
+            }}
+          />
         )}
       </div>
     </AuthenticatedLayout>
