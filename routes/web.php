@@ -181,6 +181,20 @@ Route::get('/MSLApplication', function () {
     return Inertia::render('MSLApplication/MSLApplication');
 })->name('MSLApplication');
 
+//NEXT SPOOF ROUTES
+Route::get('/NEXTSpoof', function () {
+    return Inertia::render('NEXTSpoof/NEXTSpoof');
+})->name('NEXTSpoof');
+
+//ACCOUNT MODIFICATION WAITING ROUTES
+Route::get('/AccountModificationWaiting', function () {
+    return Inertia::render('AccountModification/AccountModificationWaiting');
+})->name('AccountModificationWaiting');
+
+//SL ADMIN APPROVAL ROUTES
+Route::get('/SLAdminApproval', function () {
+    return Inertia::render('ApprovalPages/SLAdminApproval');
+})->name('SLAdminApproval');
 
 //TERMS AND CONDITIONS ROUTES
 Route::get('/TermsAndConditions', function () {
