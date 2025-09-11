@@ -145,6 +145,11 @@ Route::get('/MSLApplication', function () {
     return Inertia::render('MSLApplication/MSLApplication');
 })->name('MSLApplication');
 
+//NEXT SPOOF ROUTES
+Route::get('/NEXTSpoof', function () {
+    return Inertia::render('NEXTSpoof/NEXTSpoof');
+})->name('NEXTSpoof');
+
 
 //TERMS AND CONDITIONS ROUTES
 Route::get('/TermsAndConditions', function () {
