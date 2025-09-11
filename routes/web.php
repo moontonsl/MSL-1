@@ -150,6 +150,10 @@ Route::get('/NEXTSpoof', function () {
     return Inertia::render('NEXTSpoof/NEXTSpoof');
 })->name('NEXTSpoof');
 
+//ACCOUNT MODIFICATION WAITING ROUTES
+Route::get('/AccountModificationWaiting', function () {
+    return Inertia::render('AccountModification/AccountModificationWaiting');
+})->name('AccountModificationWaiting');
 
 //TERMS AND CONDITIONS ROUTES
 Route::get('/TermsAndConditions', function () {
