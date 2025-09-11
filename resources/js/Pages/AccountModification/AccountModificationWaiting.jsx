@@ -44,7 +44,7 @@ const AccountModificationWaiting = () => {
                                         Verification in Progress
                                     </h3>
                                     <p className="text-gray-300 leading-relaxed">
-                                        Your account has been submitted and is currently being reviewed by our Student Leaders or Regional Admins. 
+                                        Your modification request has been submitted and is currently being reviewed by our Student Leaders or Regional Admins. 
                                         This process typically takes 24 - 48 hours.
                                     </p>
                                 </div>

@@ -155,6 +155,11 @@ Route::get('/AccountModificationWaiting', function () {
     return Inertia::render('AccountModification/AccountModificationWaiting');
 })->name('AccountModificationWaiting');
 
+//SL ADMIN APPROVAL ROUTES
+Route::get('/SLAdminApproval', function () {
+    return Inertia::render('ApprovalPages/SLAdminApproval');
+})->name('SLAdminApproval');
+
 //TERMS AND CONDITIONS ROUTES
 Route::get('/TermsAndConditions', function () {
     return Inertia::render('TermsAndConditions/TermsAndConditions');
