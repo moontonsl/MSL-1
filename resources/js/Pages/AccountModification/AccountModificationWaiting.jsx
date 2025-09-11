@@ -25,7 +25,7 @@ const AccountModificationWaiting = () => {
                         {/* Header */}
                         <div className="text-center mb-8">
                             <div className="inline-flex items-center justify-center h-20 w-20 bg-gray-500/20 rounded-2xl">
-                                <img src="/MSL_LOGO.png" alt="MSL Logo" className="h-20 w-20"/>
+                                <img src="/MSL_LOGO-waiting.png" alt="MSL Logo" className="h-20 w-20"/>
                             </div>
                             <h1 className="text-3xl font-bold text-white mb-2 mt-6">
                                 Account Modification Verification
