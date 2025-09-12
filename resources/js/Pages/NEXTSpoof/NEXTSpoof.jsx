@@ -83,7 +83,7 @@ export default function NEXTSpoof({ auth }) {
       <div className="flex flex-col items-center justify-center min-h-screen text-white px-4 pt-8 md:pt-2 mt-[-50px]">
         {/* Logo */}
         <img
-          src="/NEXTFLICKS_LOGO.png"
+          src="/NEXT-FLICKS-logo.png"
           alt="NEXTSpoof Logo"
           className="w-[250px] h-[200px] md:w-[400px] md:h-[320px] mt-0 block mx-auto object-contain"
           style={{
