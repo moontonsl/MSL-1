@@ -3,11 +3,12 @@ import {Footer, Header} from '@/Components/index.js';
 import {Toaster} from 'react-hot-toast';
 import styles from './AuthenticatedLayoutNEXTSpoof.module.scss';
 
-export default function AuthenticatedLayoutEventsWatchFest({children}) {
+export default function AuthenticatedLayoutEvents({children}) {
     return (
-        <div className={`${styles.nextSpoofLayout} app`}>
+        <div className="app">
             <Header/>
-            <main className={styles.mainContent}>
+            <main>
+                <div className="nextSpoofBG"/>
                 {children}
             </main>
             <Footer/>
@@ -24,5 +25,6 @@ export default function AuthenticatedLayoutEventsWatchFest({children}) {
         </div>
     );
 }
+
 
 

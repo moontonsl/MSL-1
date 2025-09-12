@@ -80,19 +80,19 @@ export default function NEXTSpoof({ auth }) {
         />
       </Helmet>
 
-      <div className="flex flex-col items-center justify-center min-h-screen text-white px-4 pt-8 md:pt-2 mt-[-50px]">
+      <div className="flex flex-col items-center justify-center min-h-screen text-white px-4 pt-5 mt-[-55px] md:mt-[-70px]">
         {/* Logo */}
         <img
-          src="/NEXT-FLICKS-logo.png"
-          alt="NEXTSpoof Logo"
-          className="w-[250px] h-[200px] md:w-[400px] md:h-[320px] mt-0 block mx-auto object-contain"
-          style={{
-            filter: "drop-shadow(0 0 10px white) drop-shadow(0 0 20px white)",
-          }}
+            src="/NEXT-FLICKS-logo.png"
+            alt="NEXTSpoof Logo"
+            className="w-[250px] h-[200px] md:w-[400px] md:h-[320px] mt-5 block mx-auto object-contain"
+            style={{
+              filter: "drop-shadow(0 0 5px rgba(255,255,255,0.7)) drop-shadow(0 0 10px rgba(255,255,255,0.5))",
+            }}
         />
 
         {/* Card */}
-        <div className="w-full max-w-xl bg-white rounded-2xl shadow-xl p-8 backdrop-blur-md border border-black mt-2 md:mt-3 mb-8">
+        <div className="w-full max-w-xl bg-white rounded-2xl shadow-xl p-8 backdrop-blur-md border border-black mt-[-10px] mb-8">
           <h1 className="text-xl md:text-2xl font-bold text-center text-black mb-5 tracking-wide">
             NEXT Spoof Submission
           </h1>
