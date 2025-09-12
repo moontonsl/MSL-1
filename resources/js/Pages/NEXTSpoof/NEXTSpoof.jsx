@@ -133,10 +133,10 @@ export default function NEXTSpoof({ auth }) {
                           focus:shadow-[0_0_10px_2px_rgba(250,204,21,0.7)] transition text-center"
               >
                 <option value="" disabled>
-                  Are you CH or SL?
+                  Are you part of CH or SL?
                 </option>
-                <option value="CH">CH</option>
-                <option value="SL">SL</option>
+                <option value="CH">Community Heroes</option>
+                <option value="SL">Student Leaders</option>
               </select>
             </div>
 
