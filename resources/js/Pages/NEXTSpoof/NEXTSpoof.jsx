@@ -83,7 +83,7 @@ export default function NEXTSpoof({ auth }) {
       <div className="flex flex-col items-center justify-center min-h-screen text-white px-4 pt-8 md:pt-2 mt-[-50px]">
         {/* Logo */}
         <img
-          src="/NEXTFLICKS_LOGO.png"
+          src="/NEXT-FLICKS-logo.png"
           alt="NEXTSpoof Logo"
           className="w-[250px] h-[200px] md:w-[400px] md:h-[320px] mt-0 block mx-auto object-contain"
           style={{
@@ -133,10 +133,10 @@ export default function NEXTSpoof({ auth }) {
                           focus:shadow-[0_0_10px_2px_rgba(250,204,21,0.7)] transition text-center"
               >
                 <option value="" disabled>
-                  Are you CH or SL?
+                  Are you part of CH or SL?
                 </option>
-                <option value="CH">CH</option>
-                <option value="SL">SL</option>
+                <option value="CH">Community Heroes</option>
+                <option value="SL">Student Leaders</option>
               </select>
             </div>
 
