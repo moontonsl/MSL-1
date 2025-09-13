@@ -41,25 +41,19 @@ Route::get('/about', function () {
     return Inertia::render('About Page/index');
 })->name('about');
 
-// Campus Tournament listing/management page
-Route::get('/CampusTournament', function () {
+// Campus Tournament listing/management page (updated routes)
+Route::get('/Tournament/SL', function () {
     return Inertia::render('Campus Tournament/CampusTournament');
 })->name('campus.tournament');
-Route::get('/campustournament', function () {
-    return Inertia::render('Campus Tournament/CampusTournament');
-});
 
-// Team Registration page
-Route::get('/TeamRegistration', function () {
+// Team Registration page (updated route)
+Route::get('/Tournament/CampusTournamentReg', function () {
     return Inertia::render('Campus Tournament/TeamRegistration');
 })->name('campus.teamregistration');
-Route::get('/teamregistration', function () {
-    return Inertia::render('Campus Tournament/TeamRegistration');
-});
 
-// Captain Registration page
-Route::get('/CaptainRegistration', function () {
-    return Inertia::render('Campus Tournament/CaptainRegistration');
+// Captain Registration page (updated route and filename mapping)
+Route::get('/Tournament/CampusTournament', function () {
+    return Inertia::render('Campus Tournament/Registration');
 })->name('campus.captainregistration');
 
 

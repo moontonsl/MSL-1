@@ -2,7 +2,7 @@ import React from "react";
 import { Head } from "@inertiajs/react";
 import MainLayout from "@/Layouts/MainLayout.jsx";
 
-export default function CaptainRegistration() {
+export default function Registration() {
   return (
     <MainLayout>
       <Head title="Campus Tournament" />
