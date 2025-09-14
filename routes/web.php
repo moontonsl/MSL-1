@@ -42,6 +42,27 @@ Route::get('/about', function () {
     return Inertia::render('About Page/index');
 })->name('about');
 
+// Campus Tournament listing/management page
+Route::get('/CampusTournament', function () {
+    return Inertia::render('Campus Tournament/CampusTournament');
+})->name('campus.tournament');
+Route::get('/campustournament', function () {
+    return Inertia::render('Campus Tournament/CampusTournament');
+});
+
+// Team Registration page
+Route::get('/TeamRegistration', function () {
+    return Inertia::render('Campus Tournament/TeamRegistration');
+})->name('campus.teamregistration');
+Route::get('/teamregistration', function () {
+    return Inertia::render('Campus Tournament/TeamRegistration');
+});
+
+// Captain Registration page
+Route::get('/CaptainRegistration', function () {
+    return Inertia::render('Campus Tournament/CaptainRegistration');
+})->name('campus.captainregistration');
+
 
 // Admin routes are defined in routes/admin.php
 
@@ -174,6 +195,26 @@ Route::get('/Programs', function () {
 Route::get('/BuffsAndSupport', function () {
     return Inertia::render('BuffsAndSupport/BuffsAndSupport');
 })->name('BuffsAndSupport');
+
+//MSL APPLICATION ROUTES
+Route::get('/MSLApplication', function () {
+    return Inertia::render('MSLApplication/MSLApplication');
+})->name('MSLApplication');
+
+//NEXT SPOOF ROUTES
+Route::get('/NEXTSpoof', function () {
+    return Inertia::render('NEXTSpoof/NEXTSpoof');
+})->name('NEXTSpoof');
+
+//ACCOUNT MODIFICATION WAITING ROUTES
+Route::get('/AccountModificationWaiting', function () {
+    return Inertia::render('AccountModification/AccountModificationWaiting');
+})->name('AccountModificationWaiting');
+
+//SL ADMIN APPROVAL ROUTES
+Route::get('/SLAdminApproval', function () {
+    return Inertia::render('ApprovalPages/SLAdminApproval');
+})->name('SLAdminApproval');
 
 //TERMS AND CONDITIONS ROUTES
 Route::get('/TermsAndConditions', function () {

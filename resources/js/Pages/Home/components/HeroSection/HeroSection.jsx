@@ -19,7 +19,7 @@ const HeroSection = () => {
             imgPosition: "object-center",
         },
         {
-            path: "/soon",
+            path: "/BuffsAndSupport",
             title: (
                 <>
                     Buffs <br className="hidden xl:block" /> & Supports
@@ -29,7 +29,7 @@ const HeroSection = () => {
             imgPosition: "object-center",
         },
         {
-            path: "/soon",
+            path: "/MSLApplication",
             title: "STUDENT LEADER",
             img: badingImg,
             imgPosition: "object-center",
