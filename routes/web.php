@@ -52,10 +52,20 @@ Route::get('/Tournament/CampusTournamentReg', function () {
     return Inertia::render('Campus Tournament/TeamRegistration');
 })->name('campus.teamregistration');
 
+// Campus Team page - shows logged-in player's team (mocked for now)
+Route::get('/Tournament/CampusTournamentTeam', function () {
+    return Inertia::render('Campus Tournament/Campus Tournament Team');
+})->name('campus.team');
+
 // Captain Registration page (updated route and filename mapping)
 Route::get('/Tournament/CampusTournament', function () {
     return Inertia::render('Campus Tournament/Registration');
 })->name('campus.captainregistration');
+
+// Regional Admin - Tournament Requests page
+Route::get('/Tournament/RegionalAdmin', function () {
+    return Inertia::render('Campus Tournament/Regional Admin');
+})->name('campus.regionaladmin');
 
 
 // Admin routes are defined in routes/admin.php
