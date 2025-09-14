@@ -100,42 +100,34 @@ Route::get('/notfound', function () {return Inertia::render('Errors/NotFound');}
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/sl-admin', function () {
         $user = Auth::user();
-        // Check if user has SL, Regional Admin, or Super Admin role
         if ($user->role !== 'SL' && $user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
             return redirect()->route('dashboard')->with('error', 'Access denied. Only Student Leaders, Regional Admins, and Super Admins can access this page.');
         }
 
-        // Build query based on user role
         $query = User::query();
 
         if ($user->role === 'SL') {
-            // SL can only see data within their university
             $query->where('university', $user->university);
         } elseif ($user->role === 'Regional Admin') {
-            // Regional Admin can see data within their assigned regions
-            $assignedRegions = $user->getAssignedRegionNames();
-            if (!empty($assignedRegions)) {
-                $query->whereIn('region', $assignedRegions);
+            $assignedRegionIds = $user->getAssignedRegionIds();
+            if (!empty($assignedRegionIds)) {
+                $query->whereIn('region', $assignedRegionIds);
             } else {
-                // Fallback to single region if no assigned regions
                 $query->where('region', $user->region);
             }
         }
-        // Super Admin can see all data (no additional where clause needed)
 
         $verified = (clone $query)->where('state', 'Verified')->count();
         $new      = (clone $query)->where('state', 'New')->count();
         $renewed  = (clone $query)->where('state', 'Renew')->count();
         $blocked  = (clone $query)->where('state', 'Blocked')->count();
         
-        //Student Leader para sa Regional Admin role
         $studentLeaders = 0;
         if ($user->role === 'Regional Admin') {
-            $assignedRegions = $user->getAssignedRegionNames();
-            if (!empty($assignedRegions)) {
-                $studentLeaders = User::where('role', 'SL')->whereIn('region', $assignedRegions)->count();
+            $assignedRegionIds = $user->getAssignedRegionIds();
+            if (!empty($assignedRegionIds)) {
+                $studentLeaders = User::where('role', 'SL')->whereIn('region', $assignedRegionIds)->count();
             } else {
-                // Fallback to single region if no assigned regions
                 $studentLeaders = User::where('role', 'SL')->where('region', $user->region)->count();
             }
         }
@@ -527,9 +519,9 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
     if ($user->role === 'SL') {
         $query->where('users.university', $user->university);
     } elseif ($user->role === 'Regional Admin') {
-        $assignedRegions = $user->getAssignedRegionNames();
-        if (!empty($assignedRegions)) {
-            $query->whereIn('users.region', $assignedRegions);
+        $assignedRegionIds = $user->getAssignedRegionIds();
+        if (!empty($assignedRegionIds)) {
+            $query->whereIn('users.region', $assignedRegionIds);
         } else {
             // Fallback to single region if no assigned regions
             $query->where('users.region', $user->region);
@@ -585,9 +577,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         if ($user->role === 'SL') {
             $query->where('university', $user->university);
         } elseif ($user->role === 'Regional Admin') {
-            $assignedRegions = $user->getAssignedRegionNames();
-            if (!empty($assignedRegions)) {
-                $query->whereIn('region', $assignedRegions);
+            $assignedRegionIds = $user->getAssignedRegionIds();
+            if (!empty($assignedRegionIds)) {
+                $query->whereIn('region', $assignedRegionIds);
             } else {
                 // Fallback to single region if no assigned regions
                 $query->where('region', $user->region);
@@ -630,9 +622,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         if ($user->role === 'SL') {
             $query->where('university', $user->university);
         } elseif ($user->role === 'Regional Admin') {
-            $assignedRegions = $user->getAssignedRegionNames();
-            if (!empty($assignedRegions)) {
-                $query->whereIn('region', $assignedRegions);
+            $assignedRegionIds = $user->getAssignedRegionIds();
+            if (!empty($assignedRegionIds)) {
+                $query->whereIn('region', $assignedRegionIds);
             } else {
                 // Fallback to single region if no assigned regions
                 $query->where('region', $user->region);
@@ -686,9 +678,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         if ($user->role === 'SL') {
             $query->where('university', $user->university);
         } elseif ($user->role === 'Regional Admin') {
-            $assignedRegions = $user->getAssignedRegionNames();
-            if (!empty($assignedRegions)) {
-                $query->whereIn('region', $assignedRegions);
+            $assignedRegionIds = $user->getAssignedRegionIds();
+            if (!empty($assignedRegionIds)) {
+                $query->whereIn('region', $assignedRegionIds);
             } else {
                 // Fallback to single region if no assigned regions
                 $query->where('region', $user->region);

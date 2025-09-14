@@ -126,4 +126,23 @@ class User extends Authenticatable
         
         return false;
     }
+
+    /**
+     * Get region IDs for assigned region names (for database queries)
+     */
+    public function getAssignedRegionIds()
+    {
+        $regionNames = $this->getAssignedRegionNames();
+        if (empty($regionNames)) {
+            return [];
+        }
+        
+        // Convert region names to IDs
+        $regionIds = \Illuminate\Support\Facades\DB::table('regions')
+            ->whereIn('name', $regionNames)
+            ->pluck('id')
+            ->toArray();
+            
+        return $regionIds;
+    }
 }

@@ -82,6 +82,28 @@ Route::middleware(['web'])->group(function () {
             'regions.*' => 'required|string|max:255'
         ]);
         
+        // Check for duplicate region assignments
+        $requestedRegions = $request->regions;
+        $existingAssignments = \App\Models\UserRegion::whereIn('region_name', $requestedRegions)
+            ->where('user_id', '!=', $targetUser->id)
+            ->get();
+        
+        if ($existingAssignments->count() > 0) {
+            $duplicateRegions = $existingAssignments->pluck('region_name')->toArray();
+            $duplicateUsers = \App\Models\User::whereIn('id', $existingAssignments->pluck('user_id'))
+                ->get(['id', 'name', 'surname'])
+                ->map(function($user) {
+                    return $user->name . ' ' . $user->surname;
+                })
+                ->toArray();
+            
+            return response()->json([
+                'error' => 'Some regions are already assigned to other Regional Admins',
+                'duplicate_regions' => $duplicateRegions,
+                'assigned_to' => $duplicateUsers
+            ], 400);
+        }
+        
         // Clear existing regions
         $targetUser->assignedRegions()->delete();
         
@@ -96,6 +118,87 @@ Route::middleware(['web'])->group(function () {
             'success' => true, 
             'message' => 'User regions updated successfully',
             'assigned_regions' => $targetUser->getAssignedRegionNames()
+        ]);
+    });
+    
+    // Re-assign regions from one Regional Admin to another
+    Route::post('/admin/users/{fromUserId}/reassign-regions', function ($fromUserId, Request $request) {
+        \Log::info('Re-assign regions API hit', [
+            'fromUserId' => $fromUserId,
+            'requestData' => $request->all(),
+            'sessionId' => session()->getId(),
+            'authCheck' => Auth::check(),
+            'user' => Auth::user() ? Auth::user()->toArray() : null
+        ]);
+        
+        $user = Auth::user();
+        
+        if (!$user) {
+            return response()->json(['error' => 'User not authenticated'], 401);
+        }
+        
+        if ($user->role !== 'Admin' && $user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Access denied. Only Admins can re-assign regions.'], 403);
+        }
+        
+        $request->validate([
+            'to_user_id' => 'required|integer|exists:users,id',
+            'regions' => 'required|array',
+            'regions.*' => 'required|string|max:255'
+        ]);
+        
+        $fromUser = User::find($fromUserId);
+        $toUser = User::find($request->to_user_id);
+        
+        if (!$fromUser || !$toUser) {
+            return response()->json(['error' => 'One or both users not found.'], 404);
+        }
+        
+        if ($fromUser->role !== 'Regional Admin' || $toUser->role !== 'Regional Admin') {
+            return response()->json(['error' => 'Both users must be Regional Admins.'], 400);
+        }
+        
+        $regionsToReassign = $request->regions;
+        
+        // Check if the target user already has any of these regions
+        $existingAssignments = \App\Models\UserRegion::whereIn('region_name', $regionsToReassign)
+            ->where('user_id', $toUser->id)
+            ->get();
+        
+        if ($existingAssignments->count() > 0) {
+            $duplicateRegions = $existingAssignments->pluck('region_name')->toArray();
+            return response()->json([
+                'error' => 'Target user already has some of these regions assigned',
+                'duplicate_regions' => $duplicateRegions
+            ], 400);
+        }
+        
+        // Remove regions from source user
+        \App\Models\UserRegion::where('user_id', $fromUserId)
+            ->whereIn('region_name', $regionsToReassign)
+            ->delete();
+        
+        // Add regions to target user
+        foreach ($regionsToReassign as $regionName) {
+            $toUser->assignedRegions()->create([
+                'region_name' => $regionName
+            ]);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Regions re-assigned successfully',
+            'from_user' => [
+                'id' => $fromUser->id,
+                'name' => $fromUser->name . ' ' . $fromUser->surname,
+                'remaining_regions' => $fromUser->fresh()->getAssignedRegionNames()
+            ],
+            'to_user' => [
+                'id' => $toUser->id,
+                'name' => $toUser->name . ' ' . $toUser->surname,
+                'new_regions' => $toUser->fresh()->getAssignedRegionNames()
+            ],
+            'reassigned_regions' => $regionsToReassign
         ]);
     });
 });

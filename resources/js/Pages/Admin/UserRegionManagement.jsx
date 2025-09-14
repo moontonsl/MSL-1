@@ -4,7 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.jsx';
 import { Check, X, Plus, Trash2, Save } from 'lucide-react';
 
 const UserRegionManagement = () => {
-    const { regionalAdmins, allRegions, user } = usePage().props;
+    const { regionalAdmins, allRegions, assignedRegions, regionalAdminsList, user } = usePage().props;
     
     // Debug: Log the allRegions data
     console.log('allRegions data:', allRegions);
@@ -14,6 +14,13 @@ const UserRegionManagement = () => {
     const [selectedRegions, setSelectedRegions] = useState([]);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ show: false, text: '', type: 'info' });
+    
+    // Re-assign states
+    const [showReassignModal, setShowReassignModal] = useState(false);
+    const [reassigningUser, setReassigningUser] = useState(null);
+    const [selectedRegionsToReassign, setSelectedRegionsToReassign] = useState([]);
+    const [targetUserId, setTargetUserId] = useState('');
+    const [reassignLoading, setReassignLoading] = useState(false);
 
     const showToast = (text, type = 'info') => {
         setMessage({ show: true, text, type });
@@ -31,6 +38,14 @@ const UserRegionManagement = () => {
     };
 
     const toggleRegion = (region) => {
+        // Check if region is already assigned to another user
+        const isAssignedToOther = assignedRegions[region] && assignedRegions[region].user_id !== editingUser?.id;
+        
+        if (isAssignedToOther) {
+            showToast(`Region "${region}" is already assigned to ${assignedRegions[region].assigned_to}`, 'error');
+            return;
+        }
+        
         setSelectedRegions(prev => 
             prev.includes(region) 
                 ? prev.filter(r => r !== region)
@@ -76,13 +91,84 @@ const UserRegionManagement = () => {
                 // Refresh the page to get updated data
                 window.location.reload();
             } else {
-                showToast(data.error || 'Failed to update regions', 'error');
+                if (data.duplicate_regions && data.assigned_to) {
+                    const duplicateList = data.duplicate_regions.map((region, index) => 
+                        `${region} (assigned to ${data.assigned_to[index]})`
+                    ).join(', ');
+                    showToast(`Cannot assign regions: ${duplicateList}`, 'error');
+                } else {
+                    showToast(data.error || 'Failed to update regions', 'error');
+                }
             }
         } catch (error) {
             console.error('Error updating regions:', error);
             showToast('Network error. Please try again.', 'error');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const startReassigning = (admin) => {
+        setReassigningUser(admin);
+        setSelectedRegionsToReassign([]);
+        setTargetUserId('');
+        setShowReassignModal(true);
+    };
+
+    const cancelReassigning = () => {
+        setShowReassignModal(false);
+        setReassigningUser(null);
+        setSelectedRegionsToReassign([]);
+        setTargetUserId('');
+    };
+
+    const toggleRegionForReassign = (region) => {
+        setSelectedRegionsToReassign(prev => 
+            prev.includes(region) 
+                ? prev.filter(r => r !== region)
+                : [...prev, region]
+        );
+    };
+
+    const reassignRegions = async () => {
+        if (!reassigningUser || !targetUserId || selectedRegionsToReassign.length === 0) {
+            showToast('Please select regions and target user', 'error');
+            return;
+        }
+        
+        setReassignLoading(true);
+        try {
+            const response = await fetch(`/api/admin/users/${reassigningUser.id}/reassign-regions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: JSON.stringify({ 
+                    to_user_id: parseInt(targetUserId),
+                    regions: selectedRegionsToReassign 
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showToast(data.message, 'success');
+                // Refresh the page to get updated data
+                window.location.reload();
+            } else {
+                if (data.duplicate_regions) {
+                    const duplicateList = data.duplicate_regions.join(', ');
+                    showToast(`Cannot re-assign regions: ${duplicateList} (already assigned to target user)`, 'error');
+                } else {
+                    showToast(data.error || 'Failed to re-assign regions', 'error');
+                }
+            }
+        } catch (error) {
+            console.error('Error re-assigning regions:', error);
+            showToast('Network error. Please try again.', 'error');
+        } finally {
+            setReassignLoading(false);
         }
     };
 
@@ -130,13 +216,24 @@ const UserRegionManagement = () => {
                                                         @{admin.username} • {admin.email}
                                                     </p>
                                                 </div>
-                                                <button
-                                                    onClick={() => startEditing(admin)}
-                                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all duration-200 flex items-center gap-2"
-                                                >
-                                                    <Plus className="w-4 h-4" />
-                                                    Manage Regions
-                                                </button>
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => startEditing(admin)}
+                                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all duration-200 flex items-center gap-2"
+                                                    >
+                                                        <Plus className="w-4 h-4" />
+                                                        Manage Regions
+                                                    </button>
+                                                    {admin.assigned_regions.length > 0 && (
+                                                        <button
+                                                            onClick={() => startReassigning(admin)}
+                                                            className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-all duration-200 flex items-center gap-2"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                            Re-assign Regions
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
                                             
                                             <div className="space-y-2">
@@ -190,17 +287,50 @@ const UserRegionManagement = () => {
                                         <div>
                                             <h4 className="text-lg font-medium text-white mb-3">Select Regions</h4>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto">
-                                                {allRegions.map((region) => (
-                                                    <label key={region} className="flex items-center space-x-3 p-3 bg-neutral-700/50 rounded-lg hover:bg-neutral-700 transition-colors cursor-pointer">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={selectedRegions.includes(region)}
-                                                            onChange={() => toggleRegion(region)}
-                                                            className="w-4 h-4 text-blue-600 bg-neutral-600 border-neutral-500 rounded focus:ring-blue-500"
-                                                        />
-                                                        <span className="text-white">{region}</span>
-                                                    </label>
-                                                ))}
+                                                {allRegions.map((region) => {
+                                                    const isAssignedToOther = assignedRegions[region] && assignedRegions[region].user_id !== editingUser?.id;
+                                                    const isAssignedToCurrent = assignedRegions[region] && assignedRegions[region].user_id === editingUser?.id;
+                                                    
+                                                    return (
+                                                        <label 
+                                                            key={region} 
+                                                            className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                                                                isAssignedToOther 
+                                                                    ? 'bg-red-700/30 border border-red-500/50 cursor-not-allowed opacity-60' 
+                                                                    : isAssignedToCurrent
+                                                                    ? 'bg-green-700/30 border border-green-500/50 cursor-pointer hover:bg-green-700/50'
+                                                                    : 'bg-neutral-700/50 cursor-pointer hover:bg-neutral-700'
+                                                            }`}
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={selectedRegions.includes(region)}
+                                                                onChange={() => toggleRegion(region)}
+                                                                disabled={isAssignedToOther}
+                                                                className={`w-4 h-4 rounded focus:ring-blue-500 ${
+                                                                    isAssignedToOther 
+                                                                        ? 'text-red-600 bg-neutral-600 border-neutral-500 cursor-not-allowed' 
+                                                                        : 'text-blue-600 bg-neutral-600 border-neutral-500'
+                                                                }`}
+                                                            />
+                                                            <div className="flex-1">
+                                                                <span className={`${isAssignedToOther ? 'text-red-300' : 'text-white'}`}>
+                                                                    {region}
+                                                                </span>
+                                                                {isAssignedToOther && (
+                                                                    <div className="text-xs text-red-400 mt-1">
+                                                                        Assigned to: {assignedRegions[region].assigned_to}
+                                                                    </div>
+                                                                )}
+                                                                {isAssignedToCurrent && (
+                                                                    <div className="text-xs text-green-400 mt-1">
+                                                                        Currently assigned
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </label>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
 
@@ -229,6 +359,97 @@ const UserRegionManagement = () => {
                                                         <>
                                                             <Save className="w-4 h-4" />
                                                             Save Changes
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Re-assign Regions Modal */}
+                    {showReassignModal && reassigningUser && (
+                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                            <div className="bg-neutral-800 rounded-xl border border-neutral-700 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+                                <div className="p-6">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h3 className="text-xl font-semibold text-white">
+                                            Re-assign Regions from {reassigningUser.name}
+                                        </h3>
+                                        <button
+                                            onClick={cancelReassigning}
+                                            className="text-neutral-400 hover:text-white transition-colors"
+                                        >
+                                            <X className="w-6 h-6" />
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        {/* Target User Selection */}
+                                        <div>
+                                            <h4 className="text-lg font-medium text-white mb-3">Select Target Regional Admin</h4>
+                                            <select
+                                                value={targetUserId}
+                                                onChange={(e) => setTargetUserId(e.target.value)}
+                                                className="w-full bg-neutral-700 border border-neutral-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                                            >
+                                                <option value="">Select Regional Admin...</option>
+                                                {regionalAdminsList
+                                                    .filter(admin => admin.id !== reassigningUser.id)
+                                                    .map(admin => (
+                                                        <option key={admin.id} value={admin.id}>
+                                                            {admin.name}
+                                                        </option>
+                                                    ))}
+                                            </select>
+                                        </div>
+
+                                        {/* Region Selection */}
+                                        <div>
+                                            <h4 className="text-lg font-medium text-white mb-3">Select Regions to Re-assign</h4>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto">
+                                                {reassigningUser.assigned_regions.map((region) => (
+                                                    <label key={region} className="flex items-center space-x-3 p-3 bg-neutral-700/50 rounded-lg hover:bg-neutral-700 transition-colors cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedRegionsToReassign.includes(region)}
+                                                            onChange={() => toggleRegionForReassign(region)}
+                                                            className="w-4 h-4 text-yellow-600 bg-neutral-600 border-neutral-500 rounded focus:ring-yellow-500"
+                                                        />
+                                                        <span className="text-white">{region}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center justify-between pt-4 border-t border-neutral-700">
+                                            <div className="text-sm text-neutral-400">
+                                                {selectedRegionsToReassign.length} region{selectedRegionsToReassign.length !== 1 ? 's' : ''} selected for re-assignment
+                                            </div>
+                                            <div className="flex gap-3">
+                                                <button
+                                                    onClick={cancelReassigning}
+                                                    className="px-4 py-2 bg-neutral-600 hover:bg-neutral-700 text-white rounded-lg font-medium transition-all duration-200"
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    onClick={reassignRegions}
+                                                    disabled={reassignLoading || !targetUserId || selectedRegionsToReassign.length === 0}
+                                                    className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-all duration-200 flex items-center gap-2 disabled:opacity-50"
+                                                >
+                                                    {reassignLoading ? (
+                                                        <>
+                                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                            Re-assigning...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Trash2 className="w-4 h-4" />
+                                                            Re-assign Regions
                                                         </>
                                                     )}
                                                 </button>
