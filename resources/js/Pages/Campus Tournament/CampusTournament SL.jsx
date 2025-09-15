@@ -89,6 +89,20 @@ const CampusTournament = () => {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const handleSetResult = (tournamentId, teamId, result) => {
+    setTournaments((prev) =>
+      prev.map((tournament) => {
+        if (tournament.id !== tournamentId) return tournament;
+        return {
+          ...tournament,
+          teams: (tournament.teams || []).map((team) =>
+            team.id === teamId ? { ...team, result } : team
+          ),
+        };
+      })
+    );
+  };
+
   const PlayerCell = ({ player }) => {
     return (
       <div className="w-full md:w-auto flex flex-col items-center gap-1 text-white/80 text-xs md:text-sm font-montserrat">
@@ -194,14 +208,15 @@ const CampusTournament = () => {
                       <div className="px-0 pb-4">
                         <div className="mt-0 rounded-b-2xl bg-neutral-800/70 backdrop-blur-sm border-t border-neutral-700/40">
                           {/* Table Header */}
-                          <div className="grid [grid-template-columns:minmax(200px,2fr)_repeat(5,minmax(140px,1fr))_minmax(120px,1fr)] gap-3 px-6 md:px-10 py-2 text-white/70 text-xs md:text-sm border-b border-white/10 font-montserrat">
+                          <div className="grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(130px,1fr)_minmax(120px,1fr)] gap-3 px-6 md:px-10 py-2 text-white/70 text-xs md:text-sm border-b border-white/10 font-montserrat">
                             <div className="self-center">Team name</div>
                             <div className="text-center">Player 1</div>
                             <div className="text-center">Player 2</div>
                             <div className="text-center">Player 3</div>
                             <div className="text-center">Player 4</div>
                             <div className="text-center">Player 5</div>
-                            <div className="text-right">Action</div>
+                            <div className="text-center">Verification</div>
+                            <div className="text-center">Result</div>
                           </div>
 
                           {/* Team Rows */}
@@ -209,7 +224,7 @@ const CampusTournament = () => {
                             item.teams.map((team) => (
                               <div
                                 key={team.id}
-                                className="grid [grid-template-columns:minmax(200px,2fr)_repeat(5,minmax(140px,1fr))_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3 border-t border-white/10 hover:bg-white/5 transition"
+                                className="grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(130px,1fr)_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3 border-t border-white/10 hover:bg-white/5 transition"
                               >
                                 <div className="text-white/90 font-montserrat md:truncate">{team.name}</div>
                                 {team.players.slice(0, 5).map((player, idx) => (
@@ -217,13 +232,25 @@ const CampusTournament = () => {
                                     <PlayerCell player={player} />
                                   </div>
                                 ))}
-                                <div className="flex justify-end">
-                                  <button
-                                    type="button"
-                                    className="bg-[#F2C21A] text-black font-montserrat text-[11px] md:text-xs font-semibold rounded-md px-3 py-1 shadow-[0_0_8px_-3px_rgba(242,194,26,1)]"
+                                {(() => {
+                                  const allVerified = team.players.slice(0, 5).every((p) => !!p.verified);
+                                  return (
+                                    <div className="flex justify-center items-center gap-2">
+                                      <span className={`w-2.5 h-2.5 rounded-full ${allVerified ? 'bg-green-400' : 'bg-yellow-400'}`} />
+                                      <span className="font-montserrat text-xs md:text-sm text-white/80">{allVerified ? 'Verified' : 'Pending'}</span>
+                                    </div>
+                                  );
+                                })()}
+                                <div className="flex justify-center">
+                                  <select
+                                    value={team.result || ''}
+                                    onChange={(e) => handleSetResult(item.id, team.id, e.target.value)}
+                                    className="bg-transparent border border-white/40 rounded-md px-2 py-1 text-white focus:text-black text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[96px]"
                                   >
-                                    Edit
-                                  </button>
+                                    <option className="text-black" value="">Select</option>
+                                    <option className="text-black" value="win">Win</option>
+                                    <option className="text-black" value="lose">Lose</option>
+                                  </select>
                                 </div>
                               </div>
                             ))

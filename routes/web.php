@@ -44,7 +44,7 @@ Route::get('/about', function () {
 
 // Campus Tournament listing/management page (updated routes)
 Route::get('/Tournament/SL', function () {
-    return Inertia::render('Campus Tournament/CampusTournament');
+    return Inertia::render('Campus Tournament/CampusTournament SL');
 })->name('campus.tournament');
 
 // Team Registration page (updated route)
