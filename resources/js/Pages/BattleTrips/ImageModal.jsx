@@ -8,7 +8,7 @@ export default function ImageModal() {
     <div className="flex justify-center">
       {/* Thumbnail Image */}
       <img
-        src="/Mini Game - 5.jpg"
+        src="/Battle Trips_Page 4 - Week 4.png"
         alt="Second Image Description"
         className="w-[200px] h-auto md:w-[300px] mx-auto mb-6 object-contain cursor-pointer"
         onClick={() => setIsOpen(true)}
@@ -25,7 +25,7 @@ export default function ImageModal() {
             onClick={() => setIsOpen(false)}
           >
             <motion.img
-              src="/Mini Game - 5.jpg"
+              src="/Battle Trips_Page 4 - Week 4.png"
               alt="Popup Image"
               className="max-w-[90%] max-h-[90%] rounded-2xl shadow-lg"
               initial={{ scale: 0.7, opacity: 0 }}
