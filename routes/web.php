@@ -14,15 +14,16 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 //jabu
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AuthController as AuthControllerClass;
 use App\Models\User;
+use App\Models\UserRegion;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\VotingController;
 use App\Http\Controllers\BracketTeamController;
 use App\Http\Controllers\MlAuthController;
 use App\Http\Controllers\GoogleSheetController;
 use App\Http\Controllers\SpreadSheetAutomationController;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Mccs2PredictionsController;
 use App\Http\Controllers\GoogleSheetMCCS2Controller;
 use App\Http\Controllers\Admin\DuplicateUsernameController;
@@ -41,26 +42,30 @@ Route::get('/about', function () {
     return Inertia::render('About Page/index');
 })->name('about');
 
-// Campus Tournament listing/management page
-Route::get('/CampusTournament', function () {
-    return Inertia::render('Campus Tournament/CampusTournament');
+// Campus Tournament listing/management page (updated routes)
+Route::get('/Tournament/SL', function () {
+    return Inertia::render('Campus Tournament/CampusTournament SL');
 })->name('campus.tournament');
-Route::get('/campustournament', function () {
-    return Inertia::render('Campus Tournament/CampusTournament');
-});
 
-// Team Registration page
-Route::get('/TeamRegistration', function () {
+// Team Registration page (updated route)
+Route::get('/Tournament/CampusTournamentReg', function () {
     return Inertia::render('Campus Tournament/TeamRegistration');
 })->name('campus.teamregistration');
-Route::get('/teamregistration', function () {
-    return Inertia::render('Campus Tournament/TeamRegistration');
-});
 
-// Captain Registration page
-Route::get('/CaptainRegistration', function () {
-    return Inertia::render('Campus Tournament/CaptainRegistration');
+// Campus Team page - shows logged-in player's team (mocked for now)
+Route::get('/Tournament/CampusTournamentTeam', function () {
+    return Inertia::render('Campus Tournament/Campus Tournament Team');
+})->name('campus.team');
+
+// Captain Registration page (updated route and filename mapping)
+Route::get('/Tournament/CampusTournament', function () {
+    return Inertia::render('Campus Tournament/Registration');
 })->name('campus.captainregistration');
+
+// Regional Admin - Tournament Requests page
+Route::get('/Tournament/RegionalAdmin', function () {
+    return Inertia::render('Campus Tournament/Regional Admin');
+})->name('campus.regionaladmin');
 
 
 // Admin routes are defined in routes/admin.php
@@ -99,34 +104,45 @@ Route::get('/notfound', function () {return Inertia::render('Errors/NotFound');}
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/sl-admin', function () {
         $user = Auth::user();
-        // Check if user has SL, Regional Admin, or Super Admin role
         if ($user->role !== 'SL' && $user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
             return redirect()->route('dashboard')->with('error', 'Access denied. Only Student Leaders, Regional Admins, and Super Admins can access this page.');
         }
 
-        // Build query based on user role
         $query = User::query();
 
         if ($user->role === 'SL') {
-            // SL can only see data within their university
             $query->where('university', $user->university);
         } elseif ($user->role === 'Regional Admin') {
-            // Regional Admin can see data within their region
-            $query->where('region', $user->region);
+            $assignedRegionIds = $user->getAssignedRegionIds();
+            if (!empty($assignedRegionIds)) {
+                $query->whereIn('region', $assignedRegionIds);
+            } else {
+                $query->where('region', $user->region);
+            }
         }
-        // Super Admin can see all data (no additional where clause needed)
 
         $verified = (clone $query)->where('state', 'Verified')->count();
         $new      = (clone $query)->where('state', 'New')->count();
         $renewed  = (clone $query)->where('state', 'Renew')->count();
         $blocked  = (clone $query)->where('state', 'Blocked')->count();
+        
+        $studentLeaders = 0;
+        if ($user->role === 'Regional Admin') {
+            $assignedRegionIds = $user->getAssignedRegionIds();
+            if (!empty($assignedRegionIds)) {
+                $studentLeaders = User::where('role', 'SL')->whereIn('region', $assignedRegionIds)->count();
+            } else {
+                $studentLeaders = User::where('role', 'SL')->where('region', $user->region)->count();
+            }
+        }
 
         return Inertia::render('SLAdmin/SLAdmin',[
             'user' => $user,
             'verified' => $verified,
             'new' => $new,
             'renewed' => $renewed,
-            'blocked' => $blocked
+            'blocked' => $blocked,
+            'studentLeaders' => $studentLeaders
         ]);
     })->name('sl-admin');
 });
@@ -155,7 +171,7 @@ Route::get('/schools/search', [SchoolController::class, 'search']);
 Route::get('/login', function () {
     return Inertia::render('Login/Login');
 })->name('login');
-// // Route::post('/login', [AuthController::class, 'login'])->name('login');
+// // Route::post('/login', [AuthControllerClass::class, 'login'])->name('login');
 
 //ACCOUNT REGISTRATION ROUTES
 Route::get('/register', function () {
@@ -512,16 +528,30 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
     if ($user->role === 'SL') {
         $query->where('users.university', $user->university);
     } elseif ($user->role === 'Regional Admin') {
-        $query->where('users.region', $user->region);
+        $assignedRegionIds = $user->getAssignedRegionIds();
+        if (!empty($assignedRegionIds)) {
+            $query->whereIn('users.region', $assignedRegionIds);
+        } else {
+            // Fallback to single region if no assigned regions
+            $query->where('users.region', $user->region);
+        }
     }
     // Super Admin can view all users (no filtering applied)
     
-    $query->where('users.role', '!=', 'SL')
-        ->where('users.role', '!=', 'Admin')
-        ->where('users.role', '!=', 'Super Admin')
-        ->where('users.role', '!=', 'Regional Admin');
-    if ($request->has('state')) {
-        $query->where('users.state', $request->query('state'));
+    // Handle Student Leader filtering
+    if ($request->has('state') && $request->query('state') === 'StudentLeaders') {
+        // Show only Student Leaders (SL role) for Regional Admin
+        $query->where('users.role', 'SL');
+    } else {
+        // Regular filtering - exclude admin roles
+        $query->where('users.role', '!=', 'SL')
+            ->where('users.role', '!=', 'Admin')
+            ->where('users.role', '!=', 'Super Admin')
+            ->where('users.role', '!=', 'Regional Admin');
+        
+        if ($request->has('state')) {
+            $query->where('users.state', $request->query('state'));
+        }
     }
     
     // Add search functionality
@@ -556,7 +586,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         if ($user->role === 'SL') {
             $query->where('university', $user->university);
         } elseif ($user->role === 'Regional Admin') {
-            $query->where('region', $user->region);
+            $assignedRegionIds = $user->getAssignedRegionIds();
+            if (!empty($assignedRegionIds)) {
+                $query->whereIn('region', $assignedRegionIds);
+            } else {
+                // Fallback to single region if no assigned regions
+                $query->where('region', $user->region);
+            }
         }
         // Super Admin can verify any user (no additional filtering)
         
@@ -595,7 +631,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         if ($user->role === 'SL') {
             $query->where('university', $user->university);
         } elseif ($user->role === 'Regional Admin') {
-            $query->where('region', $user->region);
+            $assignedRegionIds = $user->getAssignedRegionIds();
+            if (!empty($assignedRegionIds)) {
+                $query->whereIn('region', $assignedRegionIds);
+            } else {
+                // Fallback to single region if no assigned regions
+                $query->where('region', $user->region);
+            }
         }
         // Super Admin can block any user (no additional filtering)
         
@@ -645,7 +687,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         if ($user->role === 'SL') {
             $query->where('university', $user->university);
         } elseif ($user->role === 'Regional Admin') {
-            $query->where('region', $user->region);
+            $assignedRegionIds = $user->getAssignedRegionIds();
+            if (!empty($assignedRegionIds)) {
+                $query->whereIn('region', $assignedRegionIds);
+            } else {
+                // Fallback to single region if no assigned regions
+                $query->where('region', $user->region);
+            }
         }
         // Super Admin can renew any user (no additional filtering)
         
@@ -679,6 +727,66 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         return response()->json(['success' => true, 'message' => $message]);
     });
+    
+    //Pang promote sa student to SL
+    Route::patch('/api/sladmin/users/{userId}/promote', function ($userId) {
+        $user = Auth::user();
+        if ($user->role !== 'Regional Admin') {
+            return response()->json(['error' => 'Access denied. Only Regional Admins can promote users to Student Leader.'], 403);
+        }
+        
+        $query = \App\Models\User::where('id', $userId)
+            ->where('role', '!=', 'SL')
+            ->where('role', '!=', 'Admin')
+            ->where('role', '!=', 'Super Admin')
+            ->where('role', '!=', 'Regional Admin')
+            ->where('region', $user->region)
+            ->where('state', 'Verified'); // Only promote verified users
+        
+        $targetUser = $query->first();
+            
+        if (!$targetUser) {
+            return response()->json(['error' => 'User not found, not verified, or access denied.'], 404);
+        }
+        
+        $targetUser->update([
+            'role' => 'SL'
+        ]);
+        
+        return response()->json(['success' => true, 'message' => 'User promoted to Student Leader successfully']);
+    });
+    
+    //pang demote ng student leader
+    Route::patch('/api/sladmin/users/{userId}/demote', function ($userId) {
+        $user = Auth::user();
+        if ($user->role !== 'Regional Admin') {
+            return response()->json(['error' => 'Access denied. Only Regional Admins can demote Student Leaders.'], 403);
+        }
+        
+        $query = \App\Models\User::where('id', $userId)
+            ->where('role', 'SL')
+            ->where('region', $user->region);
+        
+        $targetUser = $query->first();
+            
+        if (!$targetUser) {
+            return response()->json(['error' => 'Student Leader not found or access denied.'], 404);
+        }
+        
+        $targetUser->update([
+            'role' => 'user' 
+        ]);
+        
+        return response()->json(['success' => true, 'message' => 'Student Leader demoted successfully']);
+    });
+    
+});
+
+// Admin routes for managing user regions
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/admin/user-regions', [\App\Http\Controllers\Admin\UserRegionController::class, 'index'])
+        ->name('admin.user-regions');
+    
 });
 // Duplicate Username Check
 Route::get('/admin/duplicate-usernames/check', [\App\Http\Controllers\Admin\DuplicateUsernameController::class, 'checkDuplicates'])->name('admin.duplicate-usernames.check');

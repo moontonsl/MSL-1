@@ -1,19 +1,19 @@
 <?php
 
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use Illuminate\Support\Facades\Route;
 
 // Admin Authentication Routes
 Route::middleware('guest')->group(function () {
-    Route::get('/admin/login', [AuthController::class, 'showLogin'])->name('admin.login');
-    Route::post('/admin/login', [AuthController::class, 'login'])->name('admin.login.submit');
+    Route::get('/admin/login', [AdminAuthController::class, 'showLogin'])->name('admin.login');
+    Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
 });
 
 // Protected Admin Routes
 Route::middleware(['auth:admin', 'admin'])->group(function () {
     // Logout Route
-    Route::post('/admin/logout', [AuthController::class, 'logout'])->name('admin.logout');
+    Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
 
     // Dashboard
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');

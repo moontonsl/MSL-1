@@ -227,6 +227,15 @@ const Header = () => {
                                         SL Admin
                                     </Link>
                                 )}
+                                {user.role === 'Super Admin' && (
+                                    <Link
+                                        href="/admin/user-regions"
+                                        className={styles.dropdownItem}
+                                        onClick={() => setIsDropdownOpen(false)}
+                                    >
+                                        User Regions
+                                    </Link>
+                                )}
                                 <button
                                     onClick={() => {
                                         setShowModificationModal(true);

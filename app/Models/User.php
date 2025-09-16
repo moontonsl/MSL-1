@@ -94,4 +94,55 @@ class User extends Authenticatable
     {
         return $this->hasMany(User::class, 'verified_by');
     }
+
+    /**
+     * Get the regions assigned to this user (for Regional Admins)
+     */
+    public function assignedRegions()
+    {
+        return $this->hasMany(UserRegion::class);
+    }
+
+    /**
+     * Get the region names assigned to this user
+     */
+    public function getAssignedRegionNames()
+    {
+        return $this->assignedRegions()->pluck('region_name')->toArray();
+    }
+
+    /**
+     * Check if user has access to a specific region
+     */
+    public function hasAccessToRegion($regionName)
+    {
+        if ($this->role === 'Super Admin') {
+            return true; // Super Admin has access to all regions
+        }
+        
+        if ($this->role === 'Regional Admin') {
+            return $this->assignedRegions()->where('region_name', $regionName)->exists();
+        }
+        
+        return false;
+    }
+
+    /**
+     * Get region IDs for assigned region names (for database queries)
+     */
+    public function getAssignedRegionIds()
+    {
+        $regionNames = $this->getAssignedRegionNames();
+        if (empty($regionNames)) {
+            return [];
+        }
+        
+        // Convert region names to IDs
+        $regionIds = \Illuminate\Support\Facades\DB::table('regions')
+            ->whereIn('name', $regionNames)
+            ->pluck('id')
+            ->toArray();
+            
+        return $regionIds;
+    }
 }
