@@ -26,6 +26,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Mccs2PredictionsController;
 use App\Http\Controllers\GoogleSheetMCCS2Controller;
 use App\Http\Controllers\Admin\DuplicateUsernameController;
+use App\Http\Controllers\CampusController;
+use App\Http\Controllers\CourseController;
 
 Route::get('/', function () {
     return Inertia::render('Home/Home', [
@@ -321,7 +323,7 @@ Route::get('/news/{canonical}', [NewsController::class, 'show'])->name('news.sho
 Route::get('/stats', function () {
     return [
         'student_players' => DB::table('users')->count(),
-        'student_leaders' => DB::table('users')->where('user_type', 'SL')->count(),
+        'student_leaders' => DB::table('users')->where('role', 'SL')->count(),
         'university_communities' => DB::table('msl_schools')->count(),
         'school_partners' => DB::table('msl_school_partner')->count(),
 
@@ -678,3 +680,10 @@ Route::post('/Change-Username/{user_id}', function ($user_id) {
     
     return back()->with('status', 'Username updated successfully!');
 })->name('admin.duplicate-usernames.update');
+
+// Course API Routes
+Route::get('/api/courses', [CourseController::class, 'index'])->name('courses.index');
+Route::get('/api/courses/search', [CourseController::class, 'search'])->name('courses.search');
+Route::get('/api/courses/level/{level}', [CourseController::class, 'getByLevel'])->name('courses.by-level');
+
+Route::get('/campus', [CampusController::class, 'index'])->name('campus');
