@@ -208,6 +208,11 @@ Route::get('/SLAdminApproval', function () {
     return Inertia::render('ApprovalPages/SLAdminApproval');
 })->name('SLAdminApproval');
 
+//ADMIN REGIONAL APPROVAL ROUTES
+Route::get('/RegionalAdminApproval', function () {
+    return Inertia::render('ApprovalPages/RegionalAdminApproval');
+})->name('RegionalAdminApproval');
+
 //TERMS AND CONDITIONS ROUTES
 Route::get('/TermsAndConditions', function () {
     return Inertia::render('TermsAndConditions/TermsAndConditions');
