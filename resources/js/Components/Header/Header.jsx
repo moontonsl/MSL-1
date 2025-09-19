@@ -227,7 +227,7 @@ const Header = () => {
                                         SL Admin
                                     </Link>
                                 )}
-                                <button
+                                {/* <button
                                     onClick={() => {
                                         setShowModificationModal(true);
                                         setIsDropdownOpen(false);
@@ -235,7 +235,7 @@ const Header = () => {
                                     className={styles.dropdownItem}
                                     >
                                     Modify Account
-                                </button>
+                                </button> */}
                                 <button
                                     onClick={handleDeleteAccount}
                                     className={`${styles.dropdownItem} text-red-500 hover:text-red-400`}
