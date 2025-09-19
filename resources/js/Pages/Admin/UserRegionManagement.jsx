@@ -248,11 +248,23 @@ const UserRegionManagement = () => {
                                                     <span className="text-sm text-neutral-400">Assigned Regions:</span>
                                                     <div className="mt-1 flex flex-wrap gap-2">
                                                         {admin.assigned_regions.length > 0 ? (
-                                                            admin.assigned_regions.map((region, index) => (
-                                                                <span key={index} className="px-2 py-1 bg-purple-600 text-white rounded text-sm">
-                                                                    {region}
-                                                                </span>
-                                                            ))
+                                                            admin.assigned_regions.map((region, index) => {
+                                                                const isOriginalRegion = region === admin.current_region;
+                                                                return (
+                                                                    <span 
+                                                                        key={index} 
+                                                                        className={`px-2 py-1 text-white rounded text-sm ${
+                                                                            isOriginalRegion 
+                                                                                ? 'bg-green-600 border border-green-500' 
+                                                                                : 'bg-purple-600'
+                                                                        }`}
+                                                                        title={isOriginalRegion ? 'Original Region' : 'Assigned Region'}
+                                                                    >
+                                                                        {region}
+                                                                        {isOriginalRegion && <span className="ml-1 text-xs">(Original)</span>}
+                                                                    </span>
+                                                                );
+                                                            })
                                                         ) : (
                                                             <span className="text-sm text-neutral-500 italic">No regions assigned</span>
                                                         )}
@@ -290,6 +302,7 @@ const UserRegionManagement = () => {
                                                 {allRegions.map((region) => {
                                                     const isAssignedToOther = assignedRegions[region] && assignedRegions[region].user_id !== editingUser?.id;
                                                     const isAssignedToCurrent = assignedRegions[region] && assignedRegions[region].user_id === editingUser?.id;
+                                                    const isOriginalRegion = region === editingUser?.current_region;
                                                     
                                                     return (
                                                         <label 
@@ -314,17 +327,29 @@ const UserRegionManagement = () => {
                                                                 }`}
                                                             />
                                                             <div className="flex-1">
-                                                                <span className={`${isAssignedToOther ? 'text-red-300' : 'text-white'}`}>
-                                                                    {region}
-                                                                </span>
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className={`${isAssignedToOther ? 'text-red-300' : 'text-white'}`}>
+                                                                        {region}
+                                                                    </span>
+                                                                    {isOriginalRegion && (
+                                                                        <span className="px-1.5 py-0.5 bg-green-600 text-white text-xs rounded">
+                                                                            Original
+                                                                        </span>
+                                                                    )}
+                                                                </div>
                                                                 {isAssignedToOther && (
                                                                     <div className="text-xs text-red-400 mt-1">
                                                                         Assigned to: {assignedRegions[region].assigned_to}
                                                                     </div>
                                                                 )}
-                                                                {isAssignedToCurrent && (
+                                                                {isAssignedToCurrent && !isOriginalRegion && (
                                                                     <div className="text-xs text-green-400 mt-1">
                                                                         Currently assigned
+                                                                    </div>
+                                                                )}
+                                                                {isOriginalRegion && (
+                                                                    <div className="text-xs text-green-400 mt-1">
+                                                                        Original region (always included)
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -411,17 +436,38 @@ const UserRegionManagement = () => {
                                         <div>
                                             <h4 className="text-lg font-medium text-white mb-3">Select Regions to Re-assign</h4>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto">
-                                                {reassigningUser.assigned_regions.map((region) => (
-                                                    <label key={region} className="flex items-center space-x-3 p-3 bg-neutral-700/50 rounded-lg hover:bg-neutral-700 transition-colors cursor-pointer">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={selectedRegionsToReassign.includes(region)}
-                                                            onChange={() => toggleRegionForReassign(region)}
-                                                            className="w-4 h-4 text-yellow-600 bg-neutral-600 border-neutral-500 rounded focus:ring-yellow-500"
-                                                        />
-                                                        <span className="text-white">{region}</span>
-                                                    </label>
-                                                ))}
+                                                {reassigningUser.assigned_regions.map((region) => {
+                                                    const isOriginalRegion = region === reassigningUser.current_region;
+                                                    return (
+                                                        <label key={region} className={`flex items-center space-x-3 p-3 rounded-lg transition-colors cursor-pointer ${
+                                                            isOriginalRegion 
+                                                                ? 'bg-green-700/30 border border-green-500/50 hover:bg-green-700/50' 
+                                                                : 'bg-neutral-700/50 hover:bg-neutral-700'
+                                                        }`}>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={selectedRegionsToReassign.includes(region)}
+                                                                onChange={() => toggleRegionForReassign(region)}
+                                                                className="w-4 h-4 text-yellow-600 bg-neutral-600 border-neutral-500 rounded focus:ring-yellow-500"
+                                                            />
+                                                            <div className="flex-1">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-white">{region}</span>
+                                                                    {isOriginalRegion && (
+                                                                        <span className="px-1.5 py-0.5 bg-green-600 text-white text-xs rounded">
+                                                                            Original
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                {isOriginalRegion && (
+                                                                    <div className="text-xs text-green-400 mt-1">
+                                                                        Original region
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </label>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
 

@@ -104,11 +104,24 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the region names assigned to this user
+     * Get the region names assigned to this user (including original region)
      */
     public function getAssignedRegionNames()
     {
-        return $this->assignedRegions()->pluck('region_name')->toArray();
+        $assignedRegions = $this->assignedRegions()->pluck('region_name')->toArray();
+        
+        // Include original region if it exists and user is Regional Admin
+        if ($this->role === 'Regional Admin' && $this->region) {
+            $originalRegionName = \Illuminate\Support\Facades\DB::table('regions')
+                ->where('id', $this->region)
+                ->value('name');
+            
+            if ($originalRegionName && !in_array($originalRegionName, $assignedRegions)) {
+                $assignedRegions[] = $originalRegionName;
+            }
+        }
+        
+        return $assignedRegions;
     }
 
     /**
@@ -134,6 +147,10 @@ class User extends Authenticatable
     {
         $regionNames = $this->getAssignedRegionNames();
         if (empty($regionNames)) {
+            // If no assigned regions, return original region ID if exists
+            if ($this->role === 'Regional Admin' && $this->region) {
+                return [$this->region];
+            }
             return [];
         }
         

@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import courses from "../../../../../public/json/courses.json";
 import axios from "axios";
 import styles from '../register.module.scss';
 
@@ -35,8 +34,24 @@ const Step2EducationDetails = ({
   const [filteredCourses, setFilteredCourses] = useState([]);
   const [filteredSchools, setFilteredSchools] = useState([]);
   const [schoolQuery, setSchoolQuery] = useState("");
+  const [courses, setCourses] = useState([]);
 
   const dropdownRef = useRef(null);
+  
+  // Fetch courses from database on component mount
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await axios.get('/api/courses');
+        setCourses(response.data);
+      } catch (error) {
+        console.error("Error fetching courses", error);
+      }
+    };
+    
+    fetchCourses();
+  }, []);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {

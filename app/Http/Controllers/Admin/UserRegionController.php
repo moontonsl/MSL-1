@@ -36,7 +36,7 @@ class UserRegionController extends Controller
                     'email' => $admin->email,
                     'username' => $admin->username,
                     'current_region' => $currentRegionName, // Converted to region name
-                    'assigned_regions' => $admin->getAssignedRegionNames(),
+                    'assigned_regions' => $admin->getAssignedRegionNames(), // Now includes original region
                 ];
             });
         
