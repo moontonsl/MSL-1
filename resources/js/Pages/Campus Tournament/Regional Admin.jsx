@@ -11,6 +11,7 @@ const generateMockRequests = () => ([
 const RegionalAdmin = () => {
   const [requests, setRequests] = useState(generateMockRequests());
   const [decisionById, setDecisionById] = useState({}); // { [id]: 'approved' | 'rejected' }
+  const [viewing, setViewing] = useState(null); // request being viewed in modal
 
   const hasPending = useMemo(() => requests.some(r => !decisionById[r.id]), [requests, decisionById]);
 
@@ -60,8 +61,8 @@ const RegionalAdmin = () => {
             {/* Requests Table */}
             <div className="mt-6 md:mt-10">
               <div className="relative w-full max-w-7xl mx-auto text-white rounded-2xl overflow-hidden transition-all duration-300 shadow-2xl bg-gradient-to-br from-neutral-800/80 to-neutral-900/80 backdrop-blur-sm border border-neutral-700/50">
-                {/* Header Row */}
-                <div className="grid [grid-template-columns:minmax(220px,2.2fr)_repeat(3,minmax(140px,1fr))_minmax(200px,1.3fr)] items-center gap-3 px-5 md:px-8 py-3 bg-neutral-900/70 text-white/80 text-xs md:text-sm font-montserrat">
+                {/* Header Row (hidden on mobile) */}
+                <div className="hidden md:grid [grid-template-columns:minmax(220px,2.2fr)_repeat(3,minmax(140px,1fr))_minmax(200px,1.3fr)] items-center gap-3 px-5 md:px-8 py-3 bg-neutral-900/70 text-white/80 text-xs md:text-sm font-montserrat">
                   <div className="font-semibold">School name</div>
                   <div className="text-center font-semibold">Start date</div>
                   <div className="text-center font-semibold">End date</div>
@@ -78,29 +79,59 @@ const RegionalAdmin = () => {
                   {requests.map((req) => {
                     const decision = decisionById[req.id];
                     return (
-                      <div
-                        key={req.id}
-                        className="grid [grid-template-columns:minmax(220px,2.2fr)_repeat(3,minmax(140px,1fr))_minmax(200px,1.3fr)] items-center gap-3 px-5 md:px-8 py-3 hover:bg-white/5 transition-colors"
-                      >
-                        <div className="font-montserrat text-white/90 md:truncate">{req.schoolName}</div>
-                        <div className="text-center font-montserrat text-white/80">{formatDate(req.startDate)}</div>
-                        <div className="text-center font-montserrat text-white/80">{formatDate(req.endDate)}</div>
-                        <div className="text-center font-montserrat text-white/80">{req.slName}</div>
-                        <div className="flex justify-end items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleApprove(req.id)}
-                            className={`bg-[#F2C21A] text-black font-montserrat text-[11px] md:text-xs font-semibold rounded-lg px-3 py-1.5 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] ${decision === 'approved' ? '' : 'hover:brightness-110'}`}
-                          >
-                            Approve
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleReject(req.id)}
-                            className={`bg-red-500 hover:bg-red-600 text-white font-montserrat text-[11px] md:text-xs font-semibold rounded-lg px-3 py-1.5 shadow-md ${decision === 'rejected' ? '' : ''}`}
-                          >
-                            Reject
-                          </button>
+                      <div key={req.id}>
+                        {/* Desktop row */}
+                        <div className="hidden md:grid [grid-template-columns:minmax(220px,2.2fr)_repeat(3,minmax(140px,1fr))_minmax(200px,1.3fr)] items-center gap-3 px-5 md:px-8 py-3 hover:bg-white/5 transition-colors">
+                          <div className="font-montserrat text-white/90 md:truncate">{req.schoolName}</div>
+                          <div className="text-center font-montserrat text-white/80">{formatDate(req.startDate)}</div>
+                          <div className="text-center font-montserrat text-white/80">{formatDate(req.endDate)}</div>
+                          <div className="text-center font-montserrat text-white/80">{req.slName}</div>
+                          <div className="flex justify-end items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleApprove(req.id)}
+                              className={`bg-[#F2C21A] text-black font-montserrat text-[11px] md:text-xs font-semibold rounded-lg px-3 py-1.5 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] ${decision === 'approved' ? '' : 'hover:brightness-110'}`}
+                            >
+                              Approve
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleReject(req.id)}
+                              className={`bg-red-500 hover:bg-red-600 text-white font-montserrat text-[11px] md:text-xs font-semibold rounded-lg px-3 py-1.5 shadow-md ${decision === 'rejected' ? '' : ''}`}
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Mobile row: show School, Action buttons, and View */}
+                        <div className="md:hidden grid [grid-template-columns:minmax(180px,1fr)_minmax(140px,auto)_auto] items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
+                          <div className="font-montserrat text-white/90">{req.schoolName}</div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleApprove(req.id)}
+                              className={`bg-[#F2C21A] text-black font-montserrat text-[11px] font-semibold rounded-lg px-3 py-1.5 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] ${decision === 'approved' ? '' : 'hover:brightness-110'}`}
+                            >
+                              Approve
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleReject(req.id)}
+                              className={`bg-red-500 hover:bg-red-600 text-white font-montserrat text-[11px] font-semibold rounded-lg px-3 py-1.5 shadow-md ${decision === 'rejected' ? '' : ''}`}
+                            >
+                              Reject
+                            </button>
+                          </div>
+                          <div className="flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() => setViewing(req)}
+                              className="bg-white/10 hover:bg-white/20 text-white font-montserrat text-[11px] font-semibold rounded-lg px-3 py-1.5"
+                            >
+                              View
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );
@@ -113,6 +144,53 @@ const RegionalAdmin = () => {
                 Approve or reject each request. Approved tournaments will appear on the Campus Tournament page.
               </div>
             </div>
+
+            {/* View Modal */}
+            {viewing && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/60" onClick={() => setViewing(null)} />
+                <div className="relative z-10 w-[92%] max-w-md rounded-2xl border border-white/10 bg-gradient-to-br from-neutral-800/90 to-neutral-900/90 p-5 text-white shadow-2xl">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="font-montserrat font-semibold text-lg">Request details</div>
+                      <div className="mt-0.5 text-white/70 font-montserrat text-sm">{viewing.schoolName}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setViewing(null)}
+                      className="text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-md px-2 py-1 font-montserrat text-sm"
+                    >
+                      Close
+                    </button>
+                  </div>
+
+                  <div className="mt-4 space-y-2 font-montserrat text-sm">
+                    <div className="flex items-center justify-between">
+                      <div className="text-white/70">SL name</div>
+                      <div className="text-white/90">{viewing.slName}</div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-white/70">Start date</div>
+                      <div className="text-white/90">{formatDate(viewing.startDate)}</div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-white/70">End date</div>
+                      <div className="text-white/90">{formatDate(viewing.endDate)}</div>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setViewing(null)}
+                      className="bg-[#F2C21A] text-black font-montserrat font-semibold rounded-lg px-4 py-2 shadow-[0_0_8px_-3px_rgba(242,194,26,1)]"
+                    >
+                      Done
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Empty/pending indicator */}
             {!hasPending && (
