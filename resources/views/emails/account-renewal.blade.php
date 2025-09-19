@@ -87,6 +87,8 @@
                 <p><strong>What you need to do:</strong></p>
                 <ul>
                     <li>Log in to your MSL account</li>
+                    <li>Go to the upload page where you can update both your year level and upload your proof of enrollment</li>
+                    <li>Select your current year level from the dropdown</li>
                     <li>Upload your proof of enrollment documents again (previous documents have been cleared)</li>
                     <li>Wait for verification from your Student Leader or Regional Admin</li>
                 </ul>

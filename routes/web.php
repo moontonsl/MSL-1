@@ -273,16 +273,26 @@ Route::post('/api/user/upload-proof', function (\Illuminate\Http\Request $reques
             $user = Auth::user();
             
             if (!$user) {
+                \Log::warning('Upload attempt by unauthenticated user');
                 return response()->json(['error' => 'User not authenticated'], 401);
             }
             
             // Only allow users with 'Renew' state to upload
             if ($user->state !== 'Renew') {
+                \Log::warning('Upload attempt by user with state: ' . $user->state . ' (User ID: ' . $user->id . ')');
                 return response()->json(['error' => 'Upload not allowed for your current account status'], 403);
             }
             
             $request->validate([
-                'proofOfEnrollment' => 'required|file|mimes:jpeg,jpg,png,gif,pdf|max:2048', // 2MB max (matches PHP limit)
+                'proofOfEnrollment' => 'required|file|mimes:jpeg,jpg,png,gif,pdf|max:2048', // 2MB max
+                'year_level' => 'required|string|max:255',
+            ], [
+                'proofOfEnrollment.required' => 'Please select a file to upload.',
+                'proofOfEnrollment.file' => 'The uploaded file is not valid.',
+                'proofOfEnrollment.mimes' => 'The file must be a JPEG, PNG, GIF, or PDF.',
+                'proofOfEnrollment.max' => 'The file size must not exceed 2MB.',
+                'year_level.required' => 'Please select your year level.',
+                'year_level.string' => 'Year level must be a valid selection.',
             ]);
             
             $file = $request->file('proofOfEnrollment');
@@ -291,29 +301,40 @@ Route::post('/api/user/upload-proof', function (\Illuminate\Http\Request $reques
                 return response()->json(['error' => 'No file provided'], 400);
             }
             
-            $filename = time() . '.' . $file->getClientOriginalExtension();
+            $filename = $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
             
             // Store the file in user-specific directory
             $path = $file->storeAs('users/proofOfEnrollment/' . $user->id, $filename, 'public');
             
             if (!$path) {
-                return response()->json(['error' => 'Failed to store file'], 500);
+                \Log::error('File storage failed for user ' . $user->id);
+                return response()->json(['error' => 'Failed to store file. Please try again.'], 500);
             }
             
-            // Update user's proof of enrollment
+            // Update user's proof of enrollment with full path and year level
+            $fullPath = 'users/proofOfEnrollment/' . $user->id . '/' . $filename;
             $user->update([
-                'proofOfEnrollment' => $path,
+                'proofOfEnrollment' => $fullPath,
+                'year_level' => $request->year_level,
                 'state' => 'New' // Change state back to New for review
+            ]);
+            
+            \Log::info('Proof of enrollment and year level updated successfully', [
+                'user_id' => $user->id,
+                'file_path' => $fullPath,
+                'file_size' => $file->getSize(),
+                'year_level' => $request->year_level
             ]);
             
             return response()->json([
                 'success' => true,
-                'message' => 'Proof of enrollment uploaded successfully',
-                'file_path' => $path
+                'message' => 'Proof of enrollment uploaded and year level updated successfully',
+                'file_path' => $fullPath
             ]);
             
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['error' => $e->getMessage()], 422);
+            $errors = $e->validator->errors()->all();
+            return response()->json(['error' => implode(', ', $errors)], 422);
         } catch (\Exception $e) {
             \Log::error('Upload error: ' . $e->getMessage());
             return response()->json(['error' => 'Upload failed: ' . $e->getMessage()], 500);
@@ -709,7 +730,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'state' => 'Renew',
             'verified_by' => null,
             'verified_date' => null,
-            'proofOfEnrollment' => null
+            'proofOfEnrollment' => null,
+            'year_level' => null
         ]);
         
         // Send renewal email to the user
