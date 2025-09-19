@@ -34,7 +34,7 @@ const NewsSection = () => {
         fetch('news-articles')
           .then(res => res.json())
           .then(data => {
-            setArticles(data);
+            setArticles(data.slice(0, 4));
         });
       }, []);
 
@@ -50,18 +50,21 @@ const NewsSection = () => {
 
                 <div className="lg:h-[80vh] grid grid-cols-1 lg:grid-cols-4 gap-4">
 
-                    {articles.map((article) => {
+                    {articles.map((article, index) => {
+                        // Assign sizes based on index: large, medium, small, small, small
+                        const size = index === 0 ? "large" : index === 1 ? "medium" : "small";
+                        
                         const baseStyles =
-                            article.size === "large"
+                            size === "large"
                                 ? "lg:col-span-2 lg:row-span-1 2xl:col-span-2 2xl:row-span-2"
-                                : article.size === "medium"
+                                : size === "medium"
                                     ? "lg:col-span-2 row-span-1"
                                     : "lg:col-span-2 2xl:col-span-1";
 
                         return (
                             <article key={article.title}
                                      className={`relative bg-black rounded-lg overflow-hidden ${baseStyles} h-64 md:h-80 lg:h-full group cursor-pointer transform transition duration-300 hover:scale-[1.02] hover:shadow-xl`}>
-                                <img src={`/storage/news/${article.image}`} alt={article.title}
+                                <img src={`${article.image}`} alt={article.title}
                                      loading="lazy"
                                      className="w-full h-full object-cover absolute inset-0 opacity-80 transition-transform duration-300 transform group-hover:scale-105"/>
                                 <div
