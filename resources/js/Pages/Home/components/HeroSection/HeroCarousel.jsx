@@ -6,9 +6,9 @@ const HeroCarousel = () => {
     const OPTIONS = {loop: true}
 
     const SLIDES = [
-        "/images/Carousel/C1.jpg",
-        "/images/Carousel/C2.jpg",
-        "/images/Carousel/C3.jpg",
+        "/images/Carousel/N1.jpg",
+        "/images/Carousel/N2.jpg",
+        "/images/Carousel/N3.jpg",
     ]
 
 
