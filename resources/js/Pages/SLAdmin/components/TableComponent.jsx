@@ -926,7 +926,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             
             {/* Block User Modal */}
             {showBlockModal && createPortal(
-                <div className="fixed inset-0 z-[70] bg-[#fff]/50 flex items-center justify-center p-4" style={{ pointerEvents: 'auto' }}>
+                <div className="fixed inset-0 z-[9999] bg-[#fff]/50 flex items-center justify-center p-4" style={{ pointerEvents: 'auto' }}>
                     <div 
                         className="absolute inset-0 bg-black/50" 
                         onClick={(e) => {
