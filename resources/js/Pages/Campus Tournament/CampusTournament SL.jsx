@@ -44,6 +44,7 @@ const CampusTournament = () => {
   const [endDate, setEndDate] = useState('');
   const [tournaments, setTournaments] = useState([]);
   const [expanded, setExpanded] = useState({}); // id -> boolean
+  const [mobileViewTeam, setMobileViewTeam] = useState(null); // mobile-only player popup
 
   const formatDate = (value) => {
     try {
@@ -75,7 +76,7 @@ const CampusTournament = () => {
         id: Date.now(),
         startDate,
         endDate,
-        teams: generateMockTeams(), // placeholder teams
+        teams: generateMockTeams().map((team) => ({ ...team, result: 'participant' })), // placeholder teams with default status
       },
     ]);
     handleClose();
@@ -101,6 +102,20 @@ const CampusTournament = () => {
         };
       })
     );
+  };
+
+  const getStatusClasses = (value) => {
+    const v = value || 'participant';
+    if (v === 'win') return 'bg-yellow-400/60 border border-yellow-300/80 text-white';
+    if (v === 'invalid') return 'bg-red-700/40 border border-red-600/70 text-white';
+    return 'bg-green-500/30 border border-green-400/70 text-white';
+  };
+
+  const handleSubmitResults = (tournamentId) => {
+    const tournament = tournaments.find((t) => t.id === tournamentId);
+    // Placeholder: integrate API to submit results later
+    console.log('Submitting results for tournament:', tournamentId, tournament);
+    alert('Results submitted for this tournament (placeholder).');
   };
 
   const PlayerCell = ({ player }) => {
@@ -191,13 +206,6 @@ const CampusTournament = () => {
                             <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(item.id)}
-                          className="ml-1 bg-[#F2C21A] text-black font-montserrat text-xs md:text-sm font-semibold rounded-lg px-3 py-1.5 shadow-[0_0_8px_-3px_rgba(242,194,26,1)]"
-                        >
-                          Delete
-                        </button>
                       </div>
                     </div>
 
@@ -205,58 +213,96 @@ const CampusTournament = () => {
                     <div
                       className={`transition-all duration-500 ease-in-out ${expanded[item.id] ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}
                     >
-                      <div className="px-0 pb-4">
+                      <div className="px-0 pb-0">
                         <div className="mt-0 rounded-b-2xl bg-neutral-800/70 backdrop-blur-sm border-t border-neutral-700/40">
-                          {/* Table Header */}
-                          <div className="grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(130px,1fr)_minmax(120px,1fr)] gap-3 px-6 md:px-10 py-2 text-white/70 text-xs md:text-sm border-b border-white/10 font-montserrat">
+                          {/* Table Header - Desktop */}
+                          <div className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 px-6 md:px-10 py-2 text-white/70 text-xs md:text-sm border-b border-white/10 font-montserrat">
                             <div className="self-center">Team name</div>
                             <div className="text-center">Player 1</div>
                             <div className="text-center">Player 2</div>
                             <div className="text-center">Player 3</div>
                             <div className="text-center">Player 4</div>
                             <div className="text-center">Player 5</div>
-                            <div className="text-center">Verification</div>
-                            <div className="text-center">Result</div>
+                            <div className="grid place-items-center">Status</div>
+                          </div>
+                          {/* Table Header - Mobile (Team + Status) */}
+                          <div className="md:hidden grid [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-5 px-4 py-2 text-white/70 text-xs border-b border-white/10 font-montserrat">
+                            <div className="self-center">Team name</div>
+                            <div className="justify-self-start text-left">Status</div>
+                            <div className="text-right"></div>
                           </div>
 
                           {/* Team Rows */}
                           {Array.isArray(item.teams) && item.teams.length > 0 ? (
                             item.teams.map((team) => (
-                              <div
-                                key={team.id}
-                                className="grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(130px,1fr)_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3 border-t border-white/10 hover:bg-white/5 transition"
-                              >
-                                <div className="text-white/90 font-montserrat md:truncate">{team.name}</div>
-                                {team.players.slice(0, 5).map((player, idx) => (
-                                  <div className="flex justify-center" key={idx}>
-                                    <PlayerCell player={player} />
-                                  </div>
-                                ))}
-                                {(() => {
-                                  const allVerified = team.players.slice(0, 5).every((p) => !!p.verified);
-                                  return (
-                                    <div className="flex justify-center items-center gap-2">
-                                      <span className={`w-2.5 h-2.5 rounded-full ${allVerified ? 'bg-green-400' : 'bg-yellow-400'}`} />
-                                      <span className="font-montserrat text-xs md:text-sm text-white/80">{allVerified ? 'Verified' : 'Pending'}</span>
+                              <>
+                                {/* Desktop Row */}
+                                <div
+                                  key={`d-${team.id}`}
+                                  className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3 border-t border-white/10 hover:bg-white/5 transition"
+                                >
+                                  <div className="text-white/90 font-montserrat md:truncate">{team.name}</div>
+                                  {team.players.slice(0, 5).map((player, idx) => (
+                                    <div className="flex justify-center" key={idx}>
+                                      <PlayerCell player={player} />
                                     </div>
-                                  );
-                                })()}
-                                <div className="flex justify-center">
-                                  <select
-                                    value={team.result || ''}
-                                    onChange={(e) => handleSetResult(item.id, team.id, e.target.value)}
-                                    className="bg-transparent border border-white/40 rounded-md px-2 py-1 text-white focus:text-black text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[96px]"
-                                  >
-                                    <option className="text-black" value="">Select</option>
-                                    <option className="text-black" value="win">Win</option>
-                                    <option className="text-black" value="lose">Lose</option>
-                                  </select>
+                                  ))}
+                                  <div className="flex justify-center">
+                                    <select
+                                      value={team.result || 'participant'}
+                                      onChange={(e) => handleSetResult(item.id, team.id, e.target.value)}
+                                      className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[128px]`}
+                                    >
+                                      <option className="text-black" value="">Select</option>
+                                      <option className="text-black" value="win">Win</option>
+                                      <option className="text-black" value="invalid">Invalid</option>
+                                      <option className="text-black" value="participant">Participant</option>
+                                    </select>
+                                  </div>
                                 </div>
-                              </div>
+                                {/* Mobile Row */}
+                                <div
+                                  key={`m-${team.id}`}
+                                  className="grid md:hidden [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-2 items-center px-4 py-3 border-t border-white/10 hover:bg-white/5 transition"
+                                >
+                                  <div className="text-white/90 font-montserrat truncate">{team.name}</div>
+                                  <div className="flex justify-start">
+                                    <select
+                                      value={team.result || 'participant'}
+                                      onChange={(e) => handleSetResult(item.id, team.id, e.target.value)}
+                                      className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[112px]`}
+                                    >
+                                      <option className="text-black" value="">Select</option>
+                                      <option className="text-black" value="win">Win</option>
+                                      <option className="text-black" value="invalid">Invalid</option>
+                                      <option className="text-black" value="participant">Participant</option>
+                                    </select>
+                                  </div>
+                                  <div className="flex justify-end">
+                                    <button
+                                      type="button"
+                                      onClick={() => setMobileViewTeam(team)}
+                                      className="px-3 py-1 rounded-md border border-white/30 text-white/90 text-xs bg-white/10 hover:bg-white/20"
+                                    >
+                                      View
+                                    </button>
+                                  </div>
+                                </div>
+                              </>
                             ))
                           ) : (
                             <div className="px-4 py-6 text-center text-white/60 font-montserrat">No teams registered yet.</div>
                           )}
+                          {/* Submit Results Button */}
+                          <div className="px-4 md:px-10 py-2 md:py-3 border-t border-white/10 flex justify-center sticky bottom-0 bg-neutral-900/70">
+                            <button
+                              type="button"
+                              onClick={() => handleSubmitResults(item.id)}
+                              className="bg-[#F2C21A] text-black font-montserrat font-semibold rounded-lg px-5 py-2 mt-1 mb-1 shadow-[0_0_8px_-3px_rgba(242,194,26,1)]"
+                            >
+                              Submit Results
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -308,6 +354,43 @@ const CampusTournament = () => {
             </div>
           </div>
         )}
+      {/* Mobile Players Modal */}
+      {mobileViewTeam && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10" onClick={() => setMobileViewTeam(null)} />
+          <div className="relative z-20 w-[92%] md:max-w-lg bg-neutral-900/90 text-white border border-white/20 rounded-2xl p-4 md:p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-3">
+              <div className="font-montserrat text-base md:text-lg font-semibold">{mobileViewTeam.name}</div>
+              <button
+                type="button"
+                onClick={() => setMobileViewTeam(null)}
+                className="w-8 h-8 grid place-items-center rounded-md border border-white/20 hover:bg-white/10"
+                aria-label="Close"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+            <div className="space-y-3">
+              {mobileViewTeam.players.slice(0,5).map((player, idx) => (
+                <div key={idx} className="flex items-center justify-between border border-white/10 rounded-lg px-3 py-2 bg-white/5">
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-9 h-9 rounded-full overflow-hidden border border-white/20 bg-white/10">
+                      <svg className="absolute inset-0 m-auto w-5 h-5 text-white/50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
+                        <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      </svg>
+                    </div>
+                    <div className="font-montserrat text-sm">{player.name}</div>
+                  </div>
+                  <span className={`w-2.5 h-2.5 rounded-full ${player.verified ? 'bg-green-400' : 'bg-red-500'}`} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </MainLayout>
   );
