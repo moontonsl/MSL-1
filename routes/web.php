@@ -165,6 +165,11 @@ Route::get('/RegionalAdminApproval', function () {
     return Inertia::render('ApprovalPages/RegionalAdminApproval');
 })->name('RegionalAdminApproval');
 
+//MSL NETWORK ROUTES
+Route::get('/MSLNetwork', function () {
+    return Inertia::render('MSLNetwork/MSLNetwork');
+})->name('MSLNetwork');
+
 //TERMS AND CONDITIONS ROUTES
 Route::get('/TermsAndConditions', function () {
     return Inertia::render('TermsAndConditions/TermsAndConditions');
