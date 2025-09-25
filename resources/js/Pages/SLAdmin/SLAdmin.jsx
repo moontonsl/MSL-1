@@ -1,5 +1,5 @@
 import styles from "./SLAdmin.module.scss";
-import {BadgeCheck, ArrowDownAZ, Funnel, Search, Users, UserCheck, UserX, RefreshCw} from 'lucide-react';
+import {BadgeCheck, ArrowDownAZ, Funnel, Search, Users, UserCheck, UserX, RefreshCw, Crown} from 'lucide-react';
 
 import profilePic from "./assets/42ca9ea53c9f0acd1d273d2864b58719215b59f4.png"
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
@@ -8,15 +8,21 @@ import { Head, usePage } from '@inertiajs/react';
 import React, { useState } from 'react';
 
 const SLAdmin = () => {
-    const { user, verified, new: newUsers, renewed, blocked } = usePage().props;
+    const { user, verified, new: newUsers, renewed, blocked, studentLeaders } = usePage().props;
     const [selectedTab, setSelectedTab] = useState('New');
     const [searchQuery, setSearchQuery] = useState('');
-    const tabOptions = [
+    
+    const baseTabOptions = [
         { label: 'Pending Approval', value: 'New', icon: Users, count: newUsers },
         { label: 'Renewal Required', value: 'Renew', icon: RefreshCw, count: renewed },
         { label: 'Master List', value: 'Verified', icon: UserCheck, count: verified },
         { label: 'Blocked', value: 'Blocked', icon: UserX, count: blocked },
     ];
+    
+    // Add Student Leader tab only for Regional Admin
+    const tabOptions = user.role === 'Regional Admin' 
+        ? [...baseTabOptions, { label: 'Student Leaders', value: 'StudentLeaders', icon: Crown, count: studentLeaders }]
+        : baseTabOptions;
 
     const StatCard = ({ icon: Icon, label, value, color }) => (
         <div className="bg-gradient-to-br from-neutral-800/50 to-neutral-900/50 backdrop-blur-sm border border-neutral-700/50 rounded-xl p-4 hover:border-neutral-600/50 transition-all duration-300 group">
@@ -101,7 +107,7 @@ const SLAdmin = () => {
                     </div>
 
                     {/* Statistics Grid */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div className={`grid gap-4 mb-8 ${user.role === 'Regional Admin' ? 'grid-cols-2 lg:grid-cols-5' : 'grid-cols-2 lg:grid-cols-4'}`}>
                         <StatCard 
                             icon={UserCheck} 
                             label="Verified" 
@@ -126,6 +132,14 @@ const SLAdmin = () => {
                             value={blocked} 
                             color="text-red-400" 
                         />
+                        {user.role === 'Regional Admin' && (
+                            <StatCard 
+                                icon={Crown} 
+                                label="Student Leaders" 
+                                value={studentLeaders} 
+                                color="text-purple-400" 
+                            />
+                        )}
                     </div>
 
                     {/* Table Controls */}

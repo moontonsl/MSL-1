@@ -16,6 +16,7 @@ export default function UpdateProfileInformation({
         useForm({
             name: user.name,
             email: user.email,
+            year_level: user.year_level || '',
         });
 
     const submit = (e) => {
@@ -67,6 +68,30 @@ export default function UpdateProfileInformation({
                     />
 
                     <InputError className="mt-2" message={errors.email} />
+                </div>
+
+                <div>
+                    <InputLabel htmlFor="year_level" value="Year Level" />
+
+                    <select
+                        id="year_level"
+                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                        value={data.year_level}
+                        onChange={(e) => setData('year_level', e.target.value)}
+                    >
+                        <option value="">Select Year Level</option>
+                        <option value="Grade 11 SHS">Grade 11 SHS</option>
+                        <option value="Grade 12 SHS">Grade 12 SHS</option>
+                        <option value="Freshmen (1st Yr)">Freshmen (1st Yr)</option>
+                        <option value="Sophomore (2nd Yr)">Sophomore (2nd Yr)</option>
+                        <option value="Junior (3rd Yr)">Junior (3rd Yr)</option>
+                        <option value="Senior (4th Yr Up)">Senior (4th Yr Up)</option>
+                        <option value="Alumni">Alumni</option>
+                        <option value="Masters">Masters</option>
+                        <option value="Doctorate">Doctorate</option>
+                    </select>
+
+                    <InputError className="mt-2" message={errors.year_level} />
                 </div>
 
                 {mustVerifyEmail && user.email_verified_at === null && (

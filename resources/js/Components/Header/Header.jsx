@@ -3,6 +3,9 @@ import { Link, usePage, router } from '@inertiajs/react';
 import { Menu, Trash2, AlertTriangle } from 'lucide-react';
 import styles from './Header.module.scss';
 import { MdAccountCircle } from "react-icons/md";
+import AccountModificationModal from "./AccountModificationModal";
+
+
 
 // Navigation links array (only main nav links)
 const navLinks = [
@@ -20,6 +23,8 @@ const Header = () => {
     const [deletePassword, setDeletePassword] = useState(''); // State for password input
     const [deleteError, setDeleteError] = useState(''); // State for delete errors
 
+    const [showModificationModal, setShowModificationModal] = useState(false);//For the Account Modification Modal
+    
     const { auth } = usePage().props;
     const user = auth.user;
     const passwordInputRef = useRef(null);
@@ -222,6 +227,25 @@ const Header = () => {
                                         SL Admin
                                     </Link>
                                 )}
+                                {/* {user.role === 'Super Admin' && (
+                                    <Link
+                                        href="/admin/user-regions"
+                                        className={styles.dropdownItem}
+                                        onClick={() => setIsDropdownOpen(false)}
+                                    >
+                                        User Regions
+                                    </Link>
+                                )}
+                                )} */}
+                                {/* <button
+                                    onClick={() => {
+                                        setShowModificationModal(true);
+                                        setIsDropdownOpen(false);
+                                    }}
+                                    className={styles.dropdownItem}
+                                    >
+                                    Modify Account
+                                </button> */}
                                 <button
                                     onClick={handleDeleteAccount}
                                     className={`${styles.dropdownItem} text-red-500 hover:text-red-400`}
@@ -238,9 +262,7 @@ const Header = () => {
                         )}
                     </div>
                 </div>
-
             </div>
-
             {/* Delete Account Confirmation Modal */}
             {showDeleteModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -322,6 +344,14 @@ const Header = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+             {/* Modify Account Modal */}
+            {showModificationModal && (
+            <AccountModificationModal
+                isOpen={showModificationModal}
+                onClose={() => setShowModificationModal(false)}
+            />
             )}
         </header>
     );

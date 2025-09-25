@@ -31,6 +31,7 @@ class CheckUserState
                 'logout', // Always allow logout
                 'ml.logout', // ML logout route
                 'force-logout', // Force logout route
+                'profile.destroy', // Allow account deletion for all states
             ];
             
             // Check user state and restrict access accordingly
