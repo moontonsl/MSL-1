@@ -141,7 +141,7 @@ export default function TeamRegistration() {
                             Discord Server
                         </a>
                         {' '}or our{' '}
-                        <a href="#" onClick={(e) => e.preventDefault()} className="text-yellow-300 underline hover:text-yellow-200">
+                        <a href="https://www.facebook.com/MSLPhilippines" target="_blank" rel="noopener noreferrer" className="text-yellow-300 underline hover:text-yellow-200">
                             Facebook Page
                         </a>
                         {' '}for more information and announcements.

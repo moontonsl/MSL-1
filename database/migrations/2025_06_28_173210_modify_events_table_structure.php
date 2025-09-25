@@ -6,56 +6,43 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('events', function (Blueprint $table) {
-            // Drop existing columns
-            $table->dropColumn([
-                'event_name',
-                'event_state', 
-                'event_canonical',
-                'event_logo',
-                'event_title',
-                'event_subtitle'
-            ]);
-
-            // Add new columns that match the Event model
-            $table->string('title');
-            $table->text('description')->nullable();
-            $table->dateTime('start_date');
-            $table->dateTime('end_date');
-            $table->string('location')->nullable();
-            $table->foreignId('created_by')->constrained('users');
+            // Only add if the column does not exist
+            if (!Schema::hasColumn('events', 'title')) {
+                $table->string('title');
+            }
+            if (!Schema::hasColumn('events', 'description')) {
+                $table->text('description')->nullable();
+            }
+            if (!Schema::hasColumn('events', 'start_date')) {
+                $table->dateTime('start_date');
+            }
+            if (!Schema::hasColumn('events', 'end_date')) {
+                $table->dateTime('end_date');
+            }
+            if (!Schema::hasColumn('events', 'location')) {
+                $table->string('location')->nullable();
+            }
+            if (!Schema::hasColumn('events', 'created_by')) {
+                $table->foreignId('created_by')->constrained('users');
+            }
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('events', function (Blueprint $table) {
-            // Drop new columns
-            $table->dropForeign(['created_by']);
-            $table->dropColumn([
-                'title',
-                'description',
-                'start_date',
-                'end_date',
-                'location',
-                'created_by'
-            ]);
-
-            // Restore original columns
-            $table->string('event_name');
-            $table->string('event_state');
-            $table->string('event_canonical');
-            $table->string('event_logo');
-            $table->string('event_title');
-            $table->text('event_subtitle');
+            if (Schema::hasColumn('events', 'created_by')) {
+                $table->dropForeign(['created_by']);
+                $table->dropColumn('created_by');
+            }
+            foreach (['title','description','start_date','end_date','location'] as $col) {
+                if (Schema::hasColumn('events', $col)) {
+                    $table->dropColumn($col);
+                }
+            }
         });
     }
 };
