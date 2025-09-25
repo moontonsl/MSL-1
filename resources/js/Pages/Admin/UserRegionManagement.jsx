@@ -38,10 +38,10 @@ const UserRegionManagement = () => {
     };
 
     const toggleRegion = (region) => {
-        // Check if region is already assigned to another user
+        // Check if region is already assigned to another user (only restrict for Admin, not Super Admin)
         const isAssignedToOther = assignedRegions[region] && assignedRegions[region].user_id !== editingUser?.id;
         
-        if (isAssignedToOther) {
+        if (isAssignedToOther && user.role === 'Admin') {
             showToast(`Region "${region}" is already assigned to ${assignedRegions[region].assigned_to}`, 'error');
             return;
         }
@@ -308,8 +308,10 @@ const UserRegionManagement = () => {
                                                         <label 
                                                             key={region} 
                                                             className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                                                                isAssignedToOther 
+                                                                isAssignedToOther && user.role === 'Admin'
                                                                     ? 'bg-red-700/30 border border-red-500/50 cursor-not-allowed opacity-60' 
+                                                                    : isAssignedToOther && user.role === 'Super Admin'
+                                                                    ? 'bg-yellow-700/30 border border-yellow-500/50 cursor-pointer hover:bg-yellow-700/50'
                                                                     : isAssignedToCurrent
                                                                     ? 'bg-green-700/30 border border-green-500/50 cursor-pointer hover:bg-green-700/50'
                                                                     : 'bg-neutral-700/50 cursor-pointer hover:bg-neutral-700'
@@ -319,16 +321,22 @@ const UserRegionManagement = () => {
                                                                 type="checkbox"
                                                                 checked={selectedRegions.includes(region)}
                                                                 onChange={() => toggleRegion(region)}
-                                                                disabled={isAssignedToOther}
+                                                                disabled={isAssignedToOther && user.role === 'Admin'}
                                                                 className={`w-4 h-4 rounded focus:ring-blue-500 ${
-                                                                    isAssignedToOther 
+                                                                    isAssignedToOther && user.role === 'Admin'
                                                                         ? 'text-red-600 bg-neutral-600 border-neutral-500 cursor-not-allowed' 
                                                                         : 'text-blue-600 bg-neutral-600 border-neutral-500'
                                                                 }`}
                                                             />
                                                             <div className="flex-1">
                                                                 <div className="flex items-center gap-2">
-                                                                    <span className={`${isAssignedToOther ? 'text-red-300' : 'text-white'}`}>
+                                                                    <span className={`${
+                                                                        isAssignedToOther && user.role === 'Admin' 
+                                                                            ? 'text-red-300' 
+                                                                            : isAssignedToOther && user.role === 'Super Admin'
+                                                                            ? 'text-yellow-300'
+                                                                            : 'text-white'
+                                                                    }`}>
                                                                         {region}
                                                                     </span>
                                                                     {isOriginalRegion && (
@@ -337,9 +345,14 @@ const UserRegionManagement = () => {
                                                                         </span>
                                                                     )}
                                                                 </div>
-                                                                {isAssignedToOther && (
+                                                                {isAssignedToOther && user.role === 'Admin' && (
                                                                     <div className="text-xs text-red-400 mt-1">
                                                                         Assigned to: {assignedRegions[region].assigned_to}
+                                                                    </div>
+                                                                )}
+                                                                {isAssignedToOther && user.role === 'Super Admin' && (
+                                                                    <div className="text-xs text-yellow-400 mt-1">
+                                                                        Currently assigned to: {assignedRegions[region].assigned_to} (will be reassigned)
                                                                     </div>
                                                                 )}
                                                                 {isAssignedToCurrent && !isOriginalRegion && (

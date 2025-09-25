@@ -40,18 +40,10 @@ class UserRegionController extends Controller
                 ];
             });
         
-        // Get all unique regions from the database with their names
-        $allRegions = User::whereNotNull('region')
-            ->distinct()
-            ->pluck('region')
-            ->filter()
-            ->sort()
-            ->values()
-            ->map(function($regionId) {
-                $region = \Illuminate\Support\Facades\DB::table('regions')->where('id', $regionId)->first();
-                return $region ? $region->name : null;
-            })
-            ->filter()
+        // Get all regions directly from the regions table
+        $allRegions = \Illuminate\Support\Facades\DB::table('regions')
+            ->orderBy('name')
+            ->pluck('name')
             ->values();
         
         // Get regions that are already assigned to Regional Admins

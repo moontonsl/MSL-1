@@ -58,13 +58,13 @@ const CampusTournamentTeam = () => {
       >
         <div className="w-full min-h-screen bg-black/60">
           <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 py-10 md:py-16">
-            <div className="flex items-center gap-3 md:gap-4">
+            <div className="flex flex-col items-center gap-2 md:gap-3">
               <img src="/images/About Page/SL Logo.png" alt="SL Logo" className="w-10 h-10 md:w-14 md:h-14 lg:w-16 lg:h-16 object-contain" />
-              <div className="text-white font-montserrat font-extrabold text-[32px] md:text-[48px] lg:text-[56px] leading-tight">
+              <div className="text-white text-center font-montserrat font-extrabold text-[32px] md:text-[48px] lg:text-[56px] leading-tight">
                 CAMPUS TOURNAMENT
               </div>
             </div>
-            <p className="mt-2 text-white/90 font-montserrat text-[12px] sm:text-[14px] md:text-base max-w-3xl">
+            <p className="mt-2 text-white/90 font-montserrat text-[12px] sm:text-[14px] md:text-base max-w-3xl text-center mx-auto">
               Your registered team for the ongoing Campus Tournament.
             </p>
 
@@ -81,7 +81,8 @@ const CampusTournamentTeam = () => {
 
                 {/* Roster */}
                 <div className="px-0 pb-4">
-                  <div className="mt-0 rounded-b-2xl bg-neutral-800/70 backdrop-blur-sm border-t border-neutral-700/40">
+                  {/* Desktop grid */}
+                  <div className="hidden md:block mt-0 rounded-b-2xl bg-neutral-800/70 backdrop-blur-sm border-t border-neutral-700/40">
                     <div className="grid [grid-template-columns:repeat(5,minmax(140px,1fr))_minmax(120px,1fr)] gap-3 px-6 md:px-10 py-2 text-white/70 text-xs md:text-sm border-b border-white/10 font-montserrat">
                       <div className="text-center">Player 1</div>
                       <div className="text-center">Player 2</div>
@@ -108,6 +109,41 @@ const CampusTournamentTeam = () => {
                           Edit
                         </button>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Mobile vertical list */}
+                  <div className="md:hidden mt-0 rounded-b-2xl bg-neutral-800/70 backdrop-blur-sm border-t border-neutral-700/40 px-4 py-3">
+                    <div className="space-y-3">
+                      {team.players.slice(0,5).map((player, idx) => (
+                        <div key={idx} className="flex items-center justify-between border border-white/10 rounded-lg px-3 py-2 bg-white/5">
+                          <div className="flex items-center gap-3">
+                            <div className="relative w-9 h-9 rounded-full overflow-hidden border border-white/20 bg-white/10">
+                              <svg className="absolute inset-0 m-auto w-5 h-5 text-white/50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
+                                <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                              </svg>
+                              {player?.avatarUrl && (
+                                <img src={player.avatarUrl} alt={formatPlayer(player)} className="w-full h-full object-cover" />
+                              )}
+                            </div>
+                            <div className="font-montserrat text-sm">{formatPlayer(player)}</div>
+                          </div>
+                          <span className={`w-2.5 h-2.5 rounded-full ${player?.verified ? 'bg-green-400' : 'bg-red-500'}`} />
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-3">
+                      <button
+                        type="button"
+                        disabled={!isCaptain}
+                        className={`w-full bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-5 py-2 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] ${!isCaptain ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        onClick={() => { if (isCaptain) router.visit('/Tournament/CampusTournamentReg'); }}
+                        title="Edit team details"
+                      >
+                        Edit team
+                      </button>
                     </div>
                   </div>
                 </div>

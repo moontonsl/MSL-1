@@ -6,6 +6,7 @@ import { Upload, FileText, AlertCircle, CheckCircle, X } from 'lucide-react';
 const UploadPage = () => {
     const { user } = usePage().props;
     const [file, setFile] = useState(null);
+    const [yearLevel, setYearLevel] = useState(user.year_level || '');
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -41,12 +42,18 @@ const UploadPage = () => {
             return;
         }
 
+        if (!yearLevel) {
+            setError('Please select your year level');
+            return;
+        }
+
         setUploading(true);
         setError('');
         setSuccess('');
 
         const formData = new FormData();
         formData.append('proofOfEnrollment', file);
+        formData.append('year_level', yearLevel);
         
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
         formData.append('_token', csrfToken);
@@ -79,7 +86,7 @@ const UploadPage = () => {
             }
 
             if (response.ok) {
-                setSuccess('Document uploaded successfully! Redirecting to waiting page...');
+                setSuccess('Document uploaded and year level updated successfully! Redirecting to waiting page...');
                 setFile(null);
                 // Reset file input
                 const fileInput = document.getElementById('file-input');
@@ -143,7 +150,7 @@ const UploadPage = () => {
                                 Account Renewal Required
                             </h1>
                             <p className="text-gray-300 text-lg">
-                                Please upload your proof of enrollment to continue
+                                Please upload your proof of enrollment and update your year level to continue
                             </p>
                         </div>
 
@@ -157,7 +164,7 @@ const UploadPage = () => {
                                     </h3>
                                     <p className="text-gray-300 leading-relaxed">
                                         Your account has been marked for renewal. To regain access to the MSL platform, 
-                                        please upload a current proof of enrollment document.
+                                        please upload a current proof of enrollment document and update your year level.
                                     </p>
                                 </div>
                             </div>
@@ -229,6 +236,34 @@ const UploadPage = () => {
                                         Accepted formats: JPEG, PNG, GIF, PDF (Max 2MB)
                                     </p>
                                 </div>
+                            </div>
+
+                            {/* Year Level Selection */}
+                            <div className="bg-white/5 rounded-xl p-6 border border-gray-600">
+                                <h3 className="text-lg font-semibold text-white mb-4">
+                                    Update Year Level
+                                </h3>
+                                <p className="text-gray-400 mb-4">
+                                    Please select your current year level
+                                </p>
+                                
+                                <select
+                                    value={yearLevel}
+                                    onChange={(e) => setYearLevel(e.target.value)}
+                                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                    required
+                                >
+                                    <option value="">Select Year Level</option>
+                                    <option value="Grade 11 SHS">Grade 11 SHS</option>
+                                    <option value="Grade 12 SHS">Grade 12 SHS</option>
+                                    <option value="Freshmen (1st Yr)">Freshmen (1st Yr)</option>
+                                    <option value="Sophomore (2nd Yr)">Sophomore (2nd Yr)</option>
+                                    <option value="Junior (3rd Yr)">Junior (3rd Yr)</option>
+                                    <option value="Senior (4th Yr Up)">Senior (4th Yr Up)</option>
+                                    <option value="Alumni">Alumni</option>
+                                    <option value="Masters">Masters</option>
+                                    <option value="Doctorate">Doctorate</option>
+                                </select>
                             </div>
 
                             {/* Selected File Display */}

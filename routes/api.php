@@ -82,26 +82,36 @@ Route::middleware(['web'])->group(function () {
             'regions.*' => 'required|string|max:255'
         ]);
         
-        // Check for duplicate region assignments
-        $requestedRegions = $request->regions;
-        $existingAssignments = \App\Models\UserRegion::whereIn('region_name', $requestedRegions)
-            ->where('user_id', '!=', $targetUser->id)
-            ->get();
-        
-        if ($existingAssignments->count() > 0) {
-            $duplicateRegions = $existingAssignments->pluck('region_name')->toArray();
-            $duplicateUsers = \App\Models\User::whereIn('id', $existingAssignments->pluck('user_id'))
-                ->get(['id', 'name', 'surname'])
-                ->map(function($user) {
-                    return $user->name . ' ' . $user->surname;
-                })
-                ->toArray();
+        // Check for duplicate region assignments (only for Admin, not Super Admin)
+        if ($user->role === 'Admin') {
+            $requestedRegions = $request->regions;
+            $existingAssignments = \App\Models\UserRegion::whereIn('region_name', $requestedRegions)
+                ->where('user_id', '!=', $targetUser->id)
+                ->get();
             
-            return response()->json([
-                'error' => 'Some regions are already assigned to other Regional Admins',
-                'duplicate_regions' => $duplicateRegions,
-                'assigned_to' => $duplicateUsers
-            ], 400);
+            if ($existingAssignments->count() > 0) {
+                $duplicateRegions = $existingAssignments->pluck('region_name')->toArray();
+                $duplicateUsers = \App\Models\User::whereIn('id', $existingAssignments->pluck('user_id'))
+                    ->get(['id', 'name', 'surname'])
+                    ->map(function($user) {
+                        return $user->name . ' ' . $user->surname;
+                    })
+                    ->toArray();
+                
+                return response()->json([
+                    'error' => 'Some regions are already assigned to other Regional Admins',
+                    'duplicate_regions' => $duplicateRegions,
+                    'assigned_to' => $duplicateUsers
+                ], 400);
+            }
+        }
+        
+        // For Super Admin: Remove existing assignments for requested regions from other users
+        if ($user->role === 'Super Admin') {
+            $requestedRegions = $request->regions;
+            \App\Models\UserRegion::whereIn('region_name', $requestedRegions)
+                ->where('user_id', '!=', $targetUser->id)
+                ->delete();
         }
         
         // Clear existing regions
