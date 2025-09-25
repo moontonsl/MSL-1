@@ -204,6 +204,11 @@ Route::get('/NEXTSpoof', function () {
     return Inertia::render('NEXTSpoof/NEXTSpoof');
 })->name('NEXTSpoof');
 
+//ANNIVERSARY 9TH POSTING CONTEST ROUTES
+Route::get('/9THPoster', function () {
+    return Inertia::render('Anniversary9th/9THPoster');
+})->name('9THPoster');
+
 //ACCOUNT MODIFICATION WAITING ROUTES
 Route::get('/AccountModificationWaiting', function () {
     return Inertia::render('AccountModification/AccountModificationWaiting');
