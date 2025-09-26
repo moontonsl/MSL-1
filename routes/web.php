@@ -27,7 +27,6 @@ use App\Http\Controllers\SpreadSheetAutomationController;
 use App\Http\Controllers\Mccs2PredictionsController;
 use App\Http\Controllers\GoogleSheetMCCS2Controller;
 use App\Http\Controllers\Admin\DuplicateUsernameController;
-use App\Http\Controllers\CampusController;
 use App\Http\Controllers\CourseController;
 
 Route::get('/', function () {
@@ -872,4 +871,7 @@ Route::get('/api/courses', [CourseController::class, 'index'])->name('courses.in
 Route::get('/api/courses/search', [CourseController::class, 'search'])->name('courses.search');
 Route::get('/api/courses/level/{level}', [CourseController::class, 'getByLevel'])->name('courses.by-level');
 
-Route::get('/campus', [CampusController::class, 'index'])->name('campus');
+//OPPO AMBASSADOR ROUTES
+Route::get('/OppoAmbassador', function () {
+    return Inertia::render('OppoAmbassador/OppoAmbassador');
+})->name('OppoAmbassador');
