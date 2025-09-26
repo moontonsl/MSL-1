@@ -151,7 +151,7 @@ Route::get('/NEXTSpoof', function () {
 })->name('NEXTSpoof');
 
 //ANNIVERSARY 9TH POSTING CONTEST ROUTES
-Route::get('/9THPoster', function () {
+Route::get('/9thPoster', function () {
     return Inertia::render('Anniversary9th/9THPoster');
 })->name('9THPoster');
 
