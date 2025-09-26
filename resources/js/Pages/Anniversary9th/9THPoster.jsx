@@ -3,7 +3,7 @@ import { Head } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutAnniversary9th";
 import { Helmet } from "react-helmet";
 import MechanicsModal from "./MechanicsModal";
-import PosterLogo from "./9THPosterLogo.jpg";
+import PosterLogo from "./9THLOGO.png";
 
 export default function Poster9th({ auth }) {
   const [form, setForm] = useState({
@@ -95,7 +95,7 @@ export default function Poster9th({ auth }) {
         />
 
         {/* Card */}
-        <div className="w-full max-w-xl bg-white rounded-2xl shadow-xl p-8 backdrop-blur-md border border-black mt-[-10px] mb-8">
+        <div className="w-full max-w-xl bg-[#FFB6C1] rounded-2xl shadow-xl p-8 backdrop-blur-md border border-white mt-[-10px] mb-8">
           <h1 className="text-xl md:text-2xl font-bold text-center text-black mb-5 tracking-wide">
             9th Anniversary Poster Submission
           </h1>
@@ -125,7 +125,7 @@ export default function Poster9th({ auth }) {
                 placeholder: "School or Community",
               },
               {
-                label: "Poster Link (Google Drive)",
+                label: "Poster Link",
                 name: "posterLink",
                 placeholder: "Link of your Poster entry",
               },
@@ -139,7 +139,7 @@ export default function Poster9th({ auth }) {
                   required
                   placeholder={field.placeholder}
                   className="w-full px-4 py-3 rounded-xl bg-white/20 border border-black text-black placeholder-gray-500 
-                            focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 
+                            focus:outline-none focus:ring-2 focus:ring-[#FF69B4] focus:border-[#FF69B4]
                             focus:shadow-[0_0_10px_2px_rgba(250,204,21,0.7)] transition text-center"
                 />
               </div>
@@ -153,7 +153,7 @@ export default function Poster9th({ auth }) {
                 onChange={handleChange}
                 required
                 className="w-full px-4 py-3 rounded-xl bg-white/20 border border-black text-black placeholder-gray-500 
-                          focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 
+                          focus:outline-none focus:ring-2 focus:ring-[#FF69B4] focus:border-[#FF69B4] 
                           focus:shadow-[0_0_10px_2px_rgba(250,204,21,0.7)] transition text-center"
               >
                 <option value="" disabled>
