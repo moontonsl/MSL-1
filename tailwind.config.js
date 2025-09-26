@@ -36,5 +36,6 @@ export default {
         forms,
         lineClamp,
         require('@tailwindcss/line-clamp'),
+        require("tailwind-scrollbar"),
     ],
 };
