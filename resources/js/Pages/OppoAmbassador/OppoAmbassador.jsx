@@ -36,6 +36,7 @@ const OppoAmbassador = () => {
                     zIndex: '1'
                 }}
             >
+                <div className='w-full h-10 bg-green-500 absolute top-10 left-0 z-10'></div>
                 <main className="relative text-center w-full lg:max-w-[1440px] z-10">
 
                     {/* Title Section */}
