@@ -349,7 +349,7 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
 // MCC Routes
 Route::prefix('mcc')->name('mcc.')->group(function () {
     Route::get('/', function () {
-        return Inertia::render('MCC/Main Page/index');
+        return Inertia::render('MCC Season 2/Home');
     })->name('main');
 
     Route::get('/calendar', function () {
