@@ -1,0 +1,307 @@
+import React from 'react';
+import MainLayout from '@/Layouts/MainLayout.jsx';
+
+const MCCS2Home = () => {
+  const NU_LOGO = '/images/MCC S2/NU logo.png';
+  const topTeams = Array.from({ length: 8 }, (_, i) => ({ id: i + 1, name: 'NU BULLDOGS' }));
+  const standingsRows = Array.from({ length: 8 }, (_, i) => ({
+    rank: i + 1,
+    team: 'NU BULLDOGS',
+    match: '0-0',
+    games: '0-0',
+    points: '00',
+  }));
+  const KNOCKOUT_BG = '/images/MCC S2/Knockout BG.png';
+
+  const TeamPanel = ({ backgroundClass, teamName }) => (
+    <div className="flex-1 self-stretch p-2.5 inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden">
+      <div className={`self-stretch rounded-[10px] outline outline-[0.85px] outline-offset-[-0.85px] flex flex-col justify-start items-start gap-2 overflow-hidden ${backgroundClass}`}>
+        <div className="self-stretch p-2.5 flex flex-col justify-start items-start gap-2 overflow-hidden">
+          <div className="self-stretch h-28 p-2 inline-flex justify-center items-center gap-2 overflow-hidden">
+            <img className="w-24 h-28 object-contain" src={NU_LOGO} alt={teamName} />
+          </div>
+          <div className="self-stretch p-2 rounded-[10px] inline-flex justify-center items-center gap-2 overflow-hidden">
+            <div className="text-center justify-start text-white text-base font-bold font-montserrat leading-tight">{teamName}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const ScorePanel = () => (
+    <div className="flex-1 h-48 p-2.5 inline-flex flex-col justify-center items-center gap-2.5 overflow-hidden">
+      <div className="self-stretch p-2.5 flex flex-col justify-center items-center gap-2.5 overflow-hidden">
+        <div className="text-center justify-start text-white text-4xl font-bold font-montserrat leading-[56px]">0 : 0</div>
+      </div>
+      <div className="self-stretch p-2.5 bg-yellow-400 rounded-[10px] flex flex-col justify-center items-center gap-2.5 overflow-hidden">
+        <div className="text-center justify-start text-white text-xl font-bold font-montserrat leading-7">4:00 PM</div>
+      </div>
+    </div>
+  );
+
+  const MatchCard = () => (
+    <div
+      className="self-stretch p-2.5 rounded-[20px] outline outline-1 outline-offset-[-1px] outline-yellow-400 inline-flex justify-start items-start gap-2.5 overflow-hidden"
+      style={{
+        backgroundImage: `url('${KNOCKOUT_BG}')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <TeamPanel backgroundClass="bg-blue-900" teamName="NU BULLDOGS" />
+      <ScorePanel />
+      <TeamPanel backgroundClass="bg-red-800" teamName="NU BULLDOGS" />
+    </div>
+  );
+
+  return (
+    <MainLayout>
+      <div
+        className="w-[1920px] bg-Background-Default-Default inline-flex flex-col justify-center items-center overflow-hidden font-montserrat relative"
+        style={{
+          backgroundImage: "url('/images/MCC S2/Main BG.png')",
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'top',
+          backgroundSize: 'cover',
+        }}
+      >
+
+        {/* Main Content skeleton based on provided figma-to-code */}
+        <div className="h-[6795px] flex flex-col justify-start items-center gap-16 overflow-hidden">
+          {/* Hero and intro block */}
+          <div className="h-[2309px] flex flex-col justify-start items-center overflow-hidden">
+            <div className="w-[1920px] h-[2330px] relative">
+              {/* Season chip (static) */}
+              <div className="w-[1921px] h-36 px-2.5 left-[13px] top-[1179.50px] absolute inline-flex justify-center items-end gap-2.5 overflow-visible">
+                <div className="w-[360px] h-[64px] px-8 bg-black rounded-[16px] outline outline-2 outline-offset-[-2px] outline-yellow-400 flex items-center justify-center gap-4 shadow-[0_0_8px_-3px_rgba(243,199,24,0.6)]">
+                  <div className="text-yellow-400 text-3xl font-bold font-montserrat tracking-wider">SEASON 2</div>
+                  <svg className="w-6 h-6 text-yellow-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Background hero image */}
+              <div className="w-[1920px] left-0 top-0 absolute inline-flex flex-col justify-start items-center gap-2.5">
+                <img className="self-stretch h-[1011px]" src="/images/MCC S2/Top.png" alt="Hero" />
+              </div>
+
+              
+
+              {/* Four buttons row */}
+              <div className="w-[1921px] left-0 top-[1315.50px] absolute flex justify-center items-center gap-10 z-20">
+                <div className="w-[420px] h-[180px] flex items-center justify-center">
+                  <img
+                    className="w-full h-full object-contain select-none"
+                    src="/images/MCC S2/Registration Button.png"
+                    alt="Registration"
+                  />
+                </div>
+                <div className="w-[420px] h-[180px] flex items-center justify-center">
+                  <img
+                    className="w-full h-full object-contain select-none"
+                    src="/images/MCC S2/Rules.png"
+                    alt="Rules"
+                  />
+                </div>
+                <div className="w-[420px] h-[200px] flex items-center justify-center">
+                  <img
+                    className="w-full h-full object-contain select-none"
+                    src="/images/MCC S2/Calendar.png"
+                    alt="Calendar"
+                  />
+                </div>
+                <div className="w-[420px] h-[180px] flex items-center justify-center">
+                  <img
+                    className="w-full h-full object-contain select-none"
+                    src="/images/MCC S2/Favourites.png"
+                    alt="Favourites"
+                  />
+                </div>
+              </div>
+
+              {/* MCC logo (separate so title position remains unchanged) */}
+              <div className="absolute left-1/2 -translate-x-1/2 top-[650px] z-20 inline-flex items-center justify-center">
+                <img className="w-[260px] h-auto" src="/images/MCC S2/MCCLOGO.png" alt="MCC Logo" />
+              </div>
+              {/* Centered title block (original position) */}
+              <div className="absolute left-1/2 -translate-x-1/2 top-[960px] z-20 inline-flex items-center justify-center">
+                <img
+                  className="w-[1180px] h-auto"
+                  src="/images/MCC S2/Pamantasang lakas MSL COLLEGIATE CUP S2.png"
+                  alt="Pamantasang Lakas Title"
+                />
+              </div>
+
+              {/* Left and Right hero images */}
+              <img
+                className="absolute left-0 top-[780px] w-[650px] h-auto z-10 select-none pointer-events-none"
+                src="/images/MCC S2/Lou yi.png"
+                alt="Lou Yi"
+              />
+              <img
+                className="absolute right-0 top-[780px] w-[740px] h-auto z-10 select-none pointer-events-none"
+                src="/images/MCC S2/Zhu Xin.png"
+                alt="Zhu Xin"
+              />
+
+              {/* About section */}
+              <div className="w-[1920px] h-[828px] p-2.5 left-[1px] top-[1511.50px] absolute inline-flex justify-center items-center overflow-hidden">
+                <div className="flex-1 self-stretch p-2.5 inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden">
+                  <div className="self-stretch p-2.5 flex flex-col justify-start items-center gap-2.5 overflow-hidden">
+                    <div className="text-center justify-start text-white text-4xl font-bold font-['Montserrat'] leading-[56px]">MLBB COLLEGIATE CUP</div>
+                  </div>
+                  <div className="self-stretch p-2.5 flex flex-col justify-start items-center gap-2.5 overflow-hidden">
+                    <div className="w-[1364px] justify-start text-white text-3xl font-medium font-['Montserrat']">MSL Collegiate Cup (MCC) is the trademark collegiate tournament of Moonton Student Leaders Philippines (MSL Philippines). Established in 2021 through its predecessor —  the School Rivals — and recently rebranded as MCC in 2023, it stands tall and proud as the premier and one of the biggest nationwide collegiate tournaments that shares the opportunity for a higher scale of competitive gaming.<br/><br/>Set up with impeccable standards and state-of-the-art tournament system,  MCC shines through as it has direct developer support from Moonton. With its pro-level production, it is a league beaming alongside the esteemed MLBB Professional League (MPL) and MLBB Developmental League (MDL). With its reach expanding from Luzon, NCR, Visayas, and Mindanao regions, MCC is committed to giving collegiate teams across the country a greater avenue to hone and showcase their talents and potentials as student gamers. It also promotes camaraderie and enthusiasm among the players that transcends beyond the competitive gaming horizon. In pursuit of inclusivity especially at the grassroots level, MCC continues to strive for greater, stronger, and better gaming opportunities for every collegiate team to join and enjoy.<br/></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* TOP 8 TEAMS - Sizes based on Figma sample */}
+          <div className="w-[1292px] p-2.5 inline-flex flex-col justify-start items-center gap-2.5 overflow-hidden">
+            {/* Header */}
+            <div className="w-[1082px] p-2.5 bg-black rounded-[10px] outline outline-2 outline-offset-[-2px] outline-yellow-400 inline-flex justify-center items-center gap-2.5 overflow-hidden">
+              <div className="w-72 text-center justify-start text-white text-4xl font-bold font-montserrat leading-[56px]">TOP 8 TEAMS</div>
+            </div>
+            {/* Grid container (4 columns x 2 rows) */}
+            <div className="w-[1082px] grid grid-cols-4 gap-4 overflow-hidden">
+              {topTeams.map((team) => (
+                <div key={team.id} className="p-2 inline-flex flex-col justify-start items-start gap-4 overflow-hidden">
+                  <div className="self-stretch h-72 bg-black rounded-[10px] outline outline-[0.85px] outline-offset-[-0.85px] outline-yellow-400 flex flex-col justify-start items-start gap-2 overflow-hidden">
+                    <div className="self-stretch flex-1 p-2.5 flex flex-col justify-start items-start gap-2 overflow-hidden">
+                      <div className="self-stretch h-52 p-2 inline-flex justify-center items-center gap-2 overflow-hidden">
+                        <img className="w-32 h-40" src={NU_LOGO} alt={team.name} />
+                      </div>
+                      <div className="self-stretch flex-1 p-2 bg-yellow-400 rounded-[10px] inline-flex justify-center items-center gap-2 overflow-hidden">
+                        <div className="text-center justify-start text-black text-2xl font-bold font-montserrat leading-9">{team.name}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* STANDINGS - based on Figma sample */}
+          <div className="w-[1292px] p-2.5 inline-flex flex-col justify-start items-center gap-5 overflow-hidden">
+            <div className="w-[1030px] p-2.5 bg-black rounded-[10px] outline outline-2 outline-offset-[-2px] outline-yellow-400 inline-flex justify-center items-center gap-2.5 overflow-hidden">
+              <div className="w-72 text-center justify-start text-white text-4xl font-bold font-montserrat leading-[56px]">STANDINGS</div>
+            </div>
+            <div className="h-[815px] p-2.5 bg-neutral-950 rounded-lg flex flex-col justify-start items-start gap-2">
+              {/* Table header */}
+              <div className="w-[1014.06px] h-20 bg-yellow-400 rounded-xl inline-flex justify-start items-start overflow-hidden">
+                <div className="flex-1 self-stretch p-2 flex justify-start items-start overflow-hidden">
+                  <div className="w-40 self-stretch p-2 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
+                    <div className="text-center justify-start text-black text-2xl font-bold font-montserrat leading-loose">RANK</div>
+                  </div>
+                  <div className="w-44 self-stretch p-2 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
+                    <div className="text-center justify-start text-black text-2xl font-bold font-montserrat leading-loose">TEAM</div>
+                  </div>
+                  <div className="flex-1 self-stretch p-2 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
+                    <div className="text-center justify-start text-black text-2xl font-bold font-montserrat leading-loose">MATCH W-L</div>
+                  </div>
+                  <div className="flex-1 self-stretch p-2 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
+                    <div className="text-center justify-start text-black text-2xl font-bold font-montserrat leading-loose">GAMES W-L</div>
+                  </div>
+                  <div className="flex-1 self-stretch p-2 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
+                    <div className="text-center justify-start text-black text-2xl font-bold font-montserrat leading-loose">POINTS</div>
+                  </div>
+                </div>
+              </div>
+              {/* Data rows */}
+              {standingsRows.map((row, idx) => (
+                <div key={idx} className={`w-[1014.06px] h-20 ${idx % 2 === 0 ? 'bg-black' : 'bg-neutral-900'} inline-flex justify-start items-start overflow-hidden`}>
+                  <div className="flex-1 self-stretch p-2 flex justify-start items-start overflow-hidden">
+                    <div className="w-40 self-stretch p-2 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
+                      <div className="text-center justify-start text-neutral-100 text-2xl font-bold font-montserrat leading-loose">{row.rank}</div>
+                    </div>
+                    <div className="w-44 self-stretch p-2 inline-flex flex-col justify-center items-center gap-2 overflow-hidden relative">
+                      <img
+                        src={NU_LOGO}
+                        alt="Team logo"
+                        aria-hidden="true"
+                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 opacity-25 blur-[0.2px] pointer-events-none select-none"
+                      />
+                      <div className="relative z-10 text-center justify-start text-neutral-100 text-xl font-bold font-montserrat leading-relaxed">{row.team}</div>
+                    </div>
+                    <div className="flex-1 self-stretch p-2 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
+                      <div className="text-center justify-start text-neutral-100 text-2xl font-bold font-montserrat leading-loose">{row.match}</div>
+                    </div>
+                    <div className="flex-1 self-stretch p-2 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
+                      <div className="text-center justify-start text-neutral-100 text-2xl font-bold font-montserrat leading-loose">{row.games}</div>
+                    </div>
+                    <div className="flex-1 self-stretch p-2 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
+                      <div className="text-center justify-start text-neutral-100 text-2xl font-bold font-montserrat leading-loose">{row.points}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* KNOCKOUT STAGE DAY 1 */}
+          <div className="w-[1462px] p-2.5 inline-flex flex-col justify-start items-center gap-12 overflow-hidden">
+            <div className="w-[1030px] p-2.5 bg-black rounded-[10px] outline outline-2 outline-offset-[-2px] outline-yellow-400 inline-flex justify-center items-center gap-2.5 overflow-hidden">
+              <div className="text-center justify-start text-white text-4xl font-bold font-montserrat leading-[56px]">KNOCKOUT STAGE DAY 1 | DATE</div>
+            </div>
+            <div className="self-stretch rounded-lg inline-flex justify-start items-start gap-2.5">
+              <div className="flex-1 inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden">
+                <MatchCard />
+                <MatchCard />
+              </div>
+              <div className="flex-1 inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden">
+                <MatchCard />
+                <MatchCard />
+              </div>
+              <div className="flex-1 h-[483px] flex flex-col justify-center items-stretch gap-2.5 overflow-hidden">
+                <MatchCard />
+              </div>
+            </div>
+          </div>
+
+          {/* KNOCKOUT STAGE DAY 2 */}
+          <div className="w-[1462px] p-2.5 inline-flex flex-col justify-start items-center gap-12 overflow-hidden">
+            <div className="w-[1030px] p-2.5 bg-black rounded-[10px] outline outline-2 outline-offset-[-2px] outline-yellow-400 inline-flex justify-center items-center gap-2.5 overflow-hidden">
+              <div className="text-center justify-start text-white text-4xl font-bold font-montserrat leading-[56px]">KNOCKOUT STAGE DAY 2 | DATE</div>
+            </div>
+            <div className="self-stretch rounded-lg inline-flex justify-start items-start gap-2.5">
+              <div className="flex-1 inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden">
+                <MatchCard />
+                <MatchCard />
+              </div>
+              <div className="flex-1 inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden">
+                <MatchCard />
+                <MatchCard />
+              </div>
+              <div className="flex-1 h-[483px] flex flex-col justify-center items-stretch gap-2.5 overflow-hidden">
+                <MatchCard />
+              </div>
+            </div>
+          </div>
+
+          {/* PLAYOFFS BRACKET */}
+          <div className="w-[1462px] p-2.5 flex flex-col justify-start items-center gap-12 overflow-hidden">
+            <img className="w-[1319px] h-[755px] object-contain" src="/images/MCC S2/PLayoffs bracket.png" alt="Playoffs Bracket" />
+          </div>
+
+          {/* Bottom thumbnails */}
+          <div className="p-2.5 inline-flex justify-center items-start gap-5 overflow-hidden">
+            {[0,1,2].map((i) => (
+              <div key={i} className="p-2.5 flex justify-start items-start gap-2.5 overflow-hidden">
+                <img className="w-96 h-52 object-cover" src="/images/MCC S2/BOTTOM.png" alt={`Bottom ${i+1}`} />
+              </div>
+            ))}
+          </div>
+
+          {/* TODO: Bracket and Thumbnails */}
+        </div>
+      </div>
+    </MainLayout>
+  );
+};
+
+export default MCCS2Home;
+
+
