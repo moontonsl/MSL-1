@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Action Required: Update Your MSL Username</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #dc3545;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            color: #856404;
+        }
+        .rules {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="content">
+            <p><strong>Subject: Action Required: Update Your MSL Username</strong></p>
+            
+            <p>Hi <strong>{{ $user->name }}@if($user->surname) {{ $user->surname }}@endif</strong>,</p>
+
+            <p>We have identified that your current MSL username does not meet our username requirements. To continue using your account, please update your username to comply with the following rules:</p>
+
+            <div class="rules">
+                <ul>
+                    <li>No spaces are allowed in usernames</li>
+                    <li>Usernames must not exceed 15 characters</li>
+                    <li>Usernames must be at least 4 characters long</li>
+                </ul>
+            </div>
+
+            <p>To update your username, please click the link below:</p>
+            
+            <p style="text-align: center;">
+                <a href="{{ \Illuminate\Support\Facades\URL::temporarySignedRoute('admin.duplicate-usernames.form', now()->addDays(30), ['user_id' => $user->id]) }}" class="button">Update Username</a>
+            </p>
+
+            <div class="warning">
+                <p><strong>⚠️ Please note:</strong> Failure to update your username on or before <strong>September 27, 2025</strong> will result in the deletion of your MSL account.</p>
+                <p>If you have already updated your username and completed verification, kindly disregard this message.</p>
+            </div>
+
+            <p>Thank you for your prompt attention.</p>
+
+            <p>Best regards,</p>
+            <p><strong>MSL Website Team</strong></p>
+        </div>
+
+        <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+            <p>&copy; {{ date('Y') }} MSL Website Team. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html> 
