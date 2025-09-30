@@ -35,6 +35,8 @@ const Step2EducationDetails = ({
   const [filteredSchools, setFilteredSchools] = useState([]);
   const [schoolQuery, setSchoolQuery] = useState("");
   const [courses, setCourses] = useState([]);
+  const [allSchools, setAllSchools] = useState([]);
+  const [isUniversityValid, setIsUniversityValid] = useState(true);
 
   const dropdownRef = useRef(null);
   
@@ -50,6 +52,22 @@ const Step2EducationDetails = ({
     };
     
     fetchCourses();
+  }, []);
+
+  // Fetch all schools for validation
+  useEffect(() => {
+    const fetchAllSchools = async () => {
+      try {
+        const response = await axios.get('/schools/search', {
+          params: { query: '' }
+        });
+        setAllSchools(response.data);
+      } catch (error) {
+        console.error("Error fetching all schools", error);
+      }
+    };
+    
+    fetchAllSchools();
   }, []);
 
   useEffect(() => {
@@ -91,15 +109,23 @@ const Step2EducationDetails = ({
     setSchoolQuery(value);
     if (value.trim() === "") {
       setFilteredSchools([]);
+      setIsUniversityValid(true);
       return;
     }
     debouncedSearch(value);
+    
+    // Check if the current value matches any school in allSchools
+    const isValidSchool = allSchools.some(school => 
+      school.name.toLowerCase() === value.toLowerCase()
+    );
+    setIsUniversityValid(isValidSchool);
   };
   const handleUniversitySelect = (school) => {
     handleInputChange({ target: { name: "university", value: school.name } });
     handleInputChange({ target: { name: "island", value: school.island } });
     handleInputChange({ target: { name: "region", value: school.region } });
     setFilteredSchools([]);
+    setIsUniversityValid(true);
   };
 
   const handleCourseChange = (e) => {
@@ -149,6 +175,19 @@ const Step2EducationDetails = ({
         return false;
       }
     }
+
+    // Validate university against valid schools
+    if (formData.university && formData.university.trim() !== "") {
+      const isValidSchool = allSchools.some(school => 
+        school.name.toLowerCase() === formData.university.toLowerCase()
+      );
+      if (!isValidSchool) {
+        setLocalError("⚠️ Please select a valid university from the dropdown list.");
+        setIsUniversityValid(false);
+        return false;
+      }
+    }
+
     const file = formData.proofOfEnrollment;
     if (file) {
       const allowedTypes = [
@@ -252,11 +291,18 @@ const Step2EducationDetails = ({
           value={formData.university}
           onChange={handleUniversityChange}
           onBlur={handleAnyInputBlur}
-          className={`${styles['input-field-register']} w-full p-3 text-white border border-gray-700 bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
+          className={`${styles['input-field-register']} w-full p-3 text-white border ${
+            !isUniversityValid && formData.university ? 'border-red-500' : 'border-gray-700'
+          } bg-gray-900 bg-opacity-70 rounded-lg text-base placeholder-gray-500 focus:outline-none focus:border-yellow-400`}
           placeholder="e.g. University of XYZ"
           required
           autoComplete="off"
         />
+        {!isUniversityValid && formData.university && (
+          <p className="text-red-400 text-sm mt-1">
+            Please select a valid university from the dropdown list.
+          </p>
+        )}
 
         {filteredSchools.length > 0 && (
           <ul
@@ -278,8 +324,7 @@ const Step2EducationDetails = ({
           </ul>
         )}
       </div>
-
-  </div>
+    </div>
 
   <div className="flex flex-col md:flex-row gap-4">
     <div className="flex-1">
