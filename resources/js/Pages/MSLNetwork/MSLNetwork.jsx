@@ -253,7 +253,7 @@ const MSLNetwork = () => {
                 key={idx}
                 className={`font-bold text-[8px] sm:text-[16px] lg:text-[20px] 
                             leading-snug text-center flex items-center justify-center px-1 sm:px-2
-                            h-[30px] sm:h-[50px] ${idx === 0 ? "text-yellow-400" : "text-white"}`}
+                            h-[30px] sm:h-[60px] ${idx === 0 ? "text-yellow-400" : "text-white"}`}
                 style={{ minHeight: "40px" }}
               >
                 {perk}
@@ -276,7 +276,7 @@ const MSLNetwork = () => {
                 <h4
                   className="text-[#F3C718] font-bold text-[8px] sm:text-[20px] 
                             leading-snug text-center flex items-center justify-center
-                            h-[20px] sm:h-[40px]"
+                            h-[20px] sm:h-[50px]"
                   style={{ minHeight: "30px" }}
                 >
                   {tier.name}
@@ -286,7 +286,7 @@ const MSLNetwork = () => {
                     key={i}
                     className="text-white font-bold text-[8px] sm:text-[16px] lg:text-[20px] 
                               leading-snug text-center flex items-center justify-center
-                              h-[30px] sm:h-[50px]"
+                              h-[30px] sm:h-[60px]"
                     style={{ minHeight: "40px" }}
                   >
                     {val}
@@ -301,7 +301,7 @@ const MSLNetwork = () => {
             Requirements
           </h3>
           <div className="flex flex-row w-full gap-2 overflow-x-scroll scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-transparent">
-            <div className="flex flex-col w-[30%] min-w-[120px] gap-0 sm:gap-4 bg-black/60 rounded-lg">
+            <div className="flex flex-col w-[10%] sm:w-[30%] min-w-[80px] sm:min-w-[120px] gap-0 sm:gap-4 bg-black/60 rounded-lg">
               {[
                 "Tiers",
                 <>OSA-Accredited<br/>Organization</>,
@@ -311,7 +311,7 @@ const MSLNetwork = () => {
               ].map((perk, idx) => (
                 <p
                   key={idx}
-                  className={`font-bold text-[8px] sm:text-[16px] lg:text-[20px] text-center flex items-center justify-center ${
+                  className={`font-bold text-[7px] sm:text-[16px] lg:text-[20px] text-center flex items-center justify-center ${
                     idx === 0 ? "text-[#F2C21A]" : "text-white"
                   } h-[30px] sm:h-[70px]`}
                   style={{ minHeight: "40px" }}
@@ -326,7 +326,7 @@ const MSLNetwork = () => {
               { name: "A", values: ["YES", "YES", "YES", "YES"] },
               { name: "Super School", values: ["YES", "YES", "YES", <>Moonton<br/>School Admin</>] }
             ].map((tier, idx) => (
-              <div key={idx} className="flex flex-col w-[20%] min-w-[100px] gap-0 sm:gap-4 p-1 sm:p-4 bg-gray-400/20 rounded-lg">
+              <div key={idx} className="flex flex-col w-[1%] sm:w-[20%] min-w-[80px] sm:min-w-[100px] gap-0 sm:gap-4 p-1 sm:p-4 bg-gray-400/20 rounded-lg">
                 <h4
                   className="text-[#F3C718] font-bold text-[8px] sm:text-[20px] leading-snug text-center flex items-center justify-center h-[20px] sm:h-[55px]"
                   style={{ minHeight: "30px" }}
@@ -354,7 +354,7 @@ const MSLNetwork = () => {
             Community Requirements are waived for Super School partners
           </p>
           <div className="flex flex-row w-full gap-2 overflow-x-scroll scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-transparent">
-            <div className="flex flex-col w-[30%] min-w-[120px] gap-0 sm:gap-4 bg-black/60 rounded-lg">
+            <div className="flex flex-col w-[10%] sm:w-[30%] min-w-[80px] sm:min-w-[120px] gap-0 sm:gap-4 bg-black/60 rounded-lg">
               {[
                 "Tiers",
                 <>Turnouts in 2<br/>Consecutive MSL<br/>Tournaments</>,
@@ -363,7 +363,7 @@ const MSLNetwork = () => {
               ].map((perk, idx) => (
                 <p
                   key={idx}
-                  className={`font-bold text-[8px] sm:text-[16px] lg:text-[17px] text-center flex items-center justify-center ${
+                  className={`font-bold text-[7px] sm:text-[16px] lg:text-[17px] text-center flex items-center justify-center ${
                     idx === 0 ? "text-[#F2C21A]" : "text-white"
                   } h-[30px] sm:h-[70px]`}
                   style={{ minHeight: "40px" }}
@@ -378,7 +378,7 @@ const MSLNetwork = () => {
               { name: "A", values: ["≥ 24 Teams", "≥ 24 Teams", "> 15%"] },
               { name: "Super School", values: ["N/A", "N/A", "N/A"] }
             ].map((tier, idx) => (
-              <div key={idx} className="flex flex-col w-[20%] min-w-[100px] gap-0 sm:gap-4 p-1 sm:p-4 bg-gray-400/20 rounded-lg">
+              <div key={idx} className="flex flex-col w-[1%] sm:w-[20%] min-w-[80px] sm:min-w-[100px] gap-0 sm:gap-4 p-1 sm:p-4 bg-gray-400/20 rounded-lg">
                 <h4
                   className="text-[#F3C718] font-bold text-[8px] sm:text-[20px] leading-snug text-center flex items-center justify-center h-[20px] sm:h-[55px]"
                   style={{ minHeight: "30px" }}
