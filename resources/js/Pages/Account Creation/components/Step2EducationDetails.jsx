@@ -37,6 +37,7 @@ const Step2EducationDetails = ({
   const [courses, setCourses] = useState([]);
   const [allSchools, setAllSchools] = useState([]);
   const [isUniversityValid, setIsUniversityValid] = useState(true);
+  const [hasSelectedUniversity, setHasSelectedUniversity] = useState(false);
 
   const dropdownRef = useRef(null);
   
@@ -69,6 +70,19 @@ const Step2EducationDetails = ({
     
     fetchAllSchools();
   }, []);
+
+  // Initialize hasSelectedUniversity based on current form data
+  useEffect(() => {
+    if (formData.university && formData.island && formData.region) {
+      const isValidSchool = allSchools.some(school => 
+        school.name.toLowerCase() === formData.university.toLowerCase()
+      );
+      if (isValidSchool) {
+        setHasSelectedUniversity(true);
+        setSchoolQuery(formData.university);
+      }
+    }
+  }, [formData.university, formData.island, formData.region, allSchools]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -104,14 +118,30 @@ const Step2EducationDetails = ({
 
   const handleUniversityChange = (e) => {
     const { value } = e.target;
+    
+    // If user has previously selected a university and starts typing, clear everything
+    if (hasSelectedUniversity && value !== formData.university) {
+      // Clear all related fields
+      handleInputChange({ target: { name: "university", value: "" } });
+      handleInputChange({ target: { name: "island", value: "" } });
+      handleInputChange({ target: { name: "region", value: "" } });
+      setHasSelectedUniversity(false);
+      setIsUniversityValid(true);
+      setFilteredSchools([]);
+      setSchoolQuery("");
+      return;
+    }
+    
     handleInputChange(e);
-
     setSchoolQuery(value);
+    
     if (value.trim() === "") {
       setFilteredSchools([]);
       setIsUniversityValid(true);
+      setHasSelectedUniversity(false);
       return;
     }
+    
     debouncedSearch(value);
     
     // Check if the current value matches any school in allSchools
@@ -126,6 +156,8 @@ const Step2EducationDetails = ({
     handleInputChange({ target: { name: "region", value: school.region } });
     setFilteredSchools([]);
     setIsUniversityValid(true);
+    setHasSelectedUniversity(true);
+    setSchoolQuery(school.name);
   };
 
   const handleCourseChange = (e) => {
