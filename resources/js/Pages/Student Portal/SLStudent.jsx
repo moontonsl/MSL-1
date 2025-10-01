@@ -6,6 +6,11 @@ import rankPIC from "./assets/MythicIcon.png";
 
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
 import { Head, usePage } from '@inertiajs/react';
+import { useState } from "react";
+
+import EditProfileModal from "./EditProfileModal.jsx"; 
+
+
 
 const SLStudent = () => {
     const { user } = usePage().props;
@@ -30,6 +35,11 @@ const SLStudent = () => {
         <path d="M12 2L14.09 8.26L20.97 8.27L15.45 12.14L17.54 18.4L12 14.53L6.46 18.4L8.55 12.14L3.03 8.27L9.91 8.26L12 2Z" stroke="#9B59B6" strokeWidth="2" strokeLinejoin="round"/>
         </svg>
     );
+
+    const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(user);
+
+    
     return (
         <AuthenticatedLayout>
 
@@ -41,7 +51,8 @@ const SLStudent = () => {
                 <div className={`px-2 py-2 md:px-4 pt-4 pb-8 container mx-auto max-w-[1536px]`}>
                 <div className={`${styles.topCard} px-6 py-6 md:px-0 md:py-10 max-w-[365px] mx-auto md:max-w-full md:mx-0 overflow-x-hidden grid md:grid-cols-[25%_40%_35%] xl:min-h-[365px]`}>
                       {/* profile section */}
-                        <div className="flex justify-center items-center md:justify-center">
+                        <div className="flex flex-col items-center md:justify-center space-y-3 sm:space-y-4">
+                            {/* Profile Image */}
                             <div className="bg-gradient-to-tr from-[#D4AF37] to-[#FFFACD] p-[8px] rounded-full">
                                 <div className="bg-neutral-900 rounded-full">
                                 <img
@@ -51,6 +62,31 @@ const SLStudent = () => {
                                 />
                                 </div>
                             </div>
+
+                            {/* --- Edit Profile Buttons (Choose One Style) --- */}
+                            {/* Gold Gradient */}
+                            {/*<button className="rounded-full bg-gradient-to-r from-[#D4AF37] to-[#FFFACD] px-6 py-2 text-sm font-semibold text-black shadow-md hover:from-[#b8962f] hover:to-[#fef9c3] transition">
+                                Edit Profile
+                            </button>*/}
+
+                            {/* Blue Gradient */}
+                             {/* <button className="rounded-full bg-gradient-to-r from-blue-500 to-blue-300 px-6 py-2 text-sm font-semibold text-white shadow-md hover:from-blue-600 hover:to-blue-400 transition">
+                                Edit Profile
+                            </button>*/}
+
+                            {/* Emerald Green Gradient */}
+                             {/* <button className="rounded-full bg-gradient-to-r from-emerald-500 to-emerald-300 px-6 py-2 text-sm font-semibold text-white shadow-md hover:from-emerald-600 hover:to-emerald-400 transition">
+                                Edit Profile
+                            </button>*/}
+
+                            {/* Purple Gradient */}
+                            {/* Button opens modal */}
+                            <button
+                            onClick={() => setShowEditProfileModal(true)}
+                            className="mt-4 rounded-full bg-gradient-to-r from-purple-500 to-pink-400 px-6 py-2 text-sm font-semibold text-white shadow-md hover:from-purple-600 hover:to-pink-500 transition"
+                            >
+                            Edit Profile
+                            </button>
                             </div>
 
                         <div className="w-full flex flex-col justify-center gap-6 xl:gap-[32px]">
@@ -204,9 +240,20 @@ const SLStudent = () => {
                         </div>
                     </div>
                     {/* End of Bottom Section */}
+                    
+                    
 
                 </div>
             </div>
+
+            {/* ✅ Render modal when true */}
+            {showEditProfileModal && (
+                <EditProfileModal
+                user={selectedUser}
+                onClose={() => setShowEditProfileModal(false)}
+                />
+            )}
+
         </AuthenticatedLayout>
     )
 }
