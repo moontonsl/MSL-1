@@ -32,7 +32,6 @@ use App\Http\Controllers\SpreadSheetAutomationController;
 use App\Http\Controllers\Mccs2PredictionsController;
 use App\Http\Controllers\GoogleSheetMCCS2Controller;
 use App\Http\Controllers\Admin\DuplicateUsernameController;
-use App\Http\Controllers\CampusController;
 use App\Http\Controllers\CourseController;
 
 Route::get('/', function () {
@@ -897,3 +896,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin/faulty-username')->name('adm
     Route::get('/stats', [\App\Http\Controllers\FaultyUsernameController::class, 'getStats'])->name('stats');
 });
 
+//OPPO AMBASSADOR ROUTES
+Route::get('/OppoAmbassador', function () {
+    return Inertia::render('OppoAmbassador/OppoAmbassador');
+})->name('OppoAmbassador');
