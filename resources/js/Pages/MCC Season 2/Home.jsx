@@ -57,16 +57,17 @@ const MCCS2Home = () => {
 
   return (
     <MainLayout>
-      <div
-        className="w-[1920px] bg-Background-Default-Default inline-flex flex-col justify-center items-center overflow-hidden font-montserrat relative"
-        style={{
-          backgroundImage:
-            "linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.6)), url('/images/MCC S2/Main BG.png')",
-          backgroundRepeat: 'no-repeat, repeat-y',
-          backgroundPosition: 'top center, top center',
-          backgroundSize: 'cover, 1920px auto',
-        }}
-      >
+      <div className="w-full flex justify-center overflow-x-hidden bg-black">
+        <div
+          className="w-[1920px] bg-Background-Default-Default inline-flex flex-col justify-center items-center overflow-hidden font-montserrat relative"
+          style={{
+            backgroundImage:
+              "linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.6)), url('/images/MCC S2/Main BG.png')",
+            backgroundRepeat: 'no-repeat, repeat-y',
+            backgroundPosition: 'top center, top center',
+            backgroundSize: 'cover, 1920px auto',
+          }}
+        >
 
         {/* Main Content skeleton based on provided figma-to-code */}
         <div className="h-[6795px] flex flex-col justify-start items-center gap-16 overflow-hidden">
@@ -314,6 +315,7 @@ const MCCS2Home = () => {
           </div>
 
           {/* TODO: Bracket and Thumbnails */}
+        </div>
         </div>
       </div>
     </MainLayout>
