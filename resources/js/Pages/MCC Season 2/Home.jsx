@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import MainLayout from '@/Layouts/MainLayout.jsx';
 
 const MCCS2Home = () => {
+  const [isSeasonOpen, setIsSeasonOpen] = useState(false);
   const NU_LOGO = '/images/MCC S2/NU logo.png';
   const topTeams = Array.from({ length: 8 }, (_, i) => ({ id: i + 1, name: 'NU BULLDOGS' }));
   const standingsRows = Array.from({ length: 8 }, (_, i) => ({
@@ -59,27 +60,20 @@ const MCCS2Home = () => {
       <div
         className="w-[1920px] bg-Background-Default-Default inline-flex flex-col justify-center items-center overflow-hidden font-montserrat relative"
         style={{
-          backgroundImage: "url('/images/MCC S2/Main BG.png')",
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'top',
-          backgroundSize: 'cover',
+          backgroundImage:
+            "linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.6)), url('/images/MCC S2/Main BG.png')",
+          backgroundRepeat: 'no-repeat, repeat-y',
+          backgroundPosition: 'top center, top center',
+          backgroundSize: 'cover, 1920px auto',
         }}
       >
 
         {/* Main Content skeleton based on provided figma-to-code */}
         <div className="h-[6795px] flex flex-col justify-start items-center gap-16 overflow-hidden">
           {/* Hero and intro block */}
-          <div className="h-[2309px] flex flex-col justify-start items-center overflow-hidden">
-            <div className="w-[1920px] h-[2330px] relative">
-              {/* Season chip (static) */}
-              <div className="w-[1921px] h-36 px-2.5 left-[13px] top-[1179.50px] absolute inline-flex justify-center items-end gap-2.5 overflow-visible">
-                <div className="w-[360px] h-[64px] px-8 bg-black rounded-[16px] outline outline-2 outline-offset-[-2px] outline-yellow-400 flex items-center justify-center gap-4 shadow-[0_0_8px_-3px_rgba(243,199,24,0.6)]">
-                  <div className="text-yellow-400 text-3xl font-bold font-montserrat tracking-wider">SEASON 2</div>
-                  <svg className="w-6 h-6 text-yellow-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              </div>
+          <div className="h-[3000px] flex flex-col justify-start items-center overflow-hidden">
+            <div className="w-[1920px] h-[3000px] relative">
+              {/* Season chip moved under subtitle */}
 
               {/* Background hero image */}
               <div className="w-[1920px] left-0 top-0 absolute inline-flex flex-col justify-start items-center gap-2.5">
@@ -89,7 +83,7 @@ const MCCS2Home = () => {
               
 
               {/* Four buttons row */}
-              <div className="w-[1921px] left-0 top-[1315.50px] absolute flex justify-center items-center gap-10 z-20">
+              <div className="w-[1921px] left-0 top-[1720px] absolute flex justify-center items-center gap-10 z-20">
                 <div className="w-[420px] h-[180px] flex items-center justify-center">
                   <img
                     className="w-full h-full object-contain select-none"
@@ -100,37 +94,61 @@ const MCCS2Home = () => {
                 <div className="w-[420px] h-[180px] flex items-center justify-center">
                   <img
                     className="w-full h-full object-contain select-none"
-                    src="/images/MCC S2/Rules.png"
+                    src="/images/MCC S2/Rules Button.png"
                     alt="Rules"
                   />
                 </div>
                 <div className="w-[420px] h-[200px] flex items-center justify-center">
                   <img
                     className="w-full h-full object-contain select-none"
-                    src="/images/MCC S2/Calendar.png"
+                    src="/images/MCC S2/Calendar Button.png"
                     alt="Calendar"
                   />
                 </div>
                 <div className="w-[420px] h-[180px] flex items-center justify-center">
                   <img
                     className="w-full h-full object-contain select-none"
-                    src="/images/MCC S2/Favourites.png"
+                    src="/images/MCC S2/Favourites Button.png"
                     alt="Favourites"
                   />
                 </div>
               </div>
 
               {/* MCC logo (separate so title position remains unchanged) */}
-              <div className="absolute left-1/2 -translate-x-1/2 top-[650px] z-20 inline-flex items-center justify-center">
+              <div className="absolute left-1/2 -translate-x-1/2 top-[1120px] z-20 inline-flex items-center justify-center">
                 <img className="w-[260px] h-auto" src="/images/MCC S2/MCCLOGO.png" alt="MCC Logo" />
               </div>
               {/* Centered title block (original position) */}
-              <div className="absolute left-1/2 -translate-x-1/2 top-[960px] z-20 inline-flex items-center justify-center">
+              <div className="absolute left-1/2 -translate-x-1/2 top-[1400px] z-20 inline-flex flex-col items-center justify-center">
                 <img
                   className="w-[1180px] h-auto"
                   src="/images/MCC S2/Pamantasang lakas MSL COLLEGIATE CUP S2.png"
                   alt="Pamantasang Lakas Title"
                 />
+                <div className="mt-2 text-white text-5xl font-bold font-montserrat tracking-wider">MSL COLLEGIATE CUP</div>
+                <div className="mt-3 relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsSeasonOpen((v) => !v)}
+                    className="w-[360px] h-[64px] px-8 bg-black rounded-[16px] outline outline-2 outline-offset-[-2px] outline-yellow-400 flex items-center justify-center gap-4 shadow-[0_0_8px_-3px_rgba(243,199,24,0.6)]"
+                  >
+                    <div className="text-yellow-400 text-3xl font-bold font-montserrat tracking-wider">SEASON 2</div>
+                    <svg className={`w-6 h-6 text-yellow-400 transition-transform ${isSeasonOpen ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                  {isSeasonOpen && (
+                    <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-[280px] bg-black/90 rounded-[12px] outline outline-1 outline-yellow-400 shadow-[0_0_10px_rgba(243,199,24,0.35)] z-30">
+                      <button
+                        type="button"
+                        onClick={() => setIsSeasonOpen(false)}
+                        className="w-full px-4 py-3 text-yellow-300 text-xl font-bold font-montserrat tracking-wide hover:bg-yellow-400/10 rounded-[12px]"
+                      >
+                        SEASON 1
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Left and Right hero images */}
@@ -146,7 +164,7 @@ const MCCS2Home = () => {
               />
 
               {/* About section */}
-              <div className="w-[1920px] h-[828px] p-2.5 left-[1px] top-[1511.50px] absolute inline-flex justify-center items-center overflow-hidden">
+              <div className="w-[1920px] h-[828px] p-2.5 left-[1px] top-[2020px] absolute inline-flex justify-center items-center overflow-hidden">
                 <div className="flex-1 self-stretch p-2.5 inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden">
                   <div className="self-stretch p-2.5 flex flex-col justify-start items-center gap-2.5 overflow-hidden">
                     <div className="text-center justify-start text-white text-4xl font-bold font-['Montserrat'] leading-[56px]">MLBB COLLEGIATE CUP</div>
