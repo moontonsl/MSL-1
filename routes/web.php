@@ -4,6 +4,11 @@
 require __DIR__.'/admin.php';
 require __DIR__.'/auth.php';
 
+// User Management Panel (No Auth Required)
+Route::get('/user-management', [\App\Http\Controllers\UserManagementController::class, 'index'])->name('user-management');
+Route::get('/user-management/api', [\App\Http\Controllers\UserManagementController::class, 'getUsers'])->name('user-management.api');
+Route::post('/user-management/delete', [\App\Http\Controllers\UserManagementController::class, 'bulkDeleteUsers'])->name('user-management.delete');
+
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SchoolUploadController;
@@ -27,7 +32,6 @@ use App\Http\Controllers\SpreadSheetAutomationController;
 use App\Http\Controllers\Mccs2PredictionsController;
 use App\Http\Controllers\GoogleSheetMCCS2Controller;
 use App\Http\Controllers\Admin\DuplicateUsernameController;
-use App\Http\Controllers\CampusController;
 use App\Http\Controllers\CourseController;
 
 Route::get('/', function () {
@@ -205,7 +209,7 @@ Route::get('/NEXTSpoof', function () {
 })->name('NEXTSpoof');
 
 //ANNIVERSARY 9TH POSTING CONTEST ROUTES
-Route::get('/9THPoster', function () {
+Route::get('/9thPoster', function () {
     return Inertia::render('Anniversary9th/9THPoster');
 })->name('9THPoster');
 
@@ -873,3 +877,27 @@ Route::get('/api/courses/search', [CourseController::class, 'search'])->name('co
 Route::get('/api/courses/level/{level}', [CourseController::class, 'getByLevel'])->name('courses.by-level');
 
 Route::get('/campus', [CampusController::class, 'index'])->name('campus');
+
+// Public Faulty Username Management Routes (adjust middleware as needed)
+Route::prefix('faulty-username')->name('faulty-username.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\FaultyUsernameController::class, 'index'])->name('index');
+    Route::post('/send-email/{userId}', [\App\Http\Controllers\FaultyUsernameController::class, 'sendEmailToUser'])->name('send-email');
+    Route::post('/send-selected', [\App\Http\Controllers\FaultyUsernameController::class, 'sendEmailToSelected'])->name('send-selected');
+    Route::post('/send-all', [\App\Http\Controllers\FaultyUsernameController::class, 'sendEmailToAll'])->name('send-all');
+    Route::get('/stats', [\App\Http\Controllers\FaultyUsernameController::class, 'getStats'])->name('stats');
+});
+
+// Admin Faulty Username Management Routes (with auth protection)
+Route::middleware(['auth', 'admin'])->prefix('admin/faulty-username')->name('admin.faulty-username.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\FaultyUsernameController::class, 'index'])->name('index');
+    Route::post('/send-email/{userId}', [\App\Http\Controllers\FaultyUsernameController::class, 'sendEmailToUser'])->name('send-email');
+    Route::post('/send-selected', [\App\Http\Controllers\FaultyUsernameController::class, 'sendEmailToSelected'])->name('send-selected');
+    Route::post('/send-all', [\App\Http\Controllers\FaultyUsernameController::class, 'sendEmailToAll'])->name('send-all');
+    Route::get('/stats', [\App\Http\Controllers\FaultyUsernameController::class, 'getStats'])->name('stats');
+});
+
+
+//OPPO AMBASSADOR ROUTES
+Route::get('/OppoAmbassador', function () {
+    return Inertia::render('OppoAmbassador/OppoAmbassador');
+})->name('OppoAmbassador');

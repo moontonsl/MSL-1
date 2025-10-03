@@ -19,11 +19,6 @@ export default {
                 spaceGrotesk: ['"Space Grotesk"', ...defaultTheme.fontFamily.sans],
                 poppins: ['"Poppins"', ...defaultTheme.fontFamily.sans],
             },
-        },
-    },
-
-    theme: {
-        extend: {
             screens: {
                 tablet: { max: '1024px' },
                 mobile: { max: '768px' },
@@ -35,6 +30,6 @@ export default {
     plugins: [
         forms,
         lineClamp,
-        require('@tailwindcss/line-clamp'),
+        require("tailwind-scrollbar"),
     ],
 };
