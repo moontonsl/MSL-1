@@ -363,7 +363,7 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
 // MCC Routes
 Route::prefix('mcc')->name('mcc.')->group(function () {
     Route::get('/', function () {
-        return Inertia::render('MCC/Main Page/index');
+        return Inertia::render('MCC Season 2/Home');
     })->name('main');
 
     Route::get('/calendar', function () {
@@ -895,7 +895,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin/faulty-username')->name('adm
     Route::post('/send-all', [\App\Http\Controllers\FaultyUsernameController::class, 'sendEmailToAll'])->name('send-all');
     Route::get('/stats', [\App\Http\Controllers\FaultyUsernameController::class, 'getStats'])->name('stats');
 });
-
 
 //OPPO AMBASSADOR ROUTES
 Route::get('/OppoAmbassador', function () {

@@ -11,7 +11,7 @@ import AccountModificationModal from "./AccountModificationModal";
 const navLinks = [
     { name: 'Events', href: '/Events' },
     { name: 'Program', href: '/Programs' },
-    { name: 'Resources', href: '/soon' },
+    { name: 'Resources', href: '/resources' },
     { name: 'News', href: '/news' },
 ];
 
