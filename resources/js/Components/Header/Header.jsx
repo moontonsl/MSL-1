@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
 import { Menu, Trash2, AlertTriangle } from 'lucide-react';
 import styles from './Header.module.scss';
@@ -7,8 +7,8 @@ import AccountModificationModal from "./AccountModificationModal";
 
 
 
-// Navigation links array (only main nav links)
-const navLinks = [
+// Base navigation links array (only main nav links)
+const baseNavLinks = [
     { name: 'Events', href: '/Events' },
     { name: 'Program', href: '/Programs' },
     { name: 'Resources', href: '/resources' },
@@ -28,6 +28,18 @@ const Header = () => {
     const { auth } = usePage().props;
     const user = auth.user;
     const passwordInputRef = useRef(null);
+
+    // Create navigation links based on user role
+    const navLinks = React.useMemo(() => {
+        const links = [...baseNavLinks];
+        
+        // Only show Campus Tournament tab for SL and Regional Admin
+        if (user && (user.role === 'SL' || user.role === 'Regional Admin')) {
+            links.push({ name: 'Campus Tournament', href: '/campus-tournament' });
+        }
+        
+        return links;
+    }, [user]);
 
     // Click handler for the account icon
     const handleAccountIconClick = (e) => {

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { usePage, router } from '@inertiajs/react';
 import MainLayout from "@/Layouts/MainLayout.jsx";
 
 // Temporary mock data generator until backend is wired
@@ -39,24 +40,70 @@ const generateMockTeams = () => [
 ];
 
 const CampusTournament = () => {
+  const { tournaments, user } = usePage().props;
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [tournaments, setTournaments] = useState([]);
-  const [expanded, setExpanded] = useState({}); // id -> boolean
+  const [localTournaments, setLocalTournaments] = useState(tournaments || []);
+  const [selectedTournamentId, setSelectedTournamentId] = useState(null); // Currently selected tournament
   const [mobileViewTeam, setMobileViewTeam] = useState(null); // mobile-only player popup
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [submitModalData, setSubmitModalData] = useState(null);
+
+  // Transform real tournament data to match the expected format
+  const transformedTournaments = useMemo(() => {
+    if (!localTournaments || localTournaments.length === 0) return [];
+    
+    return localTournaments.map(tournament => ({
+      ...tournament,
+      teams: tournament.teams ? tournament.teams.map(team => ({
+        id: team.id,
+        name: team.team_name,
+        result: team.result || 'participant', // Include result field
+        players: team.members ? team.members.map(member => ({
+          id: member.player_id,
+          name: member.player ? `${member.player.name} ${member.player.surname}`.trim() : 'Unknown Player',
+          verified: true, // Assuming all registered players are verified
+          role: member.role
+        })) : []
+      })) : []
+    }));
+  }, [localTournaments]);
 
   const formatDate = (value) => {
     try {
       if (!value) return '';
-      const date = new Date(`${value}T00:00:00`);
+      
+      // Handle different date formats
+      let date;
+      if (typeof value === 'string') {
+        // If it's already a valid date string, use it directly
+        if (value.includes('T') || value.includes(' ')) {
+          date = new Date(value);
+        } else {
+          // If it's just a date (YYYY-MM-DD), add time
+          date = new Date(`${value}T00:00:00`);
+        }
+      } else {
+        date = new Date(value);
+      }
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        console.error('Invalid date:', value);
+        return 'Invalid Date';
+      }
+      
       return date.toLocaleDateString(undefined, {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
       });
     } catch (error) {
-      return value;
+      console.error('Date formatting error:', error, 'Value:', value);
+      return 'Invalid Date';
     }
   };
 
@@ -67,31 +114,131 @@ const CampusTournament = () => {
     setEndDate('');
   };
 
-  const handleSubmit = (event) => {
+  const handleSuccessClose = () => {
+    setIsSuccessOpen(false);
+  };
+
+  const handleStartDateChange = (date) => {
+    setStartDate(date);
+    // If end date is before or equal to start date, clear it
+    if (endDate && new Date(date) >= new Date(endDate)) {
+      setEndDate('');
+    }
+  };
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!startDate || !endDate) return;
-    setTournaments((existing) => [
-      ...existing,
-      {
-        id: Date.now(),
-        startDate,
-        endDate,
-        teams: generateMockTeams().map((team) => ({ ...team, result: 'participant' })), // placeholder teams with default status
-      },
-    ]);
-    handleClose();
+    
+    // Validate dates
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    // Check if start date is today or earlier
+    if (start <= today) {
+      alert('Start date must be tomorrow or later.');
+      return;
+    }
+    
+    // Check if end date is today or earlier
+    if (end <= today) {
+      alert('End date must be tomorrow or later.');
+      return;
+    }
+    
+    // Check if start date is earlier than end date
+    if (start >= end) {
+      alert('Start date must be earlier than end date.');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/campus-tournaments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+        body: JSON.stringify({
+          start_date: startDate,
+          end_date: endDate,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Add the new tournament to local state
+        setLocalTournaments((existing) => [
+          ...existing,
+          {
+            id: data.tournament.id,
+            start_date: data.tournament.start_date,
+            end_date: data.tournament.end_date,
+            status: data.tournament.status,
+            school_name: data.tournament.school_name,
+            sl_name: data.tournament.sl_name,
+            // teams: [], // No teams yet for new tournaments
+          },
+        ]);
+        handleClose();
+        setIsSuccessOpen(true);
+      } else {
+        alert('Error creating tournament: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error creating tournament:', error);
+      alert('Error creating tournament. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleDelete = (id) => {
-    setTournaments((existing) => existing.filter((t) => t.id !== id));
+  const handleDelete = async (id) => {
+    if (!confirm('Are you sure you want to delete this tournament?')) return;
+    
+    try {
+      const response = await fetch(`/campus-tournaments/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setLocalTournaments((existing) => existing.filter((t) => t.id !== id));
+      } else {
+        alert('Error deleting tournament: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error deleting tournament:', error);
+      alert('Error deleting tournament. Please try again.');
+    }
   };
 
-  const toggleExpand = (id) => {
-    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+  // Set the first active approved tournament as selected by default
+  React.useEffect(() => {
+    const activeTournaments = transformedTournaments.filter(t => 
+      t.status === 'approved' && 
+      !t.results_submitted
+    );
+    if (activeTournaments.length > 0 && !selectedTournamentId) {
+      setSelectedTournamentId(activeTournaments[0].id);
+    }
+  }, [transformedTournaments, selectedTournamentId]);
+
+  const handleTournamentChange = (tournamentId) => {
+    setSelectedTournamentId(tournamentId);
   };
 
   const handleSetResult = (tournamentId, teamId, result) => {
-    setTournaments((prev) =>
+    setLocalTournaments((prev) =>
       prev.map((tournament) => {
         if (tournament.id !== tournamentId) return tournament;
         return {
@@ -111,11 +258,137 @@ const CampusTournament = () => {
     return 'bg-green-500/30 border border-green-400/70 text-white';
   };
 
-  const handleSubmitResults = (tournamentId) => {
-    const tournament = tournaments.find((t) => t.id === tournamentId);
-    // Placeholder: integrate API to submit results later
-    console.log('Submitting results for tournament:', tournamentId, tournament);
-    alert('Results submitted for this tournament (placeholder).');
+  const handleSubmitResults = async (tournamentId) => {
+    const tournament = transformedTournaments.find((t) => t.id === tournamentId);
+    
+    if (!tournament || !tournament.teams || tournament.teams.length === 0) {
+      setSubmitModalData({
+        type: 'error',
+        title: 'No Teams Found',
+        message: 'No teams found for this tournament.',
+        showCancel: false
+      });
+      setShowSubmitModal(true);
+      return;
+    }
+    
+    // Check if exactly one team is marked as winner
+    const winningTeams = tournament.teams.filter(team => team.result === 'win');
+    if (winningTeams.length === 0) {
+      setSubmitModalData({
+        type: 'error',
+        title: 'No Winning Team Selected',
+        message: 'Please select exactly one winning team before submitting results.',
+        showCancel: false
+      });
+      setShowSubmitModal(true);
+      return;
+    }
+    if (winningTeams.length > 1) {
+      setSubmitModalData({
+        type: 'error',
+        title: 'Multiple Winners Selected',
+        message: 'Only one team can be marked as winner. Please select only one winning team.',
+        showCancel: false
+      });
+      setShowSubmitModal(true);
+      return;
+    }
+    
+    // Check if all teams have results set
+    const teamsWithoutResults = tournament.teams.filter(team => !team.result || team.result === '');
+    if (teamsWithoutResults.length > 0) {
+      setSubmitModalData({
+        type: 'error',
+        title: 'Incomplete Results',
+        message: 'Please set results for all teams before submitting.',
+        showCancel: false
+      });
+      setShowSubmitModal(true);
+      return;
+    }
+    
+    // Show confirmation modal
+    const winningTeam = winningTeams[0];
+    setSubmitModalData({
+      type: 'confirm',
+      title: 'Confirm Results Submission',
+      message: `Are you sure you want to submit the results?\n\nWinner: ${winningTeam.name}\n\nThis action cannot be undone.`,
+      showCancel: true,
+      tournamentId: tournamentId,
+      tournament: tournament
+    });
+    setShowSubmitModal(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    if (!submitModalData.tournamentId) return;
+    
+    setIsSubmitting(true);
+    setShowSubmitModal(false);
+    
+    try {
+      // Prepare results data
+      const results = submitModalData.tournament.teams.map(team => ({
+        team_id: team.id,
+        result: team.result
+      }));
+      
+      const response = await fetch(`/campus-tournaments/${submitModalData.tournamentId}/submit-results`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+        body: JSON.stringify({ results }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update local state to mark results as submitted
+        setLocalTournaments((prev) =>
+          prev.map((t) =>
+            t.id === submitModalData.tournamentId
+              ? { ...t, results_submitted: true, results_submitted_at: new Date().toISOString() }
+              : t
+          )
+        );
+        
+        // Show success modal
+        setSubmitModalData({
+          type: 'success',
+          title: 'Results Submitted Successfully!',
+          message: 'Tournament results have been submitted and cannot be changed.',
+          showCancel: false
+        });
+        setShowSubmitModal(true);
+      } else {
+        setSubmitModalData({
+          type: 'error',
+          title: 'Submission Failed',
+          message: data.error || 'Unknown error occurred while submitting results.',
+          showCancel: false
+        });
+        setShowSubmitModal(true);
+      }
+    } catch (error) {
+      console.error('Error submitting results:', error);
+      setSubmitModalData({
+        type: 'error',
+        title: 'Submission Failed',
+        message: 'Error submitting results. Please try again.',
+        showCancel: false
+      });
+      setShowSubmitModal(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCloseSubmitModal = () => {
+    setShowSubmitModal(false);
+    setSubmitModalData(null);
   };
 
   const PlayerCell = ({ player }) => {
@@ -177,42 +450,59 @@ const CampusTournament = () => {
               </div>
 
               <div className="flex flex-col gap-4">
-                {tournaments.map((item) => (
-                  <div
-                    key={item.id}
-                    className="relative w-full max-w-7xl mx-auto text-white rounded-2xl overflow-hidden transition-all duration-300 shadow-2xl bg-gradient-to-br from-neutral-800/80 to-neutral-900/80 backdrop-blur-sm border border-neutral-700/50"
-                  >
-                    {/* Header */}
-                    <div className="relative z-10 w-full h-16 md:h-20 flex items-center justify-between bg-neutral-900/70 px-4 md:px-6">
-                      <div className="flex-1 text-center">
-                        <div className="font-montserrat text-lg md:text-2xl tracking-wide">TOURNAMENT</div>
-                        <div className="font-montserrat text-xs md:text-sm text-white/70">
-                          {formatDate(item.startDate)} - {formatDate(item.endDate)}
+                {/* Tournament Selector Dropdown */}
+                {transformedTournaments.filter(t => t.status === 'approved').length > 1 && (
+                  <div className="relative w-full max-w-7xl mx-auto">
+                    <div className="bg-neutral-800/80 rounded-2xl border border-neutral-700/50 p-4">
+                      <label className="block text-white/80 font-montserrat text-sm mb-2">Select Tournament:</label>
+                      <select
+                        value={selectedTournamentId || ''}
+                        onChange={(e) => handleTournamentChange(parseInt(e.target.value))}
+                        className="w-full bg-neutral-700/50 border border-white/20 rounded-lg px-4 py-2 text-white font-montserrat focus:outline-none focus:ring-2 focus:ring-[#F2C21A]"
+                      >
+                        {transformedTournaments
+                          .filter(t => t.status === 'approved')
+                          .map((tournament) => (
+                            <option key={tournament.id} value={tournament.id}>
+                              {tournament.school_name.toUpperCase()} TOURNAMENT - {formatDate(tournament.start_date)} to {formatDate(tournament.end_date)}
+                              {tournament.results_submitted ? ' (Completed)' : ''}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                {/* Single Tournament Display */}
+                {selectedTournamentId && (() => {
+                  const selectedTournament = transformedTournaments.find(t => t.id === selectedTournamentId);
+                  if (!selectedTournament) return null;
+                  
+                  return (
+                    <div className="relative w-full max-w-7xl mx-auto text-white rounded-2xl overflow-hidden transition-all duration-300 shadow-2xl bg-gradient-to-br from-neutral-800/80 to-neutral-900/80 backdrop-blur-sm border border-neutral-700/50">
+                      {/* Header */}
+                      <div className="relative z-10 w-full h-16 md:h-20 flex items-center justify-between bg-neutral-900/70 px-4 md:px-6">
+                        <div className="flex-1 text-center">
+                          <div className="font-montserrat text-lg md:text-2xl tracking-wide">{selectedTournament.school_name.toUpperCase()} TOURNAMENT</div>
+                          <div className="font-montserrat text-xs md:text-sm text-white/70">
+                            {formatDate(selectedTournament.start_date)} - {formatDate(selectedTournament.end_date)}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {/* Show delete button only for pending tournaments */}
+                          {selectedTournament.status === 'pending' && (
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(selectedTournament.id)}
+                              className="bg-red-500 hover:bg-red-600 text-white font-montserrat text-xs font-semibold rounded-lg px-3 py-1.5"
+                            >
+                              Delete
+                            </button>
+                          )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => toggleExpand(item.id)}
-                          aria-label="Toggle teams"
-                          className="grid place-items-center w-9 h-9 rounded-lg border border-white/20 hover:bg-white/10 transition"
-                        >
-                          <svg
-                            className={`w-5 h-5 transition-transform duration-300 ${expanded[item.id] ? 'rotate-180' : ''}`}
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
 
-                    {/* Dropdown Content */}
-                    <div
-                      className={`transition-all duration-500 ease-in-out ${expanded[item.id] ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}
-                    >
+                      {/* Tournament Content - Always Expanded */}
                       <div className="px-0 pb-0">
                         <div className="mt-0 rounded-b-2xl bg-neutral-800/70 backdrop-blur-sm border-t border-neutral-700/40">
                           {/* Table Header - Desktop */}
@@ -233,8 +523,8 @@ const CampusTournament = () => {
                           </div>
 
                           {/* Team Rows */}
-                          {Array.isArray(item.teams) && item.teams.length > 0 ? (
-                            item.teams.map((team) => (
+                          {Array.isArray(selectedTournament.teams) && selectedTournament.teams.length > 0 ? (
+                            selectedTournament.teams.map((team) => (
                               <>
                                 {/* Desktop Row */}
                                 <div
@@ -250,8 +540,9 @@ const CampusTournament = () => {
                                   <div className="flex justify-center">
                                     <select
                                       value={team.result || 'participant'}
-                                      onChange={(e) => handleSetResult(item.id, team.id, e.target.value)}
-                                      className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[128px]`}
+                                      onChange={(e) => handleSetResult(selectedTournament.id, team.id, e.target.value)}
+                                      disabled={selectedTournament.results_submitted}
+                                      className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[128px] ${selectedTournament.results_submitted ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                       <option className="text-black" value="">Select</option>
                                       <option className="text-black" value="win">Win</option>
@@ -269,8 +560,9 @@ const CampusTournament = () => {
                                   <div className="flex justify-start">
                                     <select
                                       value={team.result || 'participant'}
-                                      onChange={(e) => handleSetResult(item.id, team.id, e.target.value)}
-                                      className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[112px]`}
+                                      onChange={(e) => handleSetResult(selectedTournament.id, team.id, e.target.value)}
+                                      disabled={selectedTournament.results_submitted}
+                                      className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[112px] ${selectedTournament.results_submitted ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                       <option className="text-black" value="">Select</option>
                                       <option className="text-black" value="win">Win</option>
@@ -295,19 +587,33 @@ const CampusTournament = () => {
                           )}
                           {/* Submit Results Button */}
                           <div className="px-4 md:px-10 py-2 md:py-3 border-t border-white/10 flex justify-center sticky bottom-0 bg-neutral-900/70">
-                            <button
-                              type="button"
-                              onClick={() => handleSubmitResults(item.id)}
-                              className="bg-[#F2C21A] text-black font-montserrat font-semibold rounded-lg px-5 py-2 mt-1 mb-1 shadow-[0_0_8px_-3px_rgba(242,194,26,1)]"
-                            >
-                              Submit Results
-                            </button>
+                            {selectedTournament.results_submitted ? (
+                              <div className="flex flex-col items-center gap-2">
+                                <div className="bg-green-500/20 text-green-400 font-montserrat text-sm px-4 py-2 rounded-lg border border-green-400/30">
+                                  ✓ Results Submitted
+                                </div>
+                                {selectedTournament.results_submitted_at && (
+                                  <div className="text-white/60 font-montserrat text-xs">
+                                    Submitted on {new Date(selectedTournament.results_submitted_at).toLocaleDateString()}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleSubmitResults(selectedTournament.id)}
+                                disabled={isSubmitting}
+                                className="bg-[#F2C21A] text-black font-montserrat font-semibold rounded-lg px-5 py-2 mt-1 mb-1 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {isSubmitting ? 'Submitting...' : 'Submit Results'}
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })()}
               </div>
             </div>
           </div>
@@ -325,8 +631,13 @@ const CampusTournament = () => {
                   <input
                     type="date"
                     value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
+                    onChange={(e) => handleStartDateChange(e.target.value)}
                     onFocus={(e) => { if (e.target.showPicker) { try { e.target.showPicker(); } catch (_) {} } }}
+                    min={(() => {
+                      const tomorrow = new Date();
+                      tomorrow.setDate(tomorrow.getDate() + 1);
+                      return tomorrow.toISOString().split('T')[0];
+                    })()}
                     className="bg-transparent border border-white/50 rounded-xl px-4 py-3 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[#F2C21A]"
                   />
                 </label>
@@ -338,6 +649,18 @@ const CampusTournament = () => {
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                     onFocus={(e) => { if (e.target.showPicker) { try { e.target.showPicker(); } catch (_) {} } }}
+                    min={(() => {
+                      // If start date is selected, use start date + 1 day as minimum
+                      if (startDate) {
+                        const startDateObj = new Date(startDate);
+                        startDateObj.setDate(startDateObj.getDate() + 1);
+                        return startDateObj.toISOString().split('T')[0];
+                      }
+                      // Otherwise, use tomorrow as minimum
+                      const tomorrow = new Date();
+                      tomorrow.setDate(tomorrow.getDate() + 1);
+                      return tomorrow.toISOString().split('T')[0];
+                    })()}
                     className="bg-transparent border border-white/50 rounded-xl px-4 py-3 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[#F2C21A]"
                   />
                 </label>
@@ -345,9 +668,10 @@ const CampusTournament = () => {
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="bg-[#F2C21A] text-black font-montserrat font-semibold rounded-xl px-8 py-3 shadow-[0_0_8px_-3px_rgba(242,194,26,1)]"
+                    disabled={isSubmitting}
+                    className="bg-[#F2C21A] text-black font-montserrat font-semibold rounded-xl px-8 py-3 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Submit
+                    {isSubmitting ? 'Creating...' : 'Submit'}
                   </button>
                 </div>
               </form>
@@ -387,6 +711,127 @@ const CampusTournament = () => {
                   <span className={`w-2.5 h-2.5 rounded-full ${player.verified ? 'bg-green-400' : 'bg-red-500'}`} />
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {isSuccessOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10" onClick={handleSuccessClose} />
+          <div className="relative z-20 w-full max-w-md bg-black/40 backdrop-blur-md text-white border border-white/20 rounded-2xl p-6 md:p-8 shadow-2xl">
+            <div className="text-center">
+              {/* Success Icon */}
+              <div className="w-16 h-16 mx-auto mb-4 bg-green-500/20 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              
+              {/* Success Message */}
+              <h3 className="font-montserrat text-xl md:text-2xl font-semibold mb-3 text-green-400">
+                Tournament Created Successfully!
+              </h3>
+              
+              <p className="font-montserrat text-sm md:text-base text-white/80 mb-6 leading-relaxed">
+                Your tournament request has been created successfully. Please wait for Regional Admin approval.
+              </p>
+              
+              {/* Close Button */}
+              <button
+                onClick={handleSuccessClose}
+                className="w-full bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-6 py-3 hover:bg-[#F2C21A]/90 transition-colors"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Submit Results Modal */}
+      {showSubmitModal && submitModalData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-10" onClick={handleCloseSubmitModal} />
+          <div className="relative z-20 w-full max-w-md bg-gradient-to-br from-neutral-800/95 to-neutral-900/95 backdrop-blur-md text-white border border-white/20 rounded-2xl p-6 md:p-8 shadow-2xl">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                {/* Icon based on modal type */}
+                {submitModalData.type === 'error' && (
+                  <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                )}
+                {submitModalData.type === 'success' && (
+                  <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                )}
+                {submitModalData.type === 'confirm' && (
+                  <div className="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                )}
+                <h3 className="font-montserrat text-lg md:text-xl font-semibold">
+                  {submitModalData.title}
+                </h3>
+              </div>
+              <button
+                onClick={handleCloseSubmitModal}
+                className="w-8 h-8 grid place-items-center rounded-lg border border-white/20 hover:bg-white/10 transition-colors"
+                aria-label="Close"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Modal Body */}
+            <div className="mb-6">
+              <p className="font-montserrat text-sm md:text-base text-white/80 leading-relaxed whitespace-pre-line">
+                {submitModalData.message}
+              </p>
+            </div>
+            
+            {/* Modal Actions */}
+            <div className="flex gap-3 justify-end">
+              {submitModalData.showCancel && (
+                <button
+                  onClick={handleCloseSubmitModal}
+                  className="px-4 py-2 bg-neutral-700/50 hover:bg-neutral-600/50 text-white font-montserrat text-sm font-medium rounded-lg border border-white/20 transition-colors"
+                >
+                  Cancel
+                </button>
+              )}
+              {submitModalData.type === 'confirm' ? (
+                <button
+                  onClick={handleConfirmSubmit}
+                  disabled={isSubmitting}
+                  className="px-6 py-2 bg-[#F2C21A] hover:bg-[#F2C21A]/90 text-black font-montserrat text-sm font-semibold rounded-lg shadow-[0_0_8px_-3px_rgba(242,194,26,1)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isSubmitting ? 'Submitting...' : 'Confirm Submit'}
+                </button>
+              ) : (
+                <button
+                  onClick={handleCloseSubmitModal}
+                  className={`px-6 py-2 font-montserrat text-sm font-semibold rounded-lg transition-colors ${
+                    submitModalData.type === 'error' 
+                      ? 'bg-red-500 hover:bg-red-600 text-white' 
+                      : 'bg-green-500 hover:bg-green-600 text-white'
+                  }`}
+                >
+                  OK
+                </button>
+              )}
             </div>
           </div>
         </div>
