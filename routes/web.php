@@ -213,6 +213,11 @@ Route::get('/9thPoster', function () {
     return Inertia::render('Anniversary9th/9THPoster');
 })->name('9THPoster');
 
+//ANNIVERSARY 9TH GLAM UP ROUTES
+Route::get('/9thGlamUp', function () {
+    return Inertia::render('Anniversary9th/9THGlamUp');
+})->name('9THGlamUp');
+
 //ACCOUNT MODIFICATION WAITING ROUTES
 Route::get('/AccountModificationWaiting', function () {
     return Inertia::render('AccountModification/AccountModificationWaiting');
