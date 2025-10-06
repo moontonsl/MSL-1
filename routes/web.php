@@ -213,6 +213,11 @@ Route::get('/9thPoster', function () {
     return Inertia::render('Anniversary9th/9THPoster');
 })->name('9THPoster');
 
+//ANNIVERSARY 9TH GLAM UP ROUTES
+Route::get('/9thGlamUp', function () {
+    return Inertia::render('Anniversary9th/9THGlamUp');
+})->name('9THGlamUp');
+
 //ACCOUNT MODIFICATION WAITING ROUTES
 Route::get('/AccountModificationWaiting', function () {
     return Inertia::render('AccountModification/AccountModificationWaiting');
@@ -895,7 +900,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin/faulty-username')->name('adm
     Route::post('/send-all', [\App\Http\Controllers\FaultyUsernameController::class, 'sendEmailToAll'])->name('send-all');
     Route::get('/stats', [\App\Http\Controllers\FaultyUsernameController::class, 'getStats'])->name('stats');
 });
-
 
 //OPPO AMBASSADOR ROUTES
 Route::get('/OppoAmbassador', function () {
