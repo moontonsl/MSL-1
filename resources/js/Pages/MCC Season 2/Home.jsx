@@ -1,8 +1,29 @@
-import React, { useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import MainLayout from '@/Layouts/MainLayout.jsx';
 
 const MCCS2Home = () => {
   const [isSeasonOpen, setIsSeasonOpen] = useState(false);
+  const containerRef = useRef(null);
+  const [scale, setScale] = useState(1);
+  const [scaledHeight, setScaledHeight] = useState(null);
+
+  useLayoutEffect(() => {
+    const updateScale = () => {
+      const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+      const s = Math.min(1, viewportWidth / 1920);
+      setScale(s);
+      if (containerRef.current) {
+        setScaledHeight(containerRef.current.scrollHeight * s);
+      }
+    };
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    window.addEventListener('orientationchange', updateScale);
+    return () => {
+      window.removeEventListener('resize', updateScale);
+      window.removeEventListener('orientationchange', updateScale);
+    };
+  }, []);
   const NU_LOGO = '/images/MCC S2/NU logo.png';
   const topTeams = Array.from({ length: 8 }, (_, i) => ({ id: i + 1, name: 'NU BULLDOGS' }));
   const standingsRows = Array.from({ length: 8 }, (_, i) => ({
@@ -13,6 +34,7 @@ const MCCS2Home = () => {
     points: '00',
   }));
   const KNOCKOUT_BG = '/images/MCC S2/Knockout BG.png';
+  const supportsZoom = typeof document !== 'undefined' && document.documentElement && 'zoom' in document.documentElement.style;
 
   const TeamPanel = ({ backgroundClass, teamName }) => (
     <div className="flex-1 self-stretch p-2.5 inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden">
@@ -57,17 +79,20 @@ const MCCS2Home = () => {
 
   return (
     <MainLayout>
-      <div className="w-full flex justify-center overflow-x-hidden bg-black">
-        <div
-          className="w-[1920px] bg-Background-Default-Default inline-flex flex-col justify-center items-center overflow-hidden font-montserrat relative"
-          style={{
-            backgroundImage:
-              "linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.6)), url('/images/MCC S2/Main BG.png')",
-            backgroundRepeat: 'no-repeat, repeat-y',
-            backgroundPosition: 'top center, top center',
-            backgroundSize: 'cover, 1920px auto',
-          }}
-        >
+      <div className="w-full overflow-x-hidden bg-black" style={{ minHeight: scaledHeight ? `${Math.ceil(scaledHeight)}px` : undefined }}>
+        <div style={{ width: '100vw', margin: '0 auto', overflow: 'hidden' }}>
+          <div style={supportsZoom ? { zoom: scale, width: '1920px', position: 'relative', left: '50%', transform: 'translateX(-50%)', transformOrigin: 'top left' } : { transform: `translateX(-50%) scale(${scale})`, transformOrigin: 'top left', position: 'relative', left: '50%', width: '1920px', willChange: 'transform' }}>
+            <div
+              ref={containerRef}
+              className="w-[1920px] bg-Background-Default-Default inline-flex flex-col justify-center items-center overflow-hidden font-montserrat relative"
+              style={{
+                backgroundImage:
+                  "linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.6)), url('/images/MCC S2/Main BG.png')",
+                backgroundRepeat: 'no-repeat, repeat-y',
+                backgroundPosition: 'top center, top center',
+                backgroundSize: 'cover, 1920px auto',
+              }}
+            >
 
         {/* Main Content skeleton based on provided figma-to-code */}
         <div className="h-[6795px] flex flex-col justify-start items-center gap-16 overflow-hidden">
@@ -76,15 +101,23 @@ const MCCS2Home = () => {
             <div className="w-[1920px] h-[3000px] relative">
               {/* Season chip moved under subtitle */}
 
+
+
+
+
+
+
+
+
               {/* Background hero image */}
               <div className="w-[1920px] left-0 top-0 absolute inline-flex flex-col justify-start items-center gap-2.5">
                 <img className="self-stretch h-[1011px]" src="/images/MCC S2/Top.png" alt="Hero" />
               </div>
 
-              
+
 
               {/* Four buttons row */}
-              <div className="w-[1921px] left-0 top-[1720px] absolute flex justify-center items-center gap-10 z-20">
+              <div className="w-[1920px] left-0 top-[1720px] absolute flex justify-center items-center gap-10 z-20">
                 <div className="w-[420px] h-[180px] flex items-center justify-center">
                   <img
                     className="w-full h-full object-contain select-none"
@@ -165,7 +198,7 @@ const MCCS2Home = () => {
               />
 
               {/* About section */}
-              <div className="w-[1920px] h-[828px] p-2.5 left-[1px] top-[2020px] absolute inline-flex justify-center items-center overflow-hidden">
+              <div className="w-[1920px] h-[828px] p-2.5 left-0 top-[2020px] absolute inline-flex justify-center items-center overflow-hidden">
                 <div className="flex-1 self-stretch p-2.5 inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden">
                   <div className="self-stretch p-2.5 flex flex-col justify-start items-center gap-2.5 overflow-hidden">
                     <div className="text-center justify-start text-white text-4xl font-bold font-['Montserrat'] leading-[56px]">MLBB COLLEGIATE CUP</div>
@@ -315,7 +348,9 @@ const MCCS2Home = () => {
           </div>
 
           {/* TODO: Bracket and Thumbnails */}
-        </div>
+            </div>
+            </div>
+          </div>
         </div>
       </div>
     </MainLayout>
@@ -323,5 +358,3 @@ const MCCS2Home = () => {
 };
 
 export default MCCS2Home;
-
-
