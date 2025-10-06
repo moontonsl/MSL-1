@@ -99,7 +99,7 @@ export default function Articles() {
           displayArticles.map((article) => (
             <Link
               key={article.id}
-              href={article.link || `/news/${article.news_canonical || article.id}`}
+              href={article.link || `/news/${article.news_canonical || `article-${article.id}`}`}
               className="w-full h-40 md:h-64 bg-black rounded-2xl overflow-hidden hover:scale-[1.02] transition-transform duration-300 relative group"
             >
               {/* Background Image */}

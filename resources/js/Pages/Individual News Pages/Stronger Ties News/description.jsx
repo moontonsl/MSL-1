@@ -9,6 +9,9 @@ export default function MCCNewsIndividualPageColumnDescription() {
                     src="/images/MCC/IndivNews/image_3.jpg"
                     alt="Stronger Ties Partnership"
                     className="w-full h-auto rounded-lg object-cover max-h-64 sm:max-h-80 md:max-h-96 lg:max-h-none"
+                    onError={(e) => {
+                        e.target.src = '/images/MCC/IndivNews/News - Holder.jpg';
+                    }}
                 />
             </div>
             
