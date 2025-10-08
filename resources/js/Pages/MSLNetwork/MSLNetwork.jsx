@@ -229,7 +229,7 @@ const MSLNetwork = () => {
             Partnership Tiers
           </h2>
           <p className="font-medium mb-4 sm:mb-6 text-[10px] sm:text-[16px] lg:text-[16px] text-center w-full leading-snug">
-            Every org has a place in The MSL Network — tiers recognize your progress, impact, and consistency.
+            Every organization has a place in The MSL Network — tiers recognize your progress, impact, and consistency.
           </p>
 
           {/* --- PERKS --- */}
@@ -245,7 +245,7 @@ const MSLNetwork = () => {
               "Diamond Allocation (per sem)",
               <>Monetary<br />Sponsorship</>,
               <>Sponsorships &<br />Rewards</>,
-              <>Event Activities<br/>(Game Campaigns)</>,
+              <>Event Activations<br/>(Game Campaigns)</>,
               <>Creative Growth<br/>Space</>,
               <>Exclusive<br/>Opportunities</>
             ].map((perk, idx) => (
