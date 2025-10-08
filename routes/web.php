@@ -5,9 +5,9 @@ require __DIR__.'/admin.php';
 require __DIR__.'/auth.php';
 
 // User Management Panel (No Auth Required)
-Route::get('/user-management', [\App\Http\Controllers\UserManagementController::class, 'index'])->name('user-management');
-Route::get('/user-management/api', [\App\Http\Controllers\UserManagementController::class, 'getUsers'])->name('user-management.api');
-Route::post('/user-management/delete', [\App\Http\Controllers\UserManagementController::class, 'bulkDeleteUsers'])->name('user-management.delete');
+// Route::get('/user-management', [\App\Http\Controllers\UserManagementController::class, 'index'])->name('user-management');
+// Route::get('/user-management/api', [\App\Http\Controllers\UserManagementController::class, 'getUsers'])->name('user-management.api');
+// Route::post('/user-management/delete', [\App\Http\Controllers\UserManagementController::class, 'bulkDeleteUsers'])->name('user-management.delete');
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProfileController;
@@ -905,3 +905,44 @@ Route::middleware(['auth', 'admin'])->prefix('admin/faulty-username')->name('adm
 Route::get('/OppoAmbassador', function () {
     return Inertia::render('OppoAmbassador/OppoAmbassador');
 })->name('OppoAmbassador');
+
+// MSL Network Email Inquiry Route
+Route::post('/msl-network/send-inquiry', function (\Illuminate\Http\Request $request) {
+    try {
+        $request->validate([
+            'to_email' => 'required|email',
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string|max:2000',
+            'region' => 'nullable|string|max:100'
+        ]);
+
+        $inquiryData = [
+            'to_email' => $request->to_email,
+            'subject' => $request->subject,
+            'message' => $request->message,
+            'region' => $request->region,
+            'received_at' => now()
+        ];
+
+        // Send email to the regional team
+        \Mail::to($request->to_email)->send(new \App\Mail\MslNetworkInquiryMail($inquiryData));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Your inquiry has been sent successfully! We will get back to you soon.'
+        ]);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Please fill in all required fields correctly.',
+            'errors' => $e->errors()
+        ], 422);
+    } catch (\Exception $e) {
+        \Log::error('MSL Network inquiry failed: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to send inquiry. Please try again later.'
+        ], 500);
+    }
+})->name('msl-network.send-inquiry');
