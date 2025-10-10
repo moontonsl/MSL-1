@@ -49,6 +49,9 @@ const CampusTournament = () => {
   const [selectedTournamentId, setSelectedTournamentId] = useState(null); // Currently selected tournament
   const [mobileViewTeam, setMobileViewTeam] = useState(null); // mobile-only player popup
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [submitModalData, setSubmitModalData] = useState(null);
 
@@ -198,27 +201,44 @@ const CampusTournament = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this tournament?')) return;
-    
+  const openDeleteModal = (tournament) => {
+    setDeleteTarget(tournament);
+    setShowDeleteModal(true);
+  };
+
+  const closeDeleteModal = () => {
+    if (isDeleting) return;
+    setShowDeleteModal(false);
+    setDeleteTarget(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
     try {
-      const response = await fetch(`/campus-tournaments/${id}`, {
+      const response = await fetch(`/campus-tournaments/${deleteTarget.id}`, {
         method: 'DELETE',
         headers: {
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
         },
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
-        setLocalTournaments((existing) => existing.filter((t) => t.id !== id));
+        setLocalTournaments((existing) => existing.filter((t) => t.id !== deleteTarget.id));
+        setShowDeleteModal(false);
+        setDeleteTarget(null);
       } else {
+        setShowDeleteModal(false);
         alert('Error deleting tournament: ' + (data.error || 'Unknown error'));
       }
     } catch (error) {
       console.error('Error deleting tournament:', error);
+      setShowDeleteModal(false);
       alert('Error deleting tournament. Please try again.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -253,8 +273,9 @@ const CampusTournament = () => {
 
   const getStatusClasses = (value) => {
     const v = value || 'participant';
-    if (v === 'win') return 'bg-yellow-400/60 border border-yellow-300/80 text-white';
-    if (v === 'invalid') return 'bg-red-700/40 border border-red-600/70 text-white';
+    if (v === '1st') return 'bg-yellow-400/60 border border-yellow-300/80 text-white';
+    if (v === '2nd') return 'bg-gray-400/60 border border-gray-300/80 text-white';
+    if (v === '3rd') return 'bg-orange-400/60 border border-orange-300/80 text-white';
     return 'bg-green-500/30 border border-green-400/70 text-white';
   };
 
@@ -272,23 +293,69 @@ const CampusTournament = () => {
       return;
     }
     
-    // Check if exactly one team is marked as winner
-    const winningTeams = tournament.teams.filter(team => team.result === 'win');
-    if (winningTeams.length === 0) {
+    // Check if exactly one team is marked as 1st place
+    const firstPlaceTeams = tournament.teams.filter(team => team.result === '1st');
+    if (firstPlaceTeams.length === 0) {
       setSubmitModalData({
         type: 'error',
-        title: 'No Winning Team Selected',
-        message: 'Please select exactly one winning team before submitting results.',
+        title: 'No 1st Place Team Selected',
+        message: 'Please select exactly one 1st place team before submitting results.',
         showCancel: false
       });
       setShowSubmitModal(true);
       return;
     }
-    if (winningTeams.length > 1) {
+    if (firstPlaceTeams.length > 1) {
       setSubmitModalData({
         type: 'error',
-        title: 'Multiple Winners Selected',
-        message: 'Only one team can be marked as winner. Please select only one winning team.',
+        title: 'Multiple 1st Place Teams Selected',
+        message: 'Only one team can be marked as 1st place. Please select only one 1st place team.',
+        showCancel: false
+      });
+      setShowSubmitModal(true);
+      return;
+    }
+    
+    // Check if exactly one team is marked as 2nd place
+    const secondPlaceTeams = tournament.teams.filter(team => team.result === '2nd');
+    if (secondPlaceTeams.length === 0) {
+      setSubmitModalData({
+        type: 'error',
+        title: 'No 2nd Place Team Selected',
+        message: 'Please select exactly one 2nd place team before submitting results.',
+        showCancel: false
+      });
+      setShowSubmitModal(true);
+      return;
+    }
+    if (secondPlaceTeams.length > 1) {
+      setSubmitModalData({
+        type: 'error',
+        title: 'Multiple 2nd Place Teams Selected',
+        message: 'Only one team can be marked as 2nd place. Please select only one 2nd place team.',
+        showCancel: false
+      });
+      setShowSubmitModal(true);
+      return;
+    }
+    
+    // Check if exactly one team is marked as 3rd place
+    const thirdPlaceTeams = tournament.teams.filter(team => team.result === '3rd');
+    if (thirdPlaceTeams.length === 0) {
+      setSubmitModalData({
+        type: 'error',
+        title: 'No 3rd Place Team Selected',
+        message: 'Please select exactly one 3rd place team before submitting results.',
+        showCancel: false
+      });
+      setShowSubmitModal(true);
+      return;
+    }
+    if (thirdPlaceTeams.length > 1) {
+      setSubmitModalData({
+        type: 'error',
+        title: 'Multiple 3rd Place Teams Selected',
+        message: 'Only one team can be marked as 3rd place. Please select only one 3rd place team.',
         showCancel: false
       });
       setShowSubmitModal(true);
@@ -309,11 +376,13 @@ const CampusTournament = () => {
     }
     
     // Show confirmation modal
-    const winningTeam = winningTeams[0];
+    const firstPlaceTeam = firstPlaceTeams[0];
+    const secondPlaceTeam = secondPlaceTeams[0];
+    const thirdPlaceTeam = thirdPlaceTeams[0];
     setSubmitModalData({
       type: 'confirm',
       title: 'Confirm Results Submission',
-      message: `Are you sure you want to submit the results?\n\nWinner: ${winningTeam.name}\n\nThis action cannot be undone.`,
+      message: `Are you sure you want to submit the results?\n\n1st Place: ${firstPlaceTeam.name}\n2nd Place: ${secondPlaceTeam.name}\n3rd Place: ${thirdPlaceTeam.name}\n\nThis action cannot be undone.`,
       showCancel: true,
       tournamentId: tournamentId,
       tournament: tournament
@@ -449,6 +518,41 @@ const CampusTournament = () => {
                 </button>
               </div>
 
+              {/* Pending Requests Section */}
+              <div className="w-full max-w-7xl mx-auto bg-neutral-800/80 rounded-2xl border border-neutral-700/50 p-4 md:p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-white font-montserrat font-semibold text-lg md:text-xl">Pending Requests</h2>
+                  <span className="text-white/70 text-sm">{localTournaments.filter(t => t.status === 'pending').length} pending</span>
+                </div>
+                <div className="space-y-3">
+                  {localTournaments.filter(t => t.status === 'pending').length > 0 ? (
+                    localTournaments
+                      .filter(t => t.status === 'pending')
+                      .sort((a, b) => new Date(b.created_at || b.id) - new Date(a.created_at || a.id))
+                      .map((t) => (
+                        <div key={t.id} className="flex items-center justify-between bg-neutral-900/40 border border-white/10 rounded-xl px-4 py-3">
+                          <div className="flex flex-col">
+                            <div className="text-white font-montserrat text-sm md:text-base">{(t.school_name || '').toUpperCase()} TOURNAMENT</div>
+                            <div className="text-white/60 text-xs md:text-sm">{formatDate(t.start_date)} - {formatDate(t.end_date)}</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-1 rounded-md text-xs font-montserrat bg-yellow-500/20 text-yellow-300 border border-yellow-400/30">Pending</span>
+                            <button
+                              type="button"
+                              onClick={() => openDeleteModal(t)}
+                              className="bg-red-600 hover:bg-red-700 text-white font-montserrat text-xs font-semibold rounded-lg px-3 py-1.5"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                  ) : (
+                    <div className="text-white/60 text-sm">No pending tournament requests.</div>
+                  )}
+                </div>
+              </div>
+
               <div className="flex flex-col gap-4">
                 {/* Tournament Selector Dropdown */}
                 {transformedTournaments.filter(t => t.status === 'approved').length > 1 && (
@@ -544,10 +648,10 @@ const CampusTournament = () => {
                                       disabled={selectedTournament.results_submitted}
                                       className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[128px] ${selectedTournament.results_submitted ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
-                                      <option className="text-black" value="">Select</option>
-                                      <option className="text-black" value="win">Win</option>
-                                      <option className="text-black" value="invalid">Invalid</option>
                                       <option className="text-black" value="participant">Participant</option>
+                                      <option className="text-black" value="1st">1st</option>
+                                      <option className="text-black" value="2nd">2nd</option>
+                                      <option className="text-black" value="3rd">3rd</option>
                                     </select>
                                   </div>
                                 </div>
@@ -564,10 +668,10 @@ const CampusTournament = () => {
                                       disabled={selectedTournament.results_submitted}
                                       className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[112px] ${selectedTournament.results_submitted ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
-                                      <option className="text-black" value="">Select</option>
-                                      <option className="text-black" value="win">Win</option>
-                                      <option className="text-black" value="invalid">Invalid</option>
                                       <option className="text-black" value="participant">Participant</option>
+                                      <option className="text-black" value="1st">1st</option>
+                                      <option className="text-black" value="2nd">2nd</option>
+                                      <option className="text-black" value="3rd">3rd</option>
                                     </select>
                                   </div>
                                   <div className="flex justify-end">
@@ -832,6 +936,63 @@ const CampusTournament = () => {
                   OK
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-10" onClick={closeDeleteModal} />
+          <div className="relative z-20 w-full max-w-md bg-gradient-to-br from-neutral-800/95 to-neutral-900/95 backdrop-blur-md text-white border border-white/20 rounded-2xl p-6 md:p-8 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+                <h3 className="font-montserrat text-lg md:text-xl font-semibold">Delete Tournament</h3>
+              </div>
+              <button
+                onClick={closeDeleteModal}
+                className="w-8 h-8 grid place-items-center rounded-lg border border-white/20 hover:bg-white/10 transition-colors"
+                aria-label="Close"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <p className="font-montserrat text-sm md:text-base text-white/80 leading-relaxed">
+                Are you sure you want to permanently delete
+                {" "}
+                <span className="text-white font-semibold">{(deleteTarget.school_name || '').toUpperCase()} Tournament</span>
+                ? This action cannot be undone.
+              </p>
+              <div className="mt-2 text-white/60 text-sm">
+                {formatDate(deleteTarget.start_date)} - {formatDate(deleteTarget.end_date)}
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={closeDeleteModal}
+                disabled={isDeleting}
+                className="px-4 py-2 bg-neutral-700/50 hover:bg-neutral-600/50 text-white font-montserrat text-sm font-medium rounded-lg border border-white/20 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={isDeleting}
+                className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-montserrat text-sm font-semibold rounded-lg border border-red-400/20 transition-colors disabled:opacity-50"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
             </div>
           </div>
         </div>

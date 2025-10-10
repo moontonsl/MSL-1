@@ -33,6 +33,8 @@ class CampusTournamentController extends Controller
         ]);
     }
 
+    // Removed separate SL pending view; integrated pending list within SL dashboard
+
     /**
      * Display tournament requests for Regional Admin
      */
@@ -292,7 +294,7 @@ class CampusTournamentController extends Controller
         $validator = Validator::make($request->all(), [
             'results' => 'required|array',
             'results.*.team_id' => 'required|integer|exists:campus_tournament_teams,id',
-            'results.*.result' => 'required|in:participant,win,invalid',
+            'results.*.result' => 'required|in:participant,1st,2nd,3rd',
         ]);
         
         if ($validator->fails()) {
@@ -301,13 +303,31 @@ class CampusTournamentController extends Controller
         
         $results = $request->results;
         
-        // Validate that exactly one team has 'win' result
-        $winningTeams = array_filter($results, function($result) {
-            return $result['result'] === 'win';
+        // Validate that exactly one team has '1st' result
+        $firstPlaceTeams = array_filter($results, function($result) {
+            return $result['result'] === '1st';
         });
         
-        if (count($winningTeams) !== 1) {
-            return response()->json(['error' => 'Exactly one team must be marked as winner'], 422);
+        if (count($firstPlaceTeams) !== 1) {
+            return response()->json(['error' => 'Exactly one team must be marked as 1st place'], 422);
+        }
+        
+        // Validate that exactly one team has '2nd' result
+        $secondPlaceTeams = array_filter($results, function($result) {
+            return $result['result'] === '2nd';
+        });
+        
+        if (count($secondPlaceTeams) !== 1) {
+            return response()->json(['error' => 'Exactly one team must be marked as 2nd place'], 422);
+        }
+        
+        // Validate that exactly one team has '3rd' result
+        $thirdPlaceTeams = array_filter($results, function($result) {
+            return $result['result'] === '3rd';
+        });
+        
+        if (count($thirdPlaceTeams) !== 1) {
+            return response()->json(['error' => 'Exactly one team must be marked as 3rd place'], 422);
         }
         
         // Validate that all teams in the tournament have results

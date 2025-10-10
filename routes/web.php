@@ -93,6 +93,8 @@ Route::get('/Tournament/CampusTournament', function () {
 Route::get('/Tournament/RegionalAdmin', [\App\Http\Controllers\CampusTournamentController::class, 'regionalAdminIndex'])
     ->middleware(['auth', 'verified'])->name('campus.tournament.regionaladmin');
 
+
+
 // Campus Tournament API routes
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/campus-tournaments', [\App\Http\Controllers\CampusTournamentController::class, 'store'])->name('campus.tournaments.store');
@@ -176,12 +178,15 @@ Route::get('/school-players', function (\Illuminate\Http\Request $request) {
             $query->whereNotIn('id', $excludeArray);
         }
         
-        // Temporarily comment out the team registration check to see if that's causing the issue
-        // $query->whereNotExists(function($q) {
-        //     $q->select(\DB::raw(1))
-        //       ->from('campus_tournament_teams')
-        //       ->whereRaw('campus_tournament_teams.player_id = users.id');
-        // });
+        // Exclude players who are already in teams from tournaments that haven't submitted results yet
+        $query->whereNotExists(function($q) {
+            $q->select(\DB::raw(1))
+              ->from('campus_tournament_team_members')
+              ->join('campus_tournament_teams', 'campus_tournament_team_members.team_id', '=', 'campus_tournament_teams.id')
+              ->join('campus_tournaments', 'campus_tournament_teams.tournament_id', '=', 'campus_tournaments.id')
+              ->whereRaw('campus_tournament_team_members.player_id = users.id')
+              ->where('campus_tournaments.results_submitted', false);
+        });
         
         $players = $query->limit(10)->get(['id', 'username', 'name', 'surname']);
         
