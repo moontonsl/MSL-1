@@ -169,7 +169,7 @@ export default function MSLBuffsAndSupportApplicationForm({ auth }) {
       </Helmet>
 
       <div className="relative z-50 min-h-screen flex flex-col items-center justify-center text-white p-4">
-        <div className="bg-black/80 text-white rounded-2xl p-8 w-full max-w-3xl shadow-lg mx-auto">
+        <div className="bg-black/80 text-white rounded-2xl p-4 sm:p-8 w-full max-w-md sm:max-w-3xl shadow-lg mx-auto">
           <h2 className="font-bold mb-2 text-[20px] sm:text-[24px] lg:text-[30px] text-center">
             MSL Buffs and Support Application
           </h2>
@@ -516,56 +516,62 @@ export default function MSLBuffsAndSupportApplicationForm({ auth }) {
 
             {/* STEP 4 Form */}
             {step === 4 && (
-            <form onSubmit={handleNext} className="space-y-4">
+            <form onSubmit={handleNext} className="space-y-6">
                 {/* Event Details */}
                 <div>
-                    <label className="block font-medium mb-1">Event Details</label>
-                    <div className="flex items-center bg-white/5 rounded-xl p-3 gap-3">
-                        <FileText className="text-[#F2C21A] w-5 h-5" />
-                        <select
-                        name="eventDetails"
-                        value={form.eventDetails}
-                        onChange={handleChange}
-                        required
-                        className="bg-transparent w-full sm:w-auto min-w-[250px] outline-none text-white placeholder-gray-400"
-                        >
-                        <option style={{ color: "#9ca3af", backgroundColor: "white" }} disabled value="">
-                            Select event type
-                        </option>
-                        <option
-                            style={{ color: "black", backgroundColor: "white" }}
-                            value="MLBB Tournaments & Contests"
-                        >
-                            MLBB Tournaments & Contests
-                        </option>
-                        <option
-                            style={{ color: "black", backgroundColor: "white" }}
-                            value="Non-MLBB-related Contests & Events (Art Contests, TikTok Contests, Essay Contests, Pageants, etc.)"
-                        >
-                            Non-MLBB-related Contests & Events (Art Contests, TikTok Contests, Essay Contests, etc.)
-                        </option>
-                        </select>
-                    </div>
+                <label className="block font-medium mb-1">Event Details</label>
+                <div className="flex items-center bg-white/5 rounded-xl p-3 gap-3">
+                    <FileText className="text-[#F2C21A] w-5 h-5 shrink-0" />
+                    <select
+                    name="eventDetails"
+                    value={form.eventDetails}
+                    onChange={handleChange}
+                    required
+                    className="bg-transparent w-full outline-none text-white placeholder-gray-400"
+                    >
+                    <option style={{ color: "#9ca3af", backgroundColor: "white" }} disabled value="">
+                        Select event type
+                    </option>
+                    <option style={{ color: "black", backgroundColor: "white" }} value="MLBB Tournaments & Contests">
+                        MLBB Tournaments & Contests
+                    </option>
+                    <option
+                        style={{ color: "black", backgroundColor: "white" }}
+                        value="Non-MLBB-related Contests & Events (Art Contests, TikTok Contests, Essay Contests, Pageants, etc.)"
+                    >
+                        Non-MLBB-related Contests & Events (Art Contests, TikTok Contests, Essay Contests, Pageants, etc.)
+                    </option>
+                    </select>
                 </div>
-
+                </div>
 
                 {/* School MSL Category */}
                 <div>
                 <label className="block font-medium mb-1">School MSL Category of the Requestor</label>
                 <div className="flex items-center bg-white/5 rounded-xl p-3 gap-3">
-                    <GraduationCap className="text-[#F2C21A] w-5 h-5" />
+                    <GraduationCap className="text-[#F2C21A] w-5 h-5 shrink-0" />
                     <select
                     name="schoolMSLCategory"
                     value={form.schoolMSLCategory}
                     onChange={handleChange}
                     required
-                    className="bg-transparent flex-1 outline-none text-white placeholder-gray-400"
+                    className="bg-transparent w-full outline-none text-white placeholder-gray-400"
                     >
-                    <option style={{ color: "#9ca3af", backgroundColor: "white" }} disabled value="">Select category</option>
-                    <option style={{ color: "black", backgroundColor: "white" }} value="Level 1 MSL School">Level 1 MSL School</option>
-                    <option style={{ color: "black", backgroundColor: "white" }} value="Level 2 MSL School">Level 2 MSL School</option>
-                    <option style={{ color: "black", backgroundColor: "white" }} value="Level 3 MSL School">Level 3 MSL School</option>
-                    <option style={{ color: "black", backgroundColor: "white" }} value="Super School">Super School</option>
+                    <option style={{ color: "#9ca3af", backgroundColor: "white" }} disabled value="">
+                        Select category
+                    </option>
+                    <option style={{ color: "black", backgroundColor: "white" }} value="Level 1 MSL School">
+                        Level 1 MSL School
+                    </option>
+                    <option style={{ color: "black", backgroundColor: "white" }} value="Level 2 MSL School">
+                        Level 2 MSL School
+                    </option>
+                    <option style={{ color: "black", backgroundColor: "white" }} value="Level 3 MSL School">
+                        Level 3 MSL School
+                    </option>
+                    <option style={{ color: "black", backgroundColor: "white" }} value="Super School">
+                        Super School
+                    </option>
                     </select>
                 </div>
                 </div>
@@ -577,52 +583,64 @@ export default function MSLBuffsAndSupportApplicationForm({ auth }) {
                     The budget allocation to be approved by the MSL team will be contingent on the scope of the proposed event.
                 </h3>
                 <div className="flex items-center bg-white/5 rounded-xl p-3 gap-3">
-                    <Globe className="text-[#F2C21A] w-5 h-5" />
+                    <Globe className="text-[#F2C21A] w-5 h-5 shrink-0" />
                     <select
                     name="eventScope"
                     value={form.eventScope}
                     onChange={handleChange}
                     required
-                    className="bg-transparent flex-1 outline-none text-white placeholder-gray-400"
+                    className="bg-transparent w-full outline-none text-white placeholder-gray-400"
                     >
-                    <option style={{ color: "#9ca3af", backgroundColor: "white" }} disabled value="">Select event scope</option>
+                    <option style={{ color: "#9ca3af", backgroundColor: "white" }} disabled value="">
+                        Select event scope
+                    </option>
                     <option style={{ color: "black", backgroundColor: "white" }} value="Department-wide (e.g., Department of Biology)">
                         Department-wide (e.g., Department of Biology)
                     </option>
                     <option style={{ color: "black", backgroundColor: "white" }} value="College-wide (e.g., College of Arts and Sciences)">
                         College-wide (e.g., College of Arts and Sciences)
                     </option>
-                    <option style={{ color: "black", backgroundColor: "white" }} value="University-wide (e.g., Laguna State Polytechnic University - Main Campus)">
+                    <option
+                        style={{ color: "black", backgroundColor: "white" }}
+                        value="University-wide (e.g., Laguna State Polytechnic University - Main Campus)"
+                    >
                         University-wide (e.g., Laguna State Polytechnic University - Main Campus)
                     </option>
-                    <option style={{ color: "black", backgroundColor: "white" }} value="System-wide (e.g., Laguna State Polytechnic University System)">
+                    <option
+                        style={{ color: "black", backgroundColor: "white" }}
+                        value="System-wide (e.g., Laguna State Polytechnic University System)"
+                    >
                         System-wide (e.g., Laguna State Polytechnic University System)
                     </option>
                     <option style={{ color: "black", backgroundColor: "white" }} value="Region-wide (e.g., various universities in CALABARZON)">
                         Region-wide (e.g., various universities in CALABARZON)
                     </option>
-                    <option style={{ color: "black", backgroundColor: "white" }} value="Nationwide">Nationwide</option>
+                    <option style={{ color: "black", backgroundColor: "white" }} value="Nationwide">
+                        Nationwide
+                    </option>
                     <option style={{ color: "black", backgroundColor: "white" }} value="SHS-wide, Intra-strand (e.g., STEM Strand)">
                         SHS-wide, Intra-strand (e.g., STEM Strand)
                     </option>
                     <option style={{ color: "black", backgroundColor: "white" }} value="SHS-wide, Inter-strand (e.g., STEM, ABM, HUMSS, TVL)">
                         SHS-wide, Inter-strand (e.g., STEM, ABM, HUMSS, TVL)
                     </option>
-                    <option style={{ color: "black", backgroundColor: "white" }} value="Other">Other</option>
+                    <option style={{ color: "black", backgroundColor: "white" }} value="Other">
+                        Other
+                    </option>
                     </select>
                 </div>
 
                 {/* If Other is selected */}
                 {form.eventScope === "Other" && (
                     <div className="flex items-center bg-white/5 rounded-xl p-3 gap-3 mt-2">
-                    <Globe className="text-[#F2C21A] w-5 h-5" />
+                    <Globe className="text-[#F2C21A] w-5 h-5 shrink-0" />
                     <input
                         type="text"
                         name="eventScopeOther"
                         value={form.eventScopeOther || ""}
                         onChange={handleChange}
                         placeholder="Please specify"
-                        className="bg-transparent flex-1 outline-none text-white placeholder-gray-400"
+                        className="bg-transparent w-full outline-none text-white placeholder-gray-400"
                     />
                     </div>
                 )}
@@ -633,22 +651,21 @@ export default function MSLBuffsAndSupportApplicationForm({ auth }) {
                 <label className="block font-medium mb-1">
                     If you are from a MSL School: who is your MSL Handler?
                 </label>
-                <div>
-                    <label className="text-gray-400 text-sm mb-2 w-full block leading-relaxed">
-                        If your school has more than 1 MSL, who did you coordinate with for this event? Type in their <span className="font-semibold text-white">School Code</span> and <span className="font-semibold text-white">MSL Nickname</span> (ask them directly for these information).<br /><br />
-                        Type <span className="font-semibold text-white">N/A</span> if your school has no established 
-                        MSL Community under the Campus Department yet.
-                    </label>
-                </div>
+                <p className="text-gray-400 text-sm mb-2 leading-relaxed">
+                    If your school has more than 1 MSL, who did you coordinate with for this event? Type in their{" "}
+                    <span className="font-semibold text-white">School Code</span> and{" "}
+                    <span className="font-semibold text-white">MSL Nickname</span> (ask them directly for these information).<br /><br />
+                    Type <span className="font-semibold text-white">N/A</span> if your school has no established MSL Community yet.
+                </p>
                 <div className="flex items-center bg-white/5 rounded-xl p-3 gap-3">
-                    <User className="text-[#F2C21A] w-5 h-5" />
+                    <User className="text-[#F2C21A] w-5 h-5 shrink-0" />
                     <input
                     type="text"
                     name="mslHandler"
                     value={form.mslHandler}
                     onChange={handleChange}
                     placeholder="Enter MSL handler’s name or N/A"
-                    className="bg-transparent flex-1 outline-none text-white placeholder-gray-400"
+                    className="bg-transparent w-full outline-none text-white placeholder-gray-400"
                     />
                 </div>
                 </div>
@@ -657,10 +674,11 @@ export default function MSLBuffsAndSupportApplicationForm({ auth }) {
                 <div>
                 <label className="block font-medium mb-1">Date of the Event</label>
                 <h3 className="text-gray-400 text-sm mb-2">
-                    Exact or tentative date of the event. State if the event will run for more than a day <span className="font-semibold text-white">(e.g., September 7-8, 2024).</span>
+                    Exact or tentative date of the event. State if the event will run for more than a day{" "}
+                    <span className="font-semibold text-white">(e.g., September 7–8, 2024).</span>
                 </h3>
                 <div className="flex items-center bg-white/5 rounded-xl p-3 gap-3">
-                    <Calendar className="text-[#F2C21A] w-5 h-5" />
+                    <Calendar className="text-[#F2C21A] w-5 h-5 shrink-0" />
                     <input
                     type="text"
                     name="eventDate"
@@ -668,7 +686,7 @@ export default function MSLBuffsAndSupportApplicationForm({ auth }) {
                     onChange={handleChange}
                     required
                     placeholder="Enter date or date range"
-                    className="bg-transparent flex-1 outline-none text-white placeholder-gray-400"
+                    className="bg-transparent w-full outline-none text-white placeholder-gray-400"
                     />
                 </div>
                 </div>

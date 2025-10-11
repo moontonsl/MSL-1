@@ -41,8 +41,7 @@ const MSLNetwork = () => {
             <p className="font-medium mb-6 
               text-[12px] sm:text-[16px] lg:text-[16px] max-w-xl">
               The MSL Network is a nationwide community of collegiate esports
-              organizations powered by MSL Philippines. Fueling your next win
-              through events, collaboration, and exclusive opportunities.
+              organizations powered by MSL Philippines.
             </p>
 
             {/* BUTTONS */}
@@ -228,9 +227,9 @@ const MSLNetwork = () => {
           <h2 className="font-bold mb-2 sm:mb-3 text-[14px] sm:text-[24px] lg:text-[30px] text-center leading-snug">
             Partnership Tiers
           </h2>
-          <p className="font-medium mb-4 sm:mb-6 text-[10px] sm:text-[16px] lg:text-[16px] text-center w-full leading-snug">
-            Every organization has a place in The MSL Network — tiers recognize your progress, impact, and consistency.
-          </p>
+          <label className="font-medium mb-4 sm:mb-6 text-[10px] sm:text-[16px] lg:text-[16px] text-center w-full leading-snug">
+            Every org has a place in The MSL Network — tiers recognize your progress, impact, and consistency.
+          </label>
 
           {/* --- PERKS --- */}
           <h3 className="font-bold text-[16px] sm:text-[22px] lg:text-[28px] text-[#F2C21A] mb-3 self-start">
@@ -265,8 +264,8 @@ const MSLNetwork = () => {
             {[
               { name: "C", values: ["50,000", "-", "Diamonds + TL", "Low Priority", "-", "Low Priority"] },
               { name: "B", values: ["70,000", "-", "Diamonds + TL + Merch", "Moderate Priority", "Basic Access", "Moderate Priority"] },
-              { name: "A", values: ["100,000", "YES", "Diamonds + TL + Merch", "High Priority", "Full Access", "High Priority"] },
-              { name: "Super School", values: ["150,000", "YES", "All + First Priority", "First Priority", "Full Access", "First Priority"] }
+              { name: "A", values: ["100,000", "YES", "Diamonds + TL + Merch + Monetary", "High Priority", "Full Access", "High Priority"] },
+              { name: "Super School", values: ["150,000", "YES", "All + First Priority Allocations", "First Priority", "Full Access", "First Priority"] }
             ].map((tier, idx) => (
               <div
                 key={idx}
@@ -324,7 +323,7 @@ const MSLNetwork = () => {
               { name: "C", values: ["-", "-", "YES", "YES"] },
               { name: "B", values: ["-", "-", "YES", "YES"] },
               { name: "A", values: ["YES", "YES", "YES", "YES"] },
-              { name: "Super School", values: ["YES", "YES", "YES", <>Moonton<br/>School Admin</>] }
+              { name: "Super School", values: ["YES", "YES", "YES", <>Moonton &<br/>School Admin</>] }
             ].map((tier, idx) => (
               <div key={idx} className="flex flex-col w-[1%] sm:w-[20%] min-w-[80px] sm:min-w-[100px] gap-0 sm:gap-4 p-1 sm:p-4 bg-gray-400/20 rounded-lg">
                 <h4
@@ -375,7 +374,7 @@ const MSLNetwork = () => {
             {[
               { name: "C", values: ["8 - 15 Teams", "< 100", "≤ 5%"] },
               { name: "B", values: ["16 - 31 Teams", "100 - 250", "5% - 15%"] },
-              { name: "A", values: ["≥ 24 Teams", "≥ 24 Teams", "> 15%"] },
+              { name: "A", values: ["≥ 24 Teams", "≥ 250", "> 15%"] },
               { name: "Super School", values: ["N/A", "N/A", "N/A"] }
             ].map((tier, idx) => (
               <div key={idx} className="flex flex-col w-[1%] sm:w-[20%] min-w-[80px] sm:min-w-[100px] gap-0 sm:gap-4 p-1 sm:p-4 bg-gray-400/20 rounded-lg">
