@@ -198,6 +198,11 @@ Route::get('/BuffsAndSupport', function () {
     return Inertia::render('BuffsAndSupport/BuffsAndSupport');
 })->name('BuffsAndSupport');
 
+//BUFFS AND SUPPORT - APPLICATION FORM ROUTES
+Route::get('/MSLBuffsAndSupportApplicationForm', function () {
+    return Inertia::render('BuffsAndSupport/Forms/MSLBuffsAndSupportApplicationForm');
+})->name('MSLBuffsAndSupportApplicationForm');
+
 //MSL APPLICATION ROUTES
 Route::get('/MSLApplication', function () {
     return Inertia::render('MSLApplication/MSLApplication');
