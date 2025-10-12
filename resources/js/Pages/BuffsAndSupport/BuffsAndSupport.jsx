@@ -39,8 +39,8 @@ const BuffsAndSupport = () => {
                             </p>
                             <div className="flex gap-4 justify-center">
                                 <a
-                                    href="https://forms.gle/eBXzXTcySNgdtjRj6"
-                                    //href="/MSLBuffsAndSupportApplicationForm"
+                                    //href="https://forms.gle/eBXzXTcySNgdtjRj6"
+                                    href="/MSLBuffsAndSupportApplicationForm"
                                     className="px-6 py-3 bg-black text-[#F2C21A] font-bold rounded-xl"
                                 >
                                     Apply Now

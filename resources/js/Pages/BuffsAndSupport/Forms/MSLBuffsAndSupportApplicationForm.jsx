@@ -651,12 +651,12 @@ export default function MSLBuffsAndSupportApplicationForm({ auth }) {
                 <label className="block font-medium mb-1">
                     If you are from a MSL School: who is your MSL Handler?
                 </label>
-                <p className="text-gray-400 text-sm mb-2 leading-relaxed">
+                <label className="text-gray-400 text-sm mb-2 leading-relaxed">
                     If your school has more than 1 MSL, who did you coordinate with for this event? Type in their{" "}
                     <span className="font-semibold text-white">School Code</span> and{" "}
                     <span className="font-semibold text-white">MSL Nickname</span> (ask them directly for these information).<br /><br />
                     Type <span className="font-semibold text-white">N/A</span> if your school has no established MSL Community yet.
-                </p>
+                </label>
                 <div className="flex items-center bg-white/5 rounded-xl p-3 gap-3">
                     <User className="text-[#F2C21A] w-5 h-5 shrink-0" />
                     <input
