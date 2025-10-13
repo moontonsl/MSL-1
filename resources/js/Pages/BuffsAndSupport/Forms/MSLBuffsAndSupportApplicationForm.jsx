@@ -639,6 +639,7 @@ export default function MSLBuffsAndSupportApplicationForm({ auth }) {
                         name="eventScopeOther"
                         value={form.eventScopeOther || ""}
                         onChange={handleChange}
+                        required
                         placeholder="Please specify"
                         className="bg-transparent w-full outline-none text-white placeholder-gray-400"
                     />
@@ -664,6 +665,7 @@ export default function MSLBuffsAndSupportApplicationForm({ auth }) {
                     name="mslHandler"
                     value={form.mslHandler}
                     onChange={handleChange}
+                    required
                     placeholder="Enter MSL handler’s name or N/A"
                     className="bg-transparent w-full outline-none text-white placeholder-gray-400"
                     />
@@ -916,25 +918,26 @@ export default function MSLBuffsAndSupportApplicationForm({ auth }) {
             </form>
             )}
 
-            {/* Submission Modal */}
+            {/* Confirmation Modal */}
             {showModal && (
-            <div
-                className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-                onClick={() => setShowModal(false)}
-            >
+            <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
                 <div
-                className="bg-black text-white p-6 sm:p-8 rounded-2xl shadow-xl text-center w-full max-w-xs sm:max-w-md border border-white"
+                className="bg-white text-gray-800 rounded-2xl p-6 text-center max-w-sm w-full shadow-xl"
                 onClick={(e) => e.stopPropagation()}
                 >
-                <h2 className="text-lg sm:text-xl font-semibold mb-4">
-                    Registration Submitted Successfully!
+                <CheckCircle className="text-green-500 mx-auto mb-3" size={40} />
+                <h2 className="text-lg font-semibold mb-2">
+                    Application Submitted!
                 </h2>
+                <p className="text-sm mb-4">
+                    Your MSL Buffs and Support Application has been successfully sent.
+                </p>
                 <button
                     onClick={() => {
                     setShowModal(false);
-                    setStep(1); // ✅ ensure it returns to first step after modal close
+                    setStep(1); // ✅ return to first step after closing modal
                     }}
-                    className="mt-4 px-4 sm:px-6 py-2 sm:py-3 rounded-lg border-none bg-yellow-300 text-gray-800 font-bold cursor-pointer text-sm sm:text-base"
+                    className="bg-[#F2C21A] hover:bg-[#ddb518] px-5 py-2 rounded-lg text-gray-900 font-semibold transition duration-200"
                 >
                     Close
                 </button>
