@@ -180,6 +180,8 @@ Route::get('/SLAdminApproval', function () {
     return Inertia::render('ApprovalPages/SLAdminApproval');
 })->name('SLAdminApproval');
 
+
+
 //ADMIN REGIONAL APPROVAL ROUTES
 Route::get('/RegionalAdminApproval', function () {
     return Inertia::render('ApprovalPages/RegionalAdminApproval');
