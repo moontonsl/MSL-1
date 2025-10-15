@@ -133,11 +133,13 @@ const MCCS2Home = () => {
                   />
                 </div>
                 <div className="w-[420px] h-[200px] flex items-center justify-center">
-                  <img
-                    className="w-full h-full object-contain select-none"
-                    src="/images/MCC S2/Calendar Button.png"
-                    alt="Calendar"
-                  />
+                  <a href="/MCC/calendar" aria-label="Calendar" className="block w-full h-full">
+                    <img
+                      className="w-full h-full object-contain select-none cursor-pointer"
+                      src="/images/MCC S2/Calendar Button.png"
+                      alt="Calendar"
+                    />
+                  </a>
                 </div>
                 <div className="w-[420px] h-[180px] flex items-center justify-center">
                   <img
@@ -149,13 +151,15 @@ const MCCS2Home = () => {
               </div>
 
               {/* Four buttons - Mobile grid (large 2x2) */}
-              <div className="w-[1920px] left-0 top-[1660px] absolute grid grid-cols-2 gap-4 place-items-center xl:hidden z-20">
+              <div className="w-[1920px] left-0 top-[1720px] absolute grid grid-cols-2 gap-4 place-items-center xl:hidden z-20">
                 {/* Row 1: Rules | Calendar */}
                 <div className="w-[820px] h-[320px] flex items-center justify-center transform translate-x-10">
                   <img className="w-full h-full object-contain select-none" src="/images/MCC S2/Rules Button.png" alt="Rules" />
                 </div>
                 <div className="w-[820px] h-[320px] flex items-center justify-center transform -translate-x-10">
-                  <img className="w-full h-full object-contain select-none" src="/images/MCC S2/Calendar Button.png" alt="Calendar" />
+                  <a href="/MCC/calendar" aria-label="Calendar" className="block w-full h-full">
+                    <img className="w-full h-full object-contain select-none cursor-pointer" src="/images/MCC S2/Calendar Button.png" alt="Calendar" />
+                  </a>
                 </div>
                 {/* Row 2: Registration | Favourites */}
                 <div className="w-[820px] h-[320px] flex items-center justify-center transform translate-x-10">
