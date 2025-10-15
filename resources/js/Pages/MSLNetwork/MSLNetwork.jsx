@@ -189,11 +189,11 @@ const MSLNetwork = () => {
           
           {/* LEFT SIDE - TEXT */}
           <div className="flex flex-col justify-center items-center md:items-start space-y-1 md:space-y-3">
-            <h1 className="font-bold text-[20px] sm:text-[28px] lg:text-[36px] leading-tight">
+            <h1 className="font-bold text-[20px] sm:text-[28px] lg:text-[36px] leading-tight whitespace-nowrap">
               Already part of The MSL Network?
             </h1>
             <p className="font-medium text-[12px] sm:text-[16px] lg:text-[16px] max-w-sm sm:max-w-lg">
-              Learn how to access Buffs & Support, our exclusive sponsorship
+              Learn how to access <span className="font-bold">Buffs & Support </span>, our exclusive sponsorship
               program for partnered orgs.
             </p>
           </div>
