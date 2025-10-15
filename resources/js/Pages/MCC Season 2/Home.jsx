@@ -64,7 +64,7 @@ const MCCS2Home = () => {
 
   const MatchCard = () => (
     <div
-      className="self-stretch p-2.5 rounded-[20px] outline outline-1 outline-offset-[-1px] outline-yellow-400 inline-flex justify-start items-start gap-2.5 overflow-hidden"
+      className="self-stretch p-2.5 rounded-[20px] outline outline-1 outline-offset-[-1px] outline-yellow-400 inline-flex justify-start items-start gap-2.5 overflow-visible"
       style={{
         backgroundImage: `url('${KNOCKOUT_BG}')`,
         backgroundSize: 'cover',
@@ -84,7 +84,7 @@ const MCCS2Home = () => {
           <div style={supportsZoom ? { zoom: scale, width: '1920px', position: 'relative', left: '50%', transform: 'translateX(-50%)', transformOrigin: 'top left' } : { transform: `translateX(-50%) scale(${scale})`, transformOrigin: 'top left', position: 'relative', left: '50%', width: '1920px', willChange: 'transform' }}>
             <div
               ref={containerRef}
-              className="w-[1920px] bg-Background-Default-Default inline-flex flex-col justify-center items-center overflow-hidden font-montserrat relative"
+              className="w-[1920px] bg-Background-Default-Default inline-flex flex-col justify-center items-center overflow-visible font-montserrat relative"
               style={{
                 backgroundImage:
                   "linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.6)), url('/images/MCC S2/Main BG.png')",
@@ -95,10 +95,10 @@ const MCCS2Home = () => {
             >
 
         {/* Main Content skeleton based on provided figma-to-code */}
-        <div className="h-[6795px] flex flex-col justify-start items-center gap-16 overflow-hidden">
+        <div className="min-h-[6500px] flex flex-col justify-start items-center gap-1 overflow-visible pb-24">
           {/* Hero and intro block */}
-          <div className="h-[3000px] flex flex-col justify-start items-center overflow-hidden">
-            <div className="w-[1920px] h-[3000px] relative">
+          <div className="h-[3250px] xl:h-[2800px] flex flex-col justify-start items-center overflow-hidden">
+            <div className="w-[1920px] h-[3250px] xl:h-[2800px] relative">
               {/* Season chip moved under subtitle */}
 
 
@@ -116,8 +116,8 @@ const MCCS2Home = () => {
 
 
 
-              {/* Four buttons row */}
-              <div className="w-[1920px] left-0 top-[1720px] absolute flex justify-center items-center gap-10 z-20">
+              {/* Four buttons - Desktop row (original) */}
+              <div className="w-[1920px] left-0 top-[1720px] absolute hidden xl:flex justify-center items-center gap-10 z-20">
                 <div className="w-[420px] h-[180px] flex items-center justify-center">
                   <img
                     className="w-full h-full object-contain select-none"
@@ -133,11 +133,13 @@ const MCCS2Home = () => {
                   />
                 </div>
                 <div className="w-[420px] h-[200px] flex items-center justify-center">
-                  <img
-                    className="w-full h-full object-contain select-none"
-                    src="/images/MCC S2/Calendar Button.png"
-                    alt="Calendar"
-                  />
+                  <a href="/MCC/calendar" aria-label="Calendar" className="block w-full h-full">
+                    <img
+                      className="w-full h-full object-contain select-none cursor-pointer"
+                      src="/images/MCC S2/Calendar Button.png"
+                      alt="Calendar"
+                    />
+                  </a>
                 </div>
                 <div className="w-[420px] h-[180px] flex items-center justify-center">
                   <img
@@ -145,6 +147,26 @@ const MCCS2Home = () => {
                     src="/images/MCC S2/Favourites Button.png"
                     alt="Favourites"
                   />
+                </div>
+              </div>
+
+              {/* Four buttons - Mobile grid (large 2x2) */}
+              <div className="w-[1920px] left-0 top-[1720px] absolute grid grid-cols-2 gap-4 place-items-center xl:hidden z-20">
+                {/* Row 1: Rules | Calendar */}
+                <div className="w-[820px] h-[320px] flex items-center justify-center transform translate-x-10">
+                  <img className="w-full h-full object-contain select-none" src="/images/MCC S2/Rules Button.png" alt="Rules" />
+                </div>
+                <div className="w-[820px] h-[320px] flex items-center justify-center transform -translate-x-10">
+                  <a href="/MCC/calendar" aria-label="Calendar" className="block w-full h-full">
+                    <img className="w-full h-full object-contain select-none cursor-pointer" src="/images/MCC S2/Calendar Button.png" alt="Calendar" />
+                  </a>
+                </div>
+                {/* Row 2: Registration | Favourites */}
+                <div className="w-[820px] h-[320px] flex items-center justify-center transform translate-x-10">
+                  <img className="w-full h-full object-contain select-none" src="/images/MCC S2/Registration Button.png" alt="Registration" />
+                </div>
+                <div className="w-[820px] h-[320px] flex items-center justify-center transform -translate-x-10">
+                  <img className="w-full h-full object-contain select-none" src="/images/MCC S2/Favourites Button.png" alt="Favourites" />
                 </div>
               </div>
 
@@ -197,13 +219,13 @@ const MCCS2Home = () => {
                 alt="Zhu Xin"
               />
 
-              {/* About section */}
-              <div className="w-[1920px] h-[828px] p-2.5 left-0 top-[2020px] absolute inline-flex justify-center items-center overflow-hidden">
-                <div className="flex-1 self-stretch p-2.5 inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden">
-                  <div className="self-stretch p-2.5 flex flex-col justify-start items-center gap-2.5 overflow-hidden">
+              {/* About section (mobile pushed lower for buttons grid) */}
+              <div className="w-[1920px] min-h-[720px] p-2.5 left-0 absolute top-[2480px] xl:top-[2080px] inline-flex justify-center items-center overflow-visible">
+                <div className="flex-1 self-stretch p-2.5 inline-flex flex-col justify-start items-start gap-2.5 overflow-visible">
+                  <div className="self-stretch p-2.5 flex flex-col justify-start items-center gap-2.5 overflow-visible">
                     <div className="text-center justify-start text-white text-4xl font-bold font-['Montserrat'] leading-[56px]">MLBB COLLEGIATE CUP</div>
                   </div>
-                  <div className="self-stretch p-2.5 flex flex-col justify-start items-center gap-2.5 overflow-hidden">
+                  <div className="self-stretch p-2.5 flex flex-col justify-start items-center gap-2.5 overflow-visible">
                     <div className="w-[1364px] justify-start text-white text-3xl font-medium font-['Montserrat']">MSL Collegiate Cup (MCC) is the trademark collegiate tournament of Moonton Student Leaders Philippines (MSL Philippines). Established in 2021 through its predecessor —  the School Rivals — and recently rebranded as MCC in 2023, it stands tall and proud as the premier and one of the biggest nationwide collegiate tournaments that shares the opportunity for a higher scale of competitive gaming.<br/><br/>Set up with impeccable standards and state-of-the-art tournament system,  MCC shines through as it has direct developer support from Moonton. With its pro-level production, it is a league beaming alongside the esteemed MLBB Professional League (MPL) and MLBB Developmental League (MDL). With its reach expanding from Luzon, NCR, Visayas, and Mindanao regions, MCC is committed to giving collegiate teams across the country a greater avenue to hone and showcase their talents and potentials as student gamers. It also promotes camaraderie and enthusiasm among the players that transcends beyond the competitive gaming horizon. In pursuit of inclusivity especially at the grassroots level, MCC continues to strive for greater, stronger, and better gaming opportunities for every collegiate team to join and enjoy.<br/></div>
                   </div>
                 </div>
@@ -211,14 +233,36 @@ const MCCS2Home = () => {
             </div>
           </div>
 
-          {/* TOP 8 TEAMS - Sizes based on Figma sample */}
-          <div className="w-[1292px] p-2.5 inline-flex flex-col justify-start items-center gap-2.5 overflow-hidden">
+          {/* TOP 8 TEAMS - enlarge on mobile to fill width while keeping style */}
+          <div className="w-[1720px] xl:w-[1292px] p-2.5 inline-flex flex-col justify-start items-center gap-2.5 overflow-hidden">
             {/* Header */}
-            <div className="w-[1082px] p-2.5 bg-black rounded-[10px] outline outline-2 outline-offset-[-2px] outline-yellow-400 inline-flex justify-center items-center gap-2.5 overflow-hidden">
+            <div className="w-[1500px] xl:w-[1082px] p-2.5 bg-black rounded-[10px] outline outline-2 outline-offset-[-2px] outline-yellow-400 inline-flex justify-center items-center gap-2.5 overflow-hidden">
               <div className="w-72 text-center justify-start text-white text-4xl font-bold font-montserrat leading-[56px]">TOP 8 TEAMS</div>
             </div>
-            {/* Grid container (4 columns x 2 rows) */}
-            <div className="w-[1082px] grid grid-cols-4 gap-4 overflow-hidden">
+
+            {/* Mobile grid: larger columns to fill width */}
+            <div
+              className="w-[1500px] grid gap-4 justify-between overflow-hidden xl:hidden"
+              style={{ gridTemplateColumns: 'repeat(4, 360px)' }}
+            >
+              {topTeams.map((team) => (
+                <div key={team.id} className="p-2 inline-flex flex-col justify-start items-start gap-4 overflow-hidden">
+                  <div className="w-full h-96 bg-black rounded-[10px] outline outline-[0.85px] outline-offset-[-0.85px] outline-yellow-400 flex flex-col justify-start items-start gap-2 overflow-hidden">
+                    <div className="self-stretch flex-1 p-2.5 flex flex-col justify-start items-start gap-2 overflow-hidden">
+                      <div className="self-stretch h-64 p-2 inline-flex justify-center items-center gap-2 overflow-hidden">
+                        <img className="w-44 h-56" src={NU_LOGO} alt={team.name} />
+                      </div>
+                      <div className="self-stretch flex-1 py-3 px-4 bg-yellow-400 rounded-[10px] inline-flex justify-center items-center overflow-hidden">
+                        <div className="text-center justify-start text-black text-[26px] xl:text-2xl font-bold font-montserrat leading-9">{team.name}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop grid unchanged (exact original styling) */}
+            <div className="w-[1082px] hidden xl:grid grid-cols-4 gap-4 overflow-hidden">
               {topTeams.map((team) => (
                 <div key={team.id} className="p-2 inline-flex flex-col justify-start items-start gap-4 overflow-hidden">
                   <div className="self-stretch h-72 bg-black rounded-[10px] outline outline-[0.85px] outline-offset-[-0.85px] outline-yellow-400 flex flex-col justify-start items-start gap-2 overflow-hidden">
@@ -236,19 +280,19 @@ const MCCS2Home = () => {
             </div>
           </div>
 
-          {/* STANDINGS - based on Figma sample */}
-          <div className="w-[1292px] p-2.5 inline-flex flex-col justify-start items-center gap-5 overflow-hidden">
-            <div className="w-[1030px] p-2.5 bg-black rounded-[10px] outline outline-2 outline-offset-[-2px] outline-yellow-400 inline-flex justify-center items-center gap-2.5 overflow-hidden">
-              <div className="w-72 text-center justify-start text-white text-4xl font-bold font-montserrat leading-[56px]">STANDINGS</div>
+          {/* STANDINGS - Enlarged on mobile to better fill width */}
+          <div className="w-[1720px] xl:w-[1292px] mt-12 p-2.5 inline-flex flex-col justify-start items-center gap-5 overflow-hidden">
+          <div className="w-[1500px] xl:w-[1082px] h-[80px] min-h-[80px] max-h-[80px] p-2.5 bg-black rounded-[10px] outline outline-2 outline-offset-[-2px] outline-yellow-400 inline-flex justify-center items-center gap-2.5 overflow-hidden">
+              <div className="w-72 text-center justify-start text-white text-4xl font-bold font-montserrat leading-[56px] whitespace-nowrap">STANDINGS</div>
             </div>
             <div className="h-[815px] p-2.5 bg-neutral-950 rounded-lg flex flex-col justify-start items-start gap-2">
               {/* Table header */}
-              <div className="w-[1014.06px] h-20 bg-yellow-400 rounded-xl inline-flex justify-start items-start overflow-hidden">
+              <div className="w-[1500px] xl:w-[1014.06px] h-20 bg-yellow-400 rounded-xl inline-flex justify-start items-start overflow-hidden">
                 <div className="flex-1 self-stretch p-2 flex justify-start items-start overflow-hidden">
-                  <div className="w-40 self-stretch p-2 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
+                  <div className="w-48 xl:w-40 self-stretch p-2 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
                     <div className="text-center justify-start text-black text-2xl font-bold font-montserrat leading-loose">RANK</div>
                   </div>
-                  <div className="w-44 self-stretch p-2 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
+                  <div className="w-64 xl:w-44 self-stretch p-2 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
                     <div className="text-center justify-start text-black text-2xl font-bold font-montserrat leading-loose">TEAM</div>
                   </div>
                   <div className="flex-1 self-stretch p-2 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
@@ -264,12 +308,12 @@ const MCCS2Home = () => {
               </div>
               {/* Data rows */}
               {standingsRows.map((row, idx) => (
-                <div key={idx} className={`w-[1014.06px] h-20 ${idx % 2 === 0 ? 'bg-black' : 'bg-neutral-900'} inline-flex justify-start items-start overflow-hidden`}>
+                <div key={idx} className={`w-[1500px] xl:w-[1014.06px] h-20 ${idx % 2 === 0 ? 'bg-black' : 'bg-neutral-900'} inline-flex justify-start items-start overflow-hidden`}>
                   <div className="flex-1 self-stretch p-2 flex justify-start items-start overflow-hidden">
-                    <div className="w-40 self-stretch p-2 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
+                    <div className="w-48 xl:w-40 self-stretch p-2 inline-flex flex-col justify-center items-center gap-2 overflow-hidden">
                       <div className="text-center justify-start text-neutral-100 text-2xl font-bold font-montserrat leading-loose">{row.rank}</div>
                     </div>
-                    <div className="w-44 self-stretch p-2 inline-flex flex-col justify-center items-center gap-2 overflow-hidden relative">
+                    <div className="w-64 xl:w-44 self-stretch p-2 inline-flex flex-col justify-center items-center gap-2 overflow-hidden relative">
                       <img
                         src={NU_LOGO}
                         alt="Team logo"
@@ -294,41 +338,71 @@ const MCCS2Home = () => {
           </div>
 
           {/* KNOCKOUT STAGE DAY 1 */}
-          <div className="w-[1462px] p-2.5 inline-flex flex-col justify-start items-center gap-12 overflow-hidden">
-            <div className="w-[1030px] p-2.5 bg-black rounded-[10px] outline outline-2 outline-offset-[-2px] outline-yellow-400 inline-flex justify-center items-center gap-2.5 overflow-hidden">
-              <div className="text-center justify-start text-white text-4xl font-bold font-montserrat leading-[56px]">KNOCKOUT STAGE DAY 1 | DATE</div>
+          <div className="w-[1462px] p-2.5 inline-flex flex-col justify-start items-center gap-12 overflow-visible">
+            <div className="w-[1030px] h-[80px] min-h-[80px] max-h-[80px] p-2.5 bg-black rounded-[10px] outline outline-2 outline-offset-[-2px] outline-yellow-400 inline-flex justify-center items-center gap-2.5 overflow-hidden">
+              <div className="text-center justify-start text-white text-4xl font-bold font-montserrat leading-[56px] whitespace-nowrap">KNOCKOUT STAGE DAY 1 | DATE</div>
             </div>
-            <div className="self-stretch rounded-lg inline-flex justify-start items-start gap-2.5">
-              <div className="flex-1 inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden">
-                <MatchCard />
-                <MatchCard />
+            {/* Desktop layout mirrors mobile: 2 | 2 | 1 (centered) */}
+            <div className="self-stretch rounded-lg hidden xl:flex flex-col gap-2.5">
+              <div className="w-[1130px] mx-auto flex gap-2.5 justify-center">
+                <div className="w-[560px] overflow-visible"><MatchCard /></div>
+                <div className="w-[560px] overflow-visible"><MatchCard /></div>
               </div>
-              <div className="flex-1 inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden">
-                <MatchCard />
-                <MatchCard />
+              <div className="w-[1130px] mx-auto flex gap-2.5 justify-center">
+                <div className="w-[560px] overflow-visible"><MatchCard /></div>
+                <div className="w-[560px] overflow-visible"><MatchCard /></div>
               </div>
-              <div className="flex-1 h-[483px] flex flex-col justify-center items-stretch gap-2.5 overflow-hidden">
-                <MatchCard />
+              <div className="w-[1130px] mx-auto flex justify-center">
+                <div className="w-[560px] overflow-visible"><MatchCard /></div>
+              </div>
+            </div>
+            {/* Mobile layout: 2 | 2 | 1 (centered) */}
+            <div className="self-stretch flex xl:hidden flex-col gap-2.5">
+              <div className="w-[1130px] mx-auto flex gap-2.5 justify-center">
+                <div className="w-[560px] overflow-visible"><MatchCard /></div>
+                <div className="w-[560px] overflow-visible"><MatchCard /></div>
+              </div>
+              <div className="w-[1130px] mx-auto flex gap-2.5 justify-center">
+                <div className="w-[560px] overflow-visible"><MatchCard /></div>
+                <div className="w-[560px] overflow-visible"><MatchCard /></div>
+              </div>
+              <div className="w-[1130px] mx-auto flex justify-center">
+                <div className="w-[560px] overflow-visible"><MatchCard /></div>
               </div>
             </div>
           </div>
 
           {/* KNOCKOUT STAGE DAY 2 */}
-          <div className="w-[1462px] p-2.5 inline-flex flex-col justify-start items-center gap-12 overflow-hidden">
-            <div className="w-[1030px] p-2.5 bg-black rounded-[10px] outline outline-2 outline-offset-[-2px] outline-yellow-400 inline-flex justify-center items-center gap-2.5 overflow-hidden">
-              <div className="text-center justify-start text-white text-4xl font-bold font-montserrat leading-[56px]">KNOCKOUT STAGE DAY 2 | DATE</div>
+          <div className="w-[1462px] p-2.5 inline-flex flex-col justify-start items-center gap-12 overflow-visible">
+            <div className="w-[1030px] h-[80px] min-h-[80px] max-h-[80px] p-2.5 bg-black rounded-[10px] outline outline-2 outline-offset-[-2px] outline-yellow-400 inline-flex justify-center items-center gap-2.5 overflow-hidden">
+              <div className="text-center justify-start text-white text-4xl font-bold font-montserrat leading-[56px] whitespace-nowrap">KNOCKOUT STAGE DAY 2 | DATE</div>
             </div>
-            <div className="self-stretch rounded-lg inline-flex justify-start items-start gap-2.5">
-              <div className="flex-1 inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden">
-                <MatchCard />
-                <MatchCard />
+            {/* Desktop layout mirrors mobile: 2 | 2 | 1 (centered) */}
+            <div className="self-stretch rounded-lg hidden xl:flex flex-col gap-2.5">
+              <div className="w-[1130px] mx-auto flex gap-2.5 justify-center">
+                <div className="w-[560px] overflow-visible"><MatchCard /></div>
+                <div className="w-[560px] overflow-visible"><MatchCard /></div>
               </div>
-              <div className="flex-1 inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden">
-                <MatchCard />
-                <MatchCard />
+              <div className="w-[1130px] mx-auto flex gap-2.5 justify-center">
+                <div className="w-[560px] overflow-visible"><MatchCard /></div>
+                <div className="w-[560px] overflow-visible"><MatchCard /></div>
               </div>
-              <div className="flex-1 h-[483px] flex flex-col justify-center items-stretch gap-2.5 overflow-hidden">
-                <MatchCard />
+              <div className="w-[1130px] mx-auto flex justify-center">
+                <div className="w-[560px] overflow-visible"><MatchCard /></div>
+              </div>
+            </div>
+            {/* Mobile layout: 2 | 2 | 1 (centered) */}
+            <div className="self-stretch flex xl:hidden flex-col gap-2.5">
+              <div className="w-[1130px] mx-auto flex gap-2.5 justify-center">
+                <div className="w-[560px] overflow-visible"><MatchCard /></div>
+                <div className="w-[560px] overflow-visible"><MatchCard /></div>
+              </div>
+              <div className="w-[1130px] mx-auto flex gap-2.5 justify-center">
+                <div className="w-[560px] overflow-visible"><MatchCard /></div>
+                <div className="w-[560px] overflow-visible"><MatchCard /></div>
+              </div>
+              <div className="w-[1130px] mx-auto flex justify-center">
+                <div className="w-[560px] overflow-visible"><MatchCard /></div>
               </div>
             </div>
           </div>

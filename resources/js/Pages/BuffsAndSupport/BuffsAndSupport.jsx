@@ -39,7 +39,8 @@ const BuffsAndSupport = () => {
                             </p>
                             <div className="flex gap-4 justify-center">
                                 <a
-                                    href="https://forms.gle/eBXzXTcySNgdtjRj6"
+                                    //href="https://forms.gle/eBXzXTcySNgdtjRj6"
+                                    href="/MSLBuffsAndSupportApplicationForm"
                                     className="px-6 py-3 bg-black text-[#F2C21A] font-bold rounded-xl"
                                 >
                                     Apply Now
@@ -211,7 +212,8 @@ const BuffsAndSupport = () => {
                         {/* Buttons */}
                         <div className="flex flex-col sm:flex-row gap-3 text-center sm:text-left">
                             <a
-                            href="https://forms.gle/MZkMwxs5KCnrPLEw9"
+                            //href="https://forms.gle/MZkMwxs5KCnrPLEw9"
+                            href="/MSLTournamentLobbyApplicationForm"
                             className="px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-300 text-black rounded-xl font-bold font-['Montserrat'] shadow-md hover:scale-105 transition"
                             >
                             Request Access
