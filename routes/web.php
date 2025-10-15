@@ -203,6 +203,11 @@ Route::get('/MSLBuffsAndSupportApplicationForm', function () {
     return Inertia::render('BuffsAndSupport/Forms/MSLBuffsAndSupportApplicationForm');
 })->name('MSLBuffsAndSupportApplicationForm');
 
+//BUFFS AND SUPPORT - TOURNAMENT LOBBY APPLICATION FORM ROUTES
+Route::get('/MSLTournamentLobbyApplicationForm', function () {
+    return Inertia::render('BuffsAndSupport/Forms/MSLTournamentLobbyApplicationForm');
+})->name('MSLTournamentLobbyApplicationForm');
+
 //MSL APPLICATION ROUTES
 Route::get('/MSLApplication', function () {
     return Inertia::render('MSLApplication/MSLApplication');
@@ -232,6 +237,8 @@ Route::get('/AccountModificationWaiting', function () {
 Route::get('/SLAdminApproval', function () {
     return Inertia::render('ApprovalPages/SLAdminApproval');
 })->name('SLAdminApproval');
+
+
 
 //ADMIN REGIONAL APPROVAL ROUTES
 Route::get('/RegionalAdminApproval', function () {
