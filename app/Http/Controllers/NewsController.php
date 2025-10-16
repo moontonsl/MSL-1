@@ -14,7 +14,7 @@ class NewsController extends Controller
     {
         if (empty($filename)) {
             \Log::info("resolveImageUrl: filename is empty, using fallback");
-            return '/images/MCC/News/News - Holder.jpg';
+            return '/images/MCC/IndivNews/News - Holder.jpg';
         }
         
         // Check multiple possible locations - prioritize IndivNews for individual articles
@@ -25,10 +25,18 @@ class NewsController extends Controller
             '/images/MCC/' . $filename,            // Root MCC images
         ];
         
-        $finalPath = $candidates[0]; // Start with IndivNews since that's where image_1.jpg is
-        \Log::info("resolveImageUrl: filename='{$filename}', finalPath='{$finalPath}'");
+        // Check if any of the candidate files actually exist
+        foreach ($candidates as $candidate) {
+            $fullPath = public_path($candidate);
+            if (file_exists($fullPath)) {
+                \Log::info("resolveImageUrl: filename='{$filename}', found at: '{$candidate}'");
+                return $candidate;
+            }
+        }
         
-        return $finalPath;
+        // If no file found, use fallback
+        \Log::warning("resolveImageUrl: filename='{$filename}' not found in any location, using fallback");
+        return '/images/MCC/IndivNews/News - Holder.jpg';
     }
 
     /**
@@ -191,6 +199,7 @@ class NewsController extends Controller
         try {
             \Log::info("Attempting to fetch article with canonical: {$canonical}");
             
+            // First try to find by exact canonical match
             $article = News::where('news_canonical', $canonical)
                 ->select(
                     'id',
@@ -205,7 +214,33 @@ class NewsController extends Controller
                     'news_img3',
                     'news_content as content'
                 )
-                ->firstOrFail();
+                ->first();
+            
+            // If not found and canonical looks like an ID (article-123), try by ID
+            if (!$article && preg_match('/^article-(\d+)$/', $canonical, $matches)) {
+                $articleId = $matches[1];
+                \Log::info("Trying to find article by ID: {$articleId}");
+                
+                $article = News::where('id', $articleId)
+                    ->select(
+                        'id',
+                        'news_canonical as canonical',
+                        'news_state as category',
+                        'news_title as title',
+                        'news_subtitle as subtitle',
+                        'news_writer as author',
+                        'news_published as date',
+                        'news_img1',
+                        'news_img2',
+                        'news_img3',
+                        'news_content as content'
+                    )
+                    ->first();
+            }
+            
+            if (!$article) {
+                throw new \Illuminate\Database\Eloquent\ModelNotFoundException();
+            }
 
             \Log::info("Found article: {$article->title} (ID: {$article->id})");
             \Log::info("Article news_img1: '{$article->news_img1}'");

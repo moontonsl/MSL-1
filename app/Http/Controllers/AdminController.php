@@ -13,6 +13,22 @@ use Inertia\Inertia;
 
 class AdminController extends Controller
 {
+    /**
+     * Generate a URL-friendly slug from a title
+     */
+    private function generateSlug($title)
+    {
+        // Convert to lowercase and replace spaces with hyphens
+        $slug = strtolower($title);
+        $slug = preg_replace('/[^a-z0-9\s-]/', '', $slug); // Remove special characters
+        $slug = preg_replace('/[\s-]+/', '-', $slug); // Replace spaces and multiple hyphens with single hyphen
+        $slug = trim($slug, '-'); // Remove leading/trailing hyphens
+        
+        // Limit length to 100 characters
+        $slug = substr($slug, 0, 100);
+        
+        return $slug;
+    }
     protected $analyticsService;
 
     public function __construct(AnalyticsService $analyticsService)
@@ -78,11 +94,29 @@ class AdminController extends Controller
             'news_subtitle' => 'required|string',
             'news_canonical' => 'required|string',
             'news_state' => 'required|string',
-            'news_img1' => 'nullable|string',
+            'news_img1' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $validated['news_writer'] = Auth::user()->name;
         $validated['news_published'] = now();
+
+        // Set default values for image fields
+        $validated['news_img2'] = '';
+        $validated['news_img3'] = '';
+        $validated['news_content'] = $validated['news_canonical']; // Map content to canonical field
+        
+        // Generate proper canonical URL slug from title
+        $validated['news_canonical'] = $this->generateSlug($validated['news_title']);
+
+        // Handle image upload
+        if ($request->hasFile('news_img1')) {
+            $image = $request->file('news_img1');
+            $imageName = time() . '_' . $image->getClientOriginalName();
+            $image->move(public_path('images/MCC/IndivNews'), $imageName);
+            $validated['news_img1'] = $imageName;
+        } else {
+            $validated['news_img1'] = '';
+        }
 
         News::create($validated);
 
@@ -103,8 +137,39 @@ class AdminController extends Controller
             'news_subtitle' => 'required|string',
             'news_canonical' => 'required|string',
             'news_state' => 'required|string',
-            'news_img1' => 'nullable|string',
+            'news_img1' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        // Set default values for image fields if not provided
+        if (!isset($validated['news_img2'])) {
+            $validated['news_img2'] = $news->news_img2 ?: '';
+        }
+        if (!isset($validated['news_img3'])) {
+            $validated['news_img3'] = $news->news_img3 ?: '';
+        }
+        if (!isset($validated['news_content'])) {
+            $validated['news_content'] = $validated['news_canonical'];
+        }
+        
+        // Generate proper canonical URL slug from title if it's being updated
+        if (isset($validated['news_title'])) {
+            $validated['news_canonical'] = $this->generateSlug($validated['news_title']);
+        }
+
+        // Handle image upload
+        if ($request->hasFile('news_img1')) {
+            // Delete old image if it exists
+            if ($news->news_img1 && file_exists(public_path('images/MCC/IndivNews/' . $news->news_img1))) {
+                unlink(public_path('images/MCC/IndivNews/' . $news->news_img1));
+            }
+            
+            $image = $request->file('news_img1');
+            $imageName = time() . '_' . $image->getClientOriginalName();
+            $image->move(public_path('images/MCC/IndivNews'), $imageName);
+            $validated['news_img1'] = $imageName;
+        } else {
+            $validated['news_img1'] = $news->news_img1 ?: '';
+        }
 
         $news->update($validated);
 

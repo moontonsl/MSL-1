@@ -48,20 +48,41 @@ Route::get('/about', function () {
     return Inertia::render('About Page/index');
 })->name('about');
 
-// Campus Tournament listing/management page (updated routes)
-Route::get('/Tournament/SL', function () {
-    return Inertia::render('Campus Tournament/CampusTournament SL');
-})->name('campus.tournament');
+// Campus Tournament main route - redirects based on user role
+Route::get('/campus-tournament', function () {
+    $user = Auth::user();
+    
+    if (!$user) {
+        return redirect()->route('login');
+    }
+    
+    // Redirect based on user role
+    if ($user->role === 'SL') {
+        return redirect()->route('campus.tournament.sl');
+    } elseif ($user->role === 'Regional Admin') {
+        return redirect()->route('campus.tournament.regionaladmin');
+    } else {
+        // For other users, redirect to SL view or show access denied
+        return redirect()->route('campus.tournament.sl');
+    }
+})->middleware(['auth', 'verified'])->name('campus.tournament');
+
+// Campus Tournament listing/management page for SL
+Route::get('/Tournament/SL', [\App\Http\Controllers\CampusTournamentController::class, 'slIndex'])
+    ->middleware(['auth', 'verified'])->name('campus.tournament.sl');
+
+// Public route to view all approved tournaments with teams (for testing)
+Route::get('/campus-tournament/public', [\App\Http\Controllers\CampusTournamentController::class, 'publicIndex'])
+    ->name('campus.tournament.public');
 
 // Team Registration page (updated route)
 Route::get('/Tournament/CampusTournamentReg', function () {
     return Inertia::render('Campus Tournament/TeamRegistration');
 })->name('campus.teamregistration');
 
-// Campus Team page - shows logged-in player's team (mocked for now)
-Route::get('/Tournament/CampusTournamentTeam', function () {
-    return Inertia::render('Campus Tournament/Campus Tournament Team');
-})->name('campus.team');
+// Campus Team page - shows logged-in player's team
+Route::get('/Tournament/CampusTournamentTeam', [\App\Http\Controllers\CampusTournamentController::class, 'teamView'])
+    ->name('campus.team');
 
 // Captain Registration page (updated route and filename mapping)
 Route::get('/Tournament/CampusTournament', function () {
@@ -69,9 +90,263 @@ Route::get('/Tournament/CampusTournament', function () {
 })->name('campus.captainregistration');
 
 // Regional Admin - Tournament Requests page
-Route::get('/Tournament/RegionalAdmin', function () {
-    return Inertia::render('Campus Tournament/Regional Admin');
-})->name('campus.regionaladmin');
+Route::get('/Tournament/RegionalAdmin', [\App\Http\Controllers\CampusTournamentController::class, 'regionalAdminIndex'])
+    ->middleware(['auth', 'verified'])->name('campus.tournament.regionaladmin');
+
+
+
+// Campus Tournament API routes
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::post('/campus-tournaments', [\App\Http\Controllers\CampusTournamentController::class, 'store'])->name('campus.tournaments.store');
+    Route::post('/campus-tournaments/{id}/approve', [\App\Http\Controllers\CampusTournamentController::class, 'approve'])->name('campus.tournaments.approve');
+    Route::post('/campus-tournaments/{id}/reject', [\App\Http\Controllers\CampusTournamentController::class, 'reject'])->name('campus.tournaments.reject');
+    Route::post('/campus-tournaments/{id}/submit-results', [\App\Http\Controllers\CampusTournamentController::class, 'submitResults'])->name('campus.tournaments.submit-results');
+    Route::delete('/campus-tournaments/{id}', [\App\Http\Controllers\CampusTournamentController::class, 'destroy'])->name('campus.tournaments.destroy');
+});
+
+// API endpoints for Campus Tournament registration
+Route::get('/user-info', function () {
+    $user = Auth::user();
+    return response()->json(['user' => $user]);
+})->middleware(['auth', 'verified']);
+
+Route::get('/approved-tournaments', function () {
+    // Only return approved tournaments that are active (results not submitted and within registration period)
+    $tournaments = \App\Models\CampusTournament::where('status', 'approved')
+        ->where('results_submitted', false)
+        ->where('start_date', '<=', now())
+        ->where('end_date', '>=', now())
+        ->get();
+    return response()->json($tournaments);
+});
+
+Route::get('/team-check', function (\Illuminate\Http\Request $request) {
+    // Get user ID from request parameter since we're not logged in
+    $userId = $request->query('user_id');
+    
+    if (!$userId) {
+        return response()->json(['isInTeam' => false], 400);
+    }
+    
+    // Only check for teams in active tournaments (results not submitted)
+    $teamMember = \App\Models\CampusTournamentTeamMember::whereHas('team.tournament', function($query) {
+        $query->where('status', 'approved')
+              ->where('results_submitted', false);
+    })->where('player_id', $userId)->first();
+    
+    return response()->json([
+        'isInTeam' => $teamMember ? true : false,
+        'isCaptain' => $teamMember ? $teamMember->role === 'captain' : false
+    ]);
+});
+
+Route::get('/school-players', function (\Illuminate\Http\Request $request) {
+    try {
+        $search = $request->query('search', '');
+        $excludeIds = $request->query('exclude', '');
+        $university = $request->query('university', '');
+        
+        if (!$university) {
+            return response()->json(['message' => 'University parameter required'], 400);
+        }
+        
+        // Convert exclude string to array if it's not empty
+        $excludeArray = [];
+        if ($excludeIds) {
+            $excludeArray = explode(',', $excludeIds);
+            $excludeArray = array_filter($excludeArray, function($id) {
+                return is_numeric($id);
+            });
+        }
+        
+            $query = \App\Models\User::where('university', $university)
+                ->where('state', 'Verified') // Only verified users
+                ->where('role', '!=', 'SL')
+                ->where('role', '!=', 'Regional Admin')
+                ->where('role', '!=', 'Admin')
+                ->where('role', '!=', 'Super Admin');
+        
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('username', 'like', '%' . $search . '%')
+                  ->orWhere('name', 'like', '%' . $search . '%')
+                  ->orWhere('surname', 'like', '%' . $search . '%');
+            });
+        }
+        
+        if (!empty($excludeArray)) {
+            $query->whereNotIn('id', $excludeArray);
+        }
+        
+        // Exclude players who are already in teams from tournaments that haven't submitted results yet
+        $query->whereNotExists(function($q) {
+            $q->select(\DB::raw(1))
+              ->from('campus_tournament_team_members')
+              ->join('campus_tournament_teams', 'campus_tournament_team_members.team_id', '=', 'campus_tournament_teams.id')
+              ->join('campus_tournaments', 'campus_tournament_teams.tournament_id', '=', 'campus_tournaments.id')
+              ->whereRaw('campus_tournament_team_members.player_id = users.id')
+              ->where('campus_tournaments.results_submitted', false);
+        });
+        
+        $players = $query->limit(10)->get(['id', 'username', 'name', 'surname']);
+        
+        return response()->json($players);
+    } catch (\Exception $e) {
+        \Log::error('School players search error: ' . $e->getMessage());
+        return response()->json(['error' => 'Search failed', 'message' => $e->getMessage()], 500);
+    }
+});
+
+Route::post('/validate-credentials', function (\Illuminate\Http\Request $request) {
+    $request->validate([
+        'username' => 'required|string',
+        'password' => 'required|string',
+    ]);
+    
+    // Validate credentials without logging in
+    if (Auth::attempt($request->only('username', 'password'))) {
+        $user = Auth::user();
+        Auth::logout(); // Don't keep them logged in, just validate
+        
+        return response()->json(['user' => $user]);
+    }
+    
+    return response()->json(['message' => 'Invalid credentials'], 401);
+});
+
+Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
+    // Validate the request
+    $request->validate([
+        'teamName' => 'required|string|max:50',
+        'discordId' => 'required|string|max:50',
+        'captain' => 'required|array',
+        'captain.id' => 'required|integer',
+        'captain.university' => 'required|string',
+        'players' => 'required|array',
+        'players.player2' => 'required|array',
+        'players.player3' => 'required|array',
+        'players.player4' => 'required|array',
+        'players.player5' => 'required|array',
+    ]);
+    
+    $captain = $request->captain;
+    
+    // Check if captain's school has an active approved tournament
+    $tournament = \App\Models\CampusTournament::where('school_name', $captain['university'])
+        ->where('status', 'approved')
+        ->where('results_submitted', false)
+        ->where('start_date', '<=', now())
+        ->where('end_date', '>=', now())
+        ->first();
+    
+    if (!$tournament) {
+        return response()->json(['message' => 'No active tournament found for your school. Tournament may have ended or results already submitted.'], 400);
+    }
+    
+    // Check if team name already exists
+    $existingTeam = \App\Models\CampusTournamentTeam::where('team_name', $request->teamName)
+        ->where('tournament_id', $tournament->id)
+        ->first();
+    
+    if ($existingTeam) {
+        return response()->json(['message' => 'Team name already exists'], 400);
+    }
+    
+    // Create team
+    $team = \App\Models\CampusTournamentTeam::create([
+        'tournament_id' => $tournament->id,
+        'team_name' => $request->teamName,
+        'discord_id' => $request->discordId,
+        'captain_id' => $captain['id'],
+    ]);
+    
+    // Add all players to team
+    $players = [
+        $request->players['captain'],
+        $request->players['player2'],
+        $request->players['player3'],
+        $request->players['player4'],
+        $request->players['player5'],
+    ];
+    
+    foreach ($players as $player) {
+        \App\Models\CampusTournamentTeamMember::create([
+            'team_id' => $team->id,
+            'player_id' => $player['id'],
+            'role' => $player['id'] === $captain['id'] ? 'captain' : 'member',
+        ]);
+    }
+    
+    return response()->json(['message' => 'Team registered successfully', 'team_id' => $team->id]);
+});
+
+Route::put('/team-update/{teamId}', function (\Illuminate\Http\Request $request, $teamId) {
+    // Validate the request
+    $request->validate([
+        'teamName' => 'required|string|max:50',
+        'discordId' => 'required|string|max:50',
+        'captain' => 'required|array',
+        'captain.id' => 'required|integer',
+        'captain.university' => 'required|string',
+        'players' => 'required|array',
+        'players.player2' => 'required|array',
+        'players.player3' => 'required|array',
+        'players.player4' => 'required|array',
+        'players.player5' => 'required|array',
+    ]);
+    
+    $captain = $request->captain;
+    
+    // Find the existing team
+    $team = \App\Models\CampusTournamentTeam::find($teamId);
+    
+    if (!$team) {
+        return response()->json(['message' => 'Team not found'], 404);
+    }
+    
+    // Check if captain is the team captain
+    if ($team->captain_id !== $captain['id']) {
+        return response()->json(['message' => 'Only the team captain can edit the team'], 403);
+    }
+    
+    // Check if team name already exists (excluding current team)
+    $existingTeam = \App\Models\CampusTournamentTeam::where('team_name', $request->teamName)
+        ->where('tournament_id', $team->tournament_id)
+        ->where('id', '!=', $teamId)
+        ->first();
+    
+    if ($existingTeam) {
+        return response()->json(['message' => 'Team name already exists'], 400);
+    }
+    
+    // Update team details
+    $team->update([
+        'team_name' => $request->teamName,
+        'discord_id' => $request->discordId,
+    ]);
+    
+    // Delete existing team members
+    \App\Models\CampusTournamentTeamMember::where('team_id', $teamId)->delete();
+    
+    // Add all players to team
+    $players = [
+        $request->players['captain'],
+        $request->players['player2'],
+        $request->players['player3'],
+        $request->players['player4'],
+        $request->players['player5'],
+    ];
+    
+    foreach ($players as $player) {
+        \App\Models\CampusTournamentTeamMember::create([
+            'team_id' => $teamId,
+            'player_id' => $player['id'],
+            'role' => $player['id'] === $captain['id'] ? 'captain' : 'member',
+        ]);
+    }
+    
+    return response()->json(['message' => 'Team updated successfully', 'team_id' => $teamId]);
+});
 
 
 // Admin routes are defined in routes/admin.php

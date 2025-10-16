@@ -23,6 +23,11 @@ class EventsController extends Controller
             return redirect('/MPLS16Battletrips');
         }
         
+        // Redirect Campus Tournament S1 to the Campus Tournament page
+        if ($event->event_canonical === 'CampusTournament' || $event->event_name === 'Campus Tournament S1') {
+            return redirect('/Tournament/CampusTournament');
+        }
+        
         // For other events, show the generic event page
         return Inertia::render('Events/EventShow', [
             'event' => $event
