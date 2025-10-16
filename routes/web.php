@@ -923,6 +923,8 @@ Route::post('/msl-network/send-inquiry', function (\Illuminate\Http\Request $req
     try {
         $request->validate([
             'to_email' => 'required|email',
+            'cc_emails' => 'nullable|array',
+            'cc_emails.*' => 'email',
             'subject' => 'required|string|max:255',
             'message' => 'required|string|max:2000',
             'region' => 'nullable|string|max:100'
@@ -930,14 +932,22 @@ Route::post('/msl-network/send-inquiry', function (\Illuminate\Http\Request $req
 
         $inquiryData = [
             'to_email' => $request->to_email,
+            'cc_emails' => $request->cc_emails ?? [],
             'subject' => $request->subject,
             'message' => $request->message,
             'region' => $request->region,
             'received_at' => now()
         ];
 
-        // Send email to the regional team
-        \Mail::to($request->to_email)->send(new \App\Mail\MslNetworkInquiryMail($inquiryData));
+        // Send email to the regional team with CC recipients
+        $mail = \Mail::to($request->to_email);
+        
+        // Add CC recipients if any
+        if (!empty($request->cc_emails)) {
+            $mail->cc($request->cc_emails);
+        }
+        
+        $mail->send(new \App\Mail\MslNetworkInquiryMail($inquiryData));
 
         return response()->json([
             'success' => true,
