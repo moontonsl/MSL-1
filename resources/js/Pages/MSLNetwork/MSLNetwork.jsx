@@ -1,12 +1,171 @@
-import React from "react";
+import React, { useState } from "react";
 import { Head } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutBuffsAndSupport.jsx";
 import { Helmet } from "react-helmet";
 import frameImg from "./Assets/Frame437.png";
 import frameImgFooter from "./Assets/Frame437Footer.png";
-import { CalendarX, Users, HandCoins, Goal, Handshake, Sparkles } from "lucide-react";
+import { CalendarX, Users, HandCoins, Goal, Handshake, Sparkles, X, Send, Plus } from "lucide-react";
 
 const MSLNetwork = () => {
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [selectedRegionEmail, setSelectedRegionEmail] = useState("");
+  const [emailForm, setEmailForm] = useState({
+    to: "",
+    ccEmails: [],
+    subject: "",
+    message: ""
+  });
+  const [ccInput, setCcInput] = useState("");
+  const [showCcSuggestions, setShowCcSuggestions] = useState(false);
+
+  const regionEmails = {
+    "msl.partnerships.ncluz@gmail.com": "North/Central Luzon",
+    "msl.partnerships.ncr@gmail.com": "NCR",
+    "msl.partnerships.sluz@gmail.com": "South Luzon",
+    "msl.partnerships.vis@gmail.com": "Visayas",
+    "msl.partnerships.min@gmail.com": "Mindanao"
+  };
+
+  const handleRegionSelect = (email) => {
+    setSelectedRegionEmail(email);
+    setEmailForm(prev => ({
+      ...prev,
+      to: email
+    }));
+  };
+
+  const handleEmailFormChange = (field, value) => {
+    setEmailForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const addCcEmail = (email) => {
+    const trimmedEmail = email.trim();
+    if (trimmedEmail && !emailForm.ccEmails.includes(trimmedEmail)) {
+      setEmailForm(prev => ({
+        ...prev,
+        ccEmails: [...prev.ccEmails, trimmedEmail]
+      }));
+    }
+    setCcInput("");
+    setShowCcSuggestions(false);
+  };
+
+  const removeCcEmail = (emailToRemove) => {
+    setEmailForm(prev => ({
+      ...prev,
+      ccEmails: prev.ccEmails.filter(email => email !== emailToRemove)
+    }));
+  };
+
+  const handleCcInputKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addCcEmail(ccInput);
+    } else if (e.key === 'Backspace' && ccInput === '' && emailForm.ccEmails.length > 0) {
+      removeCcEmail(emailForm.ccEmails[emailForm.ccEmails.length - 1]);
+    }
+  };
+
+  const handleCcInputChange = (e) => {
+    setCcInput(e.target.value);
+    setShowCcSuggestions(e.target.value.length > 0);
+  };
+
+  const getFilteredSuggestions = () => {
+    if (!ccInput) return [];
+    return Object.entries(regionEmails).filter(([email, name]) => 
+      email.toLowerCase().includes(ccInput.toLowerCase()) || 
+      name.toLowerCase().includes(ccInput.toLowerCase())
+    );
+  };
+
+  const handleSendEmail = async () => {
+    if (!emailForm.to || !emailForm.subject || !emailForm.message) {
+      alert("Please fill in all fields");
+      return;
+    }
+
+    try {
+      // Show loading state
+      const sendButton = document.querySelector('[data-send-email]');
+      if (sendButton) {
+        sendButton.disabled = true;
+        sendButton.textContent = 'Sending...';
+      }
+
+      const response = await fetch('/msl-network/send-inquiry', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+          to_email: emailForm.to,
+          cc_emails: emailForm.ccEmails,
+          subject: emailForm.subject,
+          message: emailForm.message,
+          region: regionEmails[selectedRegionEmail] || 'Unknown'
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert(result.message);
+        // Reset form and close modal
+        setEmailForm({ to: "", ccEmails: [], subject: "", message: "" });
+        setCcInput("");
+        setShowCcSuggestions(false);
+        setSelectedRegionEmail("");
+        setIsEmailModalOpen(false);
+      } else {
+        alert(result.message || 'Failed to send email. Please try again.');
+      }
+      
+    } catch (error) {
+      console.error('Error sending email:', error);
+      alert('Failed to send email. Please try again later.');
+    } finally {
+      // Reset button state
+      const sendButton = document.querySelector('[data-send-email]');
+      if (sendButton) {
+        sendButton.disabled = false;
+        sendButton.innerHTML = '<Send className="w-4 h-4" />Send Email';
+      }
+    }
+  };
+
+  const handleCopyEmailDetails = () => {
+    const emailDetails = `To: ${emailForm.to || selectedRegionEmail}
+CC: ${emailForm.ccEmails.length ? emailForm.ccEmails.join(', ') : 'None'}
+Subject: ${emailForm.subject}
+Message: ${emailForm.message}`;
+
+    navigator.clipboard.writeText(emailDetails).then(() => {
+      alert('Email details copied to clipboard! You can now paste them into your email client.');
+    }).catch(() => {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = emailDetails;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Email details copied to clipboard! You can now paste them into your email client.');
+    });
+  };
+
+  const openEmailModal = () => {
+    if (!selectedRegionEmail) {
+      alert("Please select a region first");
+      return;
+    }
+    setIsEmailModalOpen(true);
+  };
+
   return (
     <>
       <Head title="MSL Network" />
@@ -41,8 +200,7 @@ const MSLNetwork = () => {
             <p className="font-medium mb-6 
               text-[12px] sm:text-[16px] lg:text-[16px] max-w-xl">
               The MSL Network is a nationwide community of collegiate esports
-              organizations powered by MSL Philippines. Fueling your next win
-              through events, collaboration, and exclusive opportunities.
+              organizations powered by MSL Philippines.
             </p>
 
             {/* BUTTONS */}
@@ -190,11 +348,11 @@ const MSLNetwork = () => {
           
           {/* LEFT SIDE - TEXT */}
           <div className="flex flex-col justify-center items-center md:items-start space-y-1 md:space-y-3">
-            <h1 className="font-bold text-[20px] sm:text-[28px] lg:text-[36px] leading-tight">
-              Apply part of The MSL Network?
+            <h1 className="font-bold text-[20px] sm:text-[28px] lg:text-[36px] leading-tight whitespace-nowrap">
+              Already part of The MSL Network?
             </h1>
             <p className="font-medium text-[12px] sm:text-[16px] lg:text-[16px] max-w-sm sm:max-w-lg">
-              Learn how to access Buffs & Support, our exclusive sponsorship
+              Learn how to access <span className="font-bold">Buffs & Support </span>, our exclusive sponsorship
               program for partnered orgs.
             </p>
           </div>
@@ -206,7 +364,7 @@ const MSLNetwork = () => {
                 href="#"
                 className="px-3 py-1.5 sm:px-5 sm:py-2.5 bg-black text-[#F3C718] font-bold rounded-xl text-sm sm:text-base"
               >
-                APPLY TO JOIN
+                APPLY NOW
               </a>
               <a
                 href="#"
@@ -228,9 +386,9 @@ const MSLNetwork = () => {
           <h2 className="font-bold mb-2 sm:mb-3 text-[14px] sm:text-[24px] lg:text-[30px] text-center leading-snug">
             Partnership Tiers
           </h2>
-          <p className="font-medium mb-4 sm:mb-6 text-[10px] sm:text-[16px] lg:text-[16px] text-center w-full leading-snug">
+          <label className="font-medium mb-4 sm:mb-6 text-[10px] sm:text-[16px] lg:text-[16px] text-center w-full leading-snug">
             Every org has a place in The MSL Network — tiers recognize your progress, impact, and consistency.
-          </p>
+          </label>
 
           {/* --- PERKS --- */}
           <h3 className="font-bold text-[16px] sm:text-[22px] lg:text-[28px] text-[#F2C21A] mb-3 self-start">
@@ -245,7 +403,7 @@ const MSLNetwork = () => {
               "Diamond Allocation (per sem)",
               <>Monetary<br />Sponsorship</>,
               <>Sponsorships &<br />Rewards</>,
-              <>Event Activities<br/>(Game Campaigns)</>,
+              <>Event Activations<br/>(Game Campaigns)</>,
               <>Creative Growth<br/>Space</>,
               <>Exclusive<br/>Opportunities</>
             ].map((perk, idx) => (
@@ -265,8 +423,8 @@ const MSLNetwork = () => {
             {[
               { name: "C", values: ["50,000", "-", "Diamonds + TL", "Low Priority", "-", "Low Priority"] },
               { name: "B", values: ["70,000", "-", "Diamonds + TL + Merch", "Moderate Priority", "Basic Access", "Moderate Priority"] },
-              { name: "A", values: ["100,000", "YES", "Diamonds + TL + Merch", "High Priority", "Full Access", "High Priority"] },
-              { name: "Super School", values: ["150,000", "YES", "All + First Priority", "First Priority", "Full Access", "First Priority"] }
+              { name: "A", values: ["100,000", "YES", "Diamonds + TL + Merch + Monetary", "High Priority", "Full Access", "High Priority"] },
+              { name: "Super School", values: ["150,000", "YES", "All + First Priority Allocations", "First Priority", "Full Access", "First Priority"] }
             ].map((tier, idx) => (
               <div
                 key={idx}
@@ -324,7 +482,7 @@ const MSLNetwork = () => {
               { name: "C", values: ["-", "-", "YES", "YES"] },
               { name: "B", values: ["-", "-", "YES", "YES"] },
               { name: "A", values: ["YES", "YES", "YES", "YES"] },
-              { name: "Super School", values: ["YES", "YES", "YES", <>Moonton<br/>School Admin</>] }
+              { name: "Super School", values: ["YES", "YES", "YES", <>Moonton &<br/>School Admin</>] }
             ].map((tier, idx) => (
               <div key={idx} className="flex flex-col w-[1%] sm:w-[20%] min-w-[80px] sm:min-w-[100px] gap-0 sm:gap-4 p-1 sm:p-4 bg-gray-400/20 rounded-lg">
                 <h4
@@ -375,7 +533,7 @@ const MSLNetwork = () => {
             {[
               { name: "C", values: ["8 - 15 Teams", "< 100", "≤ 5%"] },
               { name: "B", values: ["16 - 31 Teams", "100 - 250", "5% - 15%"] },
-              { name: "A", values: ["≥ 24 Teams", "≥ 24 Teams", "> 15%"] },
+              { name: "A", values: ["≥ 24 Teams", "≥ 250", "> 15%"] },
               { name: "Super School", values: ["N/A", "N/A", "N/A"] }
             ].map((tier, idx) => (
               <div key={idx} className="flex flex-col w-[1%] sm:w-[20%] min-w-[80px] sm:min-w-[100px] gap-0 sm:gap-4 p-1 sm:p-4 bg-gray-400/20 rounded-lg">
@@ -433,19 +591,8 @@ const MSLNetwork = () => {
             <div className="flex flex-col gap-3 w-full px-4">
               <select
                 className="px-4 py-2 bg-black text-[#F3C718] font-bold rounded-xl text-[12px] text-center"
-                defaultValue=""
-                onChange={(e) => {
-                  const email = e.target.value;
-                  const link = document.getElementById("compose-email-mobile");
-
-                  if (email) {
-                    link.href = `mailto:${email}`;
-                    link.classList.remove("pointer-events-none", "opacity-50");
-                  } else {
-                    link.href = "#";
-                    link.classList.add("pointer-events-none", "opacity-50");
-                  }
-                }}
+                value={selectedRegionEmail}
+                onChange={(e) => handleRegionSelect(e.target.value)}
               >
                 <option value="" disabled>
                   SELECT YOUR REGION
@@ -467,13 +614,16 @@ const MSLNetwork = () => {
                 </option>
               </select>
 
-              <a
-                id="compose-email-mobile"
-                href="#"
-                className="px-4 py-2 bg-black text-[#F3C718] font-bold rounded-xl text-[12px] text-center pointer-events-none opacity-50 transition"
+              <button
+                onClick={openEmailModal}
+                className={`px-4 py-2 bg-black text-[#F3C718] font-bold rounded-xl text-[12px] text-center transition ${
+                  selectedRegionEmail 
+                    ? "opacity-100 cursor-pointer hover:bg-gray-800" 
+                    : "pointer-events-none opacity-50"
+                }`}
               >
                 COMPOSE EMAIL
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -502,19 +652,8 @@ const MSLNetwork = () => {
               {/* Dropdown */}
               <select
                 className="px-6 py-3 bg-black text-[#F3C718] font-bold rounded-xl"
-                defaultValue=""
-                onChange={(e) => {
-                  const email = e.target.value;
-                  const link = document.getElementById("compose-email-desktop");
-
-                  if (email) {
-                    link.href = `mailto:${email}`;
-                    link.classList.remove("pointer-events-none", "opacity-50");
-                  } else {
-                    link.href = "#";
-                    link.classList.add("pointer-events-none", "opacity-50");
-                  }
-                }}
+                value={selectedRegionEmail}
+                onChange={(e) => handleRegionSelect(e.target.value)}
               >
                 <option value="" disabled className="text-center">
                   SELECT YOUR REGION
@@ -536,17 +675,170 @@ const MSLNetwork = () => {
                 </option>
               </select>
 
-              <a
-                id="compose-email-desktop"
-                href="#"
-                className="px-6 py-3 bg-black text-[#F3C718] font-bold rounded-xl text-center pointer-events-none opacity-50 transition"
+              <button
+                onClick={openEmailModal}
+                className={`px-6 py-3 bg-black text-[#F3C718] font-bold rounded-xl text-center transition ${
+                  selectedRegionEmail 
+                    ? "opacity-100 cursor-pointer hover:bg-gray-800" 
+                    : "pointer-events-none opacity-50"
+                }`}
               >
                 COMPOSE EMAIL
-              </a>
+              </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Email Composition Modal - Dark Version */}
+      {isEmailModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-700">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-700">
+              <h3 className="text-lg font-bold text-white">Compose Email</h3>
+              <button
+                onClick={() => setIsEmailModalOpen(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4">
+              {/* To Field */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Send to:
+                </label>
+                <input
+                  type="email"
+                  value={emailForm.to || selectedRegionEmail}
+                  onChange={(e) => handleEmailFormChange('to', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F2C21A] focus:border-transparent text-white bg-gray-800 placeholder-gray-400"
+                  placeholder="Enter email address"
+                />
+                {selectedRegionEmail && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    Selected: {regionEmails[selectedRegionEmail]}
+                  </p>
+                )}
+              </div>
+
+              {/* CC Field */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  CC:
+                </label>
+                <div className="relative">
+                  <div className="flex flex-wrap gap-1 p-2 border border-gray-600 rounded-md bg-gray-800 min-h-[40px] focus-within:ring-2 focus-within:ring-[#F2C21A] focus-within:border-transparent">
+                    {emailForm.ccEmails.map((email, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-[#F2C21A] text-black text-xs rounded-md"
+                      >
+                        {email}
+                        <button
+                          type="button"
+                          onClick={() => removeCcEmail(email)}
+                          className="hover:bg-black/20 rounded-full p-0.5"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                    <input
+                      type="text"
+                      value={ccInput}
+                      onChange={handleCcInputChange}
+                      onKeyDown={handleCcInputKeyDown}
+                      onBlur={() => setTimeout(() => setShowCcSuggestions(false), 200)}
+                      onFocus={() => setShowCcSuggestions(ccInput.length > 0)}
+                      className="flex-1 bg-transparent text-white placeholder-gray-400 outline-none min-w-[120px]"
+                      placeholder={emailForm.ccEmails.length === 0 ? "Enter CC email addresses (optional)" : "Add more..."}
+                    />
+                  </div>
+                  
+                  {/* Suggestions Dropdown */}
+                  {showCcSuggestions && getFilteredSuggestions().length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-600 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                      {getFilteredSuggestions().map(([email, name]) => (
+                        <button
+                          key={email}
+                          type="button"
+                          onClick={() => addCcEmail(email)}
+                          className="w-full px-3 py-2 text-left text-white hover:bg-gray-700 text-sm"
+                        >
+                          <div className="font-medium">{name}</div>
+                          <div className="text-gray-400 text-xs">{email}</div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-gray-400 mt-1">
+                  Type email addresses and press Enter or comma to add. Backspace to remove.
+                </p>
+              </div>
+
+              {/* Subject Field */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Subject:
+                </label>
+                <input
+                  type="text"
+                  value={emailForm.subject}
+                  onChange={(e) => handleEmailFormChange('subject', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F2C21A] focus:border-transparent text-white bg-gray-800 placeholder-gray-400"
+                  placeholder="Enter email subject"
+                />
+              </div>
+
+              {/* Message Field */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Message:
+                </label>
+                <textarea
+                  value={emailForm.message}
+                  onChange={(e) => handleEmailFormChange('message', e.target.value)}
+                  rows={6}
+                  className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F2C21A] focus:border-transparent resize-none text-white bg-gray-800 placeholder-gray-400"
+                  placeholder="Enter your message here..."
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-between gap-3 p-6 border-t border-gray-700">
+              <button
+                onClick={() => setIsEmailModalOpen(false)}
+                className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleCopyEmailDetails}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-700 text-white font-medium rounded-md hover:bg-gray-600 transition-colors"
+                >
+                  Copy Details
+                </button>
+                <button
+                  onClick={handleSendEmail}
+                  data-send-email
+                  className="flex items-center gap-2 px-4 py-2 bg-[#F2C21A] text-black font-bold rounded-md hover:bg-[#CA8B04] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Send className="w-4 h-4" />
+                  Send Email
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       
       </AuthenticatedLayout>

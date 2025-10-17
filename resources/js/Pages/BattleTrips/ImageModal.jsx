@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import battleTripsImage from "./Assets/Battle Trips_Page 4 Week 7.png";
+import battleTripsImage from "./Assets/Battle Trips_Page 4 (1).png";
 
 export default function ImageModal() {
   const [isOpen, setIsOpen] = useState(false);
