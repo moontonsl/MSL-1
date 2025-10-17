@@ -13,10 +13,10 @@ export default function ResourcesPage() {
     };
 
     const resourceItems = [
-        { image: "/images/MCC/Resources/Campus 3.png", alt: "Campus", path: "/resources/campus", isExternal: false },
+        { image: "/images/MCC/Resources/Campus 3.png", alt: "Campus", path: "/soon", isExternal: false },
         { image: "/images/MCC/Resources/ABOUT US.png", alt: "About Us", path: "/about", isExternal: false },
-        { image: "/images/MCC/Resources/MSL DIRECTORY.png", alt: "MSL Directory", path: "/resources/directory", isExternal: false },
-        { image: "/images/MCC/Resources/ASSETS.png", alt: "Assets", path: "/resources/assets", isExternal: false }
+        { image: "/images/MCC/Resources/MSL DIRECTORY.png", alt: "MSL Directory", path: "/soon", isExternal: false },
+        { image: "/images/MCC/Resources/ASSETS.png", alt: "Assets", path: "https://tinyurl.com/Promotional-Material-Assets", isExternal: true }
     ];
 
     return (

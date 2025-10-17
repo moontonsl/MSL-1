@@ -66,7 +66,7 @@ function Events({ events = [] }) {
                         </div>
 
                         <div className="mt-4">
-                            <Link href="/mcc">
+                            <Link href="/MCC">
                                 <div className="flex w-[190px] h-[58px] justify-center items-center gap-[5.7px] rounded-full border border-white bg-[rgba(255,255,255,0.05)] cursor-pointer hover:bg-[rgba(255,255,255,0.1)] transition-all duration-300">
                                 <span className="text-white font-['Space Grotesk'] text-[18.5px] font-bold leading-[140%]">Learn more</span>
                                 </div>
@@ -101,7 +101,7 @@ function Events({ events = [] }) {
                         </p>
                         </div>
                         <div className="p-1 mt-2">
-                        <Link href="/mcc">
+                        <Link href="/MCC">
                             <div className="flex w-[150px] h-[45px] justify-center items-center gap-1 rounded-full border border-white bg-[rgba(255,255,255,0.05)] cursor-pointer hover:bg-[rgba(255,255,255,0.1)] transition-all duration-300">
                                 <span className="text-white font-['Space Grotesk'] text-base font-bold leading-[140%]">Learn more</span>
                             </div>
