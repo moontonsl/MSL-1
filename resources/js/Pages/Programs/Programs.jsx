@@ -45,39 +45,62 @@ const Programs = () => {
                                 title: 'BUFFS AND SUPPORT',
                                 desc: 'The Buffs and Support Program of the Partnerships Department has been one of the most substantial initiatives of MSL Philippines.'
                             }
-                        ].map((program, idx) => (
-                            <div 
-                                key={idx} 
-                                className="flex flex-col bg-transparent p-3 md:p-4 lg:p-6 gap-3 md:gap-4 lg:gap-6 flex-1"
-                            >
-                                <div 
-                                    className="h-[180px] md:h-[260px] lg:h-[425px] w-full bg-lightgray bg-center bg-cover bg-no-repeat rounded-lg"
-                                    style={{ backgroundImage: `url(${program.img})` }}
-                                />
-                                <div className="flex flex-col justify-between flex-1 p-2 md:p-3 lg:p-4 gap-3">
-                                    <h3 className="text-yellow-500 text-center font-montserrat text-[18px] md:text-[22px] lg:text-[30px] font-bold leading-tight">
-                                        {program.title}
-                                    </h3>
-                                    <p className="text-white font-montserrat text-[12px] md:text-[14px] lg:text-[16px] font-medium leading-relaxed line-clamp-4">
-                                        {program.desc}
-                                    </p>
-                                    <div className="flex justify-end">
-                                        <button
-                                            className="
-                                                flex px-3 md:px-4 lg:px-6 py-2 md:py-2 lg:py-3
-                                                rounded-xl lg:rounded-[30px]
-                                                bg-[#303030] hover:bg-yellow-500
-                                                transition-colors duration-300
-                                            "
-                                        >
-                                            <span className="text-white hover:text-black font-inter text-[12px] md:text-[14px] lg:text-[16px] font-semibold">
-                                                Read More
-                                            </span>
-                                        </button>
+                        ].map((program, idx) => {
+                            const href =
+                                program.title === 'MSL NETWORK' ? '/MSLNetwork' :
+                                program.title === 'BUFFS AND SUPPORT' ? '/BuffsAndSupport' :
+                                null;
+                            return (
+                                <div
+                                    key={idx}
+                                    className="flex flex-col bg-transparent p-3 md:p-4 lg:p-6 gap-3 md:gap-4 lg:gap-6 flex-1"
+                                >
+                                    <div
+                                        className="h-[180px] md:h-[260px] lg:h-[425px] w-full bg-lightgray bg-center bg-cover bg-no-repeat rounded-lg"
+                                        style={{ backgroundImage: `url(${program.img})` }}
+                                    />
+                                    <div className="flex flex-col justify-between flex-1 p-2 md:p-3 lg:p-4 gap-3">
+                                        <h3 className="text-yellow-500 text-center font-montserrat text-[18px] md:text-[22px] lg:text-[30px] font-bold leading-tight">
+                                            {program.title}
+                                        </h3>
+                                        <p className="text-white font-montserrat text-[12px] md:text-[14px] lg:text-[16px] font-medium leading-relaxed line-clamp-4">
+                                            {program.desc}
+                                        </p>
+                                        <div className="flex justify-end">
+                                            {href ? (
+                                                <a href={href}>
+                                                    <button
+                                                        className="
+                                                            flex px-3 md:px-4 lg:px-6 py-2 md:py-2 lg:py-3
+                                                            rounded-xl lg:rounded-[30px]
+                                                            bg-[#303030] hover:bg-yellow-500
+                                                            transition-colors duration-300
+                                                        "
+                                                    >
+                                                        <span className="text-white hover:text-black font-inter text-[12px] md:text-[14px] lg:text-[16px] font-semibold">
+                                                            Read More
+                                                        </span>
+                                                    </button>
+                                                </a>
+                                            ) : (
+                                                <button
+                                                    className="
+                                                        flex px-3 md:px-4 lg:px-6 py-2 md:py-2 lg:py-3
+                                                        rounded-xl lg:rounded-[30px]
+                                                        bg-[#303030] hover:bg-yellow-500
+                                                        transition-colors duration-300
+                                                    "
+                                                >
+                                                    <span className="text-white hover:text-black font-inter text-[12px] md:text-[14px] lg:text-[16px] font-semibold">
+                                                        Read More
+                                                    </span>
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
 
                     {/* Lower Section */}
@@ -93,39 +116,62 @@ const Programs = () => {
                                 title: 'END OF SEMESTER REWARDS',
                                 desc: 'EOSR is crafted for our MLBB student communities, deeply rooted in our objective of achieving balanced gaming and academics. Its fundamental goal is to recognize your commitment, effort, and successes along your academic journey. MSL Philippines values your grades through in-game diamonds and can earn up to 3,500 by doing your best in academics!'
                             }
-                        ].map((program, idx) => (
-                            <div 
-                                key={idx} 
-                                className="flex flex-col bg-transparent p-3 md:p-4 lg:p-6 gap-3 md:gap-4 lg:gap-6 flex-1"
-                            >
-                                <div 
-                                    className="h-[180px] md:h-[260px] lg:h-[425px] w-full bg-lightgray bg-center bg-cover bg-no-repeat rounded-lg"
-                                    style={{ backgroundImage: `url(${program.img})` }}
-                                />
-                                <div className="flex flex-col justify-between flex-1 p-2 md:p-3 lg:p-4 gap-3">
-                                    <h3 className="text-yellow-500 text-center font-montserrat text-[18px] md:text-[22px] lg:text-[30px] font-bold leading-tight">
-                                        {program.title}
-                                    </h3>
-                                    <p className="text-white font-montserrat text-[12px] md:text-[14px] lg:text-[16px] font-medium leading-relaxed line-clamp-4">
-                                        {program.desc}
-                                    </p>
-                                    <div className="flex justify-end">
-                                        <button
-                                            className="
-                                                flex px-3 md:px-4 lg:px-6 py-2 md:py-2 lg:py-3
-                                                rounded-xl lg:rounded-[30px]
-                                                bg-[#303030] hover:bg-yellow-500
-                                                transition-colors duration-300
-                                            "
-                                        >
-                                            <span className="text-white hover:text-black font-inter text-[12px] md:text-[14px] lg:text-[16px] font-semibold">
-                                                Read More
-                                            </span>
-                                        </button>
+                        ].map((program, idx) => {
+                            const href =
+                                program.title === 'END OF SEMESTER REWARDS' ? '/soon' :
+                                program.title === 'MSL APPLICATION' ? '/MSLApplication' :
+                                null;
+                            return (
+                                <div
+                                    key={idx}
+                                    className="flex flex-col bg-transparent p-3 md:p-4 lg:p-6 gap-3 md:gap-4 lg:gap-6 flex-1"
+                                >
+                                    <div
+                                        className="h-[180px] md:h-[260px] lg:h-[425px] w-full bg-lightgray bg-center bg-cover bg-no-repeat rounded-lg"
+                                        style={{ backgroundImage: `url(${program.img})` }}
+                                    />
+                                    <div className="flex flex-col justify-between flex-1 p-2 md:p-3 lg:p-4 gap-3">
+                                        <h3 className="text-yellow-500 text-center font-montserrat text-[18px] md:text-[22px] lg:text-[30px] font-bold leading-tight">
+                                            {program.title}
+                                        </h3>
+                                        <p className="text-white font-montserrat text-[12px] md:text-[14px] lg:text-[16px] font-medium leading-relaxed line-clamp-4">
+                                            {program.desc}
+                                        </p>
+                                        <div className="flex justify-end">
+                                            {href ? (
+                                                <a href={href}>
+                                                    <button
+                                                        className="
+                                                            flex px-3 md:px-4 lg:px-6 py-2 md:py-2 lg:py-3
+                                                            rounded-xl lg:rounded-[30px]
+                                                            bg-[#303030] hover:bg-yellow-500
+                                                            transition-colors duration-300
+                                                        "
+                                                    >
+                                                        <span className="text-white hover:text-black font-inter text-[12px] md:text-[14px] lg:text-[16px] font-semibold">
+                                                            Read More
+                                                        </span>
+                                                    </button>
+                                                </a>
+                                            ) : (
+                                                <button
+                                                    className="
+                                                        flex px-3 md:px-4 lg:px-6 py-2 md:py-2 lg:py-3
+                                                        rounded-xl lg:rounded-[30px]
+                                                        bg-[#303030] hover:bg-yellow-500
+                                                        transition-colors duration-300
+                                                    "
+                                                >
+                                                    <span className="text-white hover:text-black font-inter text-[12px] md:text-[14px] lg:text-[16px] font-semibold">
+                                                        Read More
+                                                    </span>
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
 
                 </main>

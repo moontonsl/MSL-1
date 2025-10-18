@@ -116,34 +116,34 @@ const MCCS2Home = () => {
 
 
 
-              {/* Four buttons - Desktop row (original) */}
-              <div className="w-[1920px] left-0 top-[1720px] absolute hidden xl:flex justify-center items-center gap-10 z-20">
-                <div className="w-[420px] h-[180px] flex items-center justify-center">
+              {/* Four buttons - Desktop grid (2x2), tightened spacing and slightly larger */}
+              <div className="w-[1200px] left-1/2 -translate-x-1/2 top-[1620px] absolute hidden xl:grid grid-cols-2 gap-6 place-items-center z-20">
+                <div className="w-[520px] h-[220px] flex items-center justify-center group transition-transform duration-300 ease-out hover:scale-[1.04]">
                   <img
-                    className="w-full h-full object-contain select-none"
+                    className="w-full h-full object-contain select-none group-hover:brightness-110 group-hover:drop-shadow-[0_0_16px_rgba(243,199,24,0.45)]"
                     src="/images/MCC S2/Registration Button.png"
                     alt="Registration"
                   />
                 </div>
-                <div className="w-[420px] h-[180px] flex items-center justify-center">
+                <div className="w-[520px] h-[220px] flex items-center justify-center group transition-transform duration-300 ease-out hover:scale-[1.04]">
                   <img
-                    className="w-full h-full object-contain select-none"
+                    className="w-full h-full object-contain select-none group-hover:brightness-110 group-hover:drop-shadow-[0_0_16px_rgba(243,199,24,0.45)]"
                     src="/images/MCC S2/Rules Button.png"
                     alt="Rules"
                   />
                 </div>
-                <div className="w-[420px] h-[200px] flex items-center justify-center">
+                <div className="w-[520px] h-[220px] flex items-center justify-center group transition-transform duration-300 ease-out hover:scale-[1.04]">
                   <a href="/MCC/calendar" aria-label="Calendar" className="block w-full h-full">
                     <img
-                      className="w-full h-full object-contain select-none cursor-pointer"
+                      className="w-full h-full object-contain select-none cursor-pointer group-hover:brightness-110 group-hover:drop-shadow-[0_0_16px_rgba(243,199,24,0.45)]"
                       src="/images/MCC S2/Calendar Button.png"
                       alt="Calendar"
                     />
                   </a>
                 </div>
-                <div className="w-[420px] h-[180px] flex items-center justify-center">
+                <div className="w-[520px] h-[220px] flex items-center justify-center group transition-transform duration-300 ease-out hover:scale-[1.04]">
                   <img
-                    className="w-full h-full object-contain select-none"
+                    className="w-full h-full object-contain select-none group-hover:brightness-110 group-hover:drop-shadow-[0_0_16px_rgba(243,199,24,0.45)]"
                     src="/images/MCC S2/Favourites Button.png"
                     alt="Favourites"
                   />
@@ -153,20 +153,20 @@ const MCCS2Home = () => {
               {/* Four buttons - Mobile grid (large 2x2) */}
               <div className="w-[1920px] left-0 top-[1720px] absolute grid grid-cols-2 gap-4 place-items-center xl:hidden z-20">
                 {/* Row 1: Rules | Calendar */}
-                <div className="w-[820px] h-[320px] flex items-center justify-center transform translate-x-10">
-                  <img className="w-full h-full object-contain select-none" src="/images/MCC S2/Rules Button.png" alt="Rules" />
+                <div className="w-[820px] h-[320px] flex items-center justify-center transform translate-x-10 transition-transform duration-200 active:scale-95">
+                  <img className="w-full h-full object-contain select-none active:brightness-110" src="/images/MCC S2/Rules Button.png" alt="Rules" />
                 </div>
-                <div className="w-[820px] h-[320px] flex items-center justify-center transform -translate-x-10">
+                <div className="w-[820px] h-[320px] flex items-center justify-center transform -translate-x-10 transition-transform duration-200 active:scale-95">
                   <a href="/MCC/calendar" aria-label="Calendar" className="block w-full h-full">
-                    <img className="w-full h-full object-contain select-none cursor-pointer" src="/images/MCC S2/Calendar Button.png" alt="Calendar" />
+                    <img className="w-full h-full object-contain select-none cursor-pointer active:brightness-110" src="/images/MCC S2/Calendar Button.png" alt="Calendar" />
                   </a>
                 </div>
                 {/* Row 2: Registration | Favourites */}
-                <div className="w-[820px] h-[320px] flex items-center justify-center transform translate-x-10">
-                  <img className="w-full h-full object-contain select-none" src="/images/MCC S2/Registration Button.png" alt="Registration" />
+                <div className="w-[820px] h-[320px] flex items-center justify-center transform translate-x-10 transition-transform duration-200 active:scale-95">
+                  <img className="w-full h-full object-contain select-none active:brightness-110" src="/images/MCC S2/Registration Button.png" alt="Registration" />
                 </div>
-                <div className="w-[820px] h-[320px] flex items-center justify-center transform -translate-x-10">
-                  <img className="w-full h-full object-contain select-none" src="/images/MCC S2/Favourites Button.png" alt="Favourites" />
+                <div className="w-[820px] h-[320px] flex items-center justify-center transform -translate-x-10 transition-transform duration-200 active:scale-95">
+                  <img className="w-full h-full object-contain select-none active:brightness-110" src="/images/MCC S2/Favourites Button.png" alt="Favourites" />
                 </div>
               </div>
 

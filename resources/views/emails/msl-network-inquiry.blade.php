@@ -102,6 +102,10 @@
                 <h3>Inquiry Details:</h3>
                 <p><strong>Subject:</strong> {{ $inquiryData['subject'] ?? 'MSL Network Partnership Inquiry' }}</p>
                 <p><strong>Region:</strong> {{ $inquiryData['region'] ?? 'Not specified' }}</p>
+                <p><strong>Primary Recipient:</strong> {{ $inquiryData['to_email'] ?? 'Not specified' }}</p>
+                @if(!empty($inquiryData['cc_emails']))
+                <p><strong>CC Recipients:</strong> {{ implode(', ', $inquiryData['cc_emails']) }}</p>
+                @endif
                 <p><strong>Received:</strong> {{ now()->format('F j, Y \a\t g:i A') }}</p>
             </div>
 
