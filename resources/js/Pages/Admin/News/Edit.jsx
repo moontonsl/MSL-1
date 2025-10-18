@@ -1,20 +1,43 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Card } from '@/Components/Card';
 
 export default function EditNews({ news }) {
+    const [imagePreview, setImagePreview] = useState(news.news_img1 ? `/images/MCC/IndivNews/${news.news_img1}` : null);
+    
     const { data, setData, put, processing, errors } = useForm({
         news_title: news.news_title,
         news_subtitle: news.news_subtitle,
         news_canonical: news.news_canonical,
         news_state: news.news_state,
-        news_img1: news.news_img1 || ''
+        news_img1: null
     });
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        put(route('admin.news.update', news.id));
+        put(route('admin.news.update', news.id), {
+            forceFormData: true
+        });
+    };
+
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setData('news_img1', file);
+            
+            // Create preview URL
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setImagePreview(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const removeImage = () => {
+        setData('news_img1', null);
+        setImagePreview(null);
     };
 
     return (
@@ -95,15 +118,33 @@ export default function EditNews({ news }) {
 
                             <div>
                                 <label htmlFor="news_img1" className="block text-sm font-medium text-gray-700">
-                                    Image URL
+                                    News Image
                                 </label>
-                                <input
-                                    type="text"
-                                    id="news_img1"
-                                    value={data.news_img1}
-                                    onChange={(e) => setData('news_img1', e.target.value)}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                />
+                                <div className="mt-1">
+                                    <input
+                                        type="file"
+                                        id="news_img1"
+                                        accept="image/*"
+                                        onChange={handleImageChange}
+                                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                                    />
+                                    {imagePreview && (
+                                        <div className="mt-4 relative inline-block">
+                                            <img
+                                                src={imagePreview}
+                                                alt="Preview"
+                                                className="h-32 w-auto rounded-md border border-gray-300"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={removeImage}
+                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                                 {errors.news_img1 && (
                                     <p className="mt-1 text-sm text-red-600">{errors.news_img1}</p>
                                 )}

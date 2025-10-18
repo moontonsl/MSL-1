@@ -20,33 +20,74 @@ const generateMockTeamForUser = (user) => {
 };
 
 const CampusTournamentTeam = () => {
-  const { user, team: teamFromProps } = usePage().props || {};
-  const [team, setTeam] = useState(() => teamFromProps || generateMockTeamForUser(user));
+  const { user, team: teamFromProps, isCaptain: isCaptainFromProps, message } = usePage().props || {};
+  
+  // If there's a message (error), show it
+  if (message) {
+    return (
+      <MainLayout>
+        <div
+          className="min-h-screen w-full bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/images/Campus Tournament/MainBG.png')" }}
+        >
+          <div className="w-full min-h-screen bg-black/60 flex items-center justify-center">
+            <div className="text-center text-white">
+              <h1 className="text-2xl font-bold mb-4">Campus Tournament</h1>
+              <p className="text-lg">{message}</p>
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
-  const isCaptain = useMemo(() => {
-    if (!team || !user) return false;
-    return String(team.captainId) === String(user.id);
-  }, [team, user]);
+  // If no team data, show loading or error
+  if (!teamFromProps) {
+    return (
+      <MainLayout>
+        <div
+          className="min-h-screen w-full bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/images/Campus Tournament/MainBG.png')" }}
+        >
+          <div className="w-full min-h-screen bg-black/60 flex items-center justify-center">
+            <div className="text-center text-white">
+              <h1 className="text-2xl font-bold mb-4">Campus Tournament</h1>
+              <p className="text-lg">Loading team data...</p>
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
-  const formatPlayer = (player) => player?.name || 'Player';
+  const team = teamFromProps;
+  const isCaptain = isCaptainFromProps || false;
 
-  const PlayerCell = ({ player }) => (
-    <div className="w-full md:w-auto flex flex-col items-center gap-1 text-white/80 text-xs md:text-sm font-montserrat">
-      <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border border-white/20 bg-white/10">
-        <svg className="absolute inset-0 m-auto w-5 h-5 text-white/50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
-          <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-        {player?.avatarUrl && (
-          <img src={player.avatarUrl} alt={formatPlayer(player)} className="w-full h-full object-cover" />
-        )}
+  const formatPlayer = (player) => {
+    if (!player) return 'Player';
+    return `${player.name || ''} ${player.surname || ''}`.trim() || player.username || 'Player';
+  };
+
+  const PlayerCell = ({ player }) => {
+    // Since only verified users can register, all team members will be verified
+    return (
+      <div className="w-full md:w-auto flex flex-col items-center gap-1 text-white/80 text-xs md:text-sm font-montserrat">
+        <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border border-white/20 bg-white/10">
+          <svg className="absolute inset-0 m-auto w-5 h-5 text-white/50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          {player?.avatarUrl && (
+            <img src={player.avatarUrl} alt={formatPlayer(player)} className="w-full h-full object-cover" />
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="truncate max-w-[8ch] md:max-w-[12ch]">{formatPlayer(player)}</span>
+          <span className="w-2.5 h-2.5 rounded-full bg-green-400" />
+        </div>
       </div>
-      <div className="flex items-center gap-2">
-        <span className="truncate max-w-[8ch] md:max-w-[12ch]">{formatPlayer(player)}</span>
-        <span className={`w-2.5 h-2.5 rounded-full ${player?.verified ? 'bg-green-400' : 'bg-red-500'}`} />
-      </div>
-    </div>
-  );
+    );
+  };
 
   // Team is always mocked for now; backend can replace via props later
 
@@ -74,7 +115,7 @@ const CampusTournamentTeam = () => {
                 <div className="relative z-10 w-full h-16 md:h-20 flex items-center justify-between bg-neutral-900/70 px-4 md:px-6">
                   <div className="flex-1 text-center">
                     <div className="font-montserrat text-lg md:text-2xl tracking-wide">Team Name</div>
-                    <div className="font-montserrat text-xs md:text-sm text-white/70">{team.name}</div>
+                    <div className="font-montserrat text-xs md:text-sm text-white/70">{team.team_name}</div>
                   </div>
                   <div className="flex items-center gap-2" />
                 </div>
@@ -93,9 +134,9 @@ const CampusTournamentTeam = () => {
                     </div>
 
                     <div className="grid [grid-template-columns:repeat(5,minmax(140px,1fr))_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3">
-                      {team.players.slice(0, 5).map((player, idx) => (
+                      {team.members && team.members.slice(0, 5).map((member, idx) => (
                         <div className="flex justify-center" key={idx}>
-                          <PlayerCell player={player} />
+                          <PlayerCell player={member.player} />
                         </div>
                       ))}
                       <div className="flex justify-center">
@@ -103,7 +144,23 @@ const CampusTournamentTeam = () => {
                           type="button"
                           disabled={!isCaptain}
                           className={`bg-[#F2C21A] text-black font-montserrat text-xs md:text-sm font-semibold rounded-lg px-6 md:px-7 py-1.5 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] min-w-[88px] justify-center ${!isCaptain ? 'opacity-60 cursor-not-allowed' : ''}`}
-                          onClick={() => { if (isCaptain) router.visit('/Tournament/CampusTournamentReg'); }}
+                          onClick={() => { 
+                            if (isCaptain) {
+                              // Find the captain from team members
+                              const captainMember = team.members?.find(member => member.role === 'captain');
+                              const captainData = captainMember?.player;
+                              
+                              // Store team data for editing
+                              sessionStorage.setItem('campusTournamentEditTeam', JSON.stringify(team));
+                              
+                              // Store captain data separately
+                              if (captainData) {
+                                sessionStorage.setItem('campusTournamentCaptain', JSON.stringify(captainData));
+                              }
+                              
+                              router.visit('/Tournament/CampusTournamentReg');
+                            }
+                          }}
                           title="Edit team details"
                         >
                           Edit
@@ -115,23 +172,25 @@ const CampusTournamentTeam = () => {
                   {/* Mobile vertical list */}
                   <div className="md:hidden mt-0 rounded-b-2xl bg-neutral-800/70 backdrop-blur-sm border-t border-neutral-700/40 px-4 py-3">
                     <div className="space-y-3">
-                      {team.players.slice(0,5).map((player, idx) => (
-                        <div key={idx} className="flex items-center justify-between border border-white/10 rounded-lg px-3 py-2 bg-white/5">
-                          <div className="flex items-center gap-3">
-                            <div className="relative w-9 h-9 rounded-full overflow-hidden border border-white/20 bg-white/10">
-                              <svg className="absolute inset-0 m-auto w-5 h-5 text-white/50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
-                                <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                              </svg>
-                              {player?.avatarUrl && (
-                                <img src={player.avatarUrl} alt={formatPlayer(player)} className="w-full h-full object-cover" />
-                              )}
+                      {team.members && team.members.slice(0,5).map((member, idx) => {
+                        return (
+                          <div key={idx} className="flex items-center justify-between border border-white/10 rounded-lg px-3 py-2 bg-white/5">
+                            <div className="flex items-center gap-3">
+                              <div className="relative w-9 h-9 rounded-full overflow-hidden border border-white/20 bg-white/10">
+                                <svg className="absolute inset-0 m-auto w-5 h-5 text-white/50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
+                                  <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                </svg>
+                                {member.player?.avatarUrl && (
+                                  <img src={member.player.avatarUrl} alt={formatPlayer(member.player)} className="w-full h-full object-cover" />
+                                )}
+                              </div>
+                              <div className="font-montserrat text-sm">{formatPlayer(member.player)}</div>
                             </div>
-                            <div className="font-montserrat text-sm">{formatPlayer(player)}</div>
+                            <span className="w-2.5 h-2.5 rounded-full bg-green-400" />
                           </div>
-                          <span className={`w-2.5 h-2.5 rounded-full ${player?.verified ? 'bg-green-400' : 'bg-red-500'}`} />
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
 
                     <div className="mt-3">
@@ -139,7 +198,23 @@ const CampusTournamentTeam = () => {
                         type="button"
                         disabled={!isCaptain}
                         className={`w-full bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-5 py-2 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] ${!isCaptain ? 'opacity-60 cursor-not-allowed' : ''}`}
-                        onClick={() => { if (isCaptain) router.visit('/Tournament/CampusTournamentReg'); }}
+                        onClick={() => { 
+                          if (isCaptain) {
+                            // Find the captain from team members
+                            const captainMember = team.members?.find(member => member.role === 'captain');
+                            const captainData = captainMember?.player;
+                            
+                            // Store team data for editing
+                            sessionStorage.setItem('campusTournamentEditTeam', JSON.stringify(team));
+                            
+                            // Store captain data separately
+                            if (captainData) {
+                              sessionStorage.setItem('campusTournamentCaptain', JSON.stringify(captainData));
+                            }
+                            
+                            router.visit('/Tournament/CampusTournamentReg');
+                          }
+                        }}
                         title="Edit team details"
                       >
                         Edit team

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { usePage } from '@inertiajs/react';
 import MainLayout from "@/Layouts/MainLayout.jsx";
 
 // Temporary mock requests until backend is wired
@@ -67,33 +68,155 @@ const generateMockTournaments = () => ([
 ]);
 
 const RegionalAdmin = () => {
-  const [requests, setRequests] = useState(generateMockRequests());
+  const { tournaments, approvedTournaments, user } = usePage().props;
+  const [localTournaments, setLocalTournaments] = useState(tournaments || []);
   const [decisionById, setDecisionById] = useState({}); // { [id]: 'approved' | 'rejected' }
   const [viewing, setViewing] = useState(null); // request being viewed in modal
-  const [tournaments, setTournaments] = useState(generateMockTournaments());
   const [expanded, setExpanded] = useState({}); // id -> boolean
   const [mobileViewTeam, setMobileViewTeam] = useState(null); // mobile-only player popup
+  const [isProcessing, setIsProcessing] = useState({}); // Track which requests are being processed
+  const [showConfirmModal, setShowConfirmModal] = useState(false); // Show confirmation modal
+  const [showSuccessModal, setShowSuccessModal] = useState(false); // Show success modal
+  const [pendingAction, setPendingAction] = useState(null); // Store pending action data
+  
+  // Use real approved tournaments data instead of mock data
+  const [staticTournaments] = useState(approvedTournaments || []);
 
-  const hasPending = useMemo(() => requests.some(r => !decisionById[r.id]), [requests, decisionById]);
+  // Transform real tournament data to match the expected format
+  const transformedTournaments = useMemo(() => {
+    if (!staticTournaments || staticTournaments.length === 0) return [];
+    
+    return staticTournaments.map(tournament => ({
+      id: tournament.id,
+      startDate: tournament.start_date,
+      endDate: tournament.end_date,
+      teams: tournament.teams ? tournament.teams.map(team => ({
+        id: team.id,
+        name: team.team_name,
+        players: team.members ? team.members.map(member => ({
+          id: member.player_id,
+          name: member.player ? `${member.player.name} ${member.player.surname}`.trim() : 'Unknown Player',
+          verified: true, // Assuming all registered players are verified
+          role: member.role
+        })) : []
+      })) : []
+    }));
+  }, [staticTournaments]);
+
+  const hasPending = useMemo(() => localTournaments.some(r => r.status === 'pending'), [localTournaments]);
+
+  const handleConfirmAction = (action, tournament) => {
+    setPendingAction({ action, tournament });
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmClose = () => {
+    setShowConfirmModal(false);
+    setPendingAction(null);
+  };
+
+  const handleSuccessClose = () => {
+    setShowSuccessModal(false);
+  };
 
   const formatDate = (value) => {
     try {
       if (!value) return '';
-      const date = new Date(`${value}T00:00:00`);
+      
+      // Handle different date formats
+      let date;
+      if (typeof value === 'string') {
+        // If it's already a valid date string, use it directly
+        if (value.includes('T') || value.includes(' ')) {
+          date = new Date(value);
+        } else {
+          // If it's just a date (YYYY-MM-DD), add time
+          date = new Date(`${value}T00:00:00`);
+        }
+      } else {
+        date = new Date(value);
+      }
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        console.error('Invalid date:', value);
+        return 'Invalid Date';
+      }
+      
       return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
     } catch (e) {
-      return value;
+      console.error('Date formatting error:', e, 'Value:', value);
+      return 'Invalid Date';
     }
   };
 
   const handleApprove = (id) => {
-    setDecisionById(prev => ({ ...prev, [id]: 'approved' }));
-    // TODO: POST to backend then remove/move; for now, keep visible with status
+    const tournament = localTournaments.find(t => t.id === id);
+    handleConfirmAction('approve', tournament);
   };
 
-  const handleReject = (id) => {
-    setDecisionById(prev => ({ ...prev, [id]: 'rejected' }));
-    // TODO: POST to backend with reason
+  const executeApprove = async (id) => {
+    setIsProcessing(prev => ({ ...prev, [id]: true }));
+    
+    try {
+      const response = await fetch(`/campus-tournaments/${id}/approve`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update local state to remove the approved tournament
+        setLocalTournaments(prev => prev.filter(t => t.id !== id));
+        setShowConfirmModal(false);
+        setShowSuccessModal(true);
+      } else {
+        alert('Error approving tournament: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error approving tournament:', error);
+      alert('Error approving tournament. Please try again.');
+    } finally {
+      setIsProcessing(prev => ({ ...prev, [id]: false }));
+    }
+  };
+
+  const handleReject = async (id) => {
+    const reason = prompt('Please provide a reason for rejection:');
+    if (!reason) return;
+    
+    setIsProcessing(prev => ({ ...prev, [id]: true }));
+    
+    try {
+      const response = await fetch(`/campus-tournaments/${id}/reject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+        body: JSON.stringify({
+          rejection_reason: reason,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update local state to remove the rejected tournament
+        setLocalTournaments(prev => prev.filter(t => t.id !== id));
+      } else {
+        alert('Error rejecting tournament: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error rejecting tournament:', error);
+      alert('Error rejecting tournament. Please try again.');
+    } finally {
+      setIsProcessing(prev => ({ ...prev, [id]: false }));
+    }
   };
 
   const toggleExpand = (id) => {
@@ -169,55 +292,59 @@ const RegionalAdmin = () => {
 
                 {/* Body */}
                 <div className="divide-y divide-white/10">
-                  {requests.length === 0 && (
+                  {localTournaments.length === 0 && (
                     <div className="px-6 py-8 text-center text-white/60 font-montserrat">No requests.</div>
                   )}
 
-                  {requests.map((req) => {
-                    const decision = decisionById[req.id];
+                  {localTournaments.map((req) => {
+                    const isProcessingThis = isProcessing[req.id];
                     return (
                       <div key={req.id}>
                         {/* Desktop row */}
                         <div className="hidden md:grid [grid-template-columns:minmax(220px,2.2fr)_repeat(3,minmax(140px,1fr))_minmax(200px,1.3fr)] items-center gap-3 px-5 md:px-8 py-3 hover:bg-white/5 transition-colors">
-                          <div className="font-montserrat text-white/90 md:truncate">{req.schoolName}</div>
-                          <div className="text-center font-montserrat text-white/80">{formatDate(req.startDate)}</div>
-                          <div className="text-center font-montserrat text-white/80">{formatDate(req.endDate)}</div>
-                          <div className="text-center font-montserrat text-white/80">{req.slName}</div>
+                          <div className="font-montserrat text-white/90 md:truncate">{req.school_name}</div>
+                          <div className="text-center font-montserrat text-white/80">{formatDate(req.start_date)}</div>
+                          <div className="text-center font-montserrat text-white/80">{formatDate(req.end_date)}</div>
+                          <div className="text-center font-montserrat text-white/80">{req.sl_name}</div>
                           <div className="flex justify-end items-center gap-2">
                             <button
                               type="button"
                               onClick={() => handleApprove(req.id)}
-                              className={`bg-[#F2C21A] text-black font-montserrat text-[11px] md:text-xs font-semibold rounded-lg px-3 py-1.5 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] ${decision === 'approved' ? '' : 'hover:brightness-110'}`}
+                              disabled={isProcessingThis}
+                              className={`bg-[#F2C21A] text-black font-montserrat text-[11px] md:text-xs font-semibold rounded-lg px-3 py-1.5 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
-                              Approve
+                              {isProcessingThis ? 'Processing...' : 'Approve'}
                             </button>
                             <button
                               type="button"
                               onClick={() => handleReject(req.id)}
-                              className={`bg-red-500 hover:bg-red-600 text-white font-montserrat text-[11px] md:text-xs font-semibold rounded-lg px-3 py-1.5 shadow-md ${decision === 'rejected' ? '' : ''}`}
+                              disabled={isProcessingThis}
+                              className={`bg-red-500 hover:bg-red-600 text-white font-montserrat text-[11px] md:text-xs font-semibold rounded-lg px-3 py-1.5 shadow-md disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
-                              Reject
+                              {isProcessingThis ? 'Processing...' : 'Reject'}
                             </button>
                           </div>
                         </div>
 
                         {/* Mobile row: show School, Action buttons, and View */}
                         <div className="md:hidden grid [grid-template-columns:minmax(180px,1fr)_minmax(140px,auto)_auto] items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
-                          <div className="font-montserrat text-white/90">{req.schoolName}</div>
+                          <div className="font-montserrat text-white/90">{req.school_name}</div>
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
                               onClick={() => handleApprove(req.id)}
-                              className={`bg-[#F2C21A] text-black font-montserrat text-[11px] font-semibold rounded-lg px-3 py-1.5 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] ${decision === 'approved' ? '' : 'hover:brightness-110'}`}
+                              disabled={isProcessingThis}
+                              className={`bg-[#F2C21A] text-black font-montserrat text-[11px] font-semibold rounded-lg px-3 py-1.5 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
-                              Approve
+                              {isProcessingThis ? 'Processing...' : 'Approve'}
                             </button>
                             <button
                               type="button"
                               onClick={() => handleReject(req.id)}
-                              className={`bg-red-500 hover:bg-red-600 text-white font-montserrat text-[11px] font-semibold rounded-lg px-3 py-1.5 shadow-md ${decision === 'rejected' ? '' : ''}`}
+                              disabled={isProcessingThis}
+                              className={`bg-red-500 hover:bg-red-600 text-white font-montserrat text-[11px] font-semibold rounded-lg px-3 py-1.5 shadow-md disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
-                              Reject
+                              {isProcessingThis ? 'Processing...' : 'Reject'}
                             </button>
                           </div>
                           <div className="flex justify-end">
@@ -298,7 +425,7 @@ const RegionalAdmin = () => {
               </div>
 
               <div className="mt-4 flex flex-col gap-4">
-                {tournaments.map((item) => (
+                {transformedTournaments.map((item) => (
                   <div
                     key={item.id}
                     className="relative w-full max-w-7xl mx-auto text-white rounded-2xl overflow-hidden transition-all duration-300 shadow-2xl bg-gradient-to-br from-neutral-800/80 to-neutral-900/80 backdrop-blur-sm border border-neutral-700/50"
@@ -453,6 +580,83 @@ const RegionalAdmin = () => {
           </div>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && pendingAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10" onClick={handleConfirmClose} />
+          <div className="relative z-20 w-full max-w-md bg-black/40 backdrop-blur-md text-white border border-white/20 rounded-2xl p-6 md:p-8 shadow-2xl">
+            <div className="text-center">
+              {/* Warning Icon */}
+              <div className="w-16 h-16 mx-auto mb-4 bg-yellow-500/20 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              
+              {/* Confirmation Message */}
+              <h3 className="font-montserrat text-xl md:text-2xl font-semibold mb-3 text-yellow-400">
+                Confirm Action
+              </h3>
+              
+              <p className="font-montserrat text-sm md:text-base text-white/80 mb-6 leading-relaxed">
+                Are you sure you want to <strong>{pendingAction.action}</strong> the tournament request from <strong>{pendingAction.tournament?.school_name}</strong>?
+              </p>
+              
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={handleConfirmClose}
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-montserrat text-sm font-semibold rounded-lg px-6 py-3 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => executeApprove(pendingAction.tournament.id)}
+                  disabled={isProcessing[pendingAction.tournament.id]}
+                  className="flex-1 bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-6 py-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isProcessing[pendingAction.tournament.id] ? 'Processing...' : 'Confirm'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10" onClick={handleSuccessClose} />
+          <div className="relative z-20 w-full max-w-md bg-black/40 backdrop-blur-md text-white border border-white/20 rounded-2xl p-6 md:p-8 shadow-2xl">
+            <div className="text-center">
+              {/* Success Icon */}
+              <div className="w-16 h-16 mx-auto mb-4 bg-green-500/20 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              
+              {/* Success Message */}
+              <h3 className="font-montserrat text-xl md:text-2xl font-semibold mb-3 text-green-400">
+                Tournament Approved Successfully!
+              </h3>
+              
+              <p className="font-montserrat text-sm md:text-base text-white/80 mb-6 leading-relaxed">
+                The tournament request has been approved and is now available for student registration.
+              </p>
+              
+              {/* Close Button */}
+              <button
+                onClick={handleSuccessClose}
+                className="w-full bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-6 py-3 hover:bg-[#F2C21A]/90 transition-colors"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </MainLayout>
   );
 };
