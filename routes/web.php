@@ -5,9 +5,9 @@ require __DIR__.'/admin.php';
 require __DIR__.'/auth.php';
 
 // User Management Panel (No Auth Required)
-Route::get('/user-management', [\App\Http\Controllers\UserManagementController::class, 'index'])->name('user-management');
-Route::get('/user-management/api', [\App\Http\Controllers\UserManagementController::class, 'getUsers'])->name('user-management.api');
-Route::post('/user-management/delete', [\App\Http\Controllers\UserManagementController::class, 'bulkDeleteUsers'])->name('user-management.delete');
+// Route::get('/user-management', [\App\Http\Controllers\UserManagementController::class, 'index'])->name('user-management');
+// Route::get('/user-management/api', [\App\Http\Controllers\UserManagementController::class, 'getUsers'])->name('user-management.api');
+// Route::post('/user-management/delete', [\App\Http\Controllers\UserManagementController::class, 'bulkDeleteUsers'])->name('user-management.delete');
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProfileController;
@@ -473,6 +473,16 @@ Route::get('/BuffsAndSupport', function () {
     return Inertia::render('BuffsAndSupport/BuffsAndSupport');
 })->name('BuffsAndSupport');
 
+//BUFFS AND SUPPORT - APPLICATION FORM ROUTES
+Route::get('/MSLBuffsAndSupportApplicationForm', function () {
+    return Inertia::render('BuffsAndSupport/Forms/MSLBuffsAndSupportApplicationForm');
+})->name('MSLBuffsAndSupportApplicationForm');
+
+//BUFFS AND SUPPORT - TOURNAMENT LOBBY APPLICATION FORM ROUTES
+Route::get('/MSLTournamentLobbyApplicationForm', function () {
+    return Inertia::render('BuffsAndSupport/Forms/MSLTournamentLobbyApplicationForm');
+})->name('MSLTournamentLobbyApplicationForm');
+
 //MSL APPLICATION ROUTES
 Route::get('/MSLApplication', function () {
     return Inertia::render('MSLApplication/MSLApplication');
@@ -502,6 +512,8 @@ Route::get('/AccountModificationWaiting', function () {
 Route::get('/SLAdminApproval', function () {
     return Inertia::render('ApprovalPages/SLAdminApproval');
 })->name('SLAdminApproval');
+
+
 
 //ADMIN REGIONAL APPROVAL ROUTES
 Route::get('/RegionalAdminApproval', function () {
@@ -1180,3 +1192,54 @@ Route::middleware(['auth', 'admin'])->prefix('admin/faulty-username')->name('adm
 Route::get('/OppoAmbassador', function () {
     return Inertia::render('OppoAmbassador/OppoAmbassador');
 })->name('OppoAmbassador');
+
+// MSL Network Email Inquiry Route
+Route::post('/msl-network/send-inquiry', function (\Illuminate\Http\Request $request) {
+    try {
+        $request->validate([
+            'to_email' => 'required|email',
+            'cc_emails' => 'nullable|array',
+            'cc_emails.*' => 'email',
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string|max:2000',
+            'region' => 'nullable|string|max:100'
+        ]);
+
+        $inquiryData = [
+            'to_email' => $request->to_email,
+            'cc_emails' => $request->cc_emails ?? [],
+            'subject' => $request->subject,
+            'message' => $request->message,
+            'region' => $request->region,
+            'received_at' => now()
+        ];
+
+        // Send email to the regional team with CC recipients
+        $mail = \Mail::to($request->to_email);
+        
+        // Add CC recipients if any
+        if (!empty($request->cc_emails)) {
+            $mail->cc($request->cc_emails);
+        }
+        
+        $mail->send(new \App\Mail\MslNetworkInquiryMail($inquiryData));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Your inquiry has been sent successfully! We will get back to you soon.'
+        ]);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Please fill in all required fields correctly.',
+            'errors' => $e->errors()
+        ], 422);
+    } catch (\Exception $e) {
+        \Log::error('MSL Network inquiry failed: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to send inquiry. Please try again later.'
+        ], 500);
+    }
+})->name('msl-network.send-inquiry');
