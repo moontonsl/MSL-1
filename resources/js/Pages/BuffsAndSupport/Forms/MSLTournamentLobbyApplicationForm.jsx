@@ -149,13 +149,18 @@ export default function MSLTournamentLobbyApplicationForm({ auth }) {
             <div className="text-center mb-2">
                {/* Always visible description */}
                <h3 className="text-gray-300 text-sm sm:text-base mb-3 leading-relaxed">
-                Please fill out all required details accurately to help us process your request efficiently.
-                <br></br><br></br>
-                Requests must be submitted <span className="font-semibold text-white">20 days before</span> the date the Tournament Lobby is needed.
-                <br></br><br></br>
-                Access will be automatically granted to the submitted account for a <span className="font-semibold text-white">maximum of 2 days per event.</span> 
-                <br></br><br></br>
-                Applicants must ensure that their poster include the <span className="font-semibold text-white">E-Project logo</span> and the phrase <span className="font-semibold text-white">"Supported by E-Project"</span>,  as this is a required element for every TL request.
+                    <h3>
+                        Please fill out all required details accurately to help us process your request efficiently.
+                    </h3>
+                    <h3>
+                        Requests must be submitted <span className="font-semibold text-white">20 days before</span> the date the Tournament Lobby is needed.
+                    </h3>
+                    <h3>
+                        Access will be automatically granted to the submitted account for a <span className="font-semibold text-white">maximum of 2 days per event.</span>
+                    </h3>
+                    <h3>
+                        Applicants must ensure that their poster include the <span className="font-semibold text-white">E-Project logo</span> and the phrase <span className="font-semibold text-white">"Supported by E-Project"</span>, as this is a required element for every TL request.
+                    </h3>
                 </h3>
 
                 <h3 className="text-yellow-400 text-xs sm:text-sm mb-4">
@@ -235,7 +240,10 @@ export default function MSLTournamentLobbyApplicationForm({ auth }) {
                             required
                             className="w-5 h-5 accent-[#F2C21A] cursor-pointer"
                         />
-                        <label htmlFor="understoodSOP" className="cursor-pointer text-white text-sm leading-snug">
+                        <label
+                            htmlFor="understoodSOP"
+                            className="cursor-pointer text-white text-xs sm:text-sm leading-snug"
+                            >
                             Yes, I have read and understood the Standard Operating Procedures for Tournament Lobby.
                         </label>
                     </div>
