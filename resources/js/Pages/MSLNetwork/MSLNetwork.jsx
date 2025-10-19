@@ -599,7 +599,7 @@ Message: ${emailForm.message}`;
                     : "pointer-events-none opacity-50"
                 }`}
               >
-                COMPOSE EMAIL
+                Apply Now
               </button>
             </div>
           </div>
@@ -660,7 +660,7 @@ Message: ${emailForm.message}`;
                     : "pointer-events-none opacity-50"
                 }`}
               >
-                COMPOSE EMAIL
+                Apply Now
               </button>
             </div>
           </div>
@@ -670,10 +670,10 @@ Message: ${emailForm.message}`;
       {/* Email Composition Modal - Dark Version */}
       {isEmailModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-lg max-w-[50%] w-full max-h-[90vh] overflow-y-auto border border-gray-700">
+          <div className="bg-gray-900 rounded-lg sm:max-w-[50%] w-full max-h-[90vh] overflow-y-auto border border-gray-700">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-700">
-              <h3 className="text-lg font-bold text-white">Compose Email</h3>
+              <h3 className="text-lg font-bold text-white">Apply Now</h3>
               <button
                 onClick={() => setIsEmailModalOpen(false)}
                 className="text-gray-400 hover:text-white transition-colors"
