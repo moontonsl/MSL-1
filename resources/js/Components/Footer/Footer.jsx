@@ -93,10 +93,10 @@ const Footer = () => {
                 <div className={styles.footerCopyright}>© 2025 — Moonton Student Leaders Philippines</div>
 				<div className={styles.socials}>
 					<div className="hidden"><ThemeToggleButton /></div>
-					<a href="https://www.youtube.com/@MobileLegends5v5MOBA" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+					<a href="https://www.youtube.com/@MSLPhilippines" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
 						<Youtube size={20} />
 					</a>
-					<a href="https://www.facebook.com/MobileLegendsOnlinePH" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+					<a href="https://www.facebook.com/MSLPhilippines" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
 						<Facebook size={20} />
 					</a>
 				</div>

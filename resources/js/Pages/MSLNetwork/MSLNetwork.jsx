@@ -4,7 +4,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutBuffsAndSupport.js
 import { Helmet } from "react-helmet";
 import frameImg from "./Assets/Frame437.png";
 import frameImgFooter from "./Assets/Frame437Footer.png";
-import { CalendarX, Users, HandCoins, Goal, Handshake, Sparkles, X, Send, Plus } from "lucide-react";
+import { CalendarX, Users, HandCoins, Goal, Handshake, Sparkles, X, Send } from "lucide-react";
 
 const MSLNetwork = () => {
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
@@ -15,8 +15,6 @@ const MSLNetwork = () => {
     subject: "",
     message: ""
   });
-  const [ccInput, setCcInput] = useState("");
-  const [showCcSuggestions, setShowCcSuggestions] = useState(false);
 
   const regionEmails = {
     "msl.partnerships.ncluz@gmail.com": "North/Central Luzon",
@@ -30,7 +28,11 @@ const MSLNetwork = () => {
     setSelectedRegionEmail(email);
     setEmailForm(prev => ({
       ...prev,
-      to: email
+      to: email,
+      ccEmails: [
+        "msl.network.ph@gmail.com",
+        email
+      ]
     }));
   };
 
@@ -41,46 +43,6 @@ const MSLNetwork = () => {
     }));
   };
 
-  const addCcEmail = (email) => {
-    const trimmedEmail = email.trim();
-    if (trimmedEmail && !emailForm.ccEmails.includes(trimmedEmail)) {
-      setEmailForm(prev => ({
-        ...prev,
-        ccEmails: [...prev.ccEmails, trimmedEmail]
-      }));
-    }
-    setCcInput("");
-    setShowCcSuggestions(false);
-  };
-
-  const removeCcEmail = (emailToRemove) => {
-    setEmailForm(prev => ({
-      ...prev,
-      ccEmails: prev.ccEmails.filter(email => email !== emailToRemove)
-    }));
-  };
-
-  const handleCcInputKeyDown = (e) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      addCcEmail(ccInput);
-    } else if (e.key === 'Backspace' && ccInput === '' && emailForm.ccEmails.length > 0) {
-      removeCcEmail(emailForm.ccEmails[emailForm.ccEmails.length - 1]);
-    }
-  };
-
-  const handleCcInputChange = (e) => {
-    setCcInput(e.target.value);
-    setShowCcSuggestions(e.target.value.length > 0);
-  };
-
-  const getFilteredSuggestions = () => {
-    if (!ccInput) return [];
-    return Object.entries(regionEmails).filter(([email, name]) => 
-      email.toLowerCase().includes(ccInput.toLowerCase()) || 
-      name.toLowerCase().includes(ccInput.toLowerCase())
-    );
-  };
 
   const handleSendEmail = async () => {
     if (!emailForm.to || !emailForm.subject || !emailForm.message) {
@@ -104,12 +66,18 @@ const MSLNetwork = () => {
         },
         body: JSON.stringify({
           to_email: emailForm.to,
-          cc_emails: emailForm.ccEmails,
+          cc_emails: emailForm.ccEmails.filter(email => email.trim() !== ''),
           subject: emailForm.subject,
           message: emailForm.message,
           region: regionEmails[selectedRegionEmail] || 'Unknown'
         })
       });
+
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Server returned non-JSON response. Please check server configuration.');
+      }
 
       const result = await response.json();
 
@@ -127,7 +95,16 @@ const MSLNetwork = () => {
       
     } catch (error) {
       console.error('Error sending email:', error);
-      alert('Failed to send email. Please try again later.');
+      
+      let errorMessage = 'Failed to send email. Please try again later.';
+      
+      if (error.message.includes('non-JSON response')) {
+        errorMessage = 'Server configuration error. Please contact support.';
+      } else if (error.message.includes('NetworkError') || error.message.includes('fetch')) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      }
+      
+      alert(errorMessage);
     } finally {
       // Reset button state
       const sendButton = document.querySelector('[data-send-email]');
@@ -693,7 +670,7 @@ Message: ${emailForm.message}`;
       {/* Email Composition Modal - Dark Version */}
       {isEmailModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-700">
+          <div className="bg-gray-900 rounded-lg max-w-[50%] w-full max-h-[90vh] overflow-y-auto border border-gray-700">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-700">
               <h3 className="text-lg font-bold text-white">Compose Email</h3>
@@ -714,71 +691,31 @@ Message: ${emailForm.message}`;
                 </label>
                 <input
                   type="email"
-                  value={emailForm.to || selectedRegionEmail}
+                  value="msl.partnerships.ph@gmail.com"
                   onChange={(e) => handleEmailFormChange('to', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F2C21A] focus:border-transparent text-white bg-gray-800 placeholder-gray-400"
                   placeholder="Enter email address"
+                  readOnly
                 />
-                {selectedRegionEmail && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    Selected: {regionEmails[selectedRegionEmail]}
-                  </p>
-                )}
               </div>
 
-              {/* CC Field */}
+              {/* CC Field - Read Only */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   CC:
                 </label>
-                <div className="relative">
-                  <div className="flex flex-wrap gap-1 p-2 border border-gray-600 rounded-md bg-gray-800 min-h-[40px] focus-within:ring-2 focus-within:ring-[#F2C21A] focus-within:border-transparent">
-                    {emailForm.ccEmails.map((email, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center gap-1 px-2 py-1 bg-[#F2C21A] text-black text-xs rounded-md"
-                      >
-                        {email}
-                        <button
-                          type="button"
-                          onClick={() => removeCcEmail(email)}
-                          className="hover:bg-black/20 rounded-full p-0.5"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    ))}
-                    <input
-                      type="text"
-                      value={ccInput}
-                      onChange={handleCcInputChange}
-                      onKeyDown={handleCcInputKeyDown}
-                      onBlur={() => setTimeout(() => setShowCcSuggestions(false), 200)}
-                      onFocus={() => setShowCcSuggestions(ccInput.length > 0)}
-                      className="flex-1 bg-transparent text-white placeholder-gray-400 outline-none min-w-[120px]"
-                      placeholder={emailForm.ccEmails.length === 0 ? "Enter CC email addresses (optional)" : "Add more..."}
-                    />
-                  </div>
-                  
-                  {/* Suggestions Dropdown */}
-                  {showCcSuggestions && getFilteredSuggestions().length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-600 rounded-md shadow-lg max-h-40 overflow-y-auto">
-                      {getFilteredSuggestions().map(([email, name]) => (
-                        <button
-                          key={email}
-                          type="button"
-                          onClick={() => addCcEmail(email)}
-                          className="w-full px-3 py-2 text-left text-white hover:bg-gray-700 text-sm"
-                        >
-                          <div className="font-medium">{name}</div>
-                          <div className="text-gray-400 text-xs">{email}</div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                <div className="flex flex-wrap gap-1 p-2 border border-gray-600 rounded-md bg-gray-800 min-h-[40px]">
+                  {emailForm.ccEmails.map((email, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center gap-1 px-2 py-1 bg-[#F2C21A] text-black text-xs rounded-md"
+                    >
+                      {email}
+                    </span>
+                  ))}
                 </div>
                 <p className="text-xs text-gray-400 mt-1">
-                  Type email addresses and press Enter or comma to add. Backspace to remove.
+                  CC recipients are automatically added based on your selected region.
                 </p>
               </div>
 
@@ -789,10 +726,11 @@ Message: ${emailForm.message}`;
                 </label>
                 <input
                   type="text"
-                  value={emailForm.subject}
+                  value="Intent to Partner with MSL Philippines"
                   onChange={(e) => handleEmailFormChange('subject', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F2C21A] focus:border-transparent text-white bg-gray-800 placeholder-gray-400"
                   placeholder="Enter email subject"
+                  readOnly
                 />
               </div>
 
@@ -805,8 +743,8 @@ Message: ${emailForm.message}`;
                   value={emailForm.message}
                   onChange={(e) => handleEmailFormChange('message', e.target.value)}
                   rows={6}
-                  className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F2C21A] focus:border-transparent resize-none text-white bg-gray-800 placeholder-gray-400"
-                  placeholder="Enter your message here..."
+                  className="w-full h-[200px] px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F2C21A] focus:border-transparent resize-none text-white bg-gray-800 placeholder-gray-400"
+                  placeholder="Please introduce yourself, which org you're from, and what school you're based in, and then your partnership intent..."
                 />
               </div>
             </div>

@@ -14,8 +14,11 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SchoolUploadController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\NewsController;
+use App\Mail\MslNetworkInquiryMail;
 use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 //jabu
 use Illuminate\Support\Facades\DB;
@@ -1194,52 +1197,59 @@ Route::get('/OppoAmbassador', function () {
 })->name('OppoAmbassador');
 
 // MSL Network Email Inquiry Route
-Route::post('/msl-network/send-inquiry', function (\Illuminate\Http\Request $request) {
+Route::post('/msl-network/send-inquiry', function (Request $request) {
     try {
         $request->validate([
             'to_email' => 'required|email',
             'cc_emails' => 'nullable|array',
-            'cc_emails.*' => 'email',
+            'cc_emails.*' => 'nullable|email',
             'subject' => 'required|string|max:255',
             'message' => 'required|string|max:2000',
-            'region' => 'nullable|string|max:100'
+            'region' => 'nullable|string|max:100',
         ]);
+
+        // Filter out empty CC emails
+        $ccEmails = collect($request->cc_emails ?? [])
+            ->filter(function($email) {
+                return !empty(trim($email));
+            })
+            ->values()
+            ->toArray();
 
         $inquiryData = [
             'to_email' => $request->to_email,
-            'cc_emails' => $request->cc_emails ?? [],
+            'cc_emails' => $ccEmails,
             'subject' => $request->subject,
             'message' => $request->message,
             'region' => $request->region,
-            'received_at' => now()
+            'received_at' => now(),
         ];
 
-        // Send email to the regional team with CC recipients
-        $mail = \Mail::to($request->to_email);
-        
-        // Add CC recipients if any
-        if (!empty($request->cc_emails)) {
-            $mail->cc($request->cc_emails);
+        // Send email with CC recipients
+        $mail = Mail::to($request->to_email);
+
+        if (!empty($ccEmails)) {
+            $mail->cc($ccEmails);
         }
-        
-        $mail->send(new \App\Mail\MslNetworkInquiryMail($inquiryData));
+
+        $mail->send(new MslNetworkInquiryMail($inquiryData));
 
         return response()->json([
             'success' => true,
-            'message' => 'Your inquiry has been sent successfully! We will get back to you soon.'
+            'message' => 'Your inquiry has been sent successfully! We will get back to you soon.',
         ]);
-
     } catch (\Illuminate\Validation\ValidationException $e) {
         return response()->json([
             'success' => false,
             'message' => 'Please fill in all required fields correctly.',
-            'errors' => $e->errors()
+            'errors' => $e->errors(),
         ], 422);
     } catch (\Exception $e) {
         \Log::error('MSL Network inquiry failed: ' . $e->getMessage());
+        
         return response()->json([
             'success' => false,
-            'message' => 'Failed to send inquiry. Please try again later.'
+            'message' => 'Failed to send inquiry. Please try again later.',
         ], 500);
     }
 })->name('msl-network.send-inquiry');
