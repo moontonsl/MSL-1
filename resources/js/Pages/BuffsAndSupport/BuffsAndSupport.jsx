@@ -1,6 +1,7 @@
 import React from "react";
 import { Head } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutBuffsAndSupport.jsx";
+import Carousel from "./Carousel/Carousel.jsx";
 import { Helmet } from "react-helmet";
 import { Gem, Coins, Gamepad2, Handshake, Shirt, BookOpen, Trophy, Users, School, HeartHandshake, CheckCircle } from "lucide-react";
 import {
@@ -46,7 +47,8 @@ const BuffsAndSupport = () => {
                                     Apply Now
                                 </a>
                                 <a
-                                    href="bit.ly/2025BuffAndSupport"
+                                    //href="bit.ly/2025BuffAndSupport"
+                                    href="https://docs.google.com/document/d/1Nn3yrCn3qAMdxmEz9Tvo4xACrUIv1pukZ9tJVA1p7ak/edit?tab=t.0"
                                     className="px-6 py-3 border border-black text-black font-bold rounded-xl"
                                 >
                                     Learn More →
@@ -281,6 +283,8 @@ const BuffsAndSupport = () => {
                             </div>
                         </div>
                     </section>
+
+                    <Carousel />
                 </main>
             </AuthenticatedLayout>
         </>
