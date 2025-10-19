@@ -183,13 +183,7 @@ Message: ${emailForm.message}`;
             {/* BUTTONS */}
             <div className="flex flex-row gap-3 justify-center">
               <a
-                href="#"
-                className="px-4 py-2 md:px-6 md:py-3 bg-black text-[#F3C718] font-bold rounded-xl text-[12px] sm:text-[14px] lg:text-[16px]"
-              >
-                APPLY TO JOIN
-              </a>
-              <a
-                href="#"
+                href="https://discord.com/invite/themslnetwork"
                 className="px-4 py-2 md:px-6 md:py-3 border border-black text-black font-bold rounded-xl text-[12px] sm:text-[14px] lg:text-[16px]"
               >
                 JOIN DISCORD SERVER →
@@ -338,13 +332,13 @@ Message: ${emailForm.message}`;
           <div className="w-full flex justify-center items-center mt-0">
             <div className="flex flex-row flex-nowrap gap-2 sm:gap-3">
               <a
-                href="#"
+                href="/MSLBuffsAndSupportApplicationForm"
                 className="px-3 py-1.5 sm:px-5 sm:py-2.5 bg-black text-[#F3C718] font-bold rounded-xl text-sm sm:text-base"
               >
                 APPLY NOW
               </a>
               <a
-                href="#"
+                href="https://docs.google.com/document/d/1Nn3yrCn3qAMdxmEz9Tvo4xACrUIv1pukZ9tJVA1p7ak/edit?tab=t.0"
                 className="px-3 py-1.5 sm:px-5 sm:py-2.5 border border-black text-black font-bold rounded-xl text-sm sm:text-base"
               >
                 LEARN MORE →
@@ -599,7 +593,7 @@ Message: ${emailForm.message}`;
                     : "pointer-events-none opacity-50"
                 }`}
               >
-                COMPOSE EMAIL
+                Apply Now
               </button>
             </div>
           </div>
@@ -660,7 +654,7 @@ Message: ${emailForm.message}`;
                     : "pointer-events-none opacity-50"
                 }`}
               >
-                COMPOSE EMAIL
+                Apply Now
               </button>
             </div>
           </div>
@@ -670,10 +664,10 @@ Message: ${emailForm.message}`;
       {/* Email Composition Modal - Dark Version */}
       {isEmailModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-lg max-w-[50%] w-full max-h-[90vh] overflow-y-auto border border-gray-700">
+          <div className="bg-gray-900 rounded-lg sm:max-w-[50%] w-full max-h-[90vh] overflow-y-auto border border-gray-700">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-700">
-              <h3 className="text-lg font-bold text-white">Compose Email</h3>
+              <h3 className="text-lg font-bold text-white">Apply Now</h3>
               <button
                 onClick={() => setIsEmailModalOpen(false)}
                 className="text-gray-400 hover:text-white transition-colors"
