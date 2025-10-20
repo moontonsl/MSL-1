@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from '@inertiajs/react';
 const NewsSection = () => {
 
     const [articles, setArticles] = useState([]);
@@ -62,8 +63,11 @@ const NewsSection = () => {
                                     : "lg:col-span-2 2xl:col-span-1";
 
                         return (
-                            <article key={article.title}
-                                     className={`relative bg-black rounded-lg overflow-hidden ${baseStyles} h-64 md:h-80 lg:h-full group cursor-pointer transform transition duration-300 hover:scale-[1.02] hover:shadow-xl`}>
+                            <Link
+                                key={article.title}
+                                href={article.link || `/news/${article.news_canonical || `article-${article.id || index}`}`}
+                                className={`relative bg-black rounded-lg overflow-hidden ${baseStyles} h-64 md:h-80 lg:h-full group cursor-pointer transform transition duration-300 hover:scale-[1.02] hover:shadow-xl`}
+                            >
                                 <img src={`${article.image}`} alt={article.title}
                                      loading="lazy"
                                      className="w-full h-full object-cover absolute inset-0 opacity-80 transition-transform duration-300 transform group-hover:scale-105"/>
@@ -77,7 +81,7 @@ const NewsSection = () => {
                                         <p className="text-sm mt-1">{article.author} – {article.date}</p>
                                     )}
                                 </div>
-                            </article>
+                            </Link>
                         );
                     })}
                 </div>
