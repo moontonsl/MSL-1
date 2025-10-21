@@ -212,3 +212,45 @@ Route::middleware(['web'])->group(function () {
         ]);
     });
 });
+
+// Public API for carousel images
+Route::get('/carousel-images', function () {
+    $carousels = \App\Models\Carousel::active()->ordered()->get(['id', 'title', 'image_path']);
+    
+    return response()->json($carousels->map(function($carousel) {
+        return [
+            'id' => $carousel->id,
+            'title' => $carousel->title,
+            'image' => '/images/Carousel/' . $carousel->image_path
+        ];
+    }));
+});
+
+// Username validation API for tournament registration
+Route::post('/validate-username', function (Request $request) {
+    $request->validate([
+        'username' => 'required|string',
+        'university' => 'required|string'
+    ]);
+    
+    $username = $request->input('username');
+    $university = $request->input('university');
+    
+    $user = \App\Models\User::where('username', $username)
+        ->where('university', $university)
+        ->whereIn('state', ['Verified', 'Renew', 'Active']) // Include different valid states
+        ->whereNotIn('role', ['SL', 'Regional Admin', 'Admin', 'Super Admin'])
+        ->first();
+    
+    return response()->json([
+        'exists' => $user ? true : false,
+        'user' => $user ? [
+            'id' => $user->id,
+            'username' => $user->username,
+            'name' => $user->name,
+            'surname' => $user->surname,
+            'university' => $user->university,
+            'state' => $user->state
+        ] : null
+    ]);
+});

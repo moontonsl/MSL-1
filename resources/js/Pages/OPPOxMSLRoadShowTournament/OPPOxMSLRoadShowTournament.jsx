@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Head } from "@inertiajs/react";
 import { Helmet } from "react-helmet";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutEventsWatchFest.jsx";
 import ModalMechanics from "./ModalMechanics.jsx";
-import { User, Users } from "lucide-react";
+import { User, Users, CheckCircle } from "lucide-react";
 import msllogo from "./msl-logo.png";
 import oppologo from "./oppo-white-logo.png";
 
@@ -20,6 +20,57 @@ export default function OPPOxMSLRoadShowTournament() {
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showMechanics, setShowMechanics] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [validatingUsernames, setValidatingUsernames] = useState({});
+  const timeoutRefs = useRef({});
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(timeoutRefs.current).forEach(timeoutId => {
+        if (timeoutId) clearTimeout(timeoutId);
+      });
+    };
+  }, []);
+
+  const validateUsername = async (username, fieldName) => {
+    if (!username.trim()) {
+      setValidationErrors(prev => ({ ...prev, [fieldName]: "" }));
+      return;
+    }
+
+    setValidatingUsernames(prev => ({ ...prev, [fieldName]: true }));
+    
+    try {
+      const response = await fetch(`/school-players?search=${encodeURIComponent(username)}&university=${encodeURIComponent("First Asia Institute of Technology and Humanities")}`);
+      const data = await response.json();
+      
+        if (data && data.length > 0) {
+          const user = data.find(u => u.username.toLowerCase() === username.toLowerCase());
+          if (user) {
+            setValidationErrors(prev => ({ ...prev, [fieldName]: "VALID" }));
+          } else {
+            setValidationErrors(prev => ({ 
+              ...prev, 
+              [fieldName]: "Username not found in First Asia Institute of Technology and Humanities" 
+            }));
+          }
+        } else {
+          setValidationErrors(prev => ({ 
+            ...prev, 
+            [fieldName]: "Username not found in First Asia Institute of Technology and Humanities" 
+          }));
+        }
+    } catch (error) {
+      console.error("Error validating username:", error);
+      setValidationErrors(prev => ({ 
+        ...prev, 
+        [fieldName]: "Error validating username. Please try again." 
+      }));
+    } finally {
+      setValidatingUsernames(prev => ({ ...prev, [fieldName]: false }));
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -27,6 +78,22 @@ export default function OPPOxMSLRoadShowTournament() {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
+
+    // Validate username fields
+    if (name === "captain" || name.startsWith("player")) {
+      // Clear previous error
+      setValidationErrors(prev => ({ ...prev, [name]: "" }));
+      
+      // Clear existing timeout
+      if (timeoutRefs.current[name]) {
+        clearTimeout(timeoutRefs.current[name]);
+      }
+      
+      // Debounce validation
+      timeoutRefs.current[name] = setTimeout(() => {
+        validateUsername(value, name);
+      }, 500);
+    }
   };
 
   const handleAgreeFromModal = () => {
@@ -36,6 +103,25 @@ export default function OPPOxMSLRoadShowTournament() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Check for validation errors (excluding VALID status)
+    const hasErrors = Object.values(validationErrors).some(error => error !== "" && error !== "VALID");
+    if (hasErrors) {
+      alert("Please fix validation errors before submitting.");
+      return;
+    }
+
+    // Check if all usernames are validated
+    const usernameFields = ["captain", "player2", "player3", "player4", "player5"];
+    const allUsernamesValid = usernameFields.every(field => {
+      const username = form[field];
+      return username.trim() === "" || validationErrors[field] === "VALID";
+    });
+
+    if (!allUsernamesValid) {
+      alert("Please wait for username validation to complete.");
+      return;
+    }
 
     const googleFormURL =
       "https://docs.google.com/forms/d/e/1FAIpQLSdbHbI2DnJB3d0DcdoSR1nmTt_T5Af0MaN4w2MivO5k8ieEtg/formResponse";
@@ -67,6 +153,7 @@ export default function OPPOxMSLRoadShowTournament() {
         player5: "",
         agree: false,
       });
+      setValidationErrors({});
     } catch (error) {
       console.error("Error submitting form:", error);
     }
@@ -126,8 +213,20 @@ export default function OPPOxMSLRoadShowTournament() {
               <label className="block font-medium mb-1 text-sm sm:text-base">
                 Team Captain Username
               </label>
-              <div className="flex items-center bg-white/5 rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3">
-                <User className="text-[#F2C21A] w-4 h-4 sm:w-5 sm:h-5" />
+              <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${
+                validationErrors.captain === "VALID" 
+                  ? 'bg-green-500/10 border border-green-500' 
+                  : validationErrors.captain 
+                    ? 'bg-red-500/10 border border-red-500' 
+                    : 'bg-white/5'
+              }`}>
+                {validatingUsernames.captain ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#F2C21A]"></div>
+                ) : validationErrors.captain === "VALID" ? (
+                  <CheckCircle className="text-green-500 w-4 h-4 sm:w-5 sm:h-5" />
+                ) : (
+                  <User className="text-[#F2C21A] w-4 h-4 sm:w-5 sm:h-5" />
+                )}
                 <input
                   type="text"
                   name="captain"
@@ -138,14 +237,32 @@ export default function OPPOxMSLRoadShowTournament() {
                   className="bg-transparent flex-1 outline-none text-white placeholder-gray-400 text-sm sm:text-base"
                 />
               </div>
+              {validationErrors.captain && validationErrors.captain !== "VALID" && (
+                <p className="text-red-400 text-xs mt-1">{validationErrors.captain}</p>
+              )}
+              {validationErrors.captain === "VALID" && (
+                <p className="text-green-400 text-xs mt-1">Username is valid!</p>
+              )}
             </div>
 
             {/* Players 2–5 */}
             {[2, 3, 4, 5].map((num) => (
               <div key={num}>
                 <label className="block font-medium mb-1 text-sm sm:text-base">{`Player ${num} Username`}</label>
-                <div className="flex items-center bg-white/5 rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3">
-                  <User className="text-[#F2C21A] w-4 h-4 sm:w-5 sm:h-5" />
+                <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${
+                  validationErrors[`player${num}`] === "VALID" 
+                    ? 'bg-green-500/10 border border-green-500' 
+                    : validationErrors[`player${num}`] 
+                      ? 'bg-red-500/10 border border-red-500' 
+                      : 'bg-white/5'
+                }`}>
+                  {validatingUsernames[`player${num}`] ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#F2C21A]"></div>
+                  ) : validationErrors[`player${num}`] === "VALID" ? (
+                    <CheckCircle className="text-green-500 w-4 h-4 sm:w-5 sm:h-5" />
+                  ) : (
+                    <User className="text-[#F2C21A] w-4 h-4 sm:w-5 sm:h-5" />
+                  )}
                   <input
                     type="text"
                     name={`player${num}`}
@@ -156,6 +273,12 @@ export default function OPPOxMSLRoadShowTournament() {
                     className="bg-transparent flex-1 outline-none text-white placeholder-gray-400 text-sm sm:text-base"
                   />
                 </div>
+                {validationErrors[`player${num}`] && validationErrors[`player${num}`] !== "VALID" && (
+                  <p className="text-red-400 text-xs mt-1">{validationErrors[`player${num}`]}</p>
+                )}
+                {validationErrors[`player${num}`] === "VALID" && (
+                  <p className="text-green-400 text-xs mt-1">Username is valid!</p>
+                )}
               </div>
             ))}
 
@@ -199,9 +322,9 @@ export default function OPPOxMSLRoadShowTournament() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={!form.agree}
+              disabled={!form.agree || Object.values(validationErrors).some(error => error !== "" && error !== "VALID")}
               className={`w-full mt-4 font-bold py-3 rounded-xl transition-colors text-sm sm:text-base ${
-                form.agree
+                form.agree && !Object.values(validationErrors).some(error => error !== "" && error !== "VALID")
                   ? "bg-[#F2C21A] hover:bg-[#ddb518] text-black cursor-pointer"
                   : "bg-gray-500 text-gray-300 cursor-not-allowed"
               }`}

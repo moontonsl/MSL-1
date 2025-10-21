@@ -93,11 +93,12 @@ class AdminController extends Controller
             'news_title' => 'required|string|max:255',
             'news_subtitle' => 'required|string',
             'news_canonical' => 'required|string',
+            'news_author' => 'required|string|max:255',
             'news_state' => 'required|string',
             'news_img1' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $validated['news_writer'] = Auth::user()->name;
+        $validated['news_writer'] = $validated['news_author'];
         $validated['news_published'] = now();
 
         // Set default values for image fields
@@ -136,9 +137,12 @@ class AdminController extends Controller
             'news_title' => 'required|string|max:255',
             'news_subtitle' => 'required|string',
             'news_canonical' => 'required|string',
+            'news_author' => 'required|string|max:255',
             'news_state' => 'required|string',
             'news_img1' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        $validated['news_writer'] = $validated['news_author'];
 
         // Set default values for image fields if not provided
         if (!isset($validated['news_img2'])) {
@@ -180,6 +184,122 @@ class AdminController extends Controller
     {
         $news->delete();
         return back()->with('success', 'News deleted successfully');
+    }
+
+    public function manageCarousel()
+    {
+        return Inertia::render('Admin/Carousel/Index', [
+            'carousels' => \App\Models\Carousel::ordered()->get()
+        ]);
+    }
+
+    public function storeCarousel(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'nullable|string|max:255',
+            'image' => 'required|image|mimes:jpeg,png,jpg|max:5120', // 5MB max
+            'order' => 'integer|min:0'
+        ]);
+
+        // Get image dimensions for validation
+        $image = $request->file('image');
+        $imageInfo = getimagesize($image->getPathname());
+        $width = $imageInfo[0];
+        $height = $imageInfo[1];
+
+        // Validate dimensions (you can adjust these values)
+        $requiredWidth = 1920;
+        $requiredHeight = 1080;
+        
+        if ($width !== $requiredWidth || $height !== $requiredHeight) {
+            return back()->withErrors([
+                'image' => "Image must be exactly {$requiredWidth}x{$requiredHeight} pixels. Your image is {$width}x{$height} pixels."
+            ]);
+        }
+
+        // Store image
+        $imageName = time() . '_' . $image->getClientOriginalName();
+        $image->move(public_path('images/Carousel'), $imageName);
+
+        // Get next order number
+        $order = $validated['order'] ?? (\App\Models\Carousel::max('order') + 1);
+
+        \App\Models\Carousel::create([
+            'title' => $validated['title'],
+            'image_path' => $imageName,
+            'order' => $order,
+            'is_active' => true
+        ]);
+
+        return back()->with('success', 'Carousel image added successfully');
+    }
+
+    public function updateCarousel(Request $request, \App\Models\Carousel $carousel)
+    {
+        $validated = $request->validate([
+            'title' => 'nullable|string|max:255',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+            'order' => 'integer|min:0',
+            'is_active' => 'boolean'
+        ]);
+
+        // Handle image update if provided
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $imageInfo = getimagesize($image->getPathname());
+            $width = $imageInfo[0];
+            $height = $imageInfo[1];
+
+            // Validate dimensions
+            $requiredWidth = 1920;
+            $requiredHeight = 1080;
+            
+            if ($width !== $requiredWidth || $height !== $requiredHeight) {
+                return back()->withErrors([
+                    'image' => "Image must be exactly {$requiredWidth}x{$requiredHeight} pixels. Your image is {$width}x{$height} pixels."
+                ]);
+            }
+
+            // Delete old image
+            if ($carousel->image_path && file_exists(public_path('images/Carousel/' . $carousel->image_path))) {
+                unlink(public_path('images/Carousel/' . $carousel->image_path));
+            }
+
+            // Store new image
+            $imageName = time() . '_' . $image->getClientOriginalName();
+            $image->move(public_path('images/Carousel'), $imageName);
+            $validated['image_path'] = $imageName;
+        }
+
+        $carousel->update($validated);
+        return back()->with('success', 'Carousel updated successfully');
+    }
+
+    public function deleteCarousel(\App\Models\Carousel $carousel)
+    {
+        // Delete image file
+        if ($carousel->image_path && file_exists(public_path('images/Carousel/' . $carousel->image_path))) {
+            unlink(public_path('images/Carousel/' . $carousel->image_path));
+        }
+
+        $carousel->delete();
+        return back()->with('success', 'Carousel image deleted successfully');
+    }
+
+    public function reorderCarousel(Request $request)
+    {
+        $validated = $request->validate([
+            'carousels' => 'required|array',
+            'carousels.*.id' => 'required|integer|exists:carousels,id',
+            'carousels.*.order' => 'required|integer|min:0'
+        ]);
+
+        foreach ($validated['carousels'] as $carouselData) {
+            \App\Models\Carousel::where('id', $carouselData['id'])
+                ->update(['order' => $carouselData['order']]);
+        }
+
+        return back()->with('success', 'Carousel order updated successfully');
     }
 
     public function manageEvents()
