@@ -30,6 +30,13 @@ Route::middleware(['auth:admin', 'admin'])->group(function () {
     Route::put('/admin/news/{news}', [AdminController::class, 'updateNews'])->name('admin.news.update');
     Route::delete('/admin/news/{news}', [AdminController::class, 'deleteNews'])->name('admin.news.delete');
 
+    // Carousel Management
+    Route::get('/admin/carousel', [AdminController::class, 'manageCarousel'])->name('admin.carousel');
+    Route::post('/admin/carousel', [AdminController::class, 'storeCarousel'])->name('admin.carousel.store');
+    Route::put('/admin/carousel/{carousel}', [AdminController::class, 'updateCarousel'])->name('admin.carousel.update');
+    Route::delete('/admin/carousel/{carousel}', [AdminController::class, 'deleteCarousel'])->name('admin.carousel.delete');
+    Route::post('/admin/carousel/reorder', [AdminController::class, 'reorderCarousel'])->name('admin.carousel.reorder');
+
     // Event Management
     Route::get('/admin/events', [AdminController::class, 'manageEvents'])->name('admin.events');
     Route::get('/admin/events/create', [AdminController::class, 'createEvent'])->name('admin.events.create');
