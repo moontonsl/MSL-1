@@ -164,7 +164,7 @@ Message: ${emailForm.message}`;
             {/* TITLE */}
             <h1 className="font-bold mb-2 
               text-[24px] sm:text-[32px] lg:text-[40px] leading-tight">
-              MSL Network
+              The MSL Network
             </h1>
             
             {/* HEADER */}
@@ -182,6 +182,19 @@ Message: ${emailForm.message}`;
 
             {/* BUTTONS */}
             <div className="flex flex-row gap-3 justify-center">
+              <a
+                href="#apply-section"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById("apply-section")?.scrollIntoView({
+                    behavior: "smooth",
+                  });
+                }}
+                className="px-3 py-1.5 sm:px-5 sm:py-2.5 bg-black text-[#F3C718] font-bold rounded-xl text-sm sm:text-base"
+              >
+                APPLY NOW
+              </a>
+
               <a
                 href="https://discord.com/invite/themslnetwork"
                 className="px-4 py-2 md:px-6 md:py-3 border border-black text-black font-bold rounded-xl text-[12px] sm:text-[14px] lg:text-[16px]"
@@ -531,7 +544,7 @@ Message: ${emailForm.message}`;
       {/* --- Partnership Tiers --- */}
 
       {/* --- MSL Network Footer --- */}
-      <div className="w-full bg-gradient-to-r from-[#F2C21A] to-[#CA8B04] text-black font-['Montserrat'] mt-8">
+      <div id="apply-section" className="w-full bg-gradient-to-r from-[#F2C21A] to-[#CA8B04] text-black font-['Montserrat'] mt-8">
         
         {/* MOBILE (same style as header) */}
         <div className="relative md:hidden min-h-[250px] flex flex-col justify-center items-center text-center px-6 py-8">

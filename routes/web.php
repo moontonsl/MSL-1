@@ -511,6 +511,11 @@ Route::get('/AccountModificationWaiting', function () {
     return Inertia::render('AccountModification/AccountModificationWaiting');
 })->name('AccountModificationWaiting');
 
+//OPPO X MSL ROAD SHOW TOURNAMENT ROUTES
+Route::get('/RoadshowTournament', function () {
+    return Inertia::render('OPPOxMSLRoadShowTournament/OPPOxMSLRoadShowTournament');
+})->name('OPPOxMSLRoadShowTournament');
+
 //SL ADMIN APPROVAL ROUTES
 Route::get('/SLAdminApproval', function () {
     return Inertia::render('ApprovalPages/SLAdminApproval');
