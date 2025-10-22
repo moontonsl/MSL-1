@@ -180,6 +180,12 @@ Route::get('/RoadshowTournament', function () {
     return Inertia::render('OPPOxMSLRoadShowTournament/OPPOxMSLRoadShowTournament');
 })->name('OPPOxMSLRoadShowTournament');
 
+
+//OPPO X MSL ROAD SHOW TOURNAMENT ATTENDANCE ROUTES
+Route::get('/RoadshowAttendance', function () {
+    return Inertia::render('OPPOxMSLRoadShowTournament/RoadshowAttendance');
+})->name('RoadshowAttendance');
+
 //SL ADMIN APPROVAL ROUTES
 Route::get('/SLAdminApproval', function () {
     return Inertia::render('ApprovalPages/SLAdminApproval');
