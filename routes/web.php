@@ -186,16 +186,32 @@ Route::get('/RoadshowAttendance', function () {
     return Inertia::render('OPPOxMSLRoadShowTournament/RoadshowAttendance');
 })->name('RoadshowAttendance');
 
-//SL ADMIN APPROVAL ROUTES
-Route::get('/SLAdminApproval', function () {
-    return Inertia::render('ApprovalPages/SLAdminApproval');
+//SL ADMIN APPROVAL ROUTES - Only SL role can access
+Route::middleware(['auth', 'verified'])->get('/SLAdminApproval', function () {
+    $user = Auth::user();
+    
+    // Only SL role can access this page
+    if ($user->role !== 'SL') {
+        abort(403, 'Access denied. Only Student Leaders can access this page.');
+    }
+    
+    return Inertia::render('ApprovalPages/SLAdminApproval', [
+        'user' => $user
+    ]);
 })->name('SLAdminApproval');
 
-
-
-//ADMIN REGIONAL APPROVAL ROUTES
-Route::get('/RegionalAdminApproval', function () {
-    return Inertia::render('ApprovalPages/RegionalAdminApproval');
+//ADMIN REGIONAL APPROVAL ROUTES - Only Regional Admin role can access
+Route::middleware(['auth', 'verified'])->get('/RegionalAdminApproval', function () {
+    $user = Auth::user();
+    
+    // Only Regional Admin role can access this page
+    if ($user->role !== 'Regional Admin') {
+        abort(403, 'Access denied. Only Regional Admins can access this page.');
+    }
+    
+    return Inertia::render('ApprovalPages/RegionalAdminApproval', [
+        'user' => $user
+    ]);
 })->name('RegionalAdminApproval');
 
 //MSL NETWORK ROUTES
