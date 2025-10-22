@@ -42,7 +42,7 @@ function SortableCarouselItem({ carousel, onEdit, onDelete, onToggleActive }) {
         <div ref={setNodeRef} style={style} className="border border-gray-200 rounded-lg overflow-hidden">
             <div className="relative">
                 <img
-                    src={`/images/Carousel/${carousel.image_path}`}
+                    src={`/storage/carousel/${carousel.image_path}`}
                     alt={carousel.title || 'Carousel image'}
                     className="w-full h-48 object-cover"
                 />
@@ -169,7 +169,7 @@ export default function CarouselIndex({ carousels }) {
             image: null,
             order: carousel.order
         });
-        setImagePreview(carousel.image_path ? `/images/Carousel/${carousel.image_path}` : null);
+        setImagePreview(carousel.image_path ? `/storage/carousel/${carousel.image_path}` : null);
     };
 
     const handleCancel = () => {

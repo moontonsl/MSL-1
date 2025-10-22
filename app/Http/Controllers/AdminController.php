@@ -217,9 +217,10 @@ class AdminController extends Controller
             ]);
         }
 
-        // Store image
+        // Store image using Laravel's storage system
         $imageName = time() . '_' . $image->getClientOriginalName();
-        $image->move(public_path('images/Carousel'), $imageName);
+        $imagePath = $image->storeAs('public/carousel', $imageName);
+        $imageName = str_replace('public/carousel/', '', $imagePath);
 
         // Get next order number
         $order = $validated['order'] ?? (\App\Models\Carousel::max('order') + 1);
@@ -261,13 +262,14 @@ class AdminController extends Controller
             }
 
             // Delete old image
-            if ($carousel->image_path && file_exists(public_path('images/Carousel/' . $carousel->image_path))) {
-                unlink(public_path('images/Carousel/' . $carousel->image_path));
+            if ($carousel->image_path && \Storage::exists('public/carousel/' . $carousel->image_path)) {
+                \Storage::delete('public/carousel/' . $carousel->image_path);
             }
 
-            // Store new image
+            // Store new image using Laravel's storage system
             $imageName = time() . '_' . $image->getClientOriginalName();
-            $image->move(public_path('images/Carousel'), $imageName);
+            $imagePath = $image->storeAs('public/carousel', $imageName);
+            $imageName = str_replace('public/carousel/', '', $imagePath);
             $validated['image_path'] = $imageName;
         }
 
@@ -277,9 +279,9 @@ class AdminController extends Controller
 
     public function deleteCarousel(\App\Models\Carousel $carousel)
     {
-        // Delete image file
-        if ($carousel->image_path && file_exists(public_path('images/Carousel/' . $carousel->image_path))) {
-            unlink(public_path('images/Carousel/' . $carousel->image_path));
+        // Delete image file from storage
+        if ($carousel->image_path && \Storage::exists('public/carousel/' . $carousel->image_path)) {
+            \Storage::delete('public/carousel/' . $carousel->image_path);
         }
 
         $carousel->delete();

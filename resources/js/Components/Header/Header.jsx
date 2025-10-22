@@ -38,6 +38,13 @@ const Header = () => {
             links.push({ name: 'Campus Tournament', href: '/campus-tournament' });
         }
         
+        // Add Modification tab based on role
+        if (user && user.role === 'SL') {
+            links.push({ name: 'Modification', href: '/SLAdminApproval' });
+        } else if (user && user.role === 'Regional Admin') {
+            links.push({ name: 'Modification', href: '/RegionalAdminApproval' });
+        }
+        
         return links;
     }, [user]);
 

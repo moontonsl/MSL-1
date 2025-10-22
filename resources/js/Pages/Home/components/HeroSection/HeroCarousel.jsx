@@ -17,18 +17,18 @@ const HeroCarousel = () => {
                 } else {
                     // Fallback to static images if API fails
                     setSlides([
-                        "/images/Carousel/C1.jpg",
-                        "/images/Carousel/C2.jpg",
-                        "/images/Carousel/C3.jpg",
+                        "/storage/carousel/C1.jpg",
+                        "/storage/carousel/C2.jpg",
+                        "/storage/carousel/C3.jpg",
                     ]);
                 }
             } catch (error) {
                 console.error('Error fetching carousel images:', error);
                 // Fallback to static images
                 setSlides([
-                    "/images/Carousel/C1.jpg",
-                    "/images/Carousel/C2.jpg",
-                    "/images/Carousel/C3.jpg",
+                    "/storage/carousel/C1.jpg",
+                    "/storage/carousel/C2.jpg",
+                    "/storage/carousel/C3.jpg",
                 ]);
             } finally {
                 setLoading(false);
