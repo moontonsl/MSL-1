@@ -765,6 +765,12 @@ Route::get('/RoadshowTournament', function () {
     return Inertia::render('OPPOxMSLRoadShowTournament/OPPOxMSLRoadShowTournament');
 })->name('OPPOxMSLRoadShowTournament');
 
+
+//OPPO X MSL ROAD SHOW TOURNAMENT ATTENDANCE ROUTES
+Route::get('/RoadshowAttendance', function () {
+    return Inertia::render('OPPOxMSLRoadShowTournament/RoadshowAttendance');
+})->name('RoadshowAttendance');
+
 //SL ADMIN APPROVAL ROUTES - Only SL role can access
 Route::middleware(['auth', 'verified'])->get('/SLAdminApproval', function () {
     $user = Auth::user();
