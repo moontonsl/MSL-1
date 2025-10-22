@@ -221,7 +221,7 @@ Route::get('/carousel-images', function () {
         return [
             'id' => $carousel->id,
             'title' => $carousel->title,
-            'image' => '/images/Carousel/' . $carousel->image_path
+            'image' => '/storage/carousel/' . $carousel->image_path
         ];
     }));
 });
