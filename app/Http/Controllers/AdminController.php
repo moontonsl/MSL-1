@@ -284,13 +284,15 @@ class AdminController extends Controller
                 \Log::info('Created carousel directory', ['path' => $carouselPath]);
             }
             
-            $imagePath = $image->storeAs('public/carousel', $imageName);
-            $imageName = str_replace('public/carousel/', '', $imagePath);
+            // Use move() instead of storeAs() for VPS compatibility
+            $destination = $carouselPath . '/' . $imageName;
+            $image->move($carouselPath, $imageName);
             
             \Log::info('Image stored successfully', [
-                'image_path' => $imagePath,
-                'final_name' => $imageName,
-                'full_storage_path' => storage_path('app/' . $imagePath),
+                'image_name' => $imageName,
+                'destination' => $destination,
+                'file_exists' => file_exists($destination),
+                'file_size' => file_exists($destination) ? filesize($destination) : null,
                 'web_path' => '/storage/carousel/' . $imageName,
                 'directory_exists' => file_exists($carouselPath)
             ]);
@@ -369,7 +371,7 @@ class AdminController extends Controller
                 \Storage::delete('public/carousel/' . $carousel->image_path);
             }
 
-            // Store new image using Laravel's storage system
+            // Store new image using move() for VPS compatibility
             $imageName = time() . '_' . $image->getClientOriginalName();
             
             // Ensure carousel directory exists
@@ -379,8 +381,8 @@ class AdminController extends Controller
                 \Log::info('Created carousel directory during update', ['path' => $carouselPath]);
             }
             
-            $imagePath = $image->storeAs('public/carousel', $imageName);
-            $imageName = str_replace('public/carousel/', '', $imagePath);
+            $destination = $carouselPath . '/' . $imageName;
+            $image->move($carouselPath, $imageName);
             $validated['image_path'] = $imageName;
         }
 
