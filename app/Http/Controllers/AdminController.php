@@ -188,18 +188,58 @@ class AdminController extends Controller
 
     public function manageCarousel()
     {
-        return Inertia::render('Admin/Carousel/Index', [
-            'carousels' => \App\Models\Carousel::ordered()->get()
-        ]);
+        \Log::info('Carousel management page accessed');
+        
+        try {
+            $carousels = \App\Models\Carousel::ordered()->get();
+            
+            \Log::info('Carousel data loaded for admin page', [
+                'count' => $carousels->count(),
+                'carousels' => $carousels->map(function($carousel) {
+                    return [
+                        'id' => $carousel->id,
+                        'title' => $carousel->title,
+                        'image_path' => $carousel->image_path,
+                        'order' => $carousel->order,
+                        'is_active' => $carousel->is_active,
+                        'web_url' => '/storage/carousel/' . $carousel->image_path,
+                        'file_exists' => \Storage::exists('public/carousel/' . $carousel->image_path),
+                        'storage_link_exists' => is_link(public_path('storage'))
+                    ];
+                })->toArray()
+            ]);
+            
+            return Inertia::render('Admin/Carousel/Index', [
+                'carousels' => $carousels
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to load carousel management page', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return Inertia::render('Admin/Carousel/Index', [
+                'carousels' => collect(),
+                'error' => 'Failed to load carousel data: ' . $e->getMessage()
+            ]);
+        }
     }
 
     public function storeCarousel(Request $request)
     {
+        \Log::info('Carousel store request started', [
+            'request_data' => $request->except(['image']),
+            'has_image' => $request->hasFile('image'),
+            'image_size' => $request->hasFile('image') ? $request->file('image')->getSize() : null
+        ]);
+
         $validated = $request->validate([
             'title' => 'nullable|string|max:255',
             'image' => 'required|image|mimes:jpeg,png,jpg|max:5120', // 5MB max
             'order' => 'integer|min:0'
         ]);
+
+        \Log::info('Carousel validation passed', ['validated_data' => $validated]);
 
         // Get image dimensions for validation
         $image = $request->file('image');
@@ -207,11 +247,22 @@ class AdminController extends Controller
         $width = $imageInfo[0];
         $height = $imageInfo[1];
 
+        \Log::info('Image dimensions check', [
+            'width' => $width,
+            'height' => $height,
+            'required_width' => 1920,
+            'required_height' => 1080
+        ]);
+
         // Validate dimensions (you can adjust these values)
         $requiredWidth = 1920;
         $requiredHeight = 1080;
         
         if ($width !== $requiredWidth || $height !== $requiredHeight) {
+            \Log::warning('Image dimensions validation failed', [
+                'actual_dimensions' => "{$width}x{$height}",
+                'required_dimensions' => "{$requiredWidth}x{$requiredHeight}"
+            ]);
             return back()->withErrors([
                 'image' => "Image must be exactly {$requiredWidth}x{$requiredHeight} pixels. Your image is {$width}x{$height} pixels."
             ]);
@@ -219,20 +270,64 @@ class AdminController extends Controller
 
         // Store image using Laravel's storage system
         $imageName = time() . '_' . $image->getClientOriginalName();
-        $imagePath = $image->storeAs('public/carousel', $imageName);
-        $imageName = str_replace('public/carousel/', '', $imagePath);
+        \Log::info('Attempting to store image', [
+            'original_name' => $image->getClientOriginalName(),
+            'new_name' => $imageName,
+            'storage_path' => 'public/carousel'
+        ]);
+
+        try {
+            $imagePath = $image->storeAs('public/carousel', $imageName);
+            $imageName = str_replace('public/carousel/', '', $imagePath);
+            
+            \Log::info('Image stored successfully', [
+                'image_path' => $imagePath,
+                'final_name' => $imageName,
+                'full_storage_path' => storage_path('app/' . $imagePath),
+                'web_path' => '/storage/carousel/' . $imageName
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to store image', [
+                'error' => $e->getMessage(),
+                'image_name' => $imageName
+            ]);
+            return back()->withErrors(['image' => 'Failed to upload image: ' . $e->getMessage()]);
+        }
 
         // Get next order number
         $order = $validated['order'] ?? (\App\Models\Carousel::max('order') + 1);
 
-        \App\Models\Carousel::create([
+        \Log::info('Creating carousel record', [
             'title' => $validated['title'],
             'image_path' => $imageName,
-            'order' => $order,
-            'is_active' => true
+            'order' => $order
         ]);
 
-        return back()->with('success', 'Carousel image added successfully');
+        try {
+            $carousel = \App\Models\Carousel::create([
+                'title' => $validated['title'],
+                'image_path' => $imageName,
+                'order' => $order,
+                'is_active' => true
+            ]);
+
+            \Log::info('Carousel created successfully', [
+                'carousel_id' => $carousel->id,
+                'final_web_url' => '/storage/carousel/' . $imageName
+            ]);
+
+            return back()->with('success', 'Carousel image added successfully');
+        } catch (\Exception $e) {
+            \Log::error('Failed to create carousel record', [
+                'error' => $e->getMessage(),
+                'data' => [
+                    'title' => $validated['title'],
+                    'image_path' => $imageName,
+                    'order' => $order
+                ]
+            ]);
+            return back()->withErrors(['general' => 'Failed to save carousel: ' . $e->getMessage()]);
+        }
     }
 
     public function updateCarousel(Request $request, \App\Models\Carousel $carousel)
