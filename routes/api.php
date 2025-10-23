@@ -240,7 +240,52 @@ Route::get('/storage-status', function () {
     return response()->json($status);
 });
 
-// Serve image directly through Laravel (bypass web server)
+// Debug storage directory contents
+Route::get('/debug-storage', function () {
+    \Log::info('Debugging storage directory contents');
+    
+    $storagePath = storage_path('app/public');
+    $carouselPath = storage_path('app/public/carousel');
+    
+    $debug = [
+        'storage_path' => $storagePath,
+        'carousel_path' => $carouselPath,
+        'storage_exists' => is_dir($storagePath),
+        'carousel_exists' => is_dir($carouselPath),
+        'storage_contents' => [],
+        'carousel_contents' => [],
+        'all_files_in_storage' => []
+    ];
+    
+    // List storage directory contents
+    if (is_dir($storagePath)) {
+        $debug['storage_contents'] = scandir($storagePath);
+    }
+    
+    // List carousel directory contents
+    if (is_dir($carouselPath)) {
+        $debug['carousel_contents'] = scandir($carouselPath);
+    }
+    
+    // Find all files recursively in storage
+    if (is_dir($storagePath)) {
+        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($storagePath));
+        foreach ($iterator as $file) {
+            if ($file->isFile()) {
+                $debug['all_files_in_storage'][] = [
+                    'path' => $file->getPathname(),
+                    'name' => $file->getFilename(),
+                    'size' => $file->getSize(),
+                    'permissions' => substr(sprintf('%o', $file->getPerms()), -4)
+                ];
+            }
+        }
+    }
+    
+    \Log::info('Storage debug completed', $debug);
+    
+    return response()->json($debug);
+});
 Route::get('/serve-image/{filename}', function ($filename) {
     \Log::info('Serving image directly through Laravel', ['filename' => $filename]);
     
