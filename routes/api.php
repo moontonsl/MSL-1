@@ -240,7 +240,51 @@ Route::get('/storage-status', function () {
     return response()->json($status);
 });
 
-// Create carousel directory manually
+// Serve image directly through Laravel (bypass web server)
+Route::get('/serve-image/{filename}', function ($filename) {
+    \Log::info('Serving image directly through Laravel', ['filename' => $filename]);
+    
+    $filePath = storage_path('app/public/carousel/' . $filename);
+    
+    if (!file_exists($filePath)) {
+        \Log::warning('Image file not found', ['file_path' => $filePath]);
+        return response()->json(['error' => 'File not found'], 404);
+    }
+    
+    \Log::info('Serving image file', [
+        'file_path' => $filePath,
+        'file_size' => filesize($filePath),
+        'mime_type' => mime_content_type($filePath)
+    ]);
+    
+    return response()->file($filePath);
+});
+
+// Test direct file access
+Route::get('/test-file-access/{filename}', function ($filename) {
+    \Log::info('Testing file access', ['filename' => $filename]);
+    
+    $filePath = storage_path('app/public/carousel/' . $filename);
+    $webPath = '/storage/carousel/' . $filename;
+    
+    $status = [
+        'filename' => $filename,
+        'file_path' => $filePath,
+        'web_path' => $webPath,
+        'file_exists' => file_exists($filePath),
+        'is_readable' => is_readable($filePath),
+        'file_size' => file_exists($filePath) ? filesize($filePath) : null,
+        'permissions' => file_exists($filePath) ? substr(sprintf('%o', fileperms($filePath)), -4) : null,
+        'storage_link_exists' => is_link(public_path('storage')),
+        'storage_link_target' => is_link(public_path('storage')) ? readlink(public_path('storage')) : null,
+        'public_storage_exists' => is_dir(public_path('storage')),
+        'public_storage_permissions' => is_dir(public_path('storage')) ? substr(sprintf('%o', fileperms(public_path('storage'))), -4) : null
+    ];
+    
+    \Log::info('File access test completed', $status);
+    
+    return response()->json($status);
+});
 Route::get('/create-carousel-dir', function () {
     \Log::info('Manual carousel directory creation requested');
     
