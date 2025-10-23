@@ -213,17 +213,75 @@ Route::middleware(['web'])->group(function () {
     });
 });
 
+// Storage link status check
+Route::get('/storage-status', function () {
+    \Log::info('Storage status check requested');
+    
+    $status = [
+        'storage_link_exists' => is_link(public_path('storage')),
+        'storage_link_target' => is_link(public_path('storage')) ? readlink(public_path('storage')) : null,
+        'storage_directory_exists' => is_dir(storage_path('app/public')),
+        'carousel_directory_exists' => is_dir(storage_path('app/public/carousel')),
+        'carousel_files' => [],
+        'public_storage_exists' => is_dir(public_path('storage')),
+        'timestamp' => now()->toDateTimeString()
+    ];
+    
+    // Check carousel files
+    if (is_dir(storage_path('app/public/carousel'))) {
+        $files = scandir(storage_path('app/public/carousel'));
+        $status['carousel_files'] = array_filter($files, function($file) {
+            return $file !== '.' && $file !== '..';
+        });
+    }
+    
+    \Log::info('Storage status check completed', $status);
+    
+    return response()->json($status);
+});
+
 // Public API for carousel images
 Route::get('/carousel-images', function () {
-    $carousels = \App\Models\Carousel::active()->ordered()->get(['id', 'title', 'image_path']);
+    \Log::info('Carousel images API called');
     
-    return response()->json($carousels->map(function($carousel) {
-        return [
-            'id' => $carousel->id,
-            'title' => $carousel->title,
-            'image' => '/storage/carousel/' . $carousel->image_path
-        ];
-    }));
+    try {
+        $carousels = \App\Models\Carousel::active()->ordered()->get(['id', 'title', 'image_path']);
+        
+        \Log::info('Carousel images retrieved', [
+            'count' => $carousels->count(),
+            'carousels' => $carousels->map(function($carousel) {
+                return [
+                    'id' => $carousel->id,
+                    'title' => $carousel->title,
+                    'image_path' => $carousel->image_path,
+                    'web_url' => '/storage/carousel/' . $carousel->image_path,
+                    'file_exists' => \Storage::exists('public/carousel/' . $carousel->image_path)
+                ];
+            })->toArray()
+        ]);
+        
+        $response = $carousels->map(function($carousel) {
+            return [
+                'id' => $carousel->id,
+                'title' => $carousel->title,
+                'image' => '/storage/carousel/' . $carousel->image_path
+            ];
+        });
+        
+        \Log::info('Carousel API response prepared', [
+            'response_count' => $response->count(),
+            'response_data' => $response->toArray()
+        ]);
+        
+        return response()->json($response);
+    } catch (\Exception $e) {
+        \Log::error('Carousel images API error', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return response()->json(['error' => 'Failed to fetch carousel images'], 500);
+    }
 });
 
 // Username validation API for tournament registration
