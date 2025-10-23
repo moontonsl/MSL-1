@@ -277,6 +277,13 @@ class AdminController extends Controller
         ]);
 
         try {
+            // Ensure carousel directory exists
+            $carouselPath = storage_path('app/public/carousel');
+            if (!file_exists($carouselPath)) {
+                mkdir($carouselPath, 0755, true);
+                \Log::info('Created carousel directory', ['path' => $carouselPath]);
+            }
+            
             $imagePath = $image->storeAs('public/carousel', $imageName);
             $imageName = str_replace('public/carousel/', '', $imagePath);
             
@@ -284,7 +291,8 @@ class AdminController extends Controller
                 'image_path' => $imagePath,
                 'final_name' => $imageName,
                 'full_storage_path' => storage_path('app/' . $imagePath),
-                'web_path' => '/storage/carousel/' . $imageName
+                'web_path' => '/storage/carousel/' . $imageName,
+                'directory_exists' => file_exists($carouselPath)
             ]);
         } catch (\Exception $e) {
             \Log::error('Failed to store image', [
@@ -363,6 +371,14 @@ class AdminController extends Controller
 
             // Store new image using Laravel's storage system
             $imageName = time() . '_' . $image->getClientOriginalName();
+            
+            // Ensure carousel directory exists
+            $carouselPath = storage_path('app/public/carousel');
+            if (!file_exists($carouselPath)) {
+                mkdir($carouselPath, 0755, true);
+                \Log::info('Created carousel directory during update', ['path' => $carouselPath]);
+            }
+            
             $imagePath = $image->storeAs('public/carousel', $imageName);
             $imageName = str_replace('public/carousel/', '', $imagePath);
             $validated['image_path'] = $imageName;

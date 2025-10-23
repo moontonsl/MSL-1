@@ -240,6 +240,45 @@ Route::get('/storage-status', function () {
     return response()->json($status);
 });
 
+// Create carousel directory manually
+Route::get('/create-carousel-dir', function () {
+    \Log::info('Manual carousel directory creation requested');
+    
+    $carouselPath = storage_path('app/public/carousel');
+    
+    try {
+        if (!file_exists($carouselPath)) {
+            mkdir($carouselPath, 0755, true);
+            \Log::info('Carousel directory created manually', ['path' => $carouselPath]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Carousel directory created successfully',
+                'path' => $carouselPath,
+                'permissions' => substr(sprintf('%o', fileperms($carouselPath)), -4)
+            ]);
+        } else {
+            return response()->json([
+                'success' => true,
+                'message' => 'Carousel directory already exists',
+                'path' => $carouselPath,
+                'permissions' => substr(sprintf('%o', fileperms($carouselPath)), -4)
+            ]);
+        }
+    } catch (\Exception $e) {
+        \Log::error('Failed to create carousel directory', [
+            'error' => $e->getMessage(),
+            'path' => $carouselPath
+        ]);
+        
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'path' => $carouselPath
+        ], 500);
+    }
+});
+
 // Public API for carousel images
 Route::get('/carousel-images', function () {
     \Log::info('Carousel images API called');
