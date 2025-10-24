@@ -5,7 +5,7 @@ import styles from './AuthenticatedLayoutAnniversary9th.module.scss';
 
 export default function AuthenticatedLayoutEventsWatchFest({children}) {
     return (
-        <div className={`${styles.Poster9thBG} app`}>
+        <div className={`${styles.GlamUp9thBG} app`}>
             <Header/>
             <main className={styles.mainContent}>
                 {children}

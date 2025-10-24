@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { Head } from "@inertiajs/react";
-import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutAnniversary9th";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutAnniversary9thGlamUp.jsx";
 import { Helmet } from "react-helmet";
-import MechanicsModal from "./MechanicsModal";
+import MechanicsModal from "./MechanicsModalGlamUp.jsx";
 import PosterLogo from "./9THLOGO.png";
 
-export default function Poster9th({ auth }) {
+export default function GlamUp9th({ auth }) {
   const [form, setForm] = useState({
     fullName: "",
     mlbbId: "",
@@ -39,7 +39,8 @@ export default function Poster9th({ auth }) {
     }
 
     const formURL =
-      "https://docs.google.com/forms/d/e/1FAIpQLSf_DEGB3NucmnIBEtRLAf8fXPZHOTAsc9GmYoEYPvWvIwwRpA/formResponse";
+      "https://docs.google.com/forms/d/e/1FAIpQLSccmlBq6F7uO1ctGlpwjBy5LRtqyXAXKFUyYg3qaI1R5gR0lA/formResponse";
+      
 
     const formData = new FormData();
     formData.append("entry.1221870114", form.fullName);
@@ -74,7 +75,7 @@ export default function Poster9th({ auth }) {
 
   return (
     <AuthenticatedLayout user={auth.user}>
-      <Head title="9th Anniversary Poster Contest" />
+      <Head title="9th Anniversary Glam Up Contest" />
       <Helmet>
         <link
           href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap"
@@ -95,9 +96,9 @@ export default function Poster9th({ auth }) {
         />
 
         {/* Card */}
-        <div className="w-full max-w-xl bg-[#FFB6C1] rounded-2xl shadow-xl p-8 backdrop-blur-md border border-white mt-[-10px] mb-8">
+        <div className="w-full max-w-xl bg-yellow-200 rounded-2xl shadow-xl p-8 backdrop-blur-md border border-white mt-[-10px] mb-8">
           <h1 className="text-xl md:text-2xl font-bold text-center text-black mb-5 tracking-wide">
-            9th Anniversary Poster Submission
+            9th Anniversary Glam Up Submission
           </h1>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -127,7 +128,7 @@ export default function Poster9th({ auth }) {
               {
                 label: "Poster Link",
                 name: "posterLink",
-                placeholder: "Link of your Poster entry",
+                placeholder: "Link of your Tiktok entry",
               },
             ].map((field, idx) => (
               <div key={idx}>
@@ -138,9 +139,9 @@ export default function Poster9th({ auth }) {
                   onChange={handleChange}
                   required
                   placeholder={field.placeholder}
-                  className="w-full px-4 py-3 rounded-xl bg-white/20 border border-black text-black placeholder-gray-500 
-                            focus:outline-none focus:ring-2 focus:ring-[#FF69B4] focus:border-[#FF69B4]
-                            focus:shadow-[0_0_10px_2px_rgba(250,204,21,0.7)] transition text-center"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-black text-black placeholder-gray-500 
+                   focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500
+                   focus:shadow-[0_0_10px_2px_rgba(250,204,21,0.7)] transition text-center"
                 />
               </div>
             ))}
@@ -152,15 +153,15 @@ export default function Poster9th({ auth }) {
                 value={form.chsl}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 rounded-xl bg-white/20 border border-black text-black placeholder-gray-500 
-                          focus:outline-none focus:ring-2 focus:ring-[#FF69B4] focus:border-[#FF69B4] 
+                className="w-full px-4 py-3 rounded-xl bg-white border border-black text-black placeholder-gray-500 
+                          focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500
                           focus:shadow-[0_0_10px_2px_rgba(250,204,21,0.7)] transition text-center"
               >
                 <option value="" disabled>
                   Are you part of CH or SL?
                 </option>
                 <option value="CH">Community Heroes</option>
-                <option value="SL">Student Leaders</option>
+                <option value="SL">Moonton Student Leaders</option>
               </select>
             </div>
 
@@ -198,10 +199,10 @@ export default function Poster9th({ auth }) {
             </div>
 
             <button
-              type="submit"
-              className="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-black font-semibold rounded-xl shadow-lg hover:opacity-90 transition"
+                type="submit"
+                className="w-full py-3 bg-[#FFB6C1] text-black font-semibold rounded-xl shadow-lg hover:opacity-90 transition"
             >
-              Submit
+                Submit
             </button>
           </form>
         </div>

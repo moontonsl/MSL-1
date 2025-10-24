@@ -140,6 +140,16 @@ Route::get('/BuffsAndSupport', function () {
     return Inertia::render('BuffsAndSupport/BuffsAndSupport');
 })->name('BuffsAndSupport');
 
+//BUFFS AND SUPPORT - APPLICATION FORM ROUTES
+Route::get('/MSLBuffsAndSupportApplicationForm', function () {
+    return Inertia::render('BuffsAndSupport/Forms/MSLBuffsAndSupportApplicationForm');
+})->name('MSLBuffsAndSupportApplicationForm');
+
+//BUFFS AND SUPPORT - TOURNAMENT LOBBY APPLICATION FORM ROUTES
+Route::get('/MSLTournamentLobbyApplicationForm', function () {
+    return Inertia::render('BuffsAndSupport/Forms/MSLTournamentLobbyApplicationForm');
+})->name('MSLTournamentLobbyApplicationForm');
+
 //MSL APPLICATION ROUTES
 Route::get('/MSLApplication', function () {
     return Inertia::render('MSLApplication/MSLApplication');
@@ -151,23 +161,57 @@ Route::get('/NEXTSpoof', function () {
 })->name('NEXTSpoof');
 
 //ANNIVERSARY 9TH POSTING CONTEST ROUTES
-Route::get('/9THPoster', function () {
+Route::get('/9thPoster', function () {
     return Inertia::render('Anniversary9th/9THPoster');
 })->name('9THPoster');
+
+//ANNIVERSARY 9TH GLAM UP ROUTES
+Route::get('/9thGlamUp', function () {
+    return Inertia::render('Anniversary9th/9THGlamUp');
+})->name('9THGlamUp');
 
 //ACCOUNT MODIFICATION WAITING ROUTES
 Route::get('/AccountModificationWaiting', function () {
     return Inertia::render('AccountModification/AccountModificationWaiting');
 })->name('AccountModificationWaiting');
 
-//SL ADMIN APPROVAL ROUTES
-Route::get('/SLAdminApproval', function () {
-    return Inertia::render('ApprovalPages/SLAdminApproval');
+//OPPO X MSL ROAD SHOW TOURNAMENT ROUTES
+Route::get('/RoadshowTournament', function () {
+    return Inertia::render('OPPOxMSLRoadShowTournament/OPPOxMSLRoadShowTournament');
+})->name('OPPOxMSLRoadShowTournament');
+
+
+//OPPO X MSL ROAD SHOW TOURNAMENT ATTENDANCE ROUTES
+Route::get('/RoadshowAttendance', function () {
+    return Inertia::render('OPPOxMSLRoadShowTournament/RoadshowAttendance');
+})->name('RoadshowAttendance');
+
+//SL ADMIN APPROVAL ROUTES - Only SL role can access
+Route::middleware(['auth', 'verified'])->get('/SLAdminApproval', function () {
+    $user = Auth::user();
+    
+    // Only SL role can access this page
+    if ($user->role !== 'SL') {
+        abort(403, 'Access denied. Only Student Leaders can access this page.');
+    }
+    
+    return Inertia::render('ApprovalPages/SLAdminApproval', [
+        'user' => $user
+    ]);
 })->name('SLAdminApproval');
 
-//ADMIN REGIONAL APPROVAL ROUTES
-Route::get('/RegionalAdminApproval', function () {
-    return Inertia::render('ApprovalPages/RegionalAdminApproval');
+//ADMIN REGIONAL APPROVAL ROUTES - Only Regional Admin role can access
+Route::middleware(['auth', 'verified'])->get('/RegionalAdminApproval', function () {
+    $user = Auth::user();
+    
+    // Only Regional Admin role can access this page
+    if ($user->role !== 'Regional Admin') {
+        abort(403, 'Access denied. Only Regional Admins can access this page.');
+    }
+    
+    return Inertia::render('ApprovalPages/RegionalAdminApproval', [
+        'user' => $user
+    ]);
 })->name('RegionalAdminApproval');
 
 //MSL NETWORK ROUTES

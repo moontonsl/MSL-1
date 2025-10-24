@@ -1,15 +1,18 @@
 // resources/js/Layouts/MainLayout.jsx
 import {Footer, Header} from '@/Components/index.js';
 import {Toaster} from 'react-hot-toast';
-import styles from './AuthenticatedLayoutAnniversary9th.module.scss';
 
-export default function AuthenticatedLayoutEventsWatchFest({children}) {
+
+export default function AuthenticatedLayout({children}) {
     return (
-        <div className={`${styles.Poster9thBG} app`}>
+        <div className="app">
             <Header/>
-            <main className={styles.mainContent}>
-                {children}
-            </main>
+            <main className="relative">
+                <div className="webBG" />  {/* Fullscreen background */}
+                <div className="relative z-10">
+                    {children}
+                </div>
+                </main>
             <Footer/>
             <Toaster
                 position="top-right"
@@ -24,5 +27,3 @@ export default function AuthenticatedLayoutEventsWatchFest({children}) {
         </div>
     );
 }
-
-

@@ -1,6 +1,7 @@
 import React from "react";
 import { Head } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutBuffsAndSupport.jsx";
+import Carousel from "./Carousel/Carousel.jsx";
 import { Helmet } from "react-helmet";
 import { Gem, Coins, Gamepad2, Handshake, Shirt, BookOpen, Trophy, Users, School, HeartHandshake, CheckCircle } from "lucide-react";
 import {
@@ -39,13 +40,15 @@ const BuffsAndSupport = () => {
                             </p>
                             <div className="flex gap-4 justify-center">
                                 <a
-                                    href="#"
+                                    //href="https://forms.gle/eBXzXTcySNgdtjRj6"
+                                    href="/MSLBuffsAndSupportApplicationForm"
                                     className="px-6 py-3 bg-black text-[#F2C21A] font-bold rounded-xl"
                                 >
                                     Apply Now
                                 </a>
                                 <a
-                                    href="#"
+                                    //href="bit.ly/2025BuffAndSupport"
+                                    href="https://docs.google.com/document/d/1Nn3yrCn3qAMdxmEz9Tvo4xACrUIv1pukZ9tJVA1p7ak/edit?tab=t.0"
                                     className="px-6 py-3 border border-black text-black font-bold rounded-xl"
                                 >
                                     Learn More →
@@ -211,13 +214,14 @@ const BuffsAndSupport = () => {
                         {/* Buttons */}
                         <div className="flex flex-col sm:flex-row gap-3 text-center sm:text-left">
                             <a
-                            href="#"
+                            //href="https://forms.gle/MZkMwxs5KCnrPLEw9"
+                            href="/MSLTournamentLobbyApplicationForm"
                             className="px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-300 text-black rounded-xl font-bold font-['Montserrat'] shadow-md hover:scale-105 transition"
                             >
                             Request Access
                             </a>
                             <a
-                            href="#"
+                            href="https://tinyurl.com/TLSOP"
                             className="px-6 py-3 border border-[#F2C21A] text-[#F2C21A] rounded-xl font-bold font-['Montserrat'] hover:bg-[#F2C21A]/10 transition"
                             >
                             View Guidelines →
@@ -279,6 +283,8 @@ const BuffsAndSupport = () => {
                             </div>
                         </div>
                     </section>
+
+                    <Carousel />
                 </main>
             </AuthenticatedLayout>
         </>
