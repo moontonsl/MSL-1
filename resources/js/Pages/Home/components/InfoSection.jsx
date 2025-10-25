@@ -64,17 +64,17 @@ const HeroSection = () => {
 
 
                 <div className="container mx-auto px-4 gap-6 lg:gap-16 grid mb-20 scale">
-                    <h1 className="text-[clamp(2.25rem,5vw,3.75rem)] font-bold text-center w-full z-10 leading-[1]">
+                    <h1 className="text-[24px] md:text-[32px] lg:text-[40px] font-bold text-center w-full z-10 leading-[1]">
                         MOONTON STUDENT LEADER <br className="hidden lg:block" />PHILIPPINES
                     </h1>
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 w-full gap-4 lg:gap-6 sm:gap-8 z-10">
                         {stats.map(({ value, label }, index) => (
                             <div key={index} className="text-center grid lg:gap-2 sm:gap-4">
-                                <div className={`text-4xl sm:text-5xl md:text-6xl font-bold ${styles.infoHead}`}>
+                                <div className={`text-[24px] sm:text-[28px] md:text-[32px] font-bold ${styles.infoHead}`}>
                                     {value}
                                 </div>
-                                <div className="text-lg sm:text-xl font-semibold scale">{label}</div>
+                                <div className="text-[10px] sm:text-[12px] md:text-[20px] font-semibold scale">{label}</div>
                             </div>
                         ))}
                     </div>
@@ -93,13 +93,13 @@ const HeroSection = () => {
                         />
                     </div>
                     <div className="p-4 lg:p-10 xl:px-24 flex flex-col gap-4 justify-center">
-                        <h2 className={`text-[clamp(2rem,6vw,2.5rem)] font-bold leading-none text-black`}>
+                        <h2 className="text-[24px] md:text-[28px] lg:text-[32px] font-bold leading-none text-black">
                             HERE AT MOONTON STUDENT LEADER PHILIPPINES we <span className={`${styles.infoHighlight} !text-white`}>
                                 {imageTextPairs[currentIndex].text}
                             </span>
                         </h2>
 
-                        <p className="text-lg text-black">
+                        <p className="text-[12px] sm:text-[14px] md:text-base text-black">
                             Moonton Student Leaders (MSL) Philippines is an organization of student-gamers from
                             different colleges and universities all over the country. Under the supervision of Moonton
                             Technologies Philippines, Inc., the program was developed to promote the growth of Mobile

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
 import { Menu, Trash2, AlertTriangle } from 'lucide-react';
 import styles from './Header.module.scss';
@@ -7,11 +7,11 @@ import AccountModificationModal from "./AccountModificationModal";
 
 
 
-// Navigation links array (only main nav links)
-const navLinks = [
+// Base navigation links array (only main nav links)
+const baseNavLinks = [
     { name: 'Events', href: '/Events' },
     { name: 'Program', href: '/Programs' },
-    { name: 'Resources', href: '/soon' },
+    { name: 'Resources', href: '/resources' },
     { name: 'News', href: '/news' },
 ];
 
@@ -28,6 +28,25 @@ const Header = () => {
     const { auth } = usePage().props;
     const user = auth.user;
     const passwordInputRef = useRef(null);
+
+    // Create navigation links based on user role
+    const navLinks = React.useMemo(() => {
+        const links = [...baseNavLinks];
+        
+        // Only show Campus Tournament tab for SL and Regional Admin
+        if (user && (user.role === 'SL' || user.role === 'Regional Admin')) {
+            links.push({ name: 'Campus Tournament', href: '/campus-tournament' });
+        }
+        
+        // Add Modification tab based on role
+        if (user && user.role === 'SL') {
+            links.push({ name: 'Modification', href: '/SLAdminApproval' });
+        } else if (user && user.role === 'Regional Admin') {
+            links.push({ name: 'Modification', href: '/RegionalAdminApproval' });
+        }
+        
+        return links;
+    }, [user]);
 
     // Click handler for the account icon
     const handleAccountIconClick = (e) => {
@@ -227,6 +246,16 @@ const Header = () => {
                                         SL Admin
                                     </Link>
                                 )}
+                                {/* {user.role === 'Super Admin' && (
+                                    <Link
+                                        href="/admin/user-regions"
+                                        className={styles.dropdownItem}
+                                        onClick={() => setIsDropdownOpen(false)}
+                                    >
+                                        User Regions
+                                    </Link>
+                                )}
+                                )} */}
                                 {/* <button
                                     onClick={() => {
                                         setShowModificationModal(true);

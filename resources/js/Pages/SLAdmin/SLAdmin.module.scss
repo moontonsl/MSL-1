@@ -1,106 +1,112 @@
+// Modern SLAdmin Styles
 .slAdmin {
-    position: relative;
-
-    &::before {
-        content: "";
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        opacity: 0.05;
-        pointer-events: none;
-        background: url(/noise.svg) lightgray 0% 0% / 100px 100px repeat;
-        mix-blend-mode: overlay;
-        z-index: 1;
+    // Custom scrollbar for webkit browsers
+    .custom-scrollbar {
+        &::-webkit-scrollbar {
+            height: 6px;
+        }
+        
+        &::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
+        &::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            
+            &:hover {
+                background: rgba(255, 255, 255, 0.5);
+            }
+        }
     }
 
-    .topCard {
-        position: relative;
-        border-radius: 8px;
-        background: var(--background-glass-effect);
-        box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
-        backdrop-filter: blur(20px);
-        overflow: hidden;
-        z-index: 2;
+    // Glass morphism effects
+    .glass-effect {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
 
+    // Hover animations
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        
+        &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+    }
+
+    // Responsive text utilities
+    .responsive-text {
+        font-size: clamp(1rem, 2.5vw, 1.5rem);
+        line-height: clamp(1.2rem, 2.5vw, 1.5rem);
+    }
+
+    // Gradient text
+    .gradient-text {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    // Animated border
+    .animated-border {
+        position: relative;
+        
         &::before {
             content: '';
             position: absolute;
             inset: 0;
-            padding: 1px;
-            background: var(--border-glass-effect);
-            border-radius: 8px;
-            -webkit-mask:
-                linear-gradient(#fff 0 0) content-box,
-                linear-gradient(#fff 0 0);
+            padding: 2px;
+            background: linear-gradient(45deg, #667eea, #764ba2, #f093fb);
+            border-radius: inherit;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor;
             mask-composite: exclude;
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        --border-glass-effect: linear-gradient(
-                270deg,
-                rgba(0, 0, 0, 0.4) 0%,
-                rgba(128, 128, 128, 0) 25%,
-                rgba(191, 191, 191, 0) 50%,
-                rgba(255, 255, 255, 0.4) 100%
-        );
-
-        --background-glass-effect: linear-gradient(
-                270deg,
-                rgba(255, 255, 255, 0.12) 0%,
-                rgba(255, 255, 255, 0.03) 100%
-        );
-    }
-
-
-    .profPic {
-        //border-radius: 9999px;
-        //border: 8px solid #F3C718;
-        //background: lightgray 50% / cover no-repeat;
-
-
-    }
-
-
-
-
-    .tableHeader {
-        background: linear-gradient(90deg, rgba(20, 20, 20, 0.00) 0%, #141414 50%, rgba(20, 20, 20, 0.00) 100%);
-
-        .slInput {
-            display: flex;
-            //max-width: 214px;
-            padding: 10px 24px;
-            align-items: center;
-            gap: 10px;
-
-            border-radius: 58px;
-            border: 2px solid #838383;
-            background: rgba(255, 255, 255, 0.10);
+            animation: border-rotate 3s linear infinite;
         }
     }
+}
 
+// Keyframe animations
+@keyframes border-rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
 
+// Responsive breakpoints
+@media (max-width: 640px) {
+    .slAdmin {
+        .mobile-stack {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .mobile-center {
+            text-align: center;
+        }
+    }
+}
 
+@media (max-width: 768px) {
+    .slAdmin {
+        .tablet-hide {
+            display: none;
+        }
+    }
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+@media (min-width: 1024px) {
+    .slAdmin {
+        .desktop-show {
+            display: block;
+        }
+    }
 }

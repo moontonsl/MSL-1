@@ -1,19 +1,19 @@
 <?php
 
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use Illuminate\Support\Facades\Route;
 
 // Admin Authentication Routes
 Route::middleware('guest')->group(function () {
-    Route::get('/admin/login', [AuthController::class, 'showLogin'])->name('admin.login');
-    Route::post('/admin/login', [AuthController::class, 'login'])->name('admin.login.submit');
+    Route::get('/admin/login', [AdminAuthController::class, 'showLogin'])->name('admin.login');
+    Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
 });
 
 // Protected Admin Routes
 Route::middleware(['auth:admin', 'admin'])->group(function () {
     // Logout Route
-    Route::post('/admin/logout', [AuthController::class, 'logout'])->name('admin.logout');
+    Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
 
     // Dashboard
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
@@ -30,6 +30,13 @@ Route::middleware(['auth:admin', 'admin'])->group(function () {
     Route::put('/admin/news/{news}', [AdminController::class, 'updateNews'])->name('admin.news.update');
     Route::delete('/admin/news/{news}', [AdminController::class, 'deleteNews'])->name('admin.news.delete');
 
+    // Carousel Management
+    Route::get('/admin/carousel', [AdminController::class, 'manageCarousel'])->name('admin.carousel');
+    Route::post('/admin/carousel', [AdminController::class, 'storeCarousel'])->name('admin.carousel.store');
+    Route::put('/admin/carousel/{carousel}', [AdminController::class, 'updateCarousel'])->name('admin.carousel.update');
+    Route::delete('/admin/carousel/{carousel}', [AdminController::class, 'deleteCarousel'])->name('admin.carousel.delete');
+    Route::post('/admin/carousel/reorder', [AdminController::class, 'reorderCarousel'])->name('admin.carousel.reorder');
+
     // Event Management
     Route::get('/admin/events', [AdminController::class, 'manageEvents'])->name('admin.events');
     Route::get('/admin/events/create', [AdminController::class, 'createEvent'])->name('admin.events.create');
@@ -41,4 +48,7 @@ Route::middleware(['auth:admin', 'admin'])->group(function () {
     // Settings Management
     Route::get('/admin/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('admin.settings');
     Route::post('/admin/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update']);
+
+    // Duplicate Username Check
+    Route::get('/admin/duplicate-usernames/check', [\App\Http\Controllers\Admin\DuplicateUsernameController::class, 'checkDuplicates'])->name('admin.duplicate-usernames.check');
 });

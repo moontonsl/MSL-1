@@ -113,7 +113,7 @@ export default function CreateEvent() {
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md"
+                                    className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md"
                                 >
                                     Create Event
                                 </button>

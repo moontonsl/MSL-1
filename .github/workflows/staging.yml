@@ -47,7 +47,7 @@ jobs:
           port: 22
           script: |
             set -e
-            cd ${{ secrets.VPS_DEPLOY_PATH }}
+            cd /home/moontonslph.org/testing/MSL-1
 
             git reset --hard
             git clean -fd
@@ -73,7 +73,7 @@ jobs:
 
             chmod -R 775 storage bootstrap/cache
             chown -R daemon:daemon storage bootstrap/cache
-            chmod -R 777 /home/moontonslph.online/testsub/storage /home/moontonslph.online/testsub/bootstrap/cache
+            chmod -R 777 /home/moontonslph.org/testing/MSL-1/storage /home/moontonslph.org/testing/MSL-1/bootstrap/cache
             php artisan up
             
             # Restart PM2 process

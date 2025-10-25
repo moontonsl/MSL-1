@@ -19,15 +19,15 @@ class SpreadSheetAutomationController extends Controller
      */
     public function exportUsersToSpreadsheet(Request $request)
     {
-        set_time_limit(0);
+        // Increase memory limit and execution time
+        ini_set('memory_limit', '512M');
+        set_time_limit(300); // 5 minutes
+        
         try {
            
             $spreadsheetId = "1216kHWU6fpbb_zDz6d2SKh9SZJjUqt0ObvxsdIDGQg0";
             $range = "MainDB!A1";
 
-            // 1. Get users data
-            $users = User::all();
-            
             // 2. Prepare data for spreadsheet
             $data = [];
             
@@ -43,7 +43,6 @@ class SpreadSheetAutomationController extends Controller
                 'ML Server',
                 'ML IGN',
                 'Status',
-                'User Type',
                 'Facebook Link',
                 'Birthday',
                 'Age',
@@ -66,46 +65,52 @@ class SpreadSheetAutomationController extends Controller
                 'Email Verified At',
                 'Created At',
                 'Updated At',
+                'verified_by',
+                'verified_date',
             ];
             
-            // Add user data rows
-            foreach ($users as $user) {
-                $data[] = [
-                    $user->id ?? 'N/A',
-                    $user->name ?? 'N/A',
-                    $user->surname ?? 'N/A',
-                    $user->suffix ?? 'N/A',
-                    $user->email ?? 'N/A',
-                    $user->username ?? 'N/A',
-                    $user->ml_id ?? 'N/A',
-                    $user->ml_server ?? 'N/A',
-                    $user->ml_ign ?? 'N/A',
-                    $user->status ?? 'N/A',
-                    $user->user_type ?? 'N/A',
-                    $user->facebook_link ?? 'N/A',
-                    $user->birthday ?? 'N/A',
-                    $user->age ?? 'N/A',
-                    $user->gender ?? 'N/A',
-                    $user->contact_number ?? 'N/A',
-                    $user->course ?? 'N/A',
-                    $user->university ?? 'N/A',
-                    $user->year_level ?? 'N/A',
-                    $user->region ?? 'N/A',
-                    $user->island ?? 'N/A',
-                    $user->squadAbbreviation ?? 'N/A',
-                    $user->squadName ?? 'N/A',
-                    $user->inGameRole ?? 'N/A',
-                    $user->mainHero ?? 'N/A',
-                    $user->rank ?? 'N/A',
-                    $user->studentId ?? 'N/A',
-                    $user->proofOfEnrollment ?? 'N/A',
-                    $user->role ?? 'N/A',
-                    $user->state ?? 'N/A',
-                    $user->email_verified_at ?? 'N/A',
-                    $user->created_at ?? 'N/A',
-                    $user->updated_at ?? 'N/A'
-                ];
-            }
+            // 1. Get users data in chunks to avoid memory issues
+            User::chunk(100, function($userChunk) use (&$data) {
+                // Process each chunk
+                foreach ($userChunk as $user) {
+                    $data[] = [
+                        $user->id ?? 'N/A',
+                        $user->name ?? 'N/A',
+                        $user->surname ?? 'N/A',
+                        $user->suffix ?? 'N/A',
+                        $user->email ?? 'N/A',
+                        $user->username ?? 'N/A',
+                        $user->ml_id ?? 'N/A',
+                        $user->ml_server ?? 'N/A',
+                        $user->ml_ign ?? 'N/A',
+                        $user->status ?? 'N/A',
+                        $user->facebook_link ?? 'N/A',
+                        $user->birthday ?? 'N/A',
+                        $user->age ?? 'N/A',
+                        $user->gender ?? 'N/A',
+                        $user->contact_number ?? 'N/A',
+                        $user->course ?? 'N/A',
+                        $user->university ?? 'N/A',
+                        $user->year_level ?? 'N/A',
+                        $user->region ?? 'N/A',
+                        $user->island ?? 'N/A',
+                        $user->squadAbbreviation ?? 'N/A',
+                        $user->squadName ?? 'N/A',
+                        $user->inGameRole ?? 'N/A',
+                        $user->mainHero ?? 'N/A',
+                        $user->rank ?? 'N/A',
+                        $user->studentId ?? 'N/A',
+                        $user->proofOfEnrollment ?? 'N/A',
+                        $user->role ?? 'N/A',
+                        $user->state ?? 'N/A',
+                        $user->email_verified_at ?? 'N/A',
+                        $user->created_at ?? 'N/A',
+                        $user->updated_at ?? 'N/A',
+                        $user->verified_by ?? 'N/A',
+                        $user->verified_date ?? 'N/A'
+                    ];
+                }
+            });
 
             // 3. Load Google Client
             $client = new Google_Client();
@@ -140,7 +145,7 @@ class SpreadSheetAutomationController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Users data exported successfully',
-                'total_users' => count($users),
+                'total_users' => count($data) - 1, // Subtract 1 for header row
                 'total_columns' => count($data[0]),
                 'updated_cells' => $result->getUpdatedCells()
             ]);

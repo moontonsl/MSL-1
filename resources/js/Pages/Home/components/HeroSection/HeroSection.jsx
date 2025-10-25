@@ -13,7 +13,7 @@ const HeroSection = () => {
 
     const heroBoxes = [
         {
-            path: "/soon",
+            path: "/MSLNetwork",
             title: "Network",
             img: minImg,
             imgPosition: "object-center",

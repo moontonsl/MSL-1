@@ -2,37 +2,37 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-// News slide data
+// News slide data - this should ideally come from an API
 const slides = [
   {
     title: "How MPL Smart Battle Trips Transformed My View of the Gaming Industry - Blog",
     author: "Nithaiah Kenshin Macaraig",
     date: "2025-03-18",
-    src: "/images/MCC/News/Carousel/image_1.jpg",
+    src: "/images/MCC/IndivNews/image_1.jpg", // Fixed path
   },
   {
     title: "At its First: Moonton, NU Laguna ties Partnership",
     author: "Nestor T. Quilop III",
     date: "2024-12-17",
-    src: "/images/MCC/News/Carousel/image_3.jpg",
+    src: "/images/MCC/IndivNews/image_3.jpg", // Fixed path
   },
   {
     title: "Unforgettable Moments: Moonton Student Leaders Gather for 2023 Year-End Party",
     author: "Mizhcar V.",
     date: "2023-12-30",
-    src: "/images/MCC/News/Carousel/image_5.JPG",
+    src: "/images/MCC/IndivNews/image_5.JPG", // Fixed path
   },
   {
     title: "MCC Watch Fest 2024",
     author: "Mizhcar V.",
     date: "2023-12-30",
-    src: "/images/MCC/News/Carousel/image_7.png",
+    src: "/images/MCC/IndivNews/image_7.png", // Fixed path
   },
   {
     title: "MSL Championship Series",
     author: "MSL Team",
     date: "2024-01-15",
-    src: "/images/MCC/News/Carousel/image_37.jpg",
+    src: "/images/MCC/IndivNews/image_37.jpg", // Fixed path
   },
 ];
 
@@ -107,9 +107,9 @@ export default function Highlights() {
 
   return (
     <div className="w-full max-w-[1900px] h-auto px-2 md:px-12 mx-auto">
-      <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold text-center mb-4 md:mb-10 text-white font-montserrat">MSL HIGHLIGHTS</h2>
+      <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold text-center mb-3 md:mb-10 text-white font-montserrat">MSL HIGHLIGHTS</h2>
       <div 
-        className="relative flex items-center justify-center h-[200px] md:h-[400px] w-full overflow-hidden" 
+        className="relative flex items-center justify-center h-[200px] md:h-[400px] w-full overflow-hidden"
         style={{ minHeight: 200 }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
@@ -139,6 +139,9 @@ export default function Highlights() {
               alt={slide.title} 
               className="w-full h-full object-cover"
               style={{ height: "100%" }}
+              onError={(e) => {
+                e.target.src = '/images/MCC/IndivNews/News - Holder.jpg';
+              }}
             />
             {/* Overlay for center and adjacent slides */}
             {positionIndexes[index] === 0 || positionIndexes[index] === 1 || positionIndexes[index] === 4 ? (
@@ -155,7 +158,7 @@ export default function Highlights() {
         ))}
       </div>
       {/* Navigation Controls Below Carousel */}
-      <div className="hidden md:flex items-center justify-center gap-4 mt-2">
+      <div className="hidden md:flex items-center justify-center gap-4 mt-0.5">
         <button
           onClick={handleBack}
           className="bg-white/10 hover:bg-white/20 text-white p-1.5 md:p-2 rounded-full backdrop-blur-sm transition-colors"

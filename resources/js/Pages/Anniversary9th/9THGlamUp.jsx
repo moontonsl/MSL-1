@@ -128,7 +128,7 @@ export default function GlamUp9th({ auth }) {
               {
                 label: "Poster Link",
                 name: "posterLink",
-                placeholder: "Link of your Tiktok entry",
+                placeholder: "Link of your entry",
               },
             ].map((field, idx) => (
               <div key={idx}>

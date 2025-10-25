@@ -1,6 +1,6 @@
 import styles from './Footer.module.scss';
 import { Link } from '@inertiajs/react';
-import { Facebook, Instagram } from 'lucide-react';
+import { Facebook, Youtube } from 'lucide-react';
 import ThemeToggleButton from '../ThemeToggleButton.jsx';
 
 const navSections = [
@@ -91,15 +91,15 @@ const Footer = () => {
 
             <div className={styles.footerBottom}>
                 <div className={styles.footerCopyright}>© 2025 — Moonton Student Leaders Philippines</div>
-                <div className={styles.socials}>
-                    <ThemeToggleButton />
-                    <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-                        <Instagram size={20} />
-                    </a>
-                    <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-                        <Facebook size={20} />
-                    </a>
-                </div>
+				<div className={styles.socials}>
+					<div className="hidden"><ThemeToggleButton /></div>
+					<a href="https://www.youtube.com/@MSLPhilippines" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+						<Youtube size={20} />
+					</a>
+					<a href="https://www.facebook.com/MSLPhilippines" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+						<Facebook size={20} />
+					</a>
+				</div>
             </div>
         </footer>
     );

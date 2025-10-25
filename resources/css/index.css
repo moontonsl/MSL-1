@@ -12,9 +12,9 @@ p, li {max-width: 65ch;text-wrap: pretty;}
 
 
 body {
-    font-family: 'Noto Sans', sans-serif;
+    font-family: 'Montserrat', sans-serif;
 }
 
 h1, h2, h3, .heading {
-    /*font-family: 'Montserrat', sans-serif;*/
+    font-family: 'Montserrat', sans-serif;
 }
