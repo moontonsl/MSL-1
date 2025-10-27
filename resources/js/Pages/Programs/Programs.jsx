@@ -37,17 +37,17 @@ const Programs = () => {
                         {[
                             {
                                 img: '/images/Programs/msln.png',
-                                title: 'MSL NETWORK',
-                                desc: 'To qualify for the MSL Network, an organization must meet several criteria. It must be focused on gaming or esports, officially recognized by its school, and have a clear structure with defined roles such as CEO, President, Committee Heads, Managers, and Players. These requirements ensure that only legitimate and well-organized groups are admitted to the MSL Network.'
+                                title: 'THE MSL NETWORK',
+                                desc: 'Our flagship program uniting collegiate esports organizations across the country. Being in the Network opens doors to recognition, growth, and exclusive opportunities.'
                             },
                             {
                                 img: '/images/Programs/bas.png',
                                 title: 'BUFFS AND SUPPORT',
-                                desc: 'The Buffs and Support Program of the Partnerships Department has been one of the most substantial initiatives of MSL Philippines.'
+                                desc: 'The official sponsorship program of MSL Philippines. Buffs & Support provides funding, resources, and perks to empower your org’s events and initiatives.'
                             }
                         ].map((program, idx) => {
                             const href =
-                                program.title === 'MSL NETWORK' ? '/MSLNetwork' :
+                                program.title === 'THE MSL NETWORK' ? '/MSLNetwork' :
                                 program.title === 'BUFFS AND SUPPORT' ? '/BuffsAndSupport' :
                                 null;
                             return (
@@ -109,16 +109,16 @@ const Programs = () => {
                             {
                                 img: '/images/Programs/msla.png',
                                 title: 'MSL APPLICATION',
-                                desc: 'Join us at MSL Philippines and become part of our growing community where your passion for gaming and commitment to academics are both valued and supported. We are open to all MLBB School Communities across the Philippines.'
+                                desc: 'Join the movement and become part of MSL Philippines. The application is your first step to connecting with a nationwide network of student leaders and esports communities.'
                             },
                             {
                                 img: '/images/Programs/eosr.png',
-                                title: 'END OF SEMESTER REWARDS',
-                                desc: 'EOSR is crafted for our MLBB student communities, deeply rooted in our objective of achieving balanced gaming and academics. Its fundamental goal is to recognize your commitment, effort, and successes along your academic journey. MSL Philippines values your grades through in-game diamonds and can earn up to 3,500 by doing your best in academics!'
+                                title: 'REFERRAL PROGRAM',
+                                desc: 'Empowering student leaders as recruiters of MSL Philippines. Refer new members and orgs, grow the community, and earn rewards along the way.'
                             }
                         ].map((program, idx) => {
                             const href =
-                                program.title === 'END OF SEMESTER REWARDS' ? '/soon' :
+                                program.title === 'REFERRAL PROGRAM' ? 'https://docs.google.com/forms/d/e/1FAIpQLSfRBbhY_FWWB5rQR6ekanRSZjgdT7GhsdlgflNG0Nw7ZsYWEg/viewform' :
                                 program.title === 'MSL APPLICATION' ? '/MSLApplication' :
                                 null;
                             return (

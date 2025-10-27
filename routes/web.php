@@ -814,6 +814,15 @@ Route::get('/PrivacyPolicy', function () {
     return Inertia::render('PrivacyPolicy/PrivacyPolicy');
 })->name('PrivacyPolicy');
 
+//FAQS ROUTES
+Route::get('/FAQs', function () {
+    return Inertia::render('FAQs/FAQS');
+})->name('FAQs');
+
+Route::get('/FAQsResult', function () {
+    return Inertia::render('FAQs/FAQS Result');
+})->name('FAQsResult');
+
 //PROGRAMS  ROUTES
 Route::get('/MPLS16Battletrips', function () {
     return Inertia::render('BattleTrips/MPLS16Battletrips');
