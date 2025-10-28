@@ -14,6 +14,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SchoolUploadController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\CampusController;
 use App\Mail\MslNetworkInquiryMail;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
@@ -1529,3 +1530,19 @@ Route::post('/msl-network/send-inquiry', function (Request $request) {
         ], 500);
     }
 })->name('msl-network.send-inquiry');
+
+// Custom Event Canonical Routes - Handle dynamic event links like /NewEvent
+// This catch-all route should be placed at the very end to avoid conflicts with other routes
+Route::get('/{canonical}', function ($canonical) {
+    // Check if this canonical matches an MSL Event
+    $event = \App\Models\MslEvent::where('event_canonical', '/' . $canonical)
+        ->orWhere('event_canonical', $canonical)
+        ->first();
+    
+    if ($event) {
+        return app(\App\Http\Controllers\EventsController::class)->show($event);
+    }
+    
+    // If no event found, return 404
+    abort(404, 'Event not found');
+})->where('canonical', '^[a-zA-Z0-9\-_]+$'); // Only match alphanumeric, hyphens, underscores

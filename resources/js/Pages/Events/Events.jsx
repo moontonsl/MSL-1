@@ -124,8 +124,15 @@ function Events({ events = [] }) {
 
                         {/* Cards Grid: 2 columns on mobile, 3 columns on desktop with centering for odd last card */}
                         <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-4 lg:gap-y-5 justify-items-center w-full px-2 md:px-0 pt-4">
-                            {events.map((event, index) => (
-                                <Link href={`/Events/${event.id}`} key={event.id}>
+                            {events.map((event, index) => {
+                                // Handle canonical URL - ensure it starts with /
+                                let eventUrl = event.event_canonical || `/Events/${event.id}`;
+                                if (eventUrl && !eventUrl.startsWith('/')) {
+                                    eventUrl = '/' + eventUrl;
+                                }
+                                
+                                return (
+                                <Link href={eventUrl} key={event.id}>
                                 <div
                                     className={`
                                         flex flex-col justify-center items-center bg-[rgba(36,36,36,0.8)] shadow-[inset_-30px_-30px_80px_#141414,inset_30px_20px_100px_#0A0A0A,-30px_-30px_80px_rgba(255,255,255,0.14),30px_30px_80px_rgba(243,199,24,0.14)] overflow-hidden w-full max-w-[463.68px]
@@ -175,7 +182,8 @@ function Events({ events = [] }) {
                                         </div>
                                 </div>
                                 </Link>
-                            ))}
+                                );
+                            })}
                         </div>
                     </section>
                 </main>

@@ -45,6 +45,15 @@ Route::middleware(['auth:admin', 'admin'])->group(function () {
     Route::put('/admin/events/{event}', [AdminController::class, 'updateEvent'])->name('admin.events.update');
     Route::delete('/admin/events/{event}', [AdminController::class, 'deleteEvent'])->name('admin.events.delete');
 
+    // MSL Event Management
+    Route::get('/admin/msl-events', [AdminController::class, 'mslEventIndex'])->name('admin.msl-events.index');
+    Route::get('/admin/msl-events/create', [AdminController::class, 'mslEventCreate'])->name('admin.msl-events.create');
+    Route::post('/admin/msl-events', [AdminController::class, 'storeMslEvent'])->name('admin.msl-events.store');
+    Route::get('/admin/msl-events/{mslEvent}/edit', [AdminController::class, 'mslEventEdit'])->name('admin.msl-events.edit');
+    Route::put('/admin/msl-events/{mslEvent}', [AdminController::class, 'updateMslEvent'])->name('admin.msl-events.update');
+    Route::put('/admin/msl-events/{mslEvent}/status', [AdminController::class, 'updateMslEventStatus'])->name('admin.msl-events.update-status');
+    Route::delete('/admin/msl-events/{mslEvent}', [AdminController::class, 'destroyMslEvent'])->name('admin.msl-events.destroy');
+
     // Settings Management
     Route::get('/admin/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('admin.settings');
     Route::post('/admin/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update']);
