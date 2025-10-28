@@ -62,7 +62,12 @@ export default function ABOUTPage() {
                                             <div className="text-center justify-start text-white text-xl font-bold font-['Montserrat'] leading-7">Our Mission</div>
                                         </div>
                                         <div className="self-stretch h-20 py-1 inline-flex justify-start items-start gap-1 overflow-hidden">
-                                            <div className="w-full pr-16 justify-start text-white text-[6px] font-normal font-['Montserrat'] leading-[8px]">To empower and unite student leaders across the Philippines through the power of gaming. We strive to create a safe and inclusive community where students can develop their leadership skills, collaborate with one another, and inspire positive change in their schools and communities.</div>
+                                            <div className="w-full pr-16 justify-start text-white text-[6px] font-normal font-['Montserrat'] leading-[8px]">
+                                                Empower student-gamers to lead vibrant MLBB communities in their schools by fostering integrity, time management, 
+                                                friendliness, adaptability, responsiveness, and academic excellence. Guided by Moonton Philippines, 
+                                                the Moonton Student Leaders create inclusive, exciting, and impactful campus initiatives that unite players, 
+                                                boost school pride, and prove that gaming passion can go together with academic success.
+                                            </div>
                                         </div>
                                     </div>
                                     <img className="w-14 h-14 right-2 top-[-8px] absolute object-contain" src="/images/About Page/Shiny_Harper 1.png" alt="Mission Icon" />
@@ -73,7 +78,11 @@ export default function ABOUTPage() {
                                             <div className="text-center justify-start text-white text-xl font-bold font-['Montserrat'] leading-7">Our Vision</div>
                                         </div>
                                         <div className="self-stretch py-1 inline-flex justify-start items-start gap-1 overflow-hidden">
-                                            <div className="w-full pr-16 justify-start text-white text-[6px] font-normal font-['Montserrat'] leading-[8px]">Creating positive change among young leaders and esports gamers in the Philippines through mobile gaming. We advocate a future where students from all walks of life can come together to share their passions, build their skills, and create meaningful impact in their communities. We strive to be a catalyst for change, leveraging the power of gaming to connect people and inspire them to take action on issues that matter, from social responsibilities to leadership. Through collective effort, we aim to cultivate a generation of socially responsible and compassionate leaders and gamers.</div>
+                                            <div className="w-full pr-16 justify-start text-white text-[6px] font-normal font-['Montserrat'] leading-[8px]">
+                                                To be the leading network of student-gamers in the Philippines who embody integrity, leadership, 
+                                                and community spirit—bridging the worlds of gaming and academics, building strong MLBB communities 
+                                                and inspiring the next generation of responsible esports leaders.
+                                            </div>
                                         </div>
                                     </div>
                                     <img className="w-16 h-16 right-2 top-[137px] absolute object-contain" src="/images/About Page/Let21 1.png" alt="Vision Icon" />
@@ -87,7 +96,12 @@ export default function ABOUTPage() {
                                             <div className="text-center justify-start text-white text-3xl font-bold font-['Montserrat'] leading-10">Our Mission</div>
                                         </div>
                                         <div className="self-stretch flex-1 py-2.5 inline-flex justify-start items-start gap-2.5">
-                                            <div className="w-full justify-start text-white text-base font-medium font-['Montserrat'] leading-relaxed">To empower and unite student leaders across the Philippines through the power of gaming. We strive to create a safe and inclusive community where students can develop their leadership skills, collaborate with one another, and inspire positive change in their schools and communities.</div>
+                                            <div className="w-full justify-start text-white text-base font-medium font-['Montserrat'] leading-relaxed">
+                                                Empower student-gamers to lead vibrant MLBB communities in their schools by fostering integrity, time management, 
+                                                friendliness, adaptability, responsiveness, and academic excellence. Guided by Moonton Philippines, 
+                                                the Moonton Student Leaders create inclusive, exciting, and impactful campus initiatives that unite players, 
+                                                boost school pride, and prove that gaming passion can go together with academic success.
+                                            </div>
                                         </div>
                                         <img 
                                             src="/images/About Page/Shiny_Harper 1.png" 
@@ -102,7 +116,11 @@ export default function ABOUTPage() {
                                             <div className="text-center justify-start text-white text-3xl font-bold font-['Montserrat'] leading-10">Our Vision</div>
                                         </div>
                                         <div className="self-stretch flex-1 py-2.5 inline-flex justify-start items-start gap-2.5">
-                                            <div className="w-full justify-start text-white text-base font-medium font-['Montserrat'] leading-relaxed">Creating positive change among young leaders and esports gamers in the Philippines through mobile gaming. We advocate a future where students from all walks of life can come together to share their passions, build their skills, and create meaningful impact in their communities. We strive to be a catalyst for change, leveraging the power of gaming to connect people and inspire them to take action on issues that matter, from social responsibilities to leadership. Through collective effort, we aim to cultivate a generation of socially responsible and compassionate leaders and gamers.</div>
+                                            <div className="w-full justify-start text-white text-base font-medium font-['Montserrat'] leading-relaxed">
+                                                To be the leading network of student-gamers in the Philippines who embody integrity, leadership, 
+                                                and community spirit—bridging the worlds of gaming and academics, building strong MLBB communities 
+                                                and inspiring the next generation of responsible esports leaders.
+                                            </div>
                                         </div>
                                         <img 
                                             src="/images/About Page/Let21 1.png" 
