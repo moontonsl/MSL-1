@@ -724,7 +724,7 @@ Route::get('/Programs', function () {
 Route::get('/BuffsAndSupport', [App\Http\Controllers\BuffsAndSupportController::class, 'index'])->name('BuffsAndSupport');
 
 //BUFFS AND SUPPORT - APPLICATION FORM ROUTES
-Route::get('/MSLBuffsAndSupportApplicationForm', function () {
+Route::get('/BuffsAndSupport/Apply', function () {
     return Inertia::render('BuffsAndSupport/Forms/MSLBuffsAndSupportApplicationForm');
 })->name('MSLBuffsAndSupportApplicationForm');
 
