@@ -722,12 +722,10 @@ Route::get('/Programs', function () {
 })->name('Programs');
 
 //BUFFS AND SUPPORT  ROUTES
-Route::get('/BuffsAndSupport', function () {
-    return Inertia::render('BuffsAndSupport/BuffsAndSupport');
-})->name('BuffsAndSupport');
+Route::get('/BuffsAndSupport', [App\Http\Controllers\BuffsAndSupportController::class, 'index'])->name('BuffsAndSupport');
 
 //BUFFS AND SUPPORT - APPLICATION FORM ROUTES
-Route::get('/MSLBuffsAndSupportApplicationForm', function () {
+Route::get('/BuffsAndSupport/Apply', function () {
     return Inertia::render('BuffsAndSupport/Forms/MSLBuffsAndSupportApplicationForm');
 })->name('MSLBuffsAndSupportApplicationForm');
 
