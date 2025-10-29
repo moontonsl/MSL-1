@@ -1,16 +1,17 @@
-import React from 'react';
+import React, { useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Header, Footer } from "@/Components";
-import style from "@/Components/CSS/Campus.module.css"
+
+const months = ["May", "June"];
 
 export default function Campus() {
     return (
-        <>
-            <div className="min-h-screen bg-black text-white">
-                <div className="relative z-10">
-                    <Header />
-                </div>
+        <div className="min-h-screen bg-black text-white">
+            <div className="relative z-10">
+                <Header />
+            </div>
 
-                <main
+            <main
                     className="relative z-0 min-h-screen py-8 md:py-16 flex items-center justify-center overflow-hidden"
                     style={{
                         backgroundImage: "url('/images/MCC/MCC2_BG.png')",
@@ -21,7 +22,7 @@ export default function Campus() {
                 >
                     <div>
                         <div>
-                            {/* create here a table with pagenation max 10 with */}
+                            create here a table with pagenation max 10 with
                         </div>
                         <div>
                             <svg className={style.svg}>
@@ -111,7 +112,10 @@ export default function Campus() {
                         </div>
                     </div>
                 </main>
+
+            <div className="relative z-10">
+                <Footer />
             </div>
-            </>
+        </div>
     );
 }

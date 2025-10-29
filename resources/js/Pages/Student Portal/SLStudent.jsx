@@ -72,12 +72,12 @@ const SLStudent = () => {
                         </div>
 
                         {/* Button for Edit Profile*/}
-                        {/*<button
+                        <button
                             onClick={() => setShowEditProfileModal(true)}
                             className="mt-5 rounded-full bg-gradient-to-r from-purple-500 to-pink-400 px-6 py-2 text-sm font-semibold text-white shadow-md hover:from-purple-600 hover:to-pink-500 transition"
                         >
                             Edit Profile
-                        </button>*/}
+                        </button>
                         </div>
 
                         {/* User Info */}

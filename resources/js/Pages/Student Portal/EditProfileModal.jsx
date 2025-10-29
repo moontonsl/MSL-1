@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 
 export default function EditProfileModal({ user, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -9,17 +9,339 @@ export default function EditProfileModal({ user, onClose, onSave }) {
     ml_server: user.ml_server || "",
     email: user.email || "",
     contact_number: user.contact_number || "",
-    facebook: user.facebook || "",
+    facebook_link: user.facebook_link || "",
   });
+  const loginRef = useRef();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [emailVerificationSent, setEmailVerificationSent] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [isVerifyingCode, setIsVerifyingCode] = useState(false);
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [emailValidation, setEmailValidation] = useState({
+    checking: false,
+    isValid: true,
+    message: ''
+  });
+  const [fieldRestrictions, setFieldRestrictions] = useState({
+    squadName: {
+      canChange: true,
+      lastChanged: user.squad_name_last_changed || null,
+      nextChangeDate: null,
+      message: ''
+    },
+    yearLevel: {
+      canChange: true,
+      lastChanged: user.year_level_last_changed || null,
+      nextChangeDate: null,
+      message: ''
+    }
+  });
+  const handleLoginClick = () => {
+    console.log('Login clicked');
+    if (loginRef.current) {
+      loginRef.current.triggerLogin();
+    }
+  };
+
+  // Function to check field change restrictions
+  const checkFieldRestrictions = useCallback(() => {
+    const now = new Date();
+    
+    // Check squad name restriction (once per month)
+    const squadNameRestriction = {
+      canChange: true,
+      lastChanged: user.squad_name_last_changed || null,
+      nextChangeDate: null,
+      message: ''
+    };
+    
+    if (user.squad_name_last_changed) {
+      const lastChanged = new Date(user.squad_name_last_changed);
+      const nextChangeDate = new Date(lastChanged);
+      nextChangeDate.setMonth(nextChangeDate.getMonth() + 1);
+      
+      if (now < nextChangeDate) {
+        squadNameRestriction.canChange = false;
+        squadNameRestriction.nextChangeDate = nextChangeDate;
+        const daysLeft = Math.ceil((nextChangeDate - now) / (1000 * 60 * 60 * 24));
+        squadNameRestriction.message = `Squad name can be changed again in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`;
+      }
+    }
+    
+    // Check year level restriction (once per year)
+    const yearLevelRestriction = {
+      canChange: true,
+      lastChanged: user.year_level_last_changed || null,
+      nextChangeDate: null,
+      message: ''
+    };
+    
+    if (user.year_level_last_changed) {
+      const lastChanged = new Date(user.year_level_last_changed);
+      const nextChangeDate = new Date(lastChanged);
+      nextChangeDate.setFullYear(nextChangeDate.getFullYear() + 1);
+      
+      if (now < nextChangeDate) {
+        yearLevelRestriction.canChange = false;
+        yearLevelRestriction.nextChangeDate = nextChangeDate;
+        const daysLeft = Math.ceil((nextChangeDate - now) / (1000 * 60 * 60 * 24));
+        yearLevelRestriction.message = `Year level can be changed again in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`;
+      }
+    }
+    
+    setFieldRestrictions({
+      squadName: squadNameRestriction,
+      yearLevel: yearLevelRestriction
+    });
+  }, [user.squad_name_last_changed, user.year_level_last_changed]);
+
+  // Check field restrictions on component mount
+  useEffect(() => {
+    checkFieldRestrictions();
+  }, [checkFieldRestrictions]);
+
+  // Debounced email validation function
+  const validateEmail = useCallback(async (email) => {
+    if (!email || email === user.email) {
+      setEmailValidation({ checking: false, isValid: true, message: '' });
+      return;
+    }
+
+    // Basic email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailValidation({ checking: false, isValid: false, message: 'Invalid email format' });
+      return;
+    }
+
+    setEmailValidation({ checking: true, isValid: true, message: 'Checking email...' });
+
+    try {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      const response = await fetch('/api/validate-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          user_id: user.id
+        }),
+      });
+
+      const data = await response.json();
+      
+      setEmailValidation({
+        checking: false,
+        isValid: data.available,
+        message: data.message
+      });
+    } catch (err) {
+      setEmailValidation({
+        checking: false,
+        isValid: true, // Assume valid if check fails
+        message: 'Could not verify email'
+      });
+    }
+  }, [user.email, user.id]);
+
+  // Debounce email validation
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (formData.email) {
+        validateEmail(formData.email);
+      }
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [formData.email, validateEmail]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    // Clear error when user starts typing
+    if (error) setError(null);
   };
 
-  const handleSubmit = () => {
-    console.log("Saving data:", formData);
-    onSave(formData);
-    onClose();
+  const handleSendCode = async () => {
+    if (!formData.email || formData.email === user.email) {
+      setError('Please enter a different email address');
+      return;
+    }
+
+    setIsSendingCode(true);
+    setError(null);
+
+    try {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      const response = await fetch('/api/send-email-verification-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          user_id: user.id
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setEmailVerificationSent(true);
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
+      } else {
+        setError(data.message || 'Failed to send verification code');
+      }
+    } catch (err) {
+      console.error('Send code error:', err);
+      setError('Network error. Please try again.');
+    } finally {
+      setIsSendingCode(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!verificationCode || verificationCode.length !== 6) {
+      setError('Please enter a valid 6-digit verification code');
+      return;
+    }
+
+    setIsVerifyingCode(true);
+    setError(null);
+
+    try {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      const response = await fetch('/api/verify-email-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          verification_code: verificationCode,
+          user_id: user.id
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Email verification successful - update the user data and clear verification state
+        setEmailVerificationSent(false);
+        setVerificationCode('');
+        setEmailVerified(true);
+        
+        // Update the form data with the new email
+        setFormData(prev => ({
+          ...prev,
+          email: data.user.email
+        }));
+        
+        // Update the user data in parent component
+        if (onSave) {
+          onSave(data.user);
+        }
+        
+        // Show success message briefly
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
+      } else {
+        setError(data.message || 'Invalid verification code');
+      }
+    } catch (err) {
+      console.error('Code verification error:', err);
+      setError('Network error. Please try again.');
+    } finally {
+      setIsVerifyingCode(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    // Check if email validation is still in progress
+    if (emailValidation.checking) {
+      setError('Please wait for email validation to complete');
+      return;
+    }
+
+    // Check if email is invalid
+    if (!emailValidation.isValid) {
+      setError(emailValidation.message);
+      return;
+    }
+
+    // Check if email is changed but not verified
+    if (formData.email !== user.email && !emailVerified) {
+      setError('Please verify your email before saving changes');
+      return;
+    }
+
+    // Check field restrictions
+    if (formData.squadName !== user.squadName && !fieldRestrictions.squadName.canChange) {
+      setError(fieldRestrictions.squadName.message);
+      return;
+    }
+
+    if (formData.year_level !== user.year_level && !fieldRestrictions.yearLevel.canChange) {
+      setError(fieldRestrictions.yearLevel.message);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Get CSRF token
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      if (!csrfToken) {
+        throw new Error('CSRF token not found');
+      }
+
+      const response = await fetch('/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      // Check if response is ok
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Server error' }));
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSuccess(true);
+        // Call the onSave callback with updated user data
+        if (onSave) {
+          onSave(data.user);
+        }
+        // Close modal after a short delay to show success message
+        setTimeout(() => {
+          onClose();
+        }, 1500);
+      } else {
+        setError(data.message || 'Failed to update profile');
+      }
+    } catch (err) {
+      console.error('Profile update error:', err);
+      setError(err.message || 'Network error. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -50,6 +372,80 @@ export default function EditProfileModal({ user, onClose, onSave }) {
           ✨ Edit Profile
         </h2>
 
+        {/* Success Message */}
+        {success && (
+          <div className="mb-4 p-3 bg-green-900/50 border border-green-500 rounded-lg text-green-400 text-sm">
+            {emailVerified ? 
+              '✅ Email verified successfully! You can now save your profile changes.' :
+              '✅ Profile updated successfully!'
+            }
+          </div>
+        )}
+
+        {/* Email Verification Message */}
+        {emailVerificationSent && (
+          <div className="mb-4 p-3 bg-blue-900/50 border border-blue-500 rounded-lg text-blue-400 text-sm">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+              <div>
+                <p className="font-semibold">📧 Email Verification Required</p>
+                <p className="text-xs mt-1">Please check your new email address for verification instructions. Your email will be updated once verified.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Verification Code Input */}
+        {emailVerificationSent && (
+          <div className="mb-4 p-4 bg-gray-800/50 border border-gray-600 rounded-lg">
+            <h3 className="text-lg font-semibold text-yellow-400 mb-3">Enter Verification Code</h3>
+            <p className="text-sm text-gray-300 mb-3">
+              We've sent a 6-digit verification code to your new email address. Enter it below to complete the email change.
+            </p>
+            <div className="flex gap-3">
+              <input
+                type="text"
+                value={verificationCode}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                  setVerificationCode(value);
+                  if (error) setError(null);
+                }}
+                placeholder="123456"
+                disabled={isVerifyingCode}
+                className="flex-1 p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 disabled:opacity-50 text-center text-2xl font-mono tracking-widest"
+                maxLength="6"
+              />
+              <button
+                onClick={handleVerifyCode}
+                disabled={isVerifyingCode || verificationCode.length !== 6}
+                className="px-6 py-3 rounded-lg bg-yellow-500 text-black font-semibold hover:bg-yellow-400 transition shadow-lg disabled:opacity-50 flex items-center gap-2"
+              >
+                {isVerifyingCode ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                    Verifying...
+                  </>
+                ) : (
+                  'Verify'
+                )}
+              </button>
+            </div>
+            <p className="text-xs text-gray-400 mt-2">
+              ⏰ Verification code expires in 10 minutes
+            </p>
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-900/50 border border-red-500 rounded-lg text-red-400 text-sm">
+            ❌ {error}
+          </div>
+        )}
+
         {/* Responsive Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           {/* Left Column */}
@@ -61,8 +457,18 @@ export default function EditProfileModal({ user, onClose, onSave }) {
                 name="squadName"
                 value={formData.squadName}
                 onChange={handleChange}
-                className="w-full p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400"
+                disabled={isLoading || !fieldRestrictions.squadName.canChange}
+                className={`w-full p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border focus:ring-1 disabled:opacity-50 ${
+                  !fieldRestrictions.squadName.canChange 
+                    ? 'border-orange-400 focus:border-orange-400 focus:ring-orange-400' 
+                    : 'border-gray-600 focus:border-yellow-400 focus:ring-yellow-400'
+                }`}
               />
+              {!fieldRestrictions.squadName.canChange && (
+                <p className="text-xs text-orange-400 mt-1">
+                  ⏰ {fieldRestrictions.squadName.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -72,19 +478,40 @@ export default function EditProfileModal({ user, onClose, onSave }) {
                 name="year_level"
                 value={formData.year_level}
                 onChange={handleChange}
-                className="w-full p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400"
+                disabled={isLoading || !fieldRestrictions.yearLevel.canChange}
+                className={`w-full p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border focus:ring-1 disabled:opacity-50 ${
+                  !fieldRestrictions.yearLevel.canChange 
+                    ? 'border-orange-400 focus:border-orange-400 focus:ring-orange-400' 
+                    : 'border-gray-600 focus:border-yellow-400 focus:ring-yellow-400'
+                }`}
               />
+              {!fieldRestrictions.yearLevel.canChange && (
+                <p className="text-xs text-orange-400 mt-1">
+                  ⏰ {fieldRestrictions.yearLevel.message}
+                </p>
+              )}
             </div>
 
             <div>
               <label className="text-sm text-gray-300">MLBB IGN</label>
-              <input
-                type="text"
-                name="ml_ign"
-                value={formData.ml_ign}
-                onChange={handleChange}
-                className="w-full p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400"
-              />
+              <div className="flex gap-2">
+                <input
+                  disabled
+                  type="text"
+                  name="ml_ign"
+                  value={formData.ml_ign}
+                  onChange={handleChange}
+                  className="flex-1 p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 opacity-50"
+                />
+                <button
+                  disabled
+                  onClick={handleLoginClick}
+                  type="button"
+                  className="px-4 py-2.5 md:py-3 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-400 transition shadow-lg disabled:opacity-50 whitespace-nowrap"
+                >
+                  Change IGN
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -95,7 +522,8 @@ export default function EditProfileModal({ user, onClose, onSave }) {
                   name="ml_id"
                   value={formData.ml_id}
                   onChange={handleChange}
-                  className="w-full p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400"
+                  disabled={isLoading}
+                  className="w-full p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 disabled:opacity-50"
                 />
               </div>
               <div>
@@ -105,7 +533,8 @@ export default function EditProfileModal({ user, onClose, onSave }) {
                   name="ml_server"
                   value={formData.ml_server}
                   onChange={handleChange}
-                  className="w-full p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400"
+                  disabled={isLoading}
+                  className="w-full p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 disabled:opacity-50"
                 />
               </div>
             </div>
@@ -115,16 +544,74 @@ export default function EditProfileModal({ user, onClose, onSave }) {
           <div className="space-y-4 md:space-y-5">
             <div>
               <label className="text-sm text-gray-300">Email</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400"
-              />
-              <p className="text-xs text-yellow-400 mt-1 md:mt-2">
-                ⚠️ Changing your email may require re-verification.
-              </p>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                    className={`w-full p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border focus:ring-1 disabled:opacity-50 pr-10 ${
+                      emailValidation.checking 
+                        ? 'border-blue-400 focus:border-blue-400 focus:ring-blue-400' 
+                        : emailValidation.isValid 
+                          ? 'border-green-400 focus:border-green-400 focus:ring-green-400' 
+                          : 'border-red-400 focus:border-red-400 focus:ring-red-400'
+                    }`}
+                  />
+                  {/* Validation Status Icon */}
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    {emailValidation.checking ? (
+                      <div className="animate-spin w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full"></div>
+                    ) : emailValidation.isValid ? (
+                      <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+                {/* Send Code Button */}
+                <button
+                  type="button"
+                  onClick={handleSendCode}
+                  disabled={isSendingCode || isLoading || formData.email === user.email || !emailValidation.isValid || emailValidation.checking}
+                  className="px-4 py-2.5 md:py-3 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-400 transition shadow-lg disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+                >
+                  {isSendingCode ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Sending...
+                    </>
+                  ) : (
+                    'Send Code'
+                  )}
+                </button>
+              </div>
+              {/* Validation Message */}
+              {emailValidation.message ? (
+                <p className={`text-xs mt-1 ${
+                  emailValidation.checking 
+                    ? 'text-blue-400' 
+                    : emailValidation.isValid 
+                      ? 'text-green-400' 
+                      : 'text-red-400'
+                }`}>
+                  {emailValidation.message}
+                </p>
+              ) : user.email_verification_code ? (
+                <p className="text-xs text-yellow-400 mt-1 md:mt-2">
+                  ⚠️ Email change pending verification. Check your email for verification code.
+                </p>
+              ) : (
+                <p className="text-xs text-yellow-400 mt-1 md:mt-2">
+                  ⚠️ Changing your email may require re-verification.
+                </p>
+              )}
             </div>
 
             <div>
@@ -134,7 +621,8 @@ export default function EditProfileModal({ user, onClose, onSave }) {
                 name="contact_number"
                 value={formData.contact_number}
                 onChange={handleChange}
-                className="w-full p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400"
+                disabled={isLoading}
+                className="w-full p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 disabled:opacity-50"
               />
             </div>
 
@@ -142,10 +630,11 @@ export default function EditProfileModal({ user, onClose, onSave }) {
               <label className="text-sm text-gray-300">Facebook Account</label>
               <input
                 type="text"
-                name="facebook"
-                value={formData.facebook}
+                name="facebook_link"
+                value={formData.facebook_link}
                 onChange={handleChange}
-                className="w-full p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400"
+                disabled={isLoading}
+                className="w-full p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 disabled:opacity-50"
               />
             </div>
           </div>
@@ -154,17 +643,43 @@ export default function EditProfileModal({ user, onClose, onSave }) {
         {/* Buttons */}
         <div className="flex justify-end gap-3 md:gap-4 mt-6 md:mt-8">
           <button
-            className="px-4 md:px-5 py-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition text-sm md:text-base"
+            className="px-4 md:px-5 py-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition text-sm md:text-base disabled:opacity-50"
             onClick={onClose}
+            disabled={isLoading}
           >
             Cancel
           </button>
           <button
-            className="px-4 md:px-5 py-2 rounded-lg bg-yellow-500 text-black font-semibold hover:bg-yellow-400 transition shadow-lg text-sm md:text-base"
+            className="px-4 md:px-5 py-2 rounded-lg bg-yellow-500 text-black font-semibold hover:bg-yellow-400 transition shadow-lg text-sm md:text-base disabled:opacity-50 flex items-center gap-2"
             onClick={handleSubmit}
+            disabled={isLoading || emailValidation.checking || !emailValidation.isValid || (formData.email !== user.email && !emailVerified) || (formData.squadName !== user.squadName && !fieldRestrictions.squadName.canChange) || (formData.year_level !== user.year_level && !fieldRestrictions.yearLevel.canChange)}
           >
-            Save Changes
+            {isLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                Saving...
+              </>
+            ) : (
+              'Save Changes'
+            )}
           </button>
+          
+          {/* Save Button Help Text */}
+          {(formData.email !== user.email && !emailVerified) && (
+            <p className="text-xs text-yellow-400 mt-2 text-center">
+              ⚠️ Please verify your email before saving changes
+            </p>
+          )}
+          {(formData.squadName !== user.squadName && !fieldRestrictions.squadName.canChange) && (
+            <p className="text-xs text-orange-400 mt-2 text-center">
+              ⏰ {fieldRestrictions.squadName.message}
+            </p>
+          )}
+          {(formData.year_level !== user.year_level && !fieldRestrictions.yearLevel.canChange) && (
+            <p className="text-xs text-orange-400 mt-2 text-center">
+              ⏰ {fieldRestrictions.yearLevel.message}
+            </p>
+          )}
         </div>
       </div>
     </div>
