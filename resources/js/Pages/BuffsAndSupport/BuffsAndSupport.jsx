@@ -12,7 +12,7 @@ import {
 } from "./BuffsCalculators";
 import { Workflow, FileText, UserPlus, BadgeCheck, CalendarCheck2, Gift } from "lucide-react";
 
-const BuffsAndSupport = () => {
+const BuffsAndSupport = ({ eventPhotos = [] }) => {
     return (
         <>
             <Head title="Buffs and Support" />
@@ -284,7 +284,7 @@ const BuffsAndSupport = () => {
                         </div>
                     </section>
 
-                    <Carousel />
+                    <Carousel eventPhotos={eventPhotos} />
                 </main>
             </AuthenticatedLayout>
         </>

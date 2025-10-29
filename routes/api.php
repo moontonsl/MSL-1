@@ -213,17 +213,158 @@ Route::middleware(['web'])->group(function () {
     });
 });
 
+// Storage link status check
+Route::get('/storage-status', function () {
+    \Log::info('Storage status check requested');
+    
+    $status = [
+        'storage_link_exists' => is_link(public_path('storage')),
+        'storage_link_target' => is_link(public_path('storage')) ? readlink(public_path('storage')) : null,
+        'storage_directory_exists' => is_dir(storage_path('app/public')),
+        'carousel_directory_exists' => is_dir(storage_path('app/public/carousel')),
+        'carousel_files' => [],
+        'public_storage_exists' => is_dir(public_path('storage')),
+        'timestamp' => now()->toDateTimeString()
+    ];
+    
+    // Check carousel files
+    if (is_dir(storage_path('app/public/carousel'))) {
+        $files = scandir(storage_path('app/public/carousel'));
+        $status['carousel_files'] = array_filter($files, function($file) {
+            return $file !== '.' && $file !== '..';
+        });
+    }
+    
+    \Log::info('Storage status check completed', $status);
+    
+    return response()->json($status);
+});
+
+// Serve image directly through Laravel (bypass web server)
+Route::get('/serve-image/{filename}', function ($filename) {
+    \Log::info('Serving image directly through Laravel', ['filename' => $filename]);
+    
+    $filePath = storage_path('app/public/carousel/' . $filename);
+    
+    if (!file_exists($filePath)) {
+        \Log::warning('Image file not found', ['file_path' => $filePath]);
+        return response()->json(['error' => 'File not found'], 404);
+    }
+    
+    \Log::info('Serving image file', [
+        'file_path' => $filePath,
+        'file_size' => filesize($filePath),
+        'mime_type' => mime_content_type($filePath)
+    ]);
+    
+    return response()->file($filePath);
+});
+
+// Test direct file access
+Route::get('/test-file-access/{filename}', function ($filename) {
+    \Log::info('Testing file access', ['filename' => $filename]);
+    
+    $filePath = storage_path('app/public/carousel/' . $filename);
+    $webPath = '/storage/carousel/' . $filename;
+    
+    $status = [
+        'filename' => $filename,
+        'file_path' => $filePath,
+        'web_path' => $webPath,
+        'file_exists' => file_exists($filePath),
+        'is_readable' => is_readable($filePath),
+        'file_size' => file_exists($filePath) ? filesize($filePath) : null,
+        'permissions' => file_exists($filePath) ? substr(sprintf('%o', fileperms($filePath)), -4) : null,
+        'storage_link_exists' => is_link(public_path('storage')),
+        'storage_link_target' => is_link(public_path('storage')) ? readlink(public_path('storage')) : null,
+        'public_storage_exists' => is_dir(public_path('storage')),
+        'public_storage_permissions' => is_dir(public_path('storage')) ? substr(sprintf('%o', fileperms(public_path('storage'))), -4) : null
+    ];
+    
+    \Log::info('File access test completed', $status);
+    
+    return response()->json($status);
+});
+Route::get('/create-carousel-dir', function () {
+    \Log::info('Manual carousel directory creation requested');
+    
+    $carouselPath = storage_path('app/public/carousel');
+    
+    try {
+        if (!file_exists($carouselPath)) {
+            mkdir($carouselPath, 0755, true);
+            \Log::info('Carousel directory created manually', ['path' => $carouselPath]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Carousel directory created successfully',
+                'path' => $carouselPath,
+                'permissions' => substr(sprintf('%o', fileperms($carouselPath)), -4)
+            ]);
+        } else {
+            return response()->json([
+                'success' => true,
+                'message' => 'Carousel directory already exists',
+                'path' => $carouselPath,
+                'permissions' => substr(sprintf('%o', fileperms($carouselPath)), -4)
+            ]);
+        }
+    } catch (\Exception $e) {
+        \Log::error('Failed to create carousel directory', [
+            'error' => $e->getMessage(),
+            'path' => $carouselPath
+        ]);
+        
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'path' => $carouselPath
+        ], 500);
+    }
+});
+
 // Public API for carousel images
 Route::get('/carousel-images', function () {
-    $carousels = \App\Models\Carousel::active()->ordered()->get(['id', 'title', 'image_path']);
+    \Log::info('Carousel images API called');
     
-    return response()->json($carousels->map(function($carousel) {
-        return [
-            'id' => $carousel->id,
-            'title' => $carousel->title,
-            'image' => '/images/Carousel/' . $carousel->image_path
-        ];
-    }));
+    try {
+        $carousels = \App\Models\Carousel::active()->ordered()->get(['id', 'title', 'image_path']);
+        
+        \Log::info('Carousel images retrieved', [
+            'count' => $carousels->count(),
+            'carousels' => $carousels->map(function($carousel) {
+                return [
+                    'id' => $carousel->id,
+                    'title' => $carousel->title,
+                    'image_path' => $carousel->image_path,
+                    'web_url' => '/storage/carousel/' . $carousel->image_path,
+                    'file_exists' => \Storage::exists('public/carousel/' . $carousel->image_path)
+                ];
+            })->toArray()
+        ]);
+        
+        $response = $carousels->map(function($carousel) {
+            return [
+                'id' => $carousel->id,
+                'title' => $carousel->title,
+                'image' => '/storage/carousel/' . $carousel->image_path
+            ];
+        });
+        
+        \Log::info('Carousel API response prepared', [
+            'response_count' => $response->count(),
+            'response_data' => $response->toArray()
+        ]);
+        
+        return response()->json($response);
+    } catch (\Exception $e) {
+        \Log::error('Carousel images API error', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return response()->json(['error' => 'Failed to fetch carousel images'], 500);
+    }
 });
 
 // Send email verification code API
