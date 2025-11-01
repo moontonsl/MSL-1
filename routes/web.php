@@ -1491,7 +1491,7 @@ Route::post('/msl-network/send-inquiry', function (Request $request) {
             'message' => 'required|string|max:2000',
             'region' => 'nullable|string|max:100',
         ]);
-
+        
         // Filter out empty CC emails
         $ccEmails = collect($request->cc_emails ?? [])
             ->filter(function($email) {

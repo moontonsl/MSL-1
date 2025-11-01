@@ -5,6 +5,7 @@ import { Helmet } from "react-helmet";
 import frameImg from "./Assets/Frame437.png";
 import frameImgFooter from "./Assets/Frame437Footer.png";
 import { CalendarX, Users, HandCoins, Goal, Handshake, Sparkles, X, Send } from "lucide-react";
+import Toast from "@/Components/Toast";
 
 const MSLNetwork = () => {
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
@@ -12,9 +13,10 @@ const MSLNetwork = () => {
   const [emailForm, setEmailForm] = useState({
     to: "",
     ccEmails: [],
-    subject: "",
+    subject: "Intent to Partner with MSL Philippines",
     message: ""
   });
+  const [toast, setToast] = useState({ isVisible: false, message: "", type: "success" });
 
   const regionEmails = {
     "msl.partnerships.ncluz@gmail.com": "North/Central Luzon",
@@ -43,12 +45,16 @@ const MSLNetwork = () => {
     }));
   };
 
+  const showToast = (message, type = 'success') => {
+    setToast({ isVisible: true, message, type });
+  };
+
+  const closeToast = () => {
+    setToast({ isVisible: false, message: "", type: "success" });
+  };
+
 
   const handleSendEmail = async () => {
-    if (!emailForm.to || !emailForm.subject || !emailForm.message) {
-      alert("Please fill in all fields");
-      return;
-    }
 
     try {
       // Show loading state
@@ -82,15 +88,13 @@ const MSLNetwork = () => {
       const result = await response.json();
 
       if (result.success) {
-        alert(result.message);
+        showToast(result.message, 'success');
         // Reset form and close modal
-        setEmailForm({ to: "", ccEmails: [], subject: "", message: "" });
-        setCcInput("");
-        setShowCcSuggestions(false);
+        setEmailForm({ to: "", ccEmails: [], subject: "Intent to Partner with MSL Philippines", message: "" });
         setSelectedRegionEmail("");
         setIsEmailModalOpen(false);
       } else {
-        alert(result.message || 'Failed to send email. Please try again.');
+        showToast(result.message || 'Failed to send email. Please try again.', 'error');
       }
       
     } catch (error) {
@@ -104,7 +108,7 @@ const MSLNetwork = () => {
         errorMessage = 'Network error. Please check your connection and try again.';
       }
       
-      alert(errorMessage);
+      showToast(errorMessage, 'error');
     } finally {
       // Reset button state
       const sendButton = document.querySelector('[data-send-email]');
@@ -733,7 +737,7 @@ Message: ${emailForm.message}`;
                 </label>
                 <input
                   type="text"
-                  value="Intent to Partner with MSL Philippines"
+                  value={emailForm.subject}
                   onChange={(e) => handleEmailFormChange('subject', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F2C21A] focus:border-transparent text-white bg-gray-800 placeholder-gray-400"
                   placeholder="Enter email subject"
@@ -785,6 +789,14 @@ Message: ${emailForm.message}`;
         </div>
       )}
 
+      {/* Toast Notification */}
+      <Toast
+        isVisible={toast.isVisible}
+        message={toast.message}
+        type={toast.type}
+        onClose={closeToast}
+        duration={5000}
+      />
       
       </AuthenticatedLayout>
     </>
