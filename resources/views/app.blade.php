@@ -18,7 +18,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title>MSL Philippines - Mobile Legends Student Leaders</title>
         
         <!-- Favicon -->
         <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -43,21 +43,21 @@
         <!-- Open Graph / Facebook -->
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="MSL Philippines" />
-        <meta property="og:title" content="MSL Philippines - Mobile Legends Student Leaders" />
+        <meta property="og:title" content="MSL Philippines" />
         <meta property="og:description" content="Greetings, mighty Warrior of the Land Of Dawn! Welcome to the realm of MLBB PH Student Leaders. From different Universities and our love for the game, we lead, promote, and dedicate our time and effort to the betterment of the MLBB Community!" />
         <meta property="og:url" content="https://moontonslph.org/" />
         <meta property="og:image" content="https://moontonslph.org/MSL_LOGO.png" />
         <meta property="og:image:secure_url" content="https://moontonslph.org/MSL_LOGO.png" />
         <meta property="og:image:type" content="image/png" />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
+        <meta property="og:image:width" content="512" />
+        <meta property="og:image:height" content="512" />
         <meta property="og:image:alt" content="MSL Philippines Logo" />
         <meta property="og:locale" content="en_US" />
         
         <!-- Twitter Card -->
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@moontonslph" />
-        <meta name="twitter:title" content="MSL Philippines - Mobile Legends Student Leaders" />
+        <meta name="twitter:title" content="MSL Philippines" />
         <meta name="twitter:description" content="Greetings, mighty Warrior of the Land Of Dawn! Welcome to the realm of MLBB PH Student Leaders. From different Universities and our love for the game, we lead, promote, and dedicate our time and effort to the betterment of the MLBB Community!" />
         <meta name="twitter:image" content="https://moontonslph.org/MSL_LOGO.png" />
         <meta name="twitter:image:alt" content="MSL Philippines Logo" />

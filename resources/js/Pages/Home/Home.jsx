@@ -19,14 +19,14 @@ const Home = () => {
                 {/* Open Graph / Facebook */}
                 <meta property="og:type" content="website" />
                 <meta property="og:site_name" content="MSL Philippines" />
-                <meta property="og:title" content="MSL Philippines - Mobile Legends Student Leaders" />
+                <meta property="og:title" content="MSL Philippines" />
                 <meta property="og:description" content="Greetings, mighty Warrior of the Land Of Dawn! Welcome to the realm of MLBB PH Student Leaders. From different Universities and our love for the game, we lead, promote, and dedicate our time and effort to the betterment of the MLBB Community!" />
                 <meta property="og:url" content="https://moontonslph.org/" />
                 <meta property="og:image" content="https://moontonslph.org/MSL_LOGO.png" />
                 <meta property="og:image:secure_url" content="https://moontonslph.org/MSL_LOGO.png" />
                 <meta property="og:image:type" content="image/png" />
-                <meta property="og:image:width" content="800" />
-                <meta property="og:image:height" content="800" />
+                <meta property="og:image:width" content="512" />
+                <meta property="og:image:height" content="512" />
                 <meta property="og:image:alt" content="MSL Philippines Logo" />
                 <meta property="og:locale" content="en_US" />
                 
