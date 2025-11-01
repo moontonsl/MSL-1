@@ -48,4 +48,8 @@ return [
         'analytics_credentials_path' => env('GOOGLE_ANALYTICS_CREDENTIALS_PATH', storage_path('app/google/analytics-credentials.json')),
     ],
 
+    'facebook' => [
+        'app_id' => env('FACEBOOK_APP_ID'),
+    ],
+
 ];
