@@ -42,7 +42,7 @@ export default function OPPOxMSLRoadShowTournament() {
     setValidatingUsernames(prev => ({ ...prev, [fieldName]: true }));
     
     try {
-      const response = await fetch(`/school-players?search=${encodeURIComponent(username)}&university=${encodeURIComponent("First Asia Institute of Technology and Humanities")}`);
+      const response = await fetch(`/school-players?search=${encodeURIComponent(username)}&university=${encodeURIComponent("Mindanao State University - Iligan Institute of Technology")}`);
       const data = await response.json();
       
         if (data && data.length > 0) {
@@ -52,13 +52,13 @@ export default function OPPOxMSLRoadShowTournament() {
           } else {
             setValidationErrors(prev => ({ 
               ...prev, 
-              [fieldName]: "Username not found in First Asia Institute of Technology and Humanities" 
+              [fieldName]: "Username not found in Mindanao State University - Iligan Institute of Technology" 
             }));
           }
         } else {
           setValidationErrors(prev => ({ 
             ...prev, 
-            [fieldName]: "Username not found in First Asia Institute of Technology and Humanities" 
+            [fieldName]: "Username not found in Mindanao State University - Iligan Institute of Technology" 
           }));
         }
     } catch (error) {
@@ -127,7 +127,7 @@ export default function OPPOxMSLRoadShowTournament() {
       "https://docs.google.com/forms/d/e/1FAIpQLSdbHbI2DnJB3d0DcdoSR1nmTt_T5Af0MaN4w2MivO5k8ieEtg/formResponse";
 
     const formBody = new FormData();
-    formBody.append("entry.2008089998", "First Asia Institute of Technology and Humanities");
+    formBody.append("entry.2008089998", "Mindanao State University - Iligan Institute of Technology");
     formBody.append("entry.1615860502", form.teamName);
     formBody.append("entry.2087994405", form.captain);
     formBody.append("entry.1748019360", form.player2);
@@ -176,7 +176,7 @@ export default function OPPOxMSLRoadShowTournament() {
             Oppo x MSL Roadshow
           </h2>
           <h3 className="text-white text-[16px] sm:text-[22px] lg:text-[26px] font-extrabold leading-relaxed break-words">
-            First Asia Institute of Technology and Humanities
+            Mindanao State University - Iligan Institute of Technology
           </h3>
         </div>
 
