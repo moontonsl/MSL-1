@@ -450,6 +450,55 @@ Route::get('/school-players', function (\Illuminate\Http\Request $request) {
     }
 });
 
+// Check username for tournament registration (checks existence and verification status)
+Route::get('/check-username-tournament', function (\Illuminate\Http\Request $request) {
+    try {
+        $username = $request->query('username', '');
+        $university = $request->query('university', '');
+        
+        if (!$username || !$university) {
+            return response()->json(['error' => 'Username and university parameters required'], 400);
+        }
+        
+        // Check if user exists in the university (regardless of verification status)
+        $user = \App\Models\User::where('username', $username)
+            ->where('university', $university)
+            ->where('role', '!=', 'SL')
+            ->where('role', '!=', 'Regional Admin')
+            ->where('role', '!=', 'Admin')
+            ->where('role', '!=', 'Super Admin')
+            ->first(['id', 'username', 'name', 'surname', 'university', 'state']);
+        
+        if (!$user) {
+            return response()->json([
+                'exists' => false,
+                'verified' => false,
+                'message' => 'Username not found in ' . $university
+            ]);
+        }
+        
+        // User exists, check verification status
+        if ($user->state === 'Verified') {
+            return response()->json([
+                'exists' => true,
+                'verified' => true,
+                'message' => 'VALID',
+                'user' => $user
+            ]);
+        } else {
+            return response()->json([
+                'exists' => true,
+                'verified' => false,
+                'message' => 'Username not verified',
+                'user' => $user
+            ]);
+        }
+    } catch (\Exception $e) {
+        \Log::error('Username tournament check error: ' . $e->getMessage());
+        return response()->json(['error' => 'Check failed', 'message' => $e->getMessage()], 500);
+    }
+});
+
 Route::post('/validate-credentials', function (\Illuminate\Http\Request $request) {
     $request->validate([
         'username' => 'required|string',
