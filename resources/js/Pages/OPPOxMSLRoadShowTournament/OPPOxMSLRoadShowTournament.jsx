@@ -34,16 +34,21 @@ export default function OPPOxMSLRoadShowTournament() {
   }, []);
 
   const checkDuplicateUsernames = (fieldName, username, allUsernames) => {
-    if (!username.trim()) {
-      return null; // No duplicate check for empty fields
+    if (!username || typeof username !== 'string' || !username.trim()) {
+      return null; // No duplicate check for empty or invalid fields
     }
 
     const duplicates = [];
     const usernameLower = username.toLowerCase().trim();
+    const usernameFields = ["captain", "player2", "player3", "player4", "player5"];
     
-    Object.entries(allUsernames).forEach(([field, value]) => {
-      if (field !== fieldName && value && value.toLowerCase().trim() === usernameLower) {
-        duplicates.push(field);
+    usernameFields.forEach(field => {
+      if (field !== fieldName) {
+        const value = allUsernames[field];
+        // Ensure value is a string before calling toLowerCase
+        if (value && typeof value === 'string' && value.toLowerCase().trim() === usernameLower) {
+          duplicates.push(field);
+        }
       }
     });
 
