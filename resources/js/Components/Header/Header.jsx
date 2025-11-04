@@ -31,21 +31,8 @@ const Header = () => {
 
     // Create navigation links based on user role
     const navLinks = React.useMemo(() => {
-        const links = [...baseNavLinks];
-        
-        // Only show Campus Tournament tab for SL and Regional Admin
-        if (user && (user.role === 'SL' || user.role === 'Regional Admin')) {
-            links.push({ name: 'Campus Tournament', href: '/campus-tournament' });
-        }
-        
-        // Add Modification tab based on role
-        if (user && user.role === 'SL') {
-            links.push({ name: 'Modification', href: '/SLAdminApproval' });
-        } else if (user && user.role === 'Regional Admin') {
-            links.push({ name: 'Modification', href: '/RegionalAdminApproval' });
-        }
-        
-        return links;
+        // Only base nav links - Campus Tournament and Modification moved to dropdown
+        return [...baseNavLinks];
     }, [user]);
 
     // Click handler for the account icon
@@ -244,6 +231,35 @@ const Header = () => {
                                         onClick={() => setIsDropdownOpen(false)}
                                     >
                                         SL Admin
+                                    </Link>
+                                )}
+                                {/* Campus Tournament - only for SL and Regional Admin */}
+                                {(user.role === 'SL' || user.role === 'Regional Admin') && (
+                                    <Link
+                                        href="/campus-tournament"
+                                        className={styles.dropdownItem}
+                                        onClick={() => setIsDropdownOpen(false)}
+                                    >
+                                        Campus Tournament
+                                    </Link>
+                                )}
+                                {/* Modification - different URLs based on role */}
+                                {user.role === 'SL' && (
+                                    <Link
+                                        href="/SLAdminApproval"
+                                        className={styles.dropdownItem}
+                                        onClick={() => setIsDropdownOpen(false)}
+                                    >
+                                        Modification
+                                    </Link>
+                                )}
+                                {user.role === 'Regional Admin' && (
+                                    <Link
+                                        href="/RegionalAdminApproval"
+                                        className={styles.dropdownItem}
+                                        onClick={() => setIsDropdownOpen(false)}
+                                    >
+                                        Modification
                                     </Link>
                                 )}
                                 {/* {user.role === 'Super Admin' && (
