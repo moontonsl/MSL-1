@@ -50,8 +50,6 @@ const Header = () => {
     };
 
     const handleLogout = () => {
-        console.log("Attempting to log out...");
-
         // Close the dropdown immediately for better UX
         setIsDropdownOpen(false);
 
@@ -60,17 +58,14 @@ const Header = () => {
         // Assuming your backend has a route like `/logout` that invalidates the session.
         router.post('/logout', {}, { // The second argument is data, which is empty for a simple logout
             onSuccess: () => {
-                console.log("Successfully logged out (server-side). Redirected to login.");
                 // Inertia.js automatically handles redirection after a successful logout,
                 // typically to the login page if configured in your backend.
             },
             onError: (errors) => {
-                console.error("Logout error:", errors);
                 // Handle any errors during logout (e.g., network issues)
             },
             onFinish: () => {
                 // This will always run after the request is finished, regardless of success or failure.
-                console.log("Logout request finished.");
             },
             replace: true, // Replace the current history entry so user can't go back to a 'logged in' state
         });
@@ -97,8 +92,6 @@ const Header = () => {
         // Close modal and redirect to delete account route
         setShowDeleteModal(false);
         
-        console.log("Sending delete account request...");
-        
         // Show success modal immediately after password validation
         // This ensures it shows before any server redirect
         setShowSuccessModal(true);
@@ -114,14 +107,12 @@ const Header = () => {
             body: JSON.stringify({ password: deletePassword }),
         })
         .then(response => {
-            console.log("Response status:", response.status);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             return response.json();
         })
         .then(data => {
-            console.log("Account deleted successfully", data);
             // Success modal is already showing
             // Force logout and redirect after a short delay
             setTimeout(() => {
@@ -133,7 +124,6 @@ const Header = () => {
             }, 2000); // Give user 2 seconds to read success message
         })
         .catch(error => {
-            console.error("Delete account error:", error);
             // Hide success modal and show error
             setShowSuccessModal(false);
             setShowDeleteModal(true);
@@ -149,7 +139,6 @@ const Header = () => {
 
     const handleSuccessOkay = () => {
         setShowSuccessModal(false);
-        console.log("Success modal closed, redirecting to login...");
         
         // Use a more direct approach to ensure redirect works
         setTimeout(() => {
