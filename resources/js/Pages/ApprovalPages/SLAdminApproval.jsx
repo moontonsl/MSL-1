@@ -38,13 +38,27 @@ export default function SLAdminApproval() {
       }
     } catch (err) {
       setError('Network error occurred');
-      console.error('Error fetching requests:', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    // Force hard refresh on first visit to ensure fresh CSRF token after login
+    // Check if we've already reloaded in this session
+    const hasReloaded = sessionStorage.getItem('slAdminApprovalReloaded') === 'true';
+    
+    if (!hasReloaded) {
+      // Mark that we're about to reload
+      sessionStorage.setItem('slAdminApprovalReloaded', 'true');
+      // Force hard refresh without modifying URL
+      window.location.reload();
+      return;
+    }
+    
+    // Clear the reload flag so next navigation will refresh again
+    sessionStorage.removeItem('slAdminApprovalReloaded');
+    
     fetchRequests();
   }, []);
 
@@ -78,7 +92,6 @@ export default function SLAdminApproval() {
         alert('User not found: ' + (data.error || 'Unknown error'));
       }
     } catch (error) {
-      console.error('Error fetching user:', error);
       alert('Error fetching user data');
     }
   };
@@ -127,7 +140,6 @@ export default function SLAdminApproval() {
             setShowMSLModal(true);
           }
         } catch (error) {
-          console.error('Error approving request:', error);
           setModalData({
             title: 'Error',
             message: 'Error approving request. Please try again.',
@@ -187,7 +199,6 @@ export default function SLAdminApproval() {
             setShowMSLModal(true);
           }
         } catch (error) {
-          console.error('Error rejecting request:', error);
           setModalData({
             title: 'Error',
             message: 'Error rejecting request. Please try again.',

@@ -52,7 +52,7 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
                 schoolCache.current[value] = schools;
                 setFilteredSchools(schools);
             } catch (error) {
-                console.error("Error fetching schools", error);
+                // Error fetching schools
             }
         }, 300), []
     );
@@ -69,7 +69,7 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
                 courseCache.current[value] = courses;
                 setFilteredCourses(courses);
             } catch (error) {
-                console.error("Error fetching courses", error);
+                // Error fetching courses
             }
         }, 300), []
     );
@@ -101,7 +101,6 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
                 setUserSearchResults(users);
                 setShowSearchResults(true);
             } catch (error) {
-                console.error('Error searching users:', error);
                 setUserSearchResults([]);
             } finally {
                 setIsSearching(false);
@@ -358,7 +357,6 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
                 setShowMSLModal(true);
             }
         } catch (error) {
-            console.error('Error submitting request:', error);
             setModalData({
                 title: 'Error',
                 message: 'Error submitting request. Please try again.',
