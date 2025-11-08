@@ -8,9 +8,12 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Models\User; // Added this import for User model
+use App\Mail\EmailChangeVerificationMail;
 
 class ProfileController extends Controller
 {
@@ -28,17 +31,148 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(ProfileUpdateRequest $request)
     {
-        $request->user()->fill($request->validated());
+        try {
+            $user = $request->user();
+            $validatedData = $request->validated();
+            $emailChanged = false;
+            $emailVerificationSent = false;
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+            // Check if email is being changed
+            if (isset($validatedData['email']) && $validatedData['email'] !== $user->email) {
+                // Don't allow email changes without verification
+                if (!$user->email_verification_code) {
+                    if ($request->wantsJson() || $request->ajax()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Please send a verification code first before changing your email'
+                        ], 400);
+                    }
+                    return Redirect::back()->withErrors(['email' => 'Please send a verification code first before changing your email']);
+                }
+                
+                // Check if verification code exists and is not expired
+                if ($user->email_verification_code_expires_at < now()) {
+                    if ($request->wantsJson() || $request->ajax()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Verification code has expired. Please send a new code.'
+                        ], 400);
+                    }
+                    return Redirect::back()->withErrors(['email' => 'Verification code has expired. Please send a new code.']);
+                }
+                
+                // Parse the stored data to get the new email
+                $storedData = explode('|', $user->email_verification_code);
+                if (count($storedData) !== 2 || $storedData[0] !== $validatedData['email']) {
+                    if ($request->wantsJson() || $request->ajax()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Email does not match the verification code. Please send a new code.'
+                        ], 400);
+                    }
+                    return Redirect::back()->withErrors(['email' => 'Email does not match the verification code. Please send a new code.']);
+                }
+                
+                // Email is verified, update it
+                $user->email = $validatedData['email'];
+                $user->email_verified_at = now();
+                $user->email_verification_code = null;
+                $user->email_verification_code_expires_at = null;
+                
+                // Remove email from validated data since we're handling it separately
+                unset($validatedData['email']);
+            }
+
+            // Check field restrictions before allowing changes
+            if (isset($validatedData['squadName']) && $validatedData['squadName'] !== $user->squadName) {
+                // Check if squad name can be changed (once per month)
+                if ($user->squad_name_last_changed) {
+                    $lastChanged = \Carbon\Carbon::parse($user->squad_name_last_changed);
+                    $nextChangeDate = $lastChanged->addMonth();
+                    
+                    if (now() < $nextChangeDate) {
+                        $daysLeft = now()->diffInDays($nextChangeDate, false);
+                        $message = "Squad name can be changed again in {$daysLeft} day" . ($daysLeft !== 1 ? 's' : '');
+                        
+                        if ($request->wantsJson() || $request->ajax()) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => $message
+                            ], 400);
+                        }
+                        return Redirect::back()->withErrors(['squadName' => $message]);
+                    }
+                }
+            }
+            
+            if (isset($validatedData['year_level']) && $validatedData['year_level'] !== $user->year_level) {
+                // Check if year level can be changed (once per year)
+                if ($user->year_level_last_changed) {
+                    $lastChanged = \Carbon\Carbon::parse($user->year_level_last_changed);
+                    $nextChangeDate = $lastChanged->addYear();
+                    
+                    if (now() < $nextChangeDate) {
+                        $daysLeft = now()->diffInDays($nextChangeDate, false);
+                        $message = "Year level can be changed again in {$daysLeft} day" . ($daysLeft !== 1 ? 's' : '');
+                        
+                        if ($request->wantsJson() || $request->ajax()) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => $message
+                            ], 400);
+                        }
+                        return Redirect::back()->withErrors(['year_level' => $message]);
+                    }
+                }
+            }
+
+            // Check for field changes and update timestamps
+            $squadNameChanged = false;
+            $yearLevelChanged = false;
+            
+            if (isset($validatedData['squadName']) && $validatedData['squadName'] !== $user->squadName) {
+                $squadNameChanged = true;
+                $user->squad_name_last_changed = now();
+            }
+            
+            if (isset($validatedData['year_level']) && $validatedData['year_level'] !== $user->year_level) {
+                $yearLevelChanged = true;
+                $user->year_level_last_changed = now();
+            }
+
+            // Update other fields
+            $user->fill($validatedData);
+            $user->save();
+
+            // Return JSON response for AJAX requests
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Profile updated successfully',
+                    'user' => $user->fresh()
+                ]);
+            }
+
+            // Return redirect for regular form submissions
+            return Redirect::route('profile.edit');
+        } catch (\Exception $e) {
+            \Log::error('Profile update error', [
+                'user_id' => $request->user()?->id,
+                'error' => $e->getMessage()
+            ]);
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update profile',
+                    'error' => $e->getMessage()
+                ], 500);
+            }
+
+            return Redirect::back()->withErrors(['error' => 'Failed to update profile']);
         }
-
-        $request->user()->save();
-
-        return Redirect::route('profile.edit');
     }
 
     /**

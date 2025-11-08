@@ -14,6 +14,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SchoolUploadController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\CampusController;
 use App\Mail\MslNetworkInquiryMail;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
@@ -1510,11 +1511,11 @@ Route::post('/msl-network/send-inquiry', function (Request $request) {
 
         // Send email with CC recipients
         $mail = Mail::to($request->to_email);
-
+        
         if (!empty($ccEmails)) {
             $mail->cc($ccEmails);
         }
-
+        
         $mail->send(new MslNetworkInquiryMail($inquiryData));
 
         return response()->json([
