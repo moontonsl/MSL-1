@@ -11,10 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->renameColumn('email_change_token', 'email_verification_code');
-            $table->renameColumn('email_change_token_expires_at', 'email_verification_code_expires_at');
-        });
+		// Rename only if legacy columns exist (older databases may not have them)
+		if (Schema::hasColumn('users', 'email_change_token')) {
+			Schema::table('users', function (Blueprint $table) {
+				$table->renameColumn('email_change_token', 'email_verification_code');
+			});
+		}
+
+		if (Schema::hasColumn('users', 'email_change_token_expires_at')) {
+			Schema::table('users', function (Blueprint $table) {
+				$table->renameColumn('email_change_token_expires_at', 'email_verification_code_expires_at');
+			});
+		}
     }
 
     /**
@@ -22,9 +30,17 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->renameColumn('email_verification_code', 'email_change_token');
-            $table->renameColumn('email_verification_code_expires_at', 'email_change_token_expires_at');
-        });
+		// Revert only if the verification columns exist
+		if (Schema::hasColumn('users', 'email_verification_code')) {
+			Schema::table('users', function (Blueprint $table) {
+				$table->renameColumn('email_verification_code', 'email_change_token');
+			});
+		}
+
+		if (Schema::hasColumn('users', 'email_verification_code_expires_at')) {
+			Schema::table('users', function (Blueprint $table) {
+				$table->renameColumn('email_verification_code_expires_at', 'email_change_token_expires_at');
+			});
+		}
     }
 };
