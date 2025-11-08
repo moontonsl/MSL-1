@@ -83,6 +83,7 @@ Route::middleware(['web'])->group(function () {
         ]);
         
         // Check for duplicate region assignments (only for Admin, not Super Admin)
+        // Super Admin can assign the same region to multiple users
         if ($user->role === 'Admin') {
             $requestedRegions = $request->regions;
             $existingAssignments = \App\Models\UserRegion::whereIn('region_name', $requestedRegions)
@@ -106,13 +107,8 @@ Route::middleware(['web'])->group(function () {
             }
         }
         
-        // For Super Admin: Remove existing assignments for requested regions from other users
-        if ($user->role === 'Super Admin') {
-            $requestedRegions = $request->regions;
-            \App\Models\UserRegion::whereIn('region_name', $requestedRegions)
-                ->where('user_id', '!=', $targetUser->id)
-                ->delete();
-        }
+        // Note: Super Admin can assign the same region to multiple users
+        // We don't delete existing assignments - multiple users can have the same region
         
         // Clear existing regions
         $targetUser->assignedRegions()->delete();

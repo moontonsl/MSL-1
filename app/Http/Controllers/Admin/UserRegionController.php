@@ -47,18 +47,28 @@ class UserRegionController extends Controller
             ->values();
         
         // Get regions that are already assigned to Regional Admins
+        // For each region, get all users who have it assigned
         $assignedRegions = \App\Models\UserRegion::with('user')
             ->get()
-            ->map(function($userRegion) {
-                return [
-                    'region_name' => $userRegion->region_name,
-                    'assigned_to' => $userRegion->user->name . ' ' . $userRegion->user->surname,
-                    'user_id' => $userRegion->user_id
-                ];
-            })
             ->groupBy('region_name')
             ->map(function($assignments) {
-                return $assignments->first(); // Get the first assignment for each region
+                // Return all assignments for this region, not just the first one
+                // For UI display, we'll show the first one but allow Super Admin to see all
+                $firstAssignment = $assignments->first();
+                return [
+                    'region_name' => $firstAssignment->region_name,
+                    'assigned_to' => $assignments->map(function($assignment) {
+                        return $assignment->user->name . ' ' . $assignment->user->surname;
+                    })->join(', '), // Show all users who have this region
+                    'user_id' => $firstAssignment->user_id, // Keep first user_id for compatibility
+                    'all_user_ids' => $assignments->pluck('user_id')->toArray(), // All user IDs with this region
+                    'all_users' => $assignments->map(function($assignment) {
+                        return [
+                            'id' => $assignment->user_id,
+                            'name' => $assignment->user->name . ' ' . $assignment->user->surname
+                        ];
+                    })->toArray()
+                ];
             });
         
         // Get list of Regional Admins for re-assignment dropdown

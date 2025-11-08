@@ -39,13 +39,20 @@ const UserRegionManagement = () => {
 
     const toggleRegion = (region) => {
         // Check if region is already assigned to another user (only restrict for Admin, not Super Admin)
-        const isAssignedToOther = assignedRegions[region] && assignedRegions[region].user_id !== editingUser?.id;
+        const regionAssignment = assignedRegions[region];
+        const currentUserHasRegion = regionAssignment && (
+            regionAssignment.all_user_ids?.includes(editingUser?.id) || 
+            regionAssignment.user_id === editingUser?.id
+        );
+        const isAssignedToOther = regionAssignment && !currentUserHasRegion;
         
         if (isAssignedToOther && user.role === 'Admin') {
-            showToast(`Region "${region}" is already assigned to ${assignedRegions[region].assigned_to}`, 'error');
+            showToast(`Region "${region}" is already assigned to ${regionAssignment.assigned_to}`, 'error');
             return;
         }
         
+        // For Super Admin, allow assigning even if already assigned to others
+        // For Admin, only allow if not assigned to others (checked above)
         setSelectedRegions(prev => 
             prev.includes(region) 
                 ? prev.filter(r => r !== region)
@@ -300,8 +307,13 @@ const UserRegionManagement = () => {
                                             <h4 className="text-lg font-medium text-white mb-3">Select Regions</h4>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto">
                                                 {allRegions.map((region) => {
-                                                    const isAssignedToOther = assignedRegions[region] && assignedRegions[region].user_id !== editingUser?.id;
-                                                    const isAssignedToCurrent = assignedRegions[region] && assignedRegions[region].user_id === editingUser?.id;
+                                                    const regionAssignment = assignedRegions[region];
+                                                    const currentUserHasRegion = regionAssignment && (
+                                                        regionAssignment.all_user_ids?.includes(editingUser?.id) || 
+                                                        regionAssignment.user_id === editingUser?.id
+                                                    );
+                                                    const isAssignedToOther = regionAssignment && !currentUserHasRegion;
+                                                    const isAssignedToCurrent = currentUserHasRegion;
                                                     const isOriginalRegion = region === editingUser?.current_region;
                                                     
                                                     return (
@@ -352,7 +364,7 @@ const UserRegionManagement = () => {
                                                                 )}
                                                                 {isAssignedToOther && user.role === 'Super Admin' && (
                                                                     <div className="text-xs text-yellow-400 mt-1">
-                                                                        Currently assigned to: {assignedRegions[region].assigned_to} (will be reassigned)
+                                                                        Also assigned to: {assignedRegions[region].assigned_to} (can assign to multiple users)
                                                                     </div>
                                                                 )}
                                                                 {isAssignedToCurrent && !isOriginalRegion && (
