@@ -20,7 +20,6 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
                 alert('Error viewing attachment');
             }
         } catch (error) {
-            console.error('Error viewing attachment:', error);
             alert('Error viewing attachment');
         }
     };

@@ -36,13 +36,27 @@ export default function RegionalAdminApproval() {
       }
     } catch (err) {
       setError('Network error occurred');
-      console.error('Error fetching requests:', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    // Force hard refresh on first visit to ensure fresh CSRF token after login
+    // Check if we've already reloaded in this session
+    const hasReloaded = sessionStorage.getItem('regionalAdminApprovalReloaded') === 'true';
+    
+    if (!hasReloaded) {
+      // Mark that we're about to reload
+      sessionStorage.setItem('regionalAdminApprovalReloaded', 'true');
+      // Force hard refresh without modifying URL
+      window.location.reload();
+      return;
+    }
+    
+    // Clear the reload flag so next navigation will refresh again
+    sessionStorage.removeItem('regionalAdminApprovalReloaded');
+    
     fetchRequests();
   }, []);
 
@@ -75,7 +89,6 @@ export default function RegionalAdminApproval() {
         alert('User not found: ' + (data.error || 'Unknown error'));
       }
     } catch (error) {
-      console.error('Error fetching user:', error);
       alert('Error fetching user data');
     }
   };
@@ -124,7 +137,6 @@ export default function RegionalAdminApproval() {
             setShowMSLModal(true);
           }
         } catch (error) {
-          console.error('Error approving request:', error);
           setModalData({
             title: 'Error',
             message: 'Error approving request. Please try again.',
@@ -184,7 +196,6 @@ export default function RegionalAdminApproval() {
             setShowMSLModal(true);
           }
         } catch (error) {
-          console.error('Error rejecting request:', error);
           setModalData({
             title: 'Error',
             message: 'Error rejecting request. Please try again.',
