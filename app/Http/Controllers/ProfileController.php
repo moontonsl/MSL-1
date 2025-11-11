@@ -128,9 +128,31 @@ class ProfileController extends Controller
                 }
             }
 
+            // Restrict MLBB account change (once per year) - only when ml_id or ml_server changes
+            $isMlAccountChanging = (
+                (isset($validatedData['ml_id']) && $validatedData['ml_id'] !== $user->ml_id) ||
+                (isset($validatedData['ml_server']) && $validatedData['ml_server'] !== $user->ml_server)
+            );
+            if ($isMlAccountChanging && $user->ml_account_last_changed) {
+                $lastChanged = \Carbon\Carbon::parse($user->ml_account_last_changed);
+                $nextChangeDate = $lastChanged->addYear();
+                if (now() < $nextChangeDate) {
+                    $daysLeft = now()->diffInDays($nextChangeDate, false);
+                    $message = "MLBB account can be changed again in {$daysLeft} day" . ($daysLeft !== 1 ? 's' : '');
+                    if ($request->wantsJson() || $request->ajax()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => $message
+                        ], 400);
+                    }
+                    return Redirect::back()->withErrors(['ml_account' => $message]);
+                }
+            }
+
             // Check for field changes and update timestamps
             $squadNameChanged = false;
             $yearLevelChanged = false;
+            $mlAccountChanged = false;
             
             if (isset($validatedData['squadName']) && $validatedData['squadName'] !== $user->squadName) {
                 $squadNameChanged = true;
@@ -140,6 +162,11 @@ class ProfileController extends Controller
             if (isset($validatedData['year_level']) && $validatedData['year_level'] !== $user->year_level) {
                 $yearLevelChanged = true;
                 $user->year_level_last_changed = now();
+            }
+
+            if ($isMlAccountChanging) {
+                $mlAccountChanged = true;
+                $user->ml_account_last_changed = now();
             }
 
             // Update other fields

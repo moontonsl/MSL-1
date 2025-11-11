@@ -54,7 +54,8 @@ class User extends Authenticatable
         'verified_by',
         'verified_date',
         'squad_name_last_changed',
-        'year_level_last_changed'
+        'year_level_last_changed',
+        'ml_account_last_changed'
     ];
 
     /**
@@ -80,6 +81,7 @@ class User extends Authenticatable
             'email_verification_code_expires_at' => 'datetime',
             'squad_name_last_changed' => 'datetime',
             'year_level_last_changed' => 'datetime',
+            'ml_account_last_changed' => 'datetime',
             'password' => 'hashed',
         ];
     }

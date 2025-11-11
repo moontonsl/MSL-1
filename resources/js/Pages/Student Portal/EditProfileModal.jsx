@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { router } from '@inertiajs/react';
 
 export default function EditProfileModal({ user, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -25,6 +26,11 @@ export default function EditProfileModal({ user, onClose, onSave }) {
     isValid: true,
     message: ''
   });
+  const [showMlLogin, setShowMlLogin] = useState(false);
+  const [mlLoginMessage, setMlLoginMessage] = useState('');
+  const mlSdkLoadedRef = useRef(false);
+  const mlInstanceRef = useRef(null);
+  const mlLoginCompletedRef = useRef(false);
   const [fieldRestrictions, setFieldRestrictions] = useState({
     squadName: {
       canChange: true,
@@ -37,14 +43,226 @@ export default function EditProfileModal({ user, onClose, onSave }) {
       lastChanged: user.year_level_last_changed || null,
       nextChangeDate: null,
       message: ''
-    }
+    },
+    mlAccount: {
+      canChange: true,
+      lastChanged: user.ml_account_last_changed || null,
+      nextChangeDate: null,
+      message: ''
+    },
   });
   const handleLoginClick = () => {
-    console.log('Login clicked');
-    if (loginRef.current) {
-      loginRef.current.triggerLogin();
+    if (!fieldRestrictions.mlAccount.canChange) {
+      setError(fieldRestrictions.mlAccount.message);
+      return;
     }
+    // Reset completion flag when starting new login
+    mlLoginCompletedRef.current = false;
+    setShowMlLogin(true);
+    setMlLoginMessage('A Mobile Legends login window will appear. Enter the code sent to your in-game mailbox.');
   };
+
+  // Lazy-load Moonton login SDK and handle login success to populate MLBB fields
+  useEffect(() => {
+    if (!showMlLogin || mlLoginCompletedRef.current) return;
+    
+    const ensureSdkAndInit = () => {
+      const init = () => {
+        // Initialize only once per open
+        const options = {
+          baseUrl: 'https://api.mobilelegends.com/base/',
+          lang: 'en',
+          params: {
+            adjust_campaign: '',
+            adjust_adgroup: 'ml',
+          },
+          referer: '',
+          loginSuccessTip: false,
+          logoutSuccessTip: false,
+        };
+        const instance = new window.$autologin(options);
+        mlInstanceRef.current = instance;
+        const LoginEvent = {
+          LOGIN_SUCCESS: 'loginSucc',
+          LOGIN_CLOSE: 'closeLogin',
+          LOGIN_FAIL: 'loginFail',
+          LOGOUT_SUCCESS: 'logoutSucc',
+        };
+        const LangCode = { en: 101 };
+        instance.on(LoginEvent.LOGIN_SUCCESS, async (loginRes) => {
+          try {
+            const token = loginRes?.data?.data?.jwt;
+            if (!token) {
+              setMlLoginMessage('Login succeeded but token missing. Please try again.');
+              return;
+            }
+            
+            // CLOSE THE MOONTON MODAL IMMEDIATELY - BEFORE ANYTHING ELSE
+            setShowMlLogin(false);
+            mlLoginCompletedRef.current = true;
+            
+            // Force close all Moonton modals immediately
+            const closeMoontonModalNow = () => {
+              // Hide all fixed position elements with high z-index (likely modals)
+              document.querySelectorAll('*').forEach(el => {
+                const style = window.getComputedStyle(el);
+                if (style.position === 'fixed' && parseInt(style.zIndex) > 1000) {
+                  const classes = (el.className || '').toString();
+                  const id = (el.id || '').toString();
+                  if (classes.includes('mlbb') || classes.includes('moonton') || classes.includes('mt-') || 
+                      id.includes('mlbb') || id.includes('moonton') || id.includes('autologin')) {
+                    el.style.display = 'none';
+                    el.style.visibility = 'hidden';
+                    el.style.opacity = '0';
+                    el.remove();
+                  }
+                }
+              });
+              // Remove all Moonton iframes
+              document.querySelectorAll('iframe').forEach(iframe => {
+                if (iframe.src && (iframe.src.includes('mobilelegends') || iframe.src.includes('moonton'))) {
+                  iframe.remove();
+                }
+              });
+            };
+            closeMoontonModalNow();
+            setTimeout(closeMoontonModalNow, 10);
+            setTimeout(closeMoontonModalNow, 50);
+            
+            // Fetch player base info (to get IGN)
+            const infoResponse = await fetch('https://api.mobilelegends.com/base/getBaseInfo', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                'Authorization': 'Bearer ' + token,
+              },
+            });
+            const info = await infoResponse.json();
+            // Decode token payload to extract ml_id (roleId) and server (zoneId)
+            let decodedPayload = {};
+            try {
+              decodedPayload = JSON.parse(atob(token.split('.')[1] || '')) || {};
+            } catch (e) {
+              // ignore decode errors
+            }
+            const extractedMlId = decodedPayload?.Ext?.roleId ? String(decodedPayload.Ext.roleId) : (formData.ml_id || '');
+            const extractedServer = decodedPayload?.Ext?.zoneId ? String(decodedPayload.Ext.zoneId) : (formData.ml_server || '');
+            const ignFromInfo = info?.data?.name || formData.ml_ign || '';
+            
+            // Update form data
+            const updatedFormData = {
+              ...formData,
+              ml_id: extractedMlId,
+              ml_server: extractedServer,
+              ml_ign: ignFromInfo,
+            };
+            setFormData(updatedFormData);
+            
+            // Close modal again after data fetch
+            closeMoontonModalNow();
+            
+            // Auto-save MLBB account changes to backend
+            setMlLoginMessage('Saving MLBB account changes...');
+            try {
+              const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+              const response = await fetch('/profile', {
+                method: 'PATCH',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRF-TOKEN': csrfToken,
+                  'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                  email: formData.email, // Include email to pass validation
+                  ml_id: extractedMlId,
+                  ml_server: extractedServer,
+                  ml_ign: ignFromInfo,
+                }),
+              });
+
+              const data = await response.json();
+              
+              if (data.success) {
+                setMlLoginMessage('✅ MLBB account updated successfully!');
+                setSuccess(true);
+                
+                // Update parent component if onSave callback exists
+                if (onSave && data.user) {
+                  onSave(data.user);
+                }
+                
+                // Update form data with the new values
+                setFormData(prev => ({
+                  ...prev,
+                  ml_id: extractedMlId,
+                  ml_server: extractedServer,
+                  ml_ign: ignFromInfo,
+                }));
+                
+                // Reload after a delay to get fresh user data
+                setTimeout(() => {
+                  router.reload({ only: ['user'] });
+                  setTimeout(() => setSuccess(false), 2000);
+                }, 1000);
+              } else {
+                setMlLoginMessage('Failed to save changes: ' + (data.message || 'Unknown error'));
+                setError(data.message || 'Failed to save MLBB account changes');
+              }
+            } catch (saveError) {
+              console.error('Save error:', saveError);
+              setMlLoginMessage('Failed to save changes. Please try saving manually.');
+              setError('Failed to save MLBB account changes');
+            }
+          } catch (e) {
+            setMlLoginMessage('Failed to fetch MLBB info. Please try again.');
+          }
+        });
+        instance.on(LoginEvent.LOGIN_CLOSE, () => {
+          setMlLoginMessage('Login cancelled.');
+          setShowMlLogin(false);
+          mlLoginCompletedRef.current = false; // Reset on close
+        });
+        instance.on(LoginEvent.LOGIN_FAIL, () => {
+          setMlLoginMessage('Login failed. Please try again.');
+        });
+        instance.changeLang(LangCode.en);
+        // Show the login popup
+        try {
+          if (typeof instance.loadIframe === 'function') {
+            instance.loadIframe();
+          }
+        } catch (_) {}
+      };
+      if (window.$autologin) {
+        init();
+        return;
+      }
+      if (mlSdkLoadedRef.current) {
+        // SDK already attempted; wait a tick and init if available
+        setTimeout(() => {
+          if (window.$autologin) init();
+        }, 50);
+        return;
+      }
+      mlSdkLoadedRef.current = true;
+      const script = document.createElement('script');
+      script.src = 'https://cdn.web.moontontech.com/lib/mtstatic/ml-login/1.0.2/index.js';
+      script.onload = init;
+      script.onerror = () => {
+        setMlLoginMessage('Unable to load MLBB login. Check your connection and try again.');
+      };
+      document.body.appendChild(script);
+      return () => {
+        try {
+          document.body.removeChild(script);
+        } catch (_) {}
+      };
+    };
+    const cleanup = ensureSdkAndInit();
+    return () => {
+      if (typeof cleanup === 'function') cleanup();
+    };
+  }, [showMlLogin, formData.ml_id, formData.ml_server, formData.ml_ign]);
 
   // Function to check field change restrictions
   const checkFieldRestrictions = useCallback(() => {
@@ -91,17 +309,97 @@ export default function EditProfileModal({ user, onClose, onSave }) {
         yearLevelRestriction.message = `Year level can be changed again in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`;
       }
     }
+
+    // Check MLBB account restriction (once per year)
+    const mlAccountRestriction = {
+      canChange: true,
+      lastChanged: user.ml_account_last_changed || null,
+      nextChangeDate: null,
+      message: ''
+    };
+    if (user.ml_account_last_changed) {
+      const lastChanged = new Date(user.ml_account_last_changed);
+      const nextChangeDate = new Date(lastChanged);
+      nextChangeDate.setFullYear(nextChangeDate.getFullYear() + 1);
+      if (now < nextChangeDate) {
+        mlAccountRestriction.canChange = false;
+        mlAccountRestriction.nextChangeDate = nextChangeDate;
+        const daysLeft = Math.ceil((nextChangeDate - now) / (1000 * 60 * 60 * 24));
+        mlAccountRestriction.message = `MLBB account can be changed again in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`;
+      }
+    }
     
     setFieldRestrictions({
       squadName: squadNameRestriction,
-      yearLevel: yearLevelRestriction
+      yearLevel: yearLevelRestriction,
+      mlAccount: mlAccountRestriction
     });
-  }, [user.squad_name_last_changed, user.year_level_last_changed]);
+  }, [user.squad_name_last_changed, user.year_level_last_changed, user.ml_account_last_changed]);
 
-  // Check field restrictions on component mount
+  // Check field restrictions on component mount and when user changes
   useEffect(() => {
     checkFieldRestrictions();
   }, [checkFieldRestrictions]);
+
+  // Sync formData when user prop changes (after page reload)
+  useEffect(() => {
+    setFormData({
+      squadName: user.squadName || "",
+      year_level: user.year_level || "",
+      ml_ign: user.ml_ign || "",
+      ml_id: user.ml_id || "",
+      ml_server: user.ml_server || "",
+      email: user.email || "",
+      contact_number: user.contact_number || "",
+      facebook_link: user.facebook_link || "",
+    });
+    // Keep login completion flag true after reload to prevent re-opening
+    // Only reset when user explicitly clicks the button again
+  }, [user]);
+
+  // Cleanup Moonton elements when showMlLogin becomes false (only after it was true)
+  const wasMlLoginOpenRef = useRef(false);
+  useEffect(() => {
+    if (showMlLogin) {
+      wasMlLoginOpenRef.current = true;
+    } else if (wasMlLoginOpenRef.current) {
+      // Only cleanup if login was previously open (not on initial mount)
+      wasMlLoginOpenRef.current = false;
+      const cleanup = () => {
+        try {
+          const iframes = document.querySelectorAll('iframe');
+          iframes.forEach(iframe => {
+            if (iframe.src && (iframe.src.includes('mobilelegends') || iframe.src.includes('moonton'))) {
+              iframe.style.display = 'none';
+              iframe.remove();
+            }
+          });
+          // Only remove Moonton SDK elements, be more specific to avoid removing page elements
+          const moontonElements = document.querySelectorAll(
+            '[class*="mlbb-login"], [id*="mlbb-login"], [class*="moonton-login"], [id*="moonton-login"], ' +
+            '[class*="mt-common"], [id*="mt-common"], [class*="autologin-container"], [id*="autologin-container"]'
+          );
+          moontonElements.forEach(el => {
+            // Only remove if it's clearly a Moonton SDK element (has specific classes or is in a modal/overlay context)
+            if (el && el.parentNode && (
+              el.classList.toString().includes('mlbb') || 
+              el.classList.toString().includes('moonton') ||
+              el.classList.toString().includes('mt-common')
+            )) {
+              el.style.display = 'none';
+              el.remove();
+            }
+          });
+        } catch (e) {
+          console.log('Cleanup error:', e);
+        }
+      };
+      // Run cleanup immediately and after a delay
+      cleanup();
+      setTimeout(cleanup, 100);
+      setTimeout(cleanup, 500);
+    }
+  }, [showMlLogin]);
 
   // Debounced email validation function
   const validateEmail = useCallback(async (email) => {
@@ -504,14 +802,24 @@ export default function EditProfileModal({ user, onClose, onSave }) {
                   className="flex-1 p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 opacity-50"
                 />
                 <button
-                  disabled
                   onClick={handleLoginClick}
                   type="button"
                   className="px-4 py-2.5 md:py-3 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-400 transition shadow-lg disabled:opacity-50 whitespace-nowrap"
+                  disabled={isLoading || !fieldRestrictions.mlAccount.canChange}
                 >
-                  Change IGN
+                  Change Mlbb Account
                 </button>
               </div>
+              {!fieldRestrictions.mlAccount.canChange && (
+                <p className="text-xs text-orange-400 mt-1">
+                  ⏰ {fieldRestrictions.mlAccount.message}
+                </p>
+              )}
+              {showMlLogin && (
+                <div className="mt-3 p-3 rounded-lg bg-blue-900/40 border border-blue-500/50 text-blue-200 text-sm">
+                  A Moonton login popup should be visible now. Enter the verification code sent to your MLBB in-game mailbox. Once verified, we will auto-fill your MLBB IGN and IDs.
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -522,7 +830,7 @@ export default function EditProfileModal({ user, onClose, onSave }) {
                   name="ml_id"
                   value={formData.ml_id}
                   onChange={handleChange}
-                  disabled={isLoading}
+                  disabled={isLoading || !fieldRestrictions.mlAccount.canChange}
                   className="w-full p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 disabled:opacity-50"
                 />
               </div>
@@ -533,7 +841,7 @@ export default function EditProfileModal({ user, onClose, onSave }) {
                   name="ml_server"
                   value={formData.ml_server}
                   onChange={handleChange}
-                  disabled={isLoading}
+                  disabled={isLoading || !fieldRestrictions.mlAccount.canChange}
                   className="w-full p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 disabled:opacity-50"
                 />
               </div>
@@ -652,7 +960,14 @@ export default function EditProfileModal({ user, onClose, onSave }) {
           <button
             className="px-4 md:px-5 py-2 rounded-lg bg-yellow-500 text-black font-semibold hover:bg-yellow-400 transition shadow-lg text-sm md:text-base disabled:opacity-50 flex items-center gap-2"
             onClick={handleSubmit}
-            disabled={isLoading || emailValidation.checking || !emailValidation.isValid || (formData.email !== user.email && !emailVerified) || (formData.squadName !== user.squadName && !fieldRestrictions.squadName.canChange) || (formData.year_level !== user.year_level && !fieldRestrictions.yearLevel.canChange)}
+            disabled={isLoading 
+              || emailValidation.checking 
+              || !emailValidation.isValid 
+              || (formData.email !== user.email && !emailVerified) 
+              || (formData.squadName !== user.squadName && !fieldRestrictions.squadName.canChange) 
+              || (formData.year_level !== user.year_level && !fieldRestrictions.yearLevel.canChange)
+              || ((formData.ml_id !== user.ml_id || formData.ml_server !== user.ml_server) && !fieldRestrictions.mlAccount.canChange)
+            }
           >
             {isLoading ? (
               <>
@@ -678,6 +993,11 @@ export default function EditProfileModal({ user, onClose, onSave }) {
           {(formData.year_level !== user.year_level && !fieldRestrictions.yearLevel.canChange) && (
             <p className="text-xs text-orange-400 mt-2 text-center">
               ⏰ {fieldRestrictions.yearLevel.message}
+            </p>
+          )}
+          {((formData.ml_id !== user.ml_id || formData.ml_server !== user.ml_server) && !fieldRestrictions.mlAccount.canChange) && (
+            <p className="text-xs text-orange-400 mt-2 text-center">
+              ⏰ {fieldRestrictions.mlAccount.message}
             </p>
           )}
         </div>
