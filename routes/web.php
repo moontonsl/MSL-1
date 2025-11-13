@@ -450,6 +450,55 @@ Route::get('/school-players', function (\Illuminate\Http\Request $request) {
     }
 });
 
+// Check username for tournament registration (checks existence and verification status)
+Route::get('/check-username-tournament', function (\Illuminate\Http\Request $request) {
+    try {
+        $username = $request->query('username', '');
+        $university = $request->query('university', '');
+        
+        if (!$username || !$university) {
+            return response()->json(['error' => 'Username and university parameters required'], 400);
+        }
+        
+        // Check if user exists in the university (regardless of verification status)
+        $user = \App\Models\User::where('username', $username)
+            ->where('university', $university)
+            ->where('role', '!=', 'SL')
+            ->where('role', '!=', 'Regional Admin')
+            ->where('role', '!=', 'Admin')
+            ->where('role', '!=', 'Super Admin')
+            ->first(['id', 'username', 'name', 'surname', 'university', 'state']);
+        
+        if (!$user) {
+            return response()->json([
+                'exists' => false,
+                'verified' => false,
+                'message' => 'Username not found in ' . $university
+            ]);
+        }
+        
+        // User exists, check verification status
+        if ($user->state === 'Verified') {
+            return response()->json([
+                'exists' => true,
+                'verified' => true,
+                'message' => 'VALID',
+                'user' => $user
+            ]);
+        } else {
+            return response()->json([
+                'exists' => true,
+                'verified' => false,
+                'message' => 'Username not verified',
+                'user' => $user
+            ]);
+        }
+    } catch (\Exception $e) {
+        \Log::error('Username tournament check error: ' . $e->getMessage());
+        return response()->json(['error' => 'Check failed', 'message' => $e->getMessage()], 500);
+    }
+});
+
 Route::post('/validate-credentials', function (\Illuminate\Http\Request $request) {
     $request->validate([
         'username' => 'required|string',
@@ -944,6 +993,15 @@ Route::prefix('MCC')->name('MCC.')->group(function () {
     Route::get('/', function () {
         return Inertia::render('MCC Season 2/Home');
     })->name('main');
+});
+
+// MCC2 Test Route (for comparison)
+Route::get('/MCC2', function () {
+    return Inertia::render('MCC Season 2/Home copy');
+})->name('MCC2');
+
+// MCC Routes continued
+Route::prefix('MCC')->name('MCC.')->group(function () {
 
     Route::get('/calendar', function () {
         return Inertia::render('MCC/Calendar/index');
@@ -1491,7 +1549,7 @@ Route::post('/msl-network/send-inquiry', function (Request $request) {
             'message' => 'required|string|max:2000',
             'region' => 'nullable|string|max:100',
         ]);
-
+        
         // Filter out empty CC emails
         $ccEmails = collect($request->cc_emails ?? [])
             ->filter(function($email) {
@@ -1537,3 +1595,19 @@ Route::post('/msl-network/send-inquiry', function (Request $request) {
         ], 500);
     }
 })->name('msl-network.send-inquiry');
+
+// Custom Event Canonical Routes - Handle dynamic event links like /NewEvent
+// This catch-all route should be placed at the very end to avoid conflicts with other routes
+Route::get('/{canonical}', function ($canonical) {
+    // Check if this canonical matches an MSL Event
+    $event = \App\Models\MslEvent::where('event_canonical', '/' . $canonical)
+        ->orWhere('event_canonical', $canonical)
+        ->first();
+    
+    if ($event) {
+        return app(\App\Http\Controllers\EventsController::class)->show($event);
+    }
+    
+    // If no event found, return 404
+    abort(404, 'Event not found');
+})->where('canonical', '^[a-zA-Z0-9\-_]+$'); // Only match alphanumeric, hyphens, underscores
