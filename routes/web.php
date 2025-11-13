@@ -993,6 +993,15 @@ Route::prefix('MCC')->name('MCC.')->group(function () {
     Route::get('/', function () {
         return Inertia::render('MCC Season 2/Home');
     })->name('main');
+});
+
+// MCC2 Test Route (for comparison)
+Route::get('/MCC2', function () {
+    return Inertia::render('MCC Season 2/Home copy');
+})->name('MCC2');
+
+// MCC Routes continued
+Route::prefix('MCC')->name('MCC.')->group(function () {
 
     Route::get('/calendar', function () {
         return Inertia::render('MCC/Calendar/index');
