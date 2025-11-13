@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { FaNewspaper, FaCalendar, FaUsers, FaTachometerAlt, FaSignOutAlt, FaBed, FaBook, FaConciergeBell, FaCog, FaTh, FaEllipsisH, FaImages, FaGamepad } from 'react-icons/fa';
+import { FaNewspaper, FaCalendar, FaUsers, FaTachometerAlt, FaSignOutAlt, FaBed, FaBook, FaConciergeBell, FaCog, FaTh, FaEllipsisH, FaImages, FaGamepad, FaUserGraduate, FaUserShield } from 'react-icons/fa';
 
 export default function AdminLayout({ children }) {
     const { auth } = usePage().props;
@@ -9,6 +9,8 @@ export default function AdminLayout({ children }) {
     const navigation = [
         { name: 'Dashboard', href: route('admin.dashboard'), routeName: 'admin.dashboard', icon: FaTh },
         { name: 'Account Management', href: route('admin.users.pending'), routeName: 'admin.users.pending', icon: FaUsers },
+        { name: 'SL Management', href: route('admin.sl-management'), routeName: 'admin.sl-management', icon: FaUserGraduate },
+        { name: 'Regional Admin Management', href: route('admin.regional-admin-management'), routeName: 'admin.regional-admin-management', icon: FaUserShield },
         { name: 'News Management', href: route('admin.news'), routeName: 'admin.news', icon: FaNewspaper },
         { name: 'Carousel Management', href: route('admin.carousel'), routeName: 'admin.carousel', icon: FaImages },
         { name: 'MSL Event Management', href: route('admin.msl-events.index'), routeName: 'admin.msl-events.index', icon: FaGamepad },

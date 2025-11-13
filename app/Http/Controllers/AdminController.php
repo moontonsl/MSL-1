@@ -674,4 +674,108 @@ class AdminController extends Controller
 
         return back()->with('success', 'Event deleted successfully');
     }
+
+    // SL Management Methods
+    public function slManagement()
+    {
+        $slUsers = User::where('role', 'SL')
+            ->select('id', 'name', 'email', 'ml_id', 'university', 'region', 'state', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        $students = User::where('state', 'Verified')
+            ->where('role', '!=', 'SL')
+            ->where('role', '!=', 'Admin')
+            ->where('role', '!=', 'Super Admin')
+            ->where('role', '!=', 'Regional Admin')
+            ->select('id', 'name', 'email', 'ml_id', 'university', 'region', 'state', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return Inertia::render('Admin/SLManagement', [
+            'slUsers' => $slUsers,
+            'students' => $students
+        ]);
+    }
+
+    public function promoteToSL(User $user)
+    {
+        // Only allow promoting verified students (not admins or SL)
+        $adminRoles = ['SL', 'Admin', 'Super Admin', 'Regional Admin'];
+        if (in_array($user->role, $adminRoles) || $user->state !== 'Verified') {
+            return back()->withErrors(['error' => 'Only verified students can be promoted to Student Leader.']);
+        }
+
+        $user->update([
+            'role' => 'SL'
+        ]);
+
+        return back()->with('success', 'User promoted to Student Leader successfully');
+    }
+
+    public function demoteFromSL(User $user)
+    {
+        // Only allow demoting SL users
+        if ($user->role !== 'SL') {
+            return back()->withErrors(['error' => 'User is not a Student Leader.']);
+        }
+
+        $user->update([
+            'role' => 'user'
+        ]);
+
+        return back()->with('success', 'Student Leader demoted to Student successfully');
+    }
+
+    // Regional Admin Management Methods
+    public function regionalAdminManagement()
+    {
+        $regionalAdmins = User::where('role', 'Regional Admin')
+            ->select('id', 'name', 'email', 'ml_id', 'university', 'region', 'state', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        $students = User::where('state', 'Verified')
+            ->where('role', '!=', 'SL')
+            ->where('role', '!=', 'Admin')
+            ->where('role', '!=', 'Super Admin')
+            ->where('role', '!=', 'Regional Admin')
+            ->select('id', 'name', 'email', 'ml_id', 'university', 'region', 'state', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return Inertia::render('Admin/RegionalAdminManagement', [
+            'regionalAdmins' => $regionalAdmins,
+            'students' => $students
+        ]);
+    }
+
+    public function promoteToRegionalAdmin(User $user)
+    {
+        // Only allow promoting verified students (not admins or SL)
+        $adminRoles = ['SL', 'Admin', 'Super Admin', 'Regional Admin'];
+        if (in_array($user->role, $adminRoles) || $user->state !== 'Verified') {
+            return back()->withErrors(['error' => 'Only verified students can be promoted to Regional Admin.']);
+        }
+
+        $user->update([
+            'role' => 'Regional Admin'
+        ]);
+
+        return back()->with('success', 'User promoted to Regional Admin successfully');
+    }
+
+    public function demoteFromRegionalAdmin(User $user)
+    {
+        // Only allow demoting Regional Admin users
+        if ($user->role !== 'Regional Admin') {
+            return back()->withErrors(['error' => 'User is not a Regional Admin.']);
+        }
+
+        $user->update([
+            'role' => 'user'
+        ]);
+
+        return back()->with('success', 'Regional Admin demoted to Student successfully');
+    }
 }
