@@ -1322,17 +1322,44 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     Route::delete('/api/sladmin/users/{userId}', function ($userId) {
         $user = Auth::user();
-        if ($user->role !== 'Super Admin') {
-            return response()->json(['error' => 'Access denied. Only Super Admins can delete users.'], 403);
+        
+        // Check if user has permission to delete
+        if ($user->role !== 'Super Admin' && $user->role !== 'Regional Admin') {
+            return response()->json(['error' => 'Access denied. Only Super Admins and Regional Admins can delete users.'], 403);
         }
         
-        $query = \App\Models\User::where('id', $userId)->where('role', '!=', 'SL');
+        $query = \App\Models\User::where('id', $userId);
         
-        // Super Admin can delete any user (no additional filtering)
+        // Regional Admin can only delete blocked accounts from their assigned regions
+        if ($user->role === 'Regional Admin') {
+            // Only allow deleting blocked accounts
+            $query->where('state', 'Blocked');
+            
+            // Filter by assigned regions
+            $assignedRegionIds = $user->getAssignedRegionIds();
+            if (!empty($assignedRegionIds)) {
+                $query->whereIn('region', $assignedRegionIds);
+            } else {
+                // Fallback to single region if no assigned regions
+                $query->where('region', $user->region);
+            }
+            
+            // Regional Admins cannot delete admin roles
+            $query->where('role', '!=', 'SL')
+                  ->where('role', '!=', 'Admin')
+                  ->where('role', '!=', 'Super Admin')
+                  ->where('role', '!=', 'Regional Admin');
+        } else {
+            // Super Admin can delete any user except SL
+            $query->where('role', '!=', 'SL');
+        }
         
         $targetUser = $query->first();
             
         if (!$targetUser) {
+            if ($user->role === 'Regional Admin') {
+                return response()->json(['error' => 'User not found, not blocked, or not in your assigned regions.'], 404);
+            }
             return response()->json(['error' => 'User not found or access denied.'], 404);
         }
         

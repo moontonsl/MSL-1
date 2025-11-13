@@ -879,7 +879,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                                     </button>
                                                 )}
                                                 
-                                                {user?.role === 'Super Admin' && (
+                                                {(user?.role === 'Super Admin' || (user?.role === 'Regional Admin' && stateFilter === 'Blocked' && selectedUser.state === 'Blocked')) && (
                                                     <button 
                                                         className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
                                                         onClick={() => handleAction('delete', selectedUser.id)}
