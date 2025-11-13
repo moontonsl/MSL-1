@@ -18,7 +18,12 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title>MSL Philippines - Mobile Legends Student Leaders</title>
+        
+        <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" href="/favicon.ico">
+        <link rel="apple-touch-icon" sizes="192x192" href="/android-chrome-192x192.png">
+        <link rel="apple-touch-icon" sizes="512x512" href="/android-chrome-512x512.png">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -28,17 +33,58 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
         
+        <!-- SEO Meta Tags -->
+        <meta name="description" content="Greetings, mighty Warrior of the Land Of Dawn! Welcome to the realm of MLBB PH Student Leaders. From different Universities and our love for the game, we lead, promote, and dedicate our time and effort to the betterment of the MLBB Community!" />
+        <meta name="keywords" content="MSL Philippines, Mobile Legends, Student Leaders, Gaming, MLBB Community, eSports, Philippines Gaming" />
+        <meta name="author" content="MSL Philippines" />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://www.moontonslph.org/" />
+        
         <!-- Open Graph / Facebook -->
         <meta property="og:type" content="website" />
-        <meta property="og:description" content="Greetings, mighty Warrior of the Land Of Dawn! Welcome to the realm of MLBB PH Student Leaders. From different Universities and our love for the game, we lead, promote, and dedicate our time and effort to the betterment of the MLBB Community!" />
-        <meta property="og:image" content="https://www.moontonslph.org/MSLNewLogo.png" />
-        <meta property="og:url" content="https://www.moontonslph.org/" />
+        <meta property="og:site_name" content="MSL Philippines" />
         <meta property="og:title" content="MSL Philippines" />
-        <meta property="og:image:secure_url" content="https://www.moontonslph.org/MSLNewLogo.png" />
+        <meta property="og:description" content="Greetings, mighty Warrior of the Land Of Dawn! Welcome to the realm of MLBB PH Student Leaders. From different Universities and our love for the game, we lead, promote, and dedicate our time and effort to the betterment of the MLBB Community!" />
+        <meta property="og:url" content="https://www.moontonslph.org/" />
+        <meta property="og:image" content="https://www.moontonslph.org/MSL_LOGO.png" />
+        <meta property="og:image:secure_url" content="https://www.moontonslph.org/MSL_LOGO.png" />
         <meta property="og:image:type" content="image/png" />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
+        <meta property="og:image:width" content="512" />
+        <meta property="og:image:height" content="512" />
         <meta property="og:image:alt" content="MSL Philippines Logo" />
+        <meta property="og:locale" content="en_US" />
+        @if(config('services.facebook.app_id'))
+        <meta property="fb:app_id" content="{{ config('services.facebook.app_id') }}" />
+        @endif
+        
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@moontonslph" />
+        <meta name="twitter:title" content="MSL Philippines" />
+        <meta name="twitter:description" content="Greetings, mighty Warrior of the Land Of Dawn! Welcome to the realm of MLBB PH Student Leaders. From different Universities and our love for the game, we lead, promote, and dedicate our time and effort to the betterment of the MLBB Community!" />
+        <meta name="twitter:image" content="https://www.moontonslph.org/MSL_LOGO.png" />
+        <meta name="twitter:image:alt" content="MSL Philippines Logo" />
+        
+        <!-- Structured Data (JSON-LD) for SEO -->
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "MSL Philippines",
+            "alternateName": "Mobile Legends Student Leaders Philippines",
+            "url": "https://www.moontonslph.org",
+            "logo": "https://www.moontonslph.org/MSL_LOGO.png",
+            "description": "Greetings, mighty Warrior of the Land Of Dawn! Welcome to the realm of MLBB PH Student Leaders. From different Universities and our love for the game, we lead, promote, and dedicate our time and effort to the betterment of the MLBB Community!",
+            "foundingDate": "2020",
+            "areaServed": {
+                "@type": "Country",
+                "name": "Philippines"
+            },
+            "sameAs": [
+                "https://www.facebook.com/moontonslph"
+            ]
+        }
+        </script>
         <!-- Scripts -->
         @routes
         @viteReactRefresh

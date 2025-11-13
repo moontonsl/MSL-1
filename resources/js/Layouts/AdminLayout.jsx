@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { FaNewspaper, FaCalendar, FaUsers, FaTachometerAlt, FaSignOutAlt, FaBed, FaBook, FaConciergeBell, FaCog, FaTh, FaEllipsisH } from 'react-icons/fa';
+import { FaNewspaper, FaCalendar, FaUsers, FaTachometerAlt, FaSignOutAlt, FaBed, FaBook, FaConciergeBell, FaCog, FaTh, FaEllipsisH, FaImages, FaGamepad } from 'react-icons/fa';
 
 export default function AdminLayout({ children }) {
     const { auth } = usePage().props;
@@ -10,6 +10,8 @@ export default function AdminLayout({ children }) {
         { name: 'Dashboard', href: route('admin.dashboard'), routeName: 'admin.dashboard', icon: FaTh },
         { name: 'Account Management', href: route('admin.users.pending'), routeName: 'admin.users.pending', icon: FaUsers },
         { name: 'News Management', href: route('admin.news'), routeName: 'admin.news', icon: FaNewspaper },
+        { name: 'Carousel Management', href: route('admin.carousel'), routeName: 'admin.carousel', icon: FaImages },
+        { name: 'MSL Event Management', href: route('admin.msl-events.index'), routeName: 'admin.msl-events.index', icon: FaGamepad },
         { name: 'Event Calendar', href: route('admin.events'), routeName: 'admin.events', icon: FaCalendar },
         { name: 'Settings', href: route('admin.settings'), routeName: 'admin.settings', icon: FaCog },
     ];

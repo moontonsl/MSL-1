@@ -10,6 +10,7 @@ export default function EditNews({ news }) {
         news_title: news.news_title,
         news_subtitle: news.news_subtitle,
         news_canonical: news.news_canonical,
+        news_author: news.news_writer || '',
         news_state: news.news_state,
         news_img1: null
     });
@@ -79,6 +80,22 @@ export default function EditNews({ news }) {
                                 />
                                 {errors.news_subtitle && (
                                     <p className="mt-1 text-sm text-red-600">{errors.news_subtitle}</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label htmlFor="news_author" className="block text-sm font-medium text-gray-700">
+                                    Author Name
+                                </label>
+                                <input
+                                    type="text"
+                                    id="news_author"
+                                    value={data.news_author}
+                                    onChange={(e) => setData('news_author', e.target.value)}
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                />
+                                {errors.news_author && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.news_author}</p>
                                 )}
                             </div>
 

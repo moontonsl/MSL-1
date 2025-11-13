@@ -4,7 +4,8 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutBuffsAndSupport.js
 import { Helmet } from "react-helmet";
 import frameImg from "./Assets/Frame437.png";
 import frameImgFooter from "./Assets/Frame437Footer.png";
-import { CalendarX, Users, HandCoins, Goal, Handshake, Sparkles, X, Send, Plus } from "lucide-react";
+import { CalendarX, Users, HandCoins, Goal, Handshake, Sparkles, X, Send } from "lucide-react";
+import Toast from "@/Components/Toast";
 
 const MSLNetwork = () => {
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
@@ -12,11 +13,10 @@ const MSLNetwork = () => {
   const [emailForm, setEmailForm] = useState({
     to: "",
     ccEmails: [],
-    subject: "",
+    subject: "Intent to Partner with MSL Philippines",
     message: ""
   });
-  const [ccInput, setCcInput] = useState("");
-  const [showCcSuggestions, setShowCcSuggestions] = useState(false);
+  const [toast, setToast] = useState({ isVisible: false, message: "", type: "success" });
 
   const regionEmails = {
     "msl.partnerships.ncluz@gmail.com": "North/Central Luzon",
@@ -30,7 +30,11 @@ const MSLNetwork = () => {
     setSelectedRegionEmail(email);
     setEmailForm(prev => ({
       ...prev,
-      to: email
+      to: "msl.partnerships.ph@gmail.com",
+      ccEmails: [
+        "msl.network.ph@gmail.com",
+        email
+      ]
     }));
   };
 
@@ -41,101 +45,43 @@ const MSLNetwork = () => {
     }));
   };
 
-  const addCcEmail = (email) => {
-    const trimmedEmail = email.trim();
-    if (trimmedEmail && !emailForm.ccEmails.includes(trimmedEmail)) {
-      setEmailForm(prev => ({
-        ...prev,
-        ccEmails: [...prev.ccEmails, trimmedEmail]
-      }));
-    }
-    setCcInput("");
-    setShowCcSuggestions(false);
+  const showToast = (message, type = 'success') => {
+    setToast({ isVisible: true, message, type });
   };
 
-  const removeCcEmail = (emailToRemove) => {
-    setEmailForm(prev => ({
-      ...prev,
-      ccEmails: prev.ccEmails.filter(email => email !== emailToRemove)
-    }));
+  const closeToast = () => {
+    setToast({ isVisible: false, message: "", type: "success" });
   };
 
-  const handleCcInputKeyDown = (e) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      addCcEmail(ccInput);
-    } else if (e.key === 'Backspace' && ccInput === '' && emailForm.ccEmails.length > 0) {
-      removeCcEmail(emailForm.ccEmails[emailForm.ccEmails.length - 1]);
-    }
-  };
 
-  const handleCcInputChange = (e) => {
-    setCcInput(e.target.value);
-    setShowCcSuggestions(e.target.value.length > 0);
-  };
-
-  const getFilteredSuggestions = () => {
-    if (!ccInput) return [];
-    return Object.entries(regionEmails).filter(([email, name]) => 
-      email.toLowerCase().includes(ccInput.toLowerCase()) || 
-      name.toLowerCase().includes(ccInput.toLowerCase())
-    );
-  };
-
-  const handleSendEmail = async () => {
-    if (!emailForm.to || !emailForm.subject || !emailForm.message) {
-      alert("Please fill in all fields");
+  const handleSendEmail = () => {
+    // Validate required fields
+    if (!emailForm.to || !emailForm.subject || !emailForm.message.trim()) {
+      showToast('Please fill in all required fields (To, Subject, and Message).', 'error');
       return;
     }
 
-    try {
-      // Show loading state
-      const sendButton = document.querySelector('[data-send-email]');
-      if (sendButton) {
-        sendButton.disabled = true;
-        sendButton.textContent = 'Sending...';
-      }
+    // Build Gmail compose URL
+    const to = emailForm.to;
+    const cc = emailForm.ccEmails.filter(email => email.trim() !== '').join(',');
+    const subject = emailForm.subject;
+    const body = emailForm.message;
 
-      const response = await fetch('/msl-network/send-inquiry', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({
-          to_email: emailForm.to,
-          cc_emails: emailForm.ccEmails,
-          subject: emailForm.subject,
-          message: emailForm.message,
-          region: regionEmails[selectedRegionEmail] || 'Unknown'
-        })
-      });
+    // Construct Gmail compose URL
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}${cc ? `&cc=${encodeURIComponent(cc)}` : ''}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
-      const result = await response.json();
+    // Open Gmail compose in new window
+    window.open(gmailUrl, '_blank');
 
-      if (result.success) {
-        alert(result.message);
-        // Reset form and close modal
-        setEmailForm({ to: "", ccEmails: [], subject: "", message: "" });
-        setCcInput("");
-        setShowCcSuggestions(false);
-        setSelectedRegionEmail("");
-        setIsEmailModalOpen(false);
-      } else {
-        alert(result.message || 'Failed to send email. Please try again.');
-      }
-      
-    } catch (error) {
-      console.error('Error sending email:', error);
-      alert('Failed to send email. Please try again later.');
-    } finally {
-      // Reset button state
-      const sendButton = document.querySelector('[data-send-email]');
-      if (sendButton) {
-        sendButton.disabled = false;
-        sendButton.innerHTML = '<Send className="w-4 h-4" />Send Email';
-      }
-    }
+    // Show success message
+    showToast('Opening Gmail compose window. Please send the email from there.', 'success');
+    
+    // Reset form and close modal after a short delay
+    setTimeout(() => {
+      setEmailForm({ to: "", ccEmails: [], subject: "Intent to Partner with MSL Philippines", message: "" });
+      setSelectedRegionEmail("");
+      setIsEmailModalOpen(false);
+    }, 1000);
   };
 
   const handleCopyEmailDetails = () => {
@@ -187,7 +133,7 @@ Message: ${emailForm.message}`;
             {/* TITLE */}
             <h1 className="font-bold mb-2 
               text-[24px] sm:text-[32px] lg:text-[40px] leading-tight">
-              MSL Network
+              The MSL Network
             </h1>
             
             {/* HEADER */}
@@ -206,13 +152,20 @@ Message: ${emailForm.message}`;
             {/* BUTTONS */}
             <div className="flex flex-row gap-3 justify-center">
               <a
-                href="#"
-                className="px-4 py-2 md:px-6 md:py-3 bg-black text-[#F3C718] font-bold rounded-xl text-[12px] sm:text-[14px] lg:text-[16px]"
+                href="#apply-section"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById("apply-section")?.scrollIntoView({
+                    behavior: "smooth",
+                  });
+                }}
+                className="px-3 py-1.5 sm:px-5 sm:py-2.5 bg-black text-[#F3C718] font-bold rounded-xl text-sm sm:text-base"
               >
-                APPLY TO JOIN
+                APPLY NOW
               </a>
+
               <a
-                href="#"
+                href="https://discord.com/invite/themslnetwork"
                 className="px-4 py-2 md:px-6 md:py-3 border border-black text-black font-bold rounded-xl text-[12px] sm:text-[14px] lg:text-[16px]"
               >
                 JOIN DISCORD SERVER →
@@ -361,13 +314,13 @@ Message: ${emailForm.message}`;
           <div className="w-full flex justify-center items-center mt-0">
             <div className="flex flex-row flex-nowrap gap-2 sm:gap-3">
               <a
-                href="#"
+                href="/MSLBuffsAndSupportApplicationForm"
                 className="px-3 py-1.5 sm:px-5 sm:py-2.5 bg-black text-[#F3C718] font-bold rounded-xl text-sm sm:text-base"
               >
                 APPLY NOW
               </a>
               <a
-                href="#"
+                href="https://docs.google.com/document/d/1Nn3yrCn3qAMdxmEz9Tvo4xACrUIv1pukZ9tJVA1p7ak/edit?tab=t.0"
                 className="px-3 py-1.5 sm:px-5 sm:py-2.5 border border-black text-black font-bold rounded-xl text-sm sm:text-base"
               >
                 LEARN MORE →
@@ -560,7 +513,7 @@ Message: ${emailForm.message}`;
       {/* --- Partnership Tiers --- */}
 
       {/* --- MSL Network Footer --- */}
-      <div className="w-full bg-gradient-to-r from-[#F2C21A] to-[#CA8B04] text-black font-['Montserrat'] mt-8">
+      <div id="apply-section" className="w-full bg-gradient-to-r from-[#F2C21A] to-[#CA8B04] text-black font-['Montserrat'] mt-8">
         
         {/* MOBILE (same style as header) */}
         <div className="relative md:hidden min-h-[250px] flex flex-col justify-center items-center text-center px-6 py-8">
@@ -622,7 +575,7 @@ Message: ${emailForm.message}`;
                     : "pointer-events-none opacity-50"
                 }`}
               >
-                COMPOSE EMAIL
+                Apply Now
               </button>
             </div>
           </div>
@@ -683,7 +636,7 @@ Message: ${emailForm.message}`;
                     : "pointer-events-none opacity-50"
                 }`}
               >
-                COMPOSE EMAIL
+                Apply Now
               </button>
             </div>
           </div>
@@ -693,10 +646,10 @@ Message: ${emailForm.message}`;
       {/* Email Composition Modal - Dark Version */}
       {isEmailModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-700">
+          <div className="bg-gray-900 rounded-lg sm:max-w-[50%] w-full max-h-[90vh] overflow-y-auto border border-gray-700">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-700">
-              <h3 className="text-lg font-bold text-white">Compose Email</h3>
+              <h3 className="text-lg font-bold text-white">Apply Now</h3>
               <button
                 onClick={() => setIsEmailModalOpen(false)}
                 className="text-gray-400 hover:text-white transition-colors"
@@ -714,71 +667,31 @@ Message: ${emailForm.message}`;
                 </label>
                 <input
                   type="email"
-                  value={emailForm.to || selectedRegionEmail}
+                  value={emailForm.to || "msl.partnerships.ph@gmail.com"}
                   onChange={(e) => handleEmailFormChange('to', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F2C21A] focus:border-transparent text-white bg-gray-800 placeholder-gray-400"
                   placeholder="Enter email address"
+                  readOnly
                 />
-                {selectedRegionEmail && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    Selected: {regionEmails[selectedRegionEmail]}
-                  </p>
-                )}
               </div>
 
-              {/* CC Field */}
+              {/* CC Field - Read Only */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   CC:
                 </label>
-                <div className="relative">
-                  <div className="flex flex-wrap gap-1 p-2 border border-gray-600 rounded-md bg-gray-800 min-h-[40px] focus-within:ring-2 focus-within:ring-[#F2C21A] focus-within:border-transparent">
-                    {emailForm.ccEmails.map((email, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center gap-1 px-2 py-1 bg-[#F2C21A] text-black text-xs rounded-md"
-                      >
-                        {email}
-                        <button
-                          type="button"
-                          onClick={() => removeCcEmail(email)}
-                          className="hover:bg-black/20 rounded-full p-0.5"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    ))}
-                    <input
-                      type="text"
-                      value={ccInput}
-                      onChange={handleCcInputChange}
-                      onKeyDown={handleCcInputKeyDown}
-                      onBlur={() => setTimeout(() => setShowCcSuggestions(false), 200)}
-                      onFocus={() => setShowCcSuggestions(ccInput.length > 0)}
-                      className="flex-1 bg-transparent text-white placeholder-gray-400 outline-none min-w-[120px]"
-                      placeholder={emailForm.ccEmails.length === 0 ? "Enter CC email addresses (optional)" : "Add more..."}
-                    />
-                  </div>
-                  
-                  {/* Suggestions Dropdown */}
-                  {showCcSuggestions && getFilteredSuggestions().length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-600 rounded-md shadow-lg max-h-40 overflow-y-auto">
-                      {getFilteredSuggestions().map(([email, name]) => (
-                        <button
-                          key={email}
-                          type="button"
-                          onClick={() => addCcEmail(email)}
-                          className="w-full px-3 py-2 text-left text-white hover:bg-gray-700 text-sm"
-                        >
-                          <div className="font-medium">{name}</div>
-                          <div className="text-gray-400 text-xs">{email}</div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                <div className="flex flex-wrap gap-1 p-2 border border-gray-600 rounded-md bg-gray-800 min-h-[40px]">
+                  {emailForm.ccEmails.map((email, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center gap-1 px-2 py-1 bg-[#F2C21A] text-black text-xs rounded-md"
+                    >
+                      {email}
+                    </span>
+                  ))}
                 </div>
                 <p className="text-xs text-gray-400 mt-1">
-                  Type email addresses and press Enter or comma to add. Backspace to remove.
+                  CC recipients are automatically added based on your selected region.
                 </p>
               </div>
 
@@ -793,6 +706,7 @@ Message: ${emailForm.message}`;
                   onChange={(e) => handleEmailFormChange('subject', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F2C21A] focus:border-transparent text-white bg-gray-800 placeholder-gray-400"
                   placeholder="Enter email subject"
+                  readOnly
                 />
               </div>
 
@@ -805,8 +719,8 @@ Message: ${emailForm.message}`;
                   value={emailForm.message}
                   onChange={(e) => handleEmailFormChange('message', e.target.value)}
                   rows={6}
-                  className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F2C21A] focus:border-transparent resize-none text-white bg-gray-800 placeholder-gray-400"
-                  placeholder="Enter your message here..."
+                  className="w-full h-[200px] px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F2C21A] focus:border-transparent resize-none text-white bg-gray-800 placeholder-gray-400"
+                  placeholder="Please introduce yourself, which org you're from, and what school you're based in, and then your partnership intent..."
                 />
               </div>
             </div>
@@ -832,7 +746,7 @@ Message: ${emailForm.message}`;
                   className="flex items-center gap-2 px-4 py-2 bg-[#F2C21A] text-black font-bold rounded-md hover:bg-[#CA8B04] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send className="w-4 h-4" />
-                  Send Email
+                  Open Gmail
                 </button>
               </div>
             </div>
@@ -840,6 +754,14 @@ Message: ${emailForm.message}`;
         </div>
       )}
 
+      {/* Toast Notification */}
+      <Toast
+        isVisible={toast.isVisible}
+        message={toast.message}
+        type={toast.type}
+        onClose={closeToast}
+        duration={5000}
+      />
       
       </AuthenticatedLayout>
     </>

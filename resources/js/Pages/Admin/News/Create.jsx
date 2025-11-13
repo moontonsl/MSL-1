@@ -10,12 +10,20 @@ export default function CreateNews() {
         news_title: '',
         news_subtitle: '',
         news_canonical: '',
+        news_author: '',
         news_state: 'published',
         news_img1: null
     });
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        
+        // Client-side validation
+        if (!data.news_title || !data.news_canonical || !data.news_author) {
+            alert('Please fill in all required fields (Title, Author, and Content)');
+            return;
+        }
+        
         post(route('admin.news.store'), {
             forceFormData: true
         });
@@ -88,6 +96,24 @@ export default function CreateNews() {
                                 />
                                 {errors.news_subtitle && (
                                     <p className="text-sm text-red-600 mt-1">{errors.news_subtitle}</p>
+                                )}
+                            </div>
+
+                            {/* Author Field */}
+                            <div className="space-y-2">
+                                <label htmlFor="news_author" className="block text-sm font-medium text-gray-700">
+                                    Author Name <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="news_author"
+                                    value={data.news_author}
+                                    onChange={(e) => setData('news_author', e.target.value)}
+                                    placeholder="Enter the author's name..."
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                />
+                                {errors.news_author && (
+                                    <p className="text-sm text-red-600 mt-1">{errors.news_author}</p>
                                 )}
                             </div>
 

@@ -76,15 +76,10 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             }
             
             const data = await response.json();
-            console.log('Fetched users data:', data);
             
             // Validate data structure
             if (!data || typeof data !== 'object') {
                 throw new Error('Server returned invalid data structure');
-            }
-            
-            if (data.data && data.data.length > 0) {
-                console.log('First user sample:', data.data[0]);
             }
             
             setUsers(data.data || []);
@@ -93,8 +88,6 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             setTotalUsers(data.total || 0);
             
         } catch (error) {
-            console.error('Error fetching users:', error);
-            
             // Retry logic for temporary server issues
             if (retryCount < 2 && (
                 error.message.includes('Server error: 500') ||
@@ -103,7 +96,6 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                 error.message.includes('Server error: 504') ||
                 error.message.includes('HTML instead of data')
             )) {
-                console.log(`Retrying fetchUsers (attempt ${retryCount + 1})...`);
                 setTimeout(() => {
                     fetchUsers(page, retryCount + 1);
                 }, 2000 * (retryCount + 1)); // Exponential backoff: 2s, 4s
@@ -149,10 +141,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
 
     useEffect(() => {
         if (showModal && selectedUser) {
-            console.log('Selected user:', selectedUser);
-            console.log('User name:', selectedUser.name);
-            console.log('User surname:', selectedUser.surname);
-            console.log('User email:', selectedUser.email);
+            // Modal opened with selected user
         }
     }, [showModal, selectedUser]);
 
@@ -188,17 +177,6 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
     };
 
     const openModal = (user) => {
-        // Log user data for debugging
-        console.log('Opening modal for user:', {
-            id: user.id,
-            name: user.name,
-            surname: user.surname,
-            email: user.email,
-            state: user.state,
-            hasProofOfEnrollment: !!user.proofOfEnrollment,
-            dataKeys: Object.keys(user)
-        });
-        
         setSelectedUser(user);
         setShowModal(true);
     };

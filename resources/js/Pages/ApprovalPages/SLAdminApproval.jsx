@@ -1,34 +1,71 @@
 import React, { useState, useEffect } from "react";
-import { Head } from "@inertiajs/react";
+import { Head, usePage } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutPrograms.jsx";
-import { Eye, Check, XCircle, FilePlus  } from "lucide-react";
+import { Eye, Check, XCircle, FilePlus } from "lucide-react";
 import AccountModificationModal from "./AccountModificationModal.jsx";
+import UserProfileModal from "./UserProfileModal.jsx";
+import MSLModal from "@/Components/MSLModal.jsx";
 
 export default function SLAdminApproval() {
+  const { user } = usePage().props;
   const [requests, setRequests] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showMSLModal, setShowMSLModal] = useState(false);
+  const [modalData, setModalData] = useState({});
   const itemsPerPage = 10;
   const mobileWindowSize = 4;
 
+  // Fetch modification requests
+  const fetchRequests = async (page = 1) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/modification-requests?page=${page}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setRequests(data.data || []);
+        setTotalPages(data.last_page || 1);
+        setCurrentPage(data.current_page || 1);
+        setError(null);
+      } else {
+        setError(data.error || 'Failed to fetch requests');
+      }
+    } catch (err) {
+      setError('Network error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const dummyData = Array.from({ length: 55 }, (_, i) => ({
-      id: i + 1,
-      username: `msl username${i + 1}`,
-      request: "Name Correction",
-      wrong: `Wrong Name ${i + 1}`,
-      correct: `Correct Name ${i + 1}`,
-      status: i % 2 === 0 ? "Pending" : "Modified",
-    }));
-    setRequests(dummyData);
+    // Force hard refresh on first visit to ensure fresh CSRF token after login
+    // Check if we've already reloaded in this session
+    const hasReloaded = sessionStorage.getItem('slAdminApprovalReloaded') === 'true';
+    
+    if (!hasReloaded) {
+      // Mark that we're about to reload
+      sessionStorage.setItem('slAdminApprovalReloaded', 'true');
+      // Force hard refresh without modifying URL
+      window.location.reload();
+      return;
+    }
+    
+    // Clear the reload flag so next navigation will refresh again
+    sessionStorage.removeItem('slAdminApprovalReloaded');
+    
+    fetchRequests();
   }, []);
 
-  const totalPages = Math.ceil(requests.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentItems = requests.slice(startIndex, startIndex + itemsPerPage);
-  const [activeRequest, setActiveRequest] = useState(null);
-
   const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) setCurrentPage(page);
+    if (page >= 1 && page <= totalPages) {
+      fetchRequests(page);
+    }
   };
 
   const computeMobilePages = () => {
@@ -43,15 +80,179 @@ export default function SLAdminApproval() {
 
   const mobilePages = computeMobilePages();
 
-  const [showModal, setShowModal] = useState(false);
+  const handleViewProfile = async (userId) => {
+    try {
+      const response = await fetch(`/api/users/${userId}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setSelectedUser(data);
+        setShowProfileModal(true);
+      } else {
+        alert('User not found: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      alert('Error fetching user data');
+    }
+  };
 
+  const handleApprove = async (requestId) => {
+    setModalData({
+      title: 'Approve Request',
+      message: 'Are you sure you want to approve this modification request?',
+      type: 'success',
+      confirmText: 'Approve',
+      cancelText: 'Cancel',
+      onConfirm: async () => {
+        setShowMSLModal(false);
+        try {
+          const response = await fetch(`/api/modification-requests/${requestId}/approve`, {
+            method: 'POST',
+            headers: {
+              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            },
+          });
+          
+          const data = await response.json();
+          
+          if (data.success) {
+            setModalData({
+              title: 'Success',
+              message: 'Request approved successfully!',
+              type: 'success',
+              confirmText: 'OK',
+              showCancel: false,
+              onConfirm: () => {
+                setShowMSLModal(false);
+                fetchRequests(currentPage);
+              }
+            });
+            setShowMSLModal(true);
+          } else {
+            setModalData({
+              title: 'Error',
+              message: 'Error approving request: ' + (data.error || 'Unknown error'),
+              type: 'error',
+              confirmText: 'OK',
+              showCancel: false,
+              onConfirm: () => setShowMSLModal(false)
+            });
+            setShowMSLModal(true);
+          }
+        } catch (error) {
+          setModalData({
+            title: 'Error',
+            message: 'Error approving request. Please try again.',
+            type: 'error',
+            confirmText: 'OK',
+            showCancel: false,
+            onConfirm: () => setShowMSLModal(false)
+          });
+          setShowMSLModal(true);
+        }
+      }
+    });
+    setShowMSLModal(true);
+  };
+
+  const handleReject = async (requestId) => {
+    setModalData({
+      title: 'Reject Request',
+      message: 'Are you sure you want to reject this modification request?',
+      type: 'error',
+      confirmText: 'Reject',
+      cancelText: 'Cancel',
+      onConfirm: async () => {
+        setShowMSLModal(false);
+        try {
+          const response = await fetch(`/api/modification-requests/${requestId}/reject`, {
+            method: 'POST',
+            headers: {
+              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            },
+          });
+          
+          const data = await response.json();
+          
+          if (data.success) {
+            setModalData({
+              title: 'Success',
+              message: 'Request rejected successfully!',
+              type: 'success',
+              confirmText: 'OK',
+              showCancel: false,
+              onConfirm: () => {
+                setShowMSLModal(false);
+                fetchRequests(currentPage);
+              }
+            });
+            setShowMSLModal(true);
+          } else {
+            setModalData({
+              title: 'Error',
+              message: 'Error rejecting request: ' + (data.error || 'Unknown error'),
+              type: 'error',
+              confirmText: 'OK',
+              showCancel: false,
+              onConfirm: () => setShowMSLModal(false)
+            });
+            setShowMSLModal(true);
+          }
+        } catch (error) {
+          setModalData({
+            title: 'Error',
+            message: 'Error rejecting request. Please try again.',
+            type: 'error',
+            confirmText: 'OK',
+            showCancel: false,
+            onConfirm: () => setShowMSLModal(false)
+          });
+          setShowMSLModal(true);
+        }
+      }
+    });
+    setShowMSLModal(true);
+  };
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'Pending':
+        return <span className="px-2 py-1 bg-yellow-500 text-black text-xs font-semibold rounded">Pending</span>;
+      case 'Approved':
+        return <span className="px-2 py-1 bg-green-500 text-white text-xs font-semibold rounded">Approved</span>;
+      case 'Rejected':
+        return <span className="px-2 py-1 bg-red-500 text-white text-xs font-semibold rounded">Rejected</span>;
+      default:
+        return <span className="px-2 py-1 bg-gray-500 text-white text-xs font-semibold rounded">{status}</span>;
+    }
+  };
+
+  if (loading) {
+    return (
+      <AuthenticatedLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-white text-xl">Loading...</div>
+        </div>
+      </AuthenticatedLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AuthenticatedLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-red-400 text-xl">{error}</div>
+        </div>
+      </AuthenticatedLayout>
+    );
+  }
 
   return (
     <>
       <Head title="SL Admin Approval" />
       <AuthenticatedLayout>
         <div className="min-h-screen flex items-center justify-center p-4 font-['Montserrat']">
-          <div className="w-full max-w-xs sm:max-w-5xl lg:max-w-7xl mx-auto">
+          <div className="w-full max-w-xs sm:max-w-7xl lg:max-w-full xl:max-w-full mx-auto">
             <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-8 border border-white/20 shadow-2xl">
 
               {/* Header with Title and Create Button */}
@@ -59,15 +260,17 @@ export default function SLAdminApproval() {
                 <h1 className="font-bold text-white text-center text-[20px] sm:text-[28px] lg:text-[40px]">
                   SL Admin Approval
                 </h1>
-                <button onClick={() => setShowModal(true)}
-                  className="mt-3 sm:mt-0 flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm font-semibold">
-                  <FilePlus className="w-4 h-4" /> Create Modification
-                </button>
+                {user.role === 'SL' && (
+                  <button onClick={() => setShowModal(true)}
+                    className="mt-3 sm:mt-0 flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm font-semibold">
+                    <FilePlus className="w-4 h-4" /> Create Modification
+                  </button>
+                )}
               </div>
 
               {/* Table View (Desktop) */}
               <div className="hidden sm:block">
-                <table className="w-full min-w-full border-collapse">
+                <table className="w-full border-collapse">
                   <thead>
                     <tr className="font-bold text-gray-200 text-[20px] sm:text-[24px] lg:text-[30px]">
                       <th className="px-4 py-3 text-left border-b border-white/20">Username</th>
@@ -76,87 +279,117 @@ export default function SLAdminApproval() {
                       <th className="px-4 py-3 text-left border-b border-white/20">Correct</th>
                       <th className="px-4 py-3 text-center border-b border-white/20">Proof</th>
                       <th className="px-4 py-3 text-center border-b border-white/20">Status</th>
+                      <th className="px-4 py-3 text-center border-b border-white/20">Approved By</th>
+                      {user.role === 'Regional Admin' && (
+                        <>
+                          <th className="px-4 py-3 text-center border-b border-white/20">Approve</th>
+                          <th className="px-4 py-3 text-center border-b border-white/20">Reject</th>
+                        </>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
-                    {currentItems.map((req, index) => (
+                    {requests.map((req, index) => (
                       <tr
                         key={req.id}
                         className={`font-medium text-gray-200 text-[14px] sm:text-[16px] ${
                           index % 2 === 0 ? "bg-white/5" : "bg-transparent"
                         } hover:bg-white/10 transition`}
                       >
-                        <td className="px-4 py-3">{req.username}</td>
-                        <td className="px-4 py-3">{req.request}</td>
-                        <td className="px-4 py-3 text-red-400">{req.wrong}</td>
-                        <td className="px-4 py-3 text-green-400">{req.correct}</td>
+                        <td className="px-4 py-3">{req.user?.username || 'N/A'}</td>
+                        <td className="px-4 py-3">{req.modification_type}</td>
+                        <td className="px-4 py-3 text-red-400">{req.wrong_value}</td>
+                        <td className="px-4 py-3 text-green-400">{req.correct_value}</td>
                         <td className="px-4 py-3 text-center">
-                          <button className="flex items-center mx-auto px-3 py-1 bg-blue-500/80 text-white rounded-lg hover:bg-blue-600 transition">
+                          <button 
+                            onClick={() => handleViewProfile(req.user_id)}
+                            className="flex items-center mx-auto px-3 py-1 bg-blue-500/80 text-white rounded-lg hover:bg-blue-600 transition"
+                          >
                             <Eye className="w-4 h-4 mr-1" /> View
                           </button>
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <span
-                            className={`px-3 py-1 rounded-lg text-white font-semibold ${
-                              req.status === "Pending"
-                                ? "bg-yellow-500/80"
-                                : "bg-green-500/80"
-                            }`}
-                          >
-                            {req.status}
-                          </span>
+                          {getStatusBadge(req.status)}
                         </td>
+                        <td className="px-4 py-3 text-center">
+                          {req.approved_by ? `${req.approved_by.name || ''} ${req.approved_by.surname || ''}`.trim() : 'Pending Approval'}
+                        </td>
+                        {user.role === 'Regional Admin' && req.status === 'Pending' && (
+                          <>
+                            <td className="px-4 py-3 text-center">
+                              <button 
+                                onClick={() => handleApprove(req.id)}
+                                className="flex items-center mx-auto px-3 py-1 bg-green-500/80 text-white rounded-lg hover:bg-green-600 transition"
+                              >
+                                <Check className="w-4 h-4 mr-1" /> Approve
+                              </button>
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <button 
+                                onClick={() => handleReject(req.id)}
+                                className="flex items-center mx-auto px-3 py-1 bg-red-500/80 text-white rounded-lg hover:bg-red-600 transition"
+                              >
+                                <XCircle className="w-4 h-4 mr-1" /> Reject
+                              </button>
+                            </td>
+                          </>
+                        )}
+                        {user.role === 'Regional Admin' && req.status !== 'Pending' && (
+                          <>
+                            <td className="px-4 py-3 text-center text-gray-500">-</td>
+                            <td className="px-4 py-3 text-center text-gray-500">-</td>
+                          </>
+                        )}
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
 
-              {/* Retain Old Mobile Version */}
+              {/* Mobile Version */}
               <div className="sm:hidden space-y-2">
-                {currentItems.map((req) => (
+                {requests.map((req) => (
                   <div
                     key={req.id}
-                    className="bg-white/5 rounded-lg p-2 text-gray-200 shadow text-xs w-[90%] mx-auto"
+                    className="bg-white/5 rounded-lg p-3 text-gray-200 shadow text-xs w-[90%] mx-auto"
                   >
-                    <div className="grid grid-cols-[70%_30%] items-center">
-                      <p className="font-semibold text-center">{req.username}</p>
-                      <div className="flex justify-center">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <p className="font-semibold">{req.user?.username || 'N/A'}</p>
+                        {getStatusBadge(req.status)}
+                      </div>
+                      <p><span className="font-bold">Request:</span> {req.modification_type}</p>
+                      <p className="text-red-400"><span className="font-bold">Wrong:</span> {req.wrong_value}</p>
+                      <p className="text-green-400"><span className="font-bold">Correct:</span> {req.correct_value}</p>
+                      <p><span className="font-bold">Approved By:</span> {req.approved_by ? `${req.approved_by.name || ''} ${req.approved_by.surname || ''}`.trim() : 'Pending Approval'}</p>
+                      <div className="flex gap-2 mt-2">
                         <button
-                          onClick={() => setActiveRequest(req)}
-                          className="inline-flex items-center justify-center gap-1 px-2 py-1 bg-blue-500/80 text-white rounded-md hover:bg-blue-600 transition text-xs w-20"
+                          onClick={() => handleViewProfile(req.user_id)}
+                          className="flex-1 flex items-center justify-center gap-1 px-2 py-1 bg-blue-500/80 text-white rounded-md hover:bg-blue-600 transition text-xs"
                         >
-                          <Check className="w-3 h-3" /> Check
+                          <Eye className="w-3 h-3" /> View
                         </button>
+                        {user.role === 'Regional Admin' && req.status === 'Pending' && (
+                          <>
+                            <button
+                              onClick={() => handleApprove(req.id)}
+                              className="flex-1 flex items-center justify-center gap-1 px-2 py-1 bg-green-500/80 text-white rounded-md hover:bg-green-600 transition text-xs"
+                            >
+                              <Check className="w-3 h-3" /> Approve
+                            </button>
+                            <button
+                              onClick={() => handleReject(req.id)}
+                              className="flex-1 flex items-center justify-center gap-1 px-2 py-1 bg-red-500/80 text-white rounded-md hover:bg-red-600 transition text-xs"
+                            >
+                              <XCircle className="w-3 h-3" /> Reject
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
-
-              {/* Mobile Modal */}
-              {activeRequest && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-                  <div className="relative bg-white/90 rounded-xl p-4 w-full max-w-sm text-black">
-                    <button
-                      onClick={() => setActiveRequest(null)}
-                      className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-red-500 rounded-full shadow hover:bg-red-600 transition transform hover:scale-105"
-                      aria-label="Close modal"
-                    >
-                      <XCircle className="w-5 h-5 text-white" />
-                    </button>
-                    <h2 className="text-lg font-bold mb-3 text-center">Request Details</h2>
-                    <p><span className="font-bold">Username:</span> {activeRequest.username}</p>
-                    <p><span className="font-bold">Request:</span> {activeRequest.request}</p>
-                    <p className="text-red-500"><span className="font-bold">Wrong:</span> {activeRequest.wrong}</p>
-                    <p className="text-green-600"><span className="font-bold">Correct:</span> {activeRequest.correct}</p>
-                    <p className="text-yellow-600"><span className="font-bold">Status:</span> {activeRequest.status}</p>
-                    <button className="w-full mt-4 flex items-center justify-center gap-1 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-                      <Eye className="w-4 h-4" /> View Proof
-                    </button>
-                  </div>
-                </div>
-              )}
 
               {/* Pagination */}
               <div className="flex justify-center items-center mt-8 space-x-2">
@@ -216,6 +449,18 @@ export default function SLAdminApproval() {
       <AccountModificationModal
           isOpen={showModal}
           onClose={() => setShowModal(false)}
+      />
+
+      <UserProfileModal
+          isOpen={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+          user={selectedUser}
+      />
+      
+      <MSLModal
+        isOpen={showMSLModal}
+        onClose={() => setShowMSLModal(false)}
+        {...modalData}
       />
     </>
   );

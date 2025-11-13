@@ -14,8 +14,12 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SchoolUploadController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\CampusController;
+use App\Mail\MslNetworkInquiryMail;
 use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 //jabu
 use Illuminate\Support\Facades\DB;
@@ -140,6 +144,255 @@ Route::get('/team-check', function (\Illuminate\Http\Request $request) {
     ]);
 });
 
+// User search API for modification requests
+Route::middleware(['auth', 'verified'])->get('/api/users/search', function (\Illuminate\Http\Request $request) {
+    $user = Auth::user();
+    
+    // Only SL and Regional Admin can search users
+    if ($user->role !== 'SL' && $user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+        return response()->json(['error' => 'Access denied'], 403);
+    }
+    
+    $search = $request->query('search', '');
+    $limit = $request->query('limit', 10);
+    
+    if (strlen($search) < 2) {
+        return response()->json([]);
+    }
+    
+    $query = \App\Models\User::select(
+        'id', 'username', 'name', 'surname', 'email', 'university', 'course', 'year_level', 'region', 'island'
+    );
+    
+    // Apply role-based filtering
+    if ($user->role === 'SL') {
+        $query->where('university', $user->university);
+    } elseif ($user->role === 'Regional Admin') {
+        $assignedRegionIds = $user->getAssignedRegionIds();
+        if (!empty($assignedRegionIds)) {
+            $query->whereIn('region', $assignedRegionIds);
+        } else {
+            $query->where('region', $user->region);
+        }
+    }
+    
+    // Search in username, name, surname, email
+    $query->where(function($q) use ($search) {
+        $q->where('username', 'like', '%' . $search . '%')
+          ->orWhere('name', 'like', '%' . $search . '%')
+          ->orWhere('surname', 'like', '%' . $search . '%')
+          ->orWhere('email', 'like', '%' . $search . '%');
+    });
+    
+    $users = $query->limit($limit)->get();
+    
+    return response()->json($users);
+});
+
+// Get specific user by ID for modification requests
+Route::middleware(['auth', 'verified'])->get('/api/users/{id}', function ($id) {
+    $user = Auth::user();
+    
+    // Only SL and Regional Admin can view users
+    if ($user->role !== 'SL' && $user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+        return response()->json(['error' => 'Access denied'], 403);
+    }
+    
+    $targetUser = \App\Models\User::select(
+        'users.id', 
+        'users.name', 
+        'users.surname', 
+        'users.username', 
+        'users.email',
+        'users.contact_number',
+        'users.course',
+        'users.studentId',
+        'users.region',
+        'users.island',
+        'users.ml_id', 
+        'users.ml_server', 
+        'users.ml_ign',
+        'users.university', 
+        'users.year_level', 
+        'users.state', 
+        'users.blocked_reason',
+        'users.verified_by',
+        'users.verified_date',
+        'users.proofOfEnrollment',
+        'users.created_at',
+        'ml_users.current_rank',
+        'ml_users.highest_rank',
+        'ml_users.level',
+        'ml_users.matches_played',
+        'ml_users.matches_won',
+        'ml_users.win_rate',
+        'ml_users.favorite_heroes',
+        'verifiers.name as verifier_name',
+        'verifiers.surname as verifier_surname'
+    )
+        ->leftJoin('ml_users', 'users.ml_id', '=', 'ml_users.ml_id')
+        ->leftJoin('users as verifiers', 'users.verified_by', '=', 'verifiers.id')
+        ->where('users.id', $id)
+        ->first();
+    
+    if (!$targetUser) {
+        return response()->json(['error' => 'User not found'], 404);
+    }
+    
+    // Apply role-based filtering
+    if ($user->role === 'SL') {
+        if ($targetUser->university !== $user->university) {
+            return response()->json(['error' => 'Access denied'], 403);
+        }
+    } elseif ($user->role === 'Regional Admin') {
+        $assignedRegionIds = $user->getAssignedRegionIds();
+        if (!empty($assignedRegionIds)) {
+            if (!in_array($targetUser->region, $assignedRegionIds)) {
+                return response()->json(['error' => 'Access denied'], 403);
+            }
+        } else {
+            if ($targetUser->region !== $user->region) {
+                return response()->json(['error' => 'Access denied'], 403);
+            }
+        }
+    }
+    
+    return response()->json($targetUser);
+});
+
+// Modification request API endpoints
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Get modification requests
+    Route::get('/api/modification-requests', function (\Illuminate\Http\Request $request) {
+        $user = Auth::user();
+        
+        if ($user->role !== 'SL' && $user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Access denied'], 403);
+        }
+        
+        $query = \App\Models\ModificationRequest::with(['user', 'submittedBy', 'approvedBy']);
+        
+        // Apply role-based filtering
+        if ($user->role === 'SL') {
+            $query->where('submitted_by', $user->id);
+        } elseif ($user->role === 'Regional Admin') {
+            $assignedRegionIds = $user->getAssignedRegionIds();
+            if (!empty($assignedRegionIds)) {
+                $query->whereHas('user', function($q) use ($assignedRegionIds) {
+                    $q->whereIn('region', $assignedRegionIds);
+                });
+            } else {
+                $query->whereHas('user', function($q) use ($user) {
+                    $q->where('region', $user->region);
+                });
+            }
+        }
+        
+        $requests = $query->orderBy('created_at', 'desc')->paginate(10);
+        
+        // Ensure relationships are included in JSON response
+        $requests->getCollection()->transform(function ($request) {
+            $request->load(['user', 'submittedBy', 'approvedBy']);
+            return $request;
+        });
+        
+        return response()->json($requests);
+    });
+    
+    // Create modification request
+    Route::post('/api/modification-requests', function (\Illuminate\Http\Request $request) {
+        $user = Auth::user();
+        
+        // Only SL can create modification requests
+        if ($user->role !== 'SL') {
+            return response()->json(['error' => 'Only Student Leaders can create modification requests'], 403);
+        }
+        
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'modification_type' => 'required|in:Full Name,School,Course',
+            'wrong_value' => 'required|string',
+            'correct_value' => 'required|string',
+        ]);
+        
+        $modificationRequest = \App\Models\ModificationRequest::create([
+            'user_id' => $request->user_id,
+            'modification_type' => $request->modification_type,
+            'wrong_value' => $request->wrong_value,
+            'correct_value' => $request->correct_value,
+            'submitted_by' => $user->id,
+            'status' => 'Pending',
+        ]);
+        
+        return response()->json(['success' => true, 'request' => $modificationRequest]);
+    });
+    
+    // Approve/Reject modification request
+    Route::post('/api/modification-requests/{id}/approve', function (\Illuminate\Http\Request $request, $id) {
+        $user = Auth::user();
+        
+        // Only Regional Admin can approve/reject
+        if ($user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Only Regional Admins can approve requests'], 403);
+        }
+        
+        $modificationRequest = \App\Models\ModificationRequest::findOrFail($id);
+        
+        if ($modificationRequest->status !== 'Pending') {
+            return response()->json(['error' => 'Request has already been processed'], 400);
+        }
+        
+        $modificationRequest->update([
+            'status' => 'Approved',
+            'approved_by' => $user->id,
+            'approved_at' => now(),
+        ]);
+        
+        // Update the user's data
+        $targetUser = $modificationRequest->user;
+        switch ($modificationRequest->modification_type) {
+            case 'Full Name':
+                $nameParts = explode(' ', $modificationRequest->correct_value, 2);
+                $targetUser->update([
+                    'name' => $nameParts[0],
+                    'surname' => $nameParts[1] ?? '',
+                ]);
+                break;
+            case 'School':
+                $targetUser->update(['university' => $modificationRequest->correct_value]);
+                break;
+            case 'Course':
+                $targetUser->update(['course' => $modificationRequest->correct_value]);
+                break;
+        }
+        
+        return response()->json(['success' => true]);
+    });
+    
+    Route::post('/api/modification-requests/{id}/reject', function (\Illuminate\Http\Request $request, $id) {
+        $user = Auth::user();
+        
+        // Only Regional Admin can approve/reject
+        if ($user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Only Regional Admins can reject requests'], 403);
+        }
+        
+        $modificationRequest = \App\Models\ModificationRequest::findOrFail($id);
+        
+        if ($modificationRequest->status !== 'Pending') {
+            return response()->json(['error' => 'Request has already been processed'], 400);
+        }
+        
+        $modificationRequest->update([
+            'status' => 'Rejected',
+            'approved_by' => $user->id,
+            'approved_at' => now(),
+        ]);
+        
+        return response()->json(['success' => true]);
+    });
+});
+
 Route::get('/school-players', function (\Illuminate\Http\Request $request) {
     try {
         $search = $request->query('search', '');
@@ -194,6 +447,55 @@ Route::get('/school-players', function (\Illuminate\Http\Request $request) {
     } catch (\Exception $e) {
         \Log::error('School players search error: ' . $e->getMessage());
         return response()->json(['error' => 'Search failed', 'message' => $e->getMessage()], 500);
+    }
+});
+
+// Check username for tournament registration (checks existence and verification status)
+Route::get('/check-username-tournament', function (\Illuminate\Http\Request $request) {
+    try {
+        $username = $request->query('username', '');
+        $university = $request->query('university', '');
+        
+        if (!$username || !$university) {
+            return response()->json(['error' => 'Username and university parameters required'], 400);
+        }
+        
+        // Check if user exists in the university (regardless of verification status)
+        $user = \App\Models\User::where('username', $username)
+            ->where('university', $university)
+            ->where('role', '!=', 'SL')
+            ->where('role', '!=', 'Regional Admin')
+            ->where('role', '!=', 'Admin')
+            ->where('role', '!=', 'Super Admin')
+            ->first(['id', 'username', 'name', 'surname', 'university', 'state']);
+        
+        if (!$user) {
+            return response()->json([
+                'exists' => false,
+                'verified' => false,
+                'message' => 'Username not found in ' . $university
+            ]);
+        }
+        
+        // User exists, check verification status
+        if ($user->state === 'Verified') {
+            return response()->json([
+                'exists' => true,
+                'verified' => true,
+                'message' => 'VALID',
+                'user' => $user
+            ]);
+        } else {
+            return response()->json([
+                'exists' => true,
+                'verified' => false,
+                'message' => 'Username not verified',
+                'user' => $user
+            ]);
+        }
+    } catch (\Exception $e) {
+        \Log::error('Username tournament check error: ' . $e->getMessage());
+        return response()->json(['error' => 'Check failed', 'message' => $e->getMessage()], 500);
     }
 });
 
@@ -469,12 +771,10 @@ Route::get('/Programs', function () {
 })->name('Programs');
 
 //BUFFS AND SUPPORT  ROUTES
-Route::get('/BuffsAndSupport', function () {
-    return Inertia::render('BuffsAndSupport/BuffsAndSupport');
-})->name('BuffsAndSupport');
+Route::get('/BuffsAndSupport', [App\Http\Controllers\BuffsAndSupportController::class, 'index'])->name('BuffsAndSupport');
 
 //BUFFS AND SUPPORT - APPLICATION FORM ROUTES
-Route::get('/MSLBuffsAndSupportApplicationForm', function () {
+Route::get('/BuffsAndSupport/Apply', function () {
     return Inertia::render('BuffsAndSupport/Forms/MSLBuffsAndSupportApplicationForm');
 })->name('MSLBuffsAndSupportApplicationForm');
 
@@ -508,16 +808,43 @@ Route::get('/AccountModificationWaiting', function () {
     return Inertia::render('AccountModification/AccountModificationWaiting');
 })->name('AccountModificationWaiting');
 
-//SL ADMIN APPROVAL ROUTES
-Route::get('/SLAdminApproval', function () {
-    return Inertia::render('ApprovalPages/SLAdminApproval');
+//OPPO X MSL ROAD SHOW TOURNAMENT ROUTES
+Route::get('/RoadshowTournament', function () {
+    return Inertia::render('OPPOxMSLRoadShowTournament/OPPOxMSLRoadShowTournament');
+})->name('OPPOxMSLRoadShowTournament');
+
+
+//OPPO X MSL ROAD SHOW TOURNAMENT ATTENDANCE ROUTES
+Route::get('/RoadshowAttendance', function () {
+    return Inertia::render('OPPOxMSLRoadShowTournament/RoadshowAttendance');
+})->name('RoadshowAttendance');
+
+//SL ADMIN APPROVAL ROUTES - Only SL role can access
+Route::middleware(['auth', 'verified'])->get('/SLAdminApproval', function () {
+    $user = Auth::user();
+    
+    // Only SL role can access this page
+    if ($user->role !== 'SL') {
+        abort(403, 'Access denied. Only Student Leaders can access this page.');
+    }
+    
+    return Inertia::render('ApprovalPages/SLAdminApproval', [
+        'user' => $user
+    ]);
 })->name('SLAdminApproval');
 
-
-
-//ADMIN REGIONAL APPROVAL ROUTES
-Route::get('/RegionalAdminApproval', function () {
-    return Inertia::render('ApprovalPages/RegionalAdminApproval');
+//ADMIN REGIONAL APPROVAL ROUTES - Only Regional Admin role can access
+Route::middleware(['auth', 'verified'])->get('/RegionalAdminApproval', function () {
+    $user = Auth::user();
+    
+    // Only Regional Admin role can access this page
+    if ($user->role !== 'Regional Admin') {
+        abort(403, 'Access denied. Only Regional Admins can access this page.');
+    }
+    
+    return Inertia::render('ApprovalPages/RegionalAdminApproval', [
+        'user' => $user
+    ]);
 })->name('RegionalAdminApproval');
 
 //MSL NETWORK ROUTES
@@ -1203,52 +1530,75 @@ Route::get('/OppoAmbassador', function () {
 })->name('OppoAmbassador');
 
 // MSL Network Email Inquiry Route
-Route::post('/msl-network/send-inquiry', function (\Illuminate\Http\Request $request) {
+Route::post('/msl-network/send-inquiry', function (Request $request) {
     try {
         $request->validate([
             'to_email' => 'required|email',
             'cc_emails' => 'nullable|array',
-            'cc_emails.*' => 'email',
+            'cc_emails.*' => 'nullable|email',
             'subject' => 'required|string|max:255',
             'message' => 'required|string|max:2000',
-            'region' => 'nullable|string|max:100'
+            'region' => 'nullable|string|max:100',
         ]);
+        
+        // Filter out empty CC emails
+        $ccEmails = collect($request->cc_emails ?? [])
+            ->filter(function($email) {
+                return !empty(trim($email));
+            })
+            ->values()
+            ->toArray();
 
         $inquiryData = [
             'to_email' => $request->to_email,
-            'cc_emails' => $request->cc_emails ?? [],
+            'cc_emails' => $ccEmails,
             'subject' => $request->subject,
             'message' => $request->message,
             'region' => $request->region,
-            'received_at' => now()
+            'received_at' => now(),
         ];
 
-        // Send email to the regional team with CC recipients
-        $mail = \Mail::to($request->to_email);
-        
-        // Add CC recipients if any
-        if (!empty($request->cc_emails)) {
-            $mail->cc($request->cc_emails);
+        // Send email with CC recipients
+        $mail = Mail::to($request->to_email);
+
+        if (!empty($ccEmails)) {
+            $mail->cc($ccEmails);
         }
-        
-        $mail->send(new \App\Mail\MslNetworkInquiryMail($inquiryData));
+
+        $mail->send(new MslNetworkInquiryMail($inquiryData));
 
         return response()->json([
             'success' => true,
-            'message' => 'Your inquiry has been sent successfully! We will get back to you soon.'
+            'message' => 'Your inquiry has been sent successfully! We will get back to you soon.',
         ]);
-
     } catch (\Illuminate\Validation\ValidationException $e) {
         return response()->json([
             'success' => false,
             'message' => 'Please fill in all required fields correctly.',
-            'errors' => $e->errors()
+            'errors' => $e->errors(),
         ], 422);
     } catch (\Exception $e) {
         \Log::error('MSL Network inquiry failed: ' . $e->getMessage());
+        
         return response()->json([
             'success' => false,
-            'message' => 'Failed to send inquiry. Please try again later.'
+            'message' => 'Failed to send inquiry. Please try again later.',
         ], 500);
     }
 })->name('msl-network.send-inquiry');
+
+// Custom Event Canonical Routes - Handle dynamic event links like /NewEvent
+// This catch-all route should be placed at the very end to avoid conflicts with other routes
+Route::get('/{canonical}', function ($canonical) {
+    // Check if this canonical matches an MSL Event
+    $event = \App\Models\MslEvent::where('event_canonical', '/' . $canonical)
+        ->orWhere('event_canonical', $canonical)
+        ->first();
+    
+    if ($event) {
+        return app(\App\Http\Controllers\EventsController::class)->show($event);
+    }
+    
+    // If no event found, return 404
+    abort(404, 'Event not found');
+})->where('canonical', '^[a-zA-Z0-9\-_]+$'); // Only match alphanumeric, hyphens, underscores
