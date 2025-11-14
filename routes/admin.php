@@ -37,6 +37,12 @@ Route::middleware(['auth:admin', 'admin'])->group(function () {
     Route::delete('/admin/carousel/{carousel}', [AdminController::class, 'deleteCarousel'])->name('admin.carousel.delete');
     Route::post('/admin/carousel/reorder', [AdminController::class, 'reorderCarousel'])->name('admin.carousel.reorder');
 
+    // Event Photos Management
+    Route::get('/admin/event-photos', [AdminController::class, 'manageEventPhotos'])->name('admin.event-photos');
+    Route::post('/admin/event-photos', [AdminController::class, 'storeEventPhoto'])->name('admin.event-photos.store');
+    Route::put('/admin/event-photos/{eventPhoto}', [AdminController::class, 'updateEventPhoto'])->name('admin.event-photos.update');
+    Route::delete('/admin/event-photos/{eventPhoto}', [AdminController::class, 'deleteEventPhoto'])->name('admin.event-photos.delete');
+
     // Event Management
     Route::get('/admin/events', [AdminController::class, 'manageEvents'])->name('admin.events');
     Route::get('/admin/events/create', [AdminController::class, 'createEvent'])->name('admin.events.create');
