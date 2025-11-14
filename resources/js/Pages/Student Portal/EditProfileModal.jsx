@@ -749,9 +749,9 @@ export default function EditProfileModal({ user, onClose, onSave }) {
       {/* Modal Box */}
       <div
         className="relative bg-gradient-to-br from-gray-900 via-black to-gray-800 
-                  rounded-2xl shadow-2xl w-[90%] max-w-xs md:max-w-5xl 
-                  p-6 border border-yellow-500/30 z-10
-                  max-h-[70vh] overflow-y-scroll scrollbar scrollbar-thin scrollbar-thumb-yellow-500 scrollbar-track-gray-800 mt-12 md:mt-0"
+                  rounded-2xl shadow-2xl w-[95%] sm:w-[90%] max-w-sm sm:max-w-2xl md:max-w-5xl 
+                  p-4 sm:p-5 md:p-6 border border-yellow-500/30 z-10
+                  max-h-[85vh] sm:max-h-[80vh] md:max-h-[70vh] overflow-y-scroll scrollbar scrollbar-thin scrollbar-thumb-yellow-500 scrollbar-track-gray-800 mt-4 sm:mt-8 md:mt-0"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -762,13 +762,13 @@ export default function EditProfileModal({ user, onClose, onSave }) {
           ✕
         </button>
 
-        <h2 className="text-xl md:text-2xl font-bold text-yellow-400 mb-4 md:mb-6 border-b border-yellow-500/30 pb-2">
+        <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-yellow-400 mb-3 sm:mb-4 md:mb-6 border-b border-yellow-500/30 pb-2">
           ✨ Edit Profile
         </h2>
 
         {/* Success Message */}
         {success && (
-          <div className="mb-4 p-3 bg-green-900/50 border border-green-500 rounded-lg text-green-400 text-sm">
+          <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-green-900/50 border border-green-500 rounded-lg text-green-400 text-xs sm:text-sm">
             {emailVerified ? 
               '✅ Email verified successfully! You can now save your profile changes.' :
               '✅ Profile updated successfully!'
@@ -778,12 +778,12 @@ export default function EditProfileModal({ user, onClose, onSave }) {
 
         {/* Email Verification Message */}
         {emailVerificationSent && (
-          <div className="mb-4 p-3 bg-blue-900/50 border border-blue-500 rounded-lg text-blue-400 text-sm">
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-blue-900/50 border border-blue-500 rounded-lg text-blue-400 text-xs sm:text-sm">
+            <div className="flex items-start gap-2">
+              <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
-              <div>
+              <div className="flex-1 min-w-0">
                 <p className="font-semibold">📧 Email Verification Required</p>
                 <p className="text-xs mt-1">Please check your new email address for verification instructions. Your email will be updated once verified.</p>
               </div>
@@ -793,15 +793,15 @@ export default function EditProfileModal({ user, onClose, onSave }) {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-4 p-3 bg-red-900/50 border border-red-500 rounded-lg text-red-400 text-sm">
+          <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-red-900/50 border border-red-500 rounded-lg text-red-400 text-xs sm:text-sm break-words">
             ❌ {error}
           </div>
         )}
 
         {/* Responsive Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6 lg:gap-8">
           {/* Left Column */}
-          <div className="space-y-4 md:space-y-5">
+          <div className="space-y-3 sm:space-y-4 md:space-y-5">
             <div>
               <label className="text-sm text-gray-300">Squad Name</label>
               <input
@@ -846,7 +846,7 @@ export default function EditProfileModal({ user, onClose, onSave }) {
 
             <div>
               <label className="text-sm text-gray-300">MLBB IGN</label>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input
                   disabled
                   type="text"
@@ -858,7 +858,7 @@ export default function EditProfileModal({ user, onClose, onSave }) {
                 <button
                   onClick={handleLoginClick}
                   type="button"
-                  className="px-4 py-2.5 md:py-3 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-400 transition shadow-lg disabled:opacity-50 whitespace-nowrap"
+                  className="px-4 py-2.5 md:py-3 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-400 transition shadow-lg disabled:opacity-50 whitespace-nowrap text-sm sm:text-base"
                   disabled={isLoading || !fieldRestrictions.mlAccount.canChange}
                 >
                   Change Mlbb Account
@@ -876,7 +876,7 @@ export default function EditProfileModal({ user, onClose, onSave }) {
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="text-sm text-gray-300">MLBB ID</label>
                 <div className="relative">
@@ -935,10 +935,10 @@ export default function EditProfileModal({ user, onClose, onSave }) {
           </div>
 
           {/* Right Column */}
-          <div className="space-y-4 md:space-y-5">
+          <div className="space-y-3 sm:space-y-4 md:space-y-5">
             <div>
               <label className="text-sm text-gray-300">Email</label>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <div className="relative flex-1">
                   <input
                     type="email"
@@ -946,7 +946,7 @@ export default function EditProfileModal({ user, onClose, onSave }) {
                     value={formData.email}
                     onChange={handleChange}
                     disabled={isLoading}
-                    className={`w-full p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border focus:ring-1 disabled:opacity-50 pr-10 ${
+                    className={`w-full p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border focus:ring-1 disabled:opacity-50 pr-10 text-sm sm:text-base ${
                       emailValidation.checking 
                         ? 'border-blue-400 focus:border-blue-400 focus:ring-blue-400' 
                         : emailValidation.isValid 
@@ -974,7 +974,7 @@ export default function EditProfileModal({ user, onClose, onSave }) {
                   type="button"
                   onClick={handleSendCode}
                   disabled={isSendingCode || isLoading || formData.email === user.email || !emailValidation.isValid || emailValidation.checking}
-                  className="px-4 py-2.5 md:py-3 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-400 transition shadow-lg disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+                  className="px-4 py-2.5 md:py-3 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-400 transition shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap text-sm sm:text-base"
                 >
                   {isSendingCode ? (
                     <>
@@ -1009,12 +1009,12 @@ export default function EditProfileModal({ user, onClose, onSave }) {
 
               {/* Verification Code Input */}
               {emailVerificationSent && (
-                <div className="mt-4 p-4 bg-gray-800/50 border border-gray-600 rounded-lg">
-                  <h3 className="text-lg font-semibold text-yellow-400 mb-3">Enter Verification Code</h3>
-                  <p className="text-sm text-gray-300 mb-3">
+                <div className="mt-4 p-3 sm:p-4 bg-gray-800/50 border border-gray-600 rounded-lg">
+                  <h3 className="text-base sm:text-lg font-semibold text-yellow-400 mb-2 sm:mb-3">Enter Verification Code</h3>
+                  <p className="text-xs sm:text-sm text-gray-300 mb-3">
                     We've sent a 6-digit verification code to your new email address. Enter it below to complete the email change.
                   </p>
-                  <div className="flex gap-3">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                     <input
                       type="text"
                       value={verificationCode}
@@ -1025,13 +1025,13 @@ export default function EditProfileModal({ user, onClose, onSave }) {
                       }}
                       placeholder="123456"
                       disabled={isVerifyingCode}
-                      className="flex-1 p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 disabled:opacity-50 text-center text-2xl font-mono tracking-widest"
+                      className="flex-1 p-2.5 sm:p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 disabled:opacity-50 text-center text-xl sm:text-2xl font-mono tracking-widest"
                       maxLength="6"
                     />
                     <button
                       onClick={handleVerifyCode}
                       disabled={isVerifyingCode || verificationCode.length !== 6}
-                      className="px-6 py-3 rounded-lg bg-yellow-500 text-black font-semibold hover:bg-yellow-400 transition shadow-lg disabled:opacity-50 flex items-center gap-2"
+                      className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg bg-yellow-500 text-black font-semibold hover:bg-yellow-400 transition shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 text-sm sm:text-base"
                     >
                       {isVerifyingCode ? (
                         <>
@@ -1077,64 +1077,68 @@ export default function EditProfileModal({ user, onClose, onSave }) {
         </div>
 
         {/* Buttons */}
-        <div className="flex justify-end gap-3 md:gap-4 mt-6 md:mt-8">
-          <button
-            className="px-4 md:px-5 py-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition text-sm md:text-base disabled:opacity-50"
-            onClick={onClose}
-            disabled={isLoading}
-          >
-            Cancel
-          </button>
-          <button
-            className="px-4 md:px-5 py-2 rounded-lg bg-yellow-500 text-black font-semibold hover:bg-yellow-400 transition shadow-lg text-sm md:text-base disabled:opacity-50 flex items-center gap-2"
-            onClick={handleSubmit}
-            disabled={isLoading 
-              || emailValidation.checking 
-              || !emailValidation.isValid 
-              || (formData.email !== user.email && !emailVerified) 
-              || mlIdValidation.checking
-              || (formData.ml_id !== user.ml_id && !mlIdValidation.isValid)
-              || (formData.squadName !== user.squadName && !fieldRestrictions.squadName.canChange) 
-              || (formData.year_level !== user.year_level && !fieldRestrictions.yearLevel.canChange)
-              || ((formData.ml_id !== user.ml_id || formData.ml_server !== user.ml_server) && !fieldRestrictions.mlAccount.canChange)
-            }
-          >
-            {isLoading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                Saving...
-              </>
-            ) : (
-              'Save Changes'
-            )}
-          </button>
+        <div className="mt-4 sm:mt-6 md:mt-8">
+          <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 md:gap-4">
+            <button
+              className="w-full sm:w-auto px-4 md:px-5 py-2.5 sm:py-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition text-sm md:text-base disabled:opacity-50"
+              onClick={onClose}
+              disabled={isLoading}
+            >
+              Cancel
+            </button>
+            <button
+              className="w-full sm:w-auto px-4 md:px-5 py-2.5 sm:py-2 rounded-lg bg-yellow-500 text-black font-semibold hover:bg-yellow-400 transition shadow-lg text-sm md:text-base disabled:opacity-50 flex items-center justify-center gap-2"
+              onClick={handleSubmit}
+              disabled={isLoading 
+                || emailValidation.checking 
+                || !emailValidation.isValid 
+                || (formData.email !== user.email && !emailVerified) 
+                || mlIdValidation.checking
+                || (formData.ml_id !== user.ml_id && !mlIdValidation.isValid)
+                || (formData.squadName !== user.squadName && !fieldRestrictions.squadName.canChange) 
+                || (formData.year_level !== user.year_level && !fieldRestrictions.yearLevel.canChange)
+                || ((formData.ml_id !== user.ml_id || formData.ml_server !== user.ml_server) && !fieldRestrictions.mlAccount.canChange)
+              }
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                  Saving...
+                </>
+              ) : (
+                'Save Changes'
+              )}
+            </button>
+          </div>
           
           {/* Save Button Help Text */}
-          {(formData.email !== user.email && !emailVerified) && (
-            <p className="text-xs text-yellow-400 mt-2 text-center">
-              ⚠️ Please verify your email before saving changes
-            </p>
-          )}
-          {(formData.squadName !== user.squadName && !fieldRestrictions.squadName.canChange) && (
-            <p className="text-xs text-orange-400 mt-2 text-center">
-              ⏰ {fieldRestrictions.squadName.message}
-            </p>
-          )}
-          {(formData.year_level !== user.year_level && !fieldRestrictions.yearLevel.canChange) && (
-            <p className="text-xs text-orange-400 mt-2 text-center">
-              ⏰ {fieldRestrictions.yearLevel.message}
-            </p>
-          )}
-          {((formData.ml_id !== user.ml_id || formData.ml_server !== user.ml_server) && !fieldRestrictions.mlAccount.canChange) && (
-            <p className="text-xs text-orange-400 mt-2 text-center">
-              ⏰ {fieldRestrictions.mlAccount.message}
-            </p>
-          )}
-          {(formData.ml_id !== user.ml_id && !mlIdValidation.isValid) && (
-            <p className="text-xs text-red-400 mt-2 text-center">
-              ⚠️ {mlIdValidation.message || 'This ML ID is already registered with another account'}
-            </p>
-          )}
+          <div className="mt-2 space-y-1">
+            {(formData.email !== user.email && !emailVerified) && (
+              <p className="text-xs text-yellow-400 text-center sm:text-left">
+                ⚠️ Please verify your email before saving changes
+              </p>
+            )}
+            {(formData.squadName !== user.squadName && !fieldRestrictions.squadName.canChange) && (
+              <p className="text-xs text-orange-400 text-center sm:text-left">
+                ⏰ {fieldRestrictions.squadName.message}
+              </p>
+            )}
+            {(formData.year_level !== user.year_level && !fieldRestrictions.yearLevel.canChange) && (
+              <p className="text-xs text-orange-400 text-center sm:text-left">
+                ⏰ {fieldRestrictions.yearLevel.message}
+              </p>
+            )}
+            {((formData.ml_id !== user.ml_id || formData.ml_server !== user.ml_server) && !fieldRestrictions.mlAccount.canChange) && (
+              <p className="text-xs text-orange-400 text-center sm:text-left">
+                ⏰ {fieldRestrictions.mlAccount.message}
+              </p>
+            )}
+            {(formData.ml_id !== user.ml_id && !mlIdValidation.isValid) && (
+              <p className="text-xs text-red-400 text-center sm:text-left">
+                ⚠️ {mlIdValidation.message || 'This ML ID is already registered with another account'}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>
