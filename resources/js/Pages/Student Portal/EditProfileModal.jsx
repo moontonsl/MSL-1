@@ -26,6 +26,11 @@ export default function EditProfileModal({ user, onClose, onSave }) {
     isValid: true,
     message: ''
   });
+  const [mlIdValidation, setMlIdValidation] = useState({
+    checking: false,
+    isValid: true,
+    message: ''
+  });
   const [showMlLogin, setShowMlLogin] = useState(false);
   const [mlLoginMessage, setMlLoginMessage] = useState('');
   const mlSdkLoadedRef = useRef(false);
@@ -158,31 +163,57 @@ export default function EditProfileModal({ user, onClose, onSave }) {
             };
             setFormData(updatedFormData);
             
+            // Trigger ML ID validation after update
+            if (extractedMlId && extractedMlId !== user.ml_id) {
+              validateMlId(extractedMlId);
+            }
+            
             // Close modal again after data fetch
             closeMoontonModalNow();
             
-            // Auto-save MLBB account changes to backend
-            setMlLoginMessage('Saving MLBB account changes...');
-            try {
-              const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-              const response = await fetch('/profile', {
-                method: 'PATCH',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'X-CSRF-TOKEN': csrfToken,
-                  'Accept': 'application/json',
-                },
-                body: JSON.stringify({
-                  email: formData.email, // Include email to pass validation
-                  ml_id: extractedMlId,
-                  ml_server: extractedServer,
-                  ml_ign: ignFromInfo,
-                }),
-              });
-
-              const data = await response.json();
+            // Check if ML ID is available before auto-saving
+            const checkMlIdBeforeSave = async () => {
+              try {
+                const checkResponse = await fetch(`/check-ml-id-availability?ml_id=${encodeURIComponent(extractedMlId)}&user_id=${user.id}`, {
+                  method: 'GET',
+                  headers: {
+                    'Accept': 'application/json',
+                  },
+                });
+                const checkData = await checkResponse.json();
+                
+                if (!checkData.available) {
+                  setMlLoginMessage('❌ This ML ID is already registered with another account.');
+                  setError('This ML ID is already registered with another account.');
+                  return;
+                }
+              } catch (checkErr) {
+                console.error('ML ID check error:', checkErr);
+                // Continue with save attempt even if check fails
+              }
               
-              if (data.success) {
+              // Auto-save MLBB account changes to backend
+              setMlLoginMessage('Saving MLBB account changes...');
+              try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                const response = await fetch('/profile', {
+                  method: 'PATCH',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    email: formData.email, // Include email to pass validation
+                    ml_id: extractedMlId,
+                    ml_server: extractedServer,
+                    ml_ign: ignFromInfo,
+                  }),
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
                 setMlLoginMessage('✅ MLBB account updated successfully!');
                 setSuccess(true);
                 
@@ -208,11 +239,14 @@ export default function EditProfileModal({ user, onClose, onSave }) {
                 setMlLoginMessage('Failed to save changes: ' + (data.message || 'Unknown error'));
                 setError(data.message || 'Failed to save MLBB account changes');
               }
-            } catch (saveError) {
-              console.error('Save error:', saveError);
+            } catch (saveErr) {
+              console.error('Save error:', saveErr);
               setMlLoginMessage('Failed to save changes. Please try saving manually.');
               setError('Failed to save MLBB account changes');
             }
+          };
+          
+          checkMlIdBeforeSave();
           } catch (e) {
             setMlLoginMessage('Failed to fetch MLBB info. Please try again.');
           }
@@ -459,6 +493,56 @@ export default function EditProfileModal({ user, onClose, onSave }) {
     return () => clearTimeout(timeoutId);
   }, [formData.email, validateEmail]);
 
+  // Debounced ML ID validation function
+  const validateMlId = useCallback(async (mlId) => {
+    if (!mlId || mlId === user.ml_id) {
+      setMlIdValidation({ checking: false, isValid: true, message: '' });
+      return;
+    }
+
+    // Basic ML ID format validation (should be numeric)
+    if (!/^\d+$/.test(mlId)) {
+      setMlIdValidation({ checking: false, isValid: false, message: 'ML ID must be numeric' });
+      return;
+    }
+
+    setMlIdValidation({ checking: true, isValid: true, message: 'Checking ML ID...' });
+
+    try {
+      const response = await fetch(`/check-ml-id-availability?ml_id=${encodeURIComponent(mlId)}&user_id=${user.id}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+      
+      setMlIdValidation({
+        checking: false,
+        isValid: data.available,
+        message: data.available ? 'ML ID is available' : 'This ML ID is already registered with another account'
+      });
+    } catch (err) {
+      setMlIdValidation({
+        checking: false,
+        isValid: true, // Assume valid if check fails
+        message: 'Could not verify ML ID'
+      });
+    }
+  }, [user.ml_id, user.id]);
+
+  // Debounce ML ID validation
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (formData.ml_id) {
+        validateMlId(formData.ml_id);
+      }
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [formData.ml_id, validateMlId]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     // Clear error when user starts typing
@@ -582,6 +666,18 @@ export default function EditProfileModal({ user, onClose, onSave }) {
       return;
     }
 
+    // Check if ML ID validation is still in progress
+    if (mlIdValidation.checking) {
+      setError('Please wait for ML ID validation to complete');
+      return;
+    }
+
+    // Check if ML ID is invalid (only if it's changed)
+    if (formData.ml_id !== user.ml_id && !mlIdValidation.isValid) {
+      setError(mlIdValidation.message || 'This ML ID is already registered with another account');
+      return;
+    }
+
     // Check field restrictions
     if (formData.squadName !== user.squadName && !fieldRestrictions.squadName.canChange) {
       setError(fieldRestrictions.squadName.message);
@@ -695,48 +791,6 @@ export default function EditProfileModal({ user, onClose, onSave }) {
           </div>
         )}
 
-        {/* Verification Code Input */}
-        {emailVerificationSent && (
-          <div className="mb-4 p-4 bg-gray-800/50 border border-gray-600 rounded-lg">
-            <h3 className="text-lg font-semibold text-yellow-400 mb-3">Enter Verification Code</h3>
-            <p className="text-sm text-gray-300 mb-3">
-              We've sent a 6-digit verification code to your new email address. Enter it below to complete the email change.
-            </p>
-            <div className="flex gap-3">
-              <input
-                type="text"
-                value={verificationCode}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-                  setVerificationCode(value);
-                  if (error) setError(null);
-                }}
-                placeholder="123456"
-                disabled={isVerifyingCode}
-                className="flex-1 p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 disabled:opacity-50 text-center text-2xl font-mono tracking-widest"
-                maxLength="6"
-              />
-              <button
-                onClick={handleVerifyCode}
-                disabled={isVerifyingCode || verificationCode.length !== 6}
-                className="px-6 py-3 rounded-lg bg-yellow-500 text-black font-semibold hover:bg-yellow-400 transition shadow-lg disabled:opacity-50 flex items-center gap-2"
-              >
-                {isVerifyingCode ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                    Verifying...
-                  </>
-                ) : (
-                  'Verify'
-                )}
-              </button>
-            </div>
-            <p className="text-xs text-gray-400 mt-2">
-              ⏰ Verification code expires in 10 minutes
-            </p>
-          </div>
-        )}
-
         {/* Error Message */}
         {error && (
           <div className="mb-4 p-3 bg-red-900/50 border border-red-500 rounded-lg text-red-400 text-sm">
@@ -825,14 +879,45 @@ export default function EditProfileModal({ user, onClose, onSave }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-gray-300">MLBB ID</label>
-                <input
-                  type="text"
-                  name="ml_id"
-                  value={formData.ml_id}
-                  onChange={handleChange}
-                  disabled={isLoading || !fieldRestrictions.mlAccount.canChange}
-                  className="w-full p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 disabled:opacity-50"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="ml_id"
+                    value={formData.ml_id}
+                    onChange={handleChange}
+                    disabled={true}
+                    readOnly={true}
+                    className={`w-full p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 opacity-50 cursor-not-allowed pr-10`}
+                  />
+                  {/* Validation Status Icon */}
+                  {formData.ml_id && formData.ml_id !== user.ml_id && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      {mlIdValidation.checking ? (
+                        <div className="animate-spin w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full"></div>
+                      ) : mlIdValidation.isValid ? (
+                        <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      ) : (
+                        <svg className="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {/* Validation Message */}
+                {formData.ml_id && formData.ml_id !== user.ml_id && mlIdValidation.message && (
+                  <p className={`text-xs mt-1 ${
+                    mlIdValidation.checking 
+                      ? 'text-blue-400' 
+                      : mlIdValidation.isValid 
+                        ? 'text-green-400' 
+                        : 'text-red-400'
+                  }`}>
+                    {mlIdValidation.message}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="text-sm text-gray-300">Server</label>
@@ -841,8 +926,9 @@ export default function EditProfileModal({ user, onClose, onSave }) {
                   name="ml_server"
                   value={formData.ml_server}
                   onChange={handleChange}
-                  disabled={isLoading || !fieldRestrictions.mlAccount.canChange}
-                  className="w-full p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 disabled:opacity-50"
+                  disabled={true}
+                  readOnly={true}
+                  className="w-full p-2.5 md:p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 opacity-50 cursor-not-allowed"
                 />
               </div>
             </div>
@@ -920,6 +1006,48 @@ export default function EditProfileModal({ user, onClose, onSave }) {
                   ⚠️ Changing your email may require re-verification.
                 </p>
               )}
+
+              {/* Verification Code Input */}
+              {emailVerificationSent && (
+                <div className="mt-4 p-4 bg-gray-800/50 border border-gray-600 rounded-lg">
+                  <h3 className="text-lg font-semibold text-yellow-400 mb-3">Enter Verification Code</h3>
+                  <p className="text-sm text-gray-300 mb-3">
+                    We've sent a 6-digit verification code to your new email address. Enter it below to complete the email change.
+                  </p>
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      value={verificationCode}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                        setVerificationCode(value);
+                        if (error) setError(null);
+                      }}
+                      placeholder="123456"
+                      disabled={isVerifyingCode}
+                      className="flex-1 p-3 rounded-lg bg-gray-900/70 text-white border border-gray-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 disabled:opacity-50 text-center text-2xl font-mono tracking-widest"
+                      maxLength="6"
+                    />
+                    <button
+                      onClick={handleVerifyCode}
+                      disabled={isVerifyingCode || verificationCode.length !== 6}
+                      className="px-6 py-3 rounded-lg bg-yellow-500 text-black font-semibold hover:bg-yellow-400 transition shadow-lg disabled:opacity-50 flex items-center gap-2"
+                    >
+                      {isVerifyingCode ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                          Verifying...
+                        </>
+                      ) : (
+                        'Verify'
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-2">
+                    ⏰ Verification code expires in 10 minutes
+                  </p>
+                </div>
+              )}
             </div>
 
             <div>
@@ -964,6 +1092,8 @@ export default function EditProfileModal({ user, onClose, onSave }) {
               || emailValidation.checking 
               || !emailValidation.isValid 
               || (formData.email !== user.email && !emailVerified) 
+              || mlIdValidation.checking
+              || (formData.ml_id !== user.ml_id && !mlIdValidation.isValid)
               || (formData.squadName !== user.squadName && !fieldRestrictions.squadName.canChange) 
               || (formData.year_level !== user.year_level && !fieldRestrictions.yearLevel.canChange)
               || ((formData.ml_id !== user.ml_id || formData.ml_server !== user.ml_server) && !fieldRestrictions.mlAccount.canChange)
@@ -998,6 +1128,11 @@ export default function EditProfileModal({ user, onClose, onSave }) {
           {((formData.ml_id !== user.ml_id || formData.ml_server !== user.ml_server) && !fieldRestrictions.mlAccount.canChange) && (
             <p className="text-xs text-orange-400 mt-2 text-center">
               ⏰ {fieldRestrictions.mlAccount.message}
+            </p>
+          )}
+          {(formData.ml_id !== user.ml_id && !mlIdValidation.isValid) && (
+            <p className="text-xs text-red-400 mt-2 text-center">
+              ⚠️ {mlIdValidation.message || 'This ML ID is already registered with another account'}
             </p>
           )}
         </div>
