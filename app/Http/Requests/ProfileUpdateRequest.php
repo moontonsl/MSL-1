@@ -27,7 +27,12 @@ class ProfileUpdateRequest extends FormRequest
             'year_level' => ['nullable', 'string', 'max:255'],
             'squadName' => ['nullable', 'string', 'max:255'],
             'ml_ign' => ['nullable', 'string', 'max:255'],
-            'ml_id' => ['nullable', 'string', 'max:255'],
+            'ml_id' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique(User::class, 'ml_id')->ignore($this->user()->id),
+            ],
             'ml_server' => ['nullable', 'string', 'max:255'],
             'contact_number' => ['nullable', 'string', 'max:20'],
             'facebook_link' => ['nullable', 'string', 'max:255'],

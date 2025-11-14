@@ -133,6 +133,21 @@ class ProfileController extends Controller
                 (isset($validatedData['ml_id']) && $validatedData['ml_id'] !== $user->ml_id) ||
                 (isset($validatedData['ml_server']) && $validatedData['ml_server'] !== $user->ml_server)
             );
+            
+            // Check if ML ID is already used by another account (only if ml_id is changing)
+            if (isset($validatedData['ml_id']) && $validatedData['ml_id'] !== $user->ml_id) {
+                if (is_ml_id_used($validatedData['ml_id'], $user->id)) {
+                    $message = 'This ML ID is already registered with another account.';
+                    if ($request->wantsJson() || $request->ajax()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => $message
+                        ], 400);
+                    }
+                    return Redirect::back()->withErrors(['ml_id' => $message]);
+                }
+            }
+            
             if ($isMlAccountChanging && $user->ml_account_last_changed) {
                 $lastChanged = \Carbon\Carbon::parse($user->ml_account_last_changed);
                 $nextChangeDate = $lastChanged->addYear();
