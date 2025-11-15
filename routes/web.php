@@ -991,17 +991,16 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
 // MCC Routes
 Route::prefix('MCC')->name('MCC.')->group(function () {
     Route::get('/', function () {
-        return Inertia::render('MCC Season 2/Home');
+        return redirect('/MCC/S2'); // Default to Season 2
     })->name('main');
-});
-
-// MCC2 Test Route (for comparison)
-Route::get('/MCC2', function () {
-    return Inertia::render('MCC Season 2/Home copy');
-})->name('MCC2');
-
-// MCC Routes continued
-Route::prefix('MCC')->name('MCC.')->group(function () {
+    
+    Route::get('/S2', function () {
+        return Inertia::render('MCC Season 2/MCC Season 2');
+    })->name('season2');
+    
+    Route::get('/S1', function () {
+        return Inertia::render('MCC Season 2/MCC Season 1');
+    })->name('season1');
 
     Route::get('/calendar', function () {
         return Inertia::render('MCC/Calendar/index');
