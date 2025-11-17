@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Head } from "@inertiajs/react";
 import { Header, Footer } from "@/Components";
 import NewsArticleSidebar from "@/Components/NewsArticleSidebar";
 
 export default function NewsArticle({ article }) {
-  const [imageLoading, setImageLoading] = useState(true);
-  const [showDebug, setShowDebug] = useState(false);
 
   // Force shimmer to show for at least 1 second
   useEffect(() => {
@@ -38,19 +36,6 @@ export default function NewsArticle({ article }) {
   const imageUrl = article?.absoluteImageUrl || (article?.image ? `${appUrl}${article.image}` : null);
   const description = article?.subtitle || article?.content?.substring(0, 200) || "News article";
 
-  // Debug: Log the values that will be used (only once when article loads)
-  React.useEffect(() => {
-    if (article?.title) {
-      console.log('=== Facebook Open Graph Debug ===');
-      console.log('Title:', article?.title);
-      console.log('Image URL:', imageUrl);
-      console.log('Article URL:', articleUrl);
-      console.log('Description:', description);
-      console.log('===============================');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [article?.title]); // Only log when title changes (article loads)
-
   return (
     <div className="min-h-screen bg-black text-white">
       <Head>
@@ -76,41 +61,6 @@ export default function NewsArticle({ article }) {
       <div className="relative z-10">
         <Header />
       </div>
-
-      {/* Debug Panel - Remove in production */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="fixed bottom-4 right-4 z-50 bg-white text-black p-4 rounded-lg shadow-2xl max-w-md">
-          <button
-            onClick={() => setShowDebug(!showDebug)}
-            className="w-full bg-blue-600 text-white px-4 py-2 rounded mb-2 hover:bg-blue-700"
-          >
-            {showDebug ? 'Hide' : 'Show'} Facebook Preview Debug
-          </button>
-          {showDebug && (
-            <div className="space-y-2 text-sm">
-              <div className="border-b pb-2">
-                <strong className="text-blue-600">og:title</strong>
-                <div className="text-gray-700 break-words">{article?.title || 'N/A'}</div>
-              </div>
-              <div className="border-b pb-2">
-                <strong className="text-blue-600">og:image</strong>
-                <div className="text-gray-700 break-all text-xs">{imageUrl || 'N/A'}</div>
-                {imageUrl && (
-                  <img src={imageUrl} alt="Preview" className="mt-2 max-w-full h-auto border rounded" />
-                )}
-              </div>
-              <div className="border-b pb-2">
-                <strong className="text-blue-600">og:url</strong>
-                <div className="text-gray-700 break-all text-xs">{articleUrl || 'N/A'}</div>
-              </div>
-              <div className="border-b pb-2">
-                <strong className="text-blue-600">og:description</strong>
-                <div className="text-gray-700 break-words text-xs">{description || 'N/A'}</div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
 
       <main className="flex-grow">
         <div 

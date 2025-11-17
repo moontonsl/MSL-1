@@ -10,18 +10,14 @@ export default function Articles() {
     const fetchArticles = async () => {
       try {
         setLoading(true);
-        console.log('Fetching articles from /news-articles...');
         const response = await fetch('/news-articles');
-        console.log('Response status:', response.status);
         if (!response.ok) {
           throw new Error('Failed to fetch articles');
         }
         const data = await response.json();
-        console.log('Articles data:', data);
         setArticles(data);
       } catch (err) {
         setError(err.message);
-        console.error('Error fetching articles:', err);
       } finally {
         setLoading(false);
       }
