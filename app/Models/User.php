@@ -52,7 +52,10 @@ class User extends Authenticatable
         'state',
         'blocked_reason',
         'verified_by',
-        'verified_date'
+        'verified_date',
+        'squad_name_last_changed',
+        'year_level_last_changed',
+        'ml_account_last_changed'
     ];
 
     /**
@@ -75,6 +78,10 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'verified_date' => 'datetime',
+            'email_verification_code_expires_at' => 'datetime',
+            'squad_name_last_changed' => 'datetime',
+            'year_level_last_changed' => 'datetime',
+            'ml_account_last_changed' => 'datetime',
             'password' => 'hashed',
         ];
     }

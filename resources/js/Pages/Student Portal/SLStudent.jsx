@@ -6,7 +6,7 @@ import profilePic from "./assets/42ca9ea53c9f0acd1d273d2864b58719215b59f4.png"
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutSLStudent.jsx";
 import TableComponent from "@/Pages/SLAdmin/components/TableComponent.jsx";
 import { Head, usePage } from '@inertiajs/react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import EditProfileModal from "./EditProfileModal.jsx"; 
 import rankPIC from "./assets/MythicIcon.png";
 
@@ -17,6 +17,11 @@ const SLStudent = () => {
 
     const [showEditProfileModal, setShowEditProfileModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState(user);
+
+    // Sync selectedUser when user prop changes (after page reload)
+    useEffect(() => {
+        setSelectedUser(user);
+    }, [user]);
 
     // Male SVG (Gold)
     const MaleIcon = () => (
@@ -72,12 +77,12 @@ const SLStudent = () => {
                         </div>
 
                         {/* Button for Edit Profile*/}
-                        {/*<button
+                        <button
                             onClick={() => setShowEditProfileModal(true)}
                             className="mt-5 rounded-full bg-gradient-to-r from-purple-500 to-pink-400 px-6 py-2 text-sm font-semibold text-white shadow-md hover:from-purple-600 hover:to-pink-500 transition"
                         >
                             Edit Profile
-                        </button>*/}
+                        </button>
                         </div>
 
                         {/* User Info */}
@@ -266,6 +271,13 @@ const SLStudent = () => {
                 <EditProfileModal
                 user={selectedUser}
                 onClose={() => setShowEditProfileModal(false)}
+                onSave={(updatedUser) => {
+                    setSelectedUser(updatedUser);
+                    // Also update the user from page props if available
+                    if (updatedUser) {
+                        // The router.reload will handle the full refresh
+                    }
+                }}
                 />
             )}
 
