@@ -274,8 +274,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         // Apply role-based filtering
         if ($user->role === 'SL') {
+            // Student Leaders can only see their own requests
             $query->where('submitted_by', $user->id);
         } elseif ($user->role === 'Regional Admin') {
+            // Regional Admins can see requests from their assigned regions
             $assignedRegionIds = $user->getAssignedRegionIds();
             if (!empty($assignedRegionIds)) {
                 $query->whereHas('user', function($q) use ($assignedRegionIds) {
@@ -287,6 +289,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 });
             }
         }
+        // Super Admin can see all requests from all regions (no filtering applied)
         
         $requests = $query->orderBy('created_at', 'desc')->paginate(10);
         
@@ -342,31 +345,93 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return response()->json(['error' => 'Request has already been processed'], 400);
         }
         
-        $modificationRequest->update([
-            'status' => 'Approved',
-            'approved_by' => $user->id,
-            'approved_at' => now(),
-        ]);
+        // Use database transaction to ensure atomicity
+        \DB::beginTransaction();
         
-        // Update the user's data
-        $targetUser = $modificationRequest->user;
-        switch ($modificationRequest->modification_type) {
-            case 'Full Name':
-                $nameParts = explode(' ', $modificationRequest->correct_value, 2);
-                $targetUser->update([
-                    'name' => $nameParts[0],
-                    'surname' => $nameParts[1] ?? '',
-                ]);
-                break;
-            case 'School':
-                $targetUser->update(['university' => $modificationRequest->correct_value]);
-                break;
-            case 'Course':
-                $targetUser->update(['course' => $modificationRequest->correct_value]);
-                break;
+        try {
+            // Update the user's data first (before updating status)
+            $targetUser = $modificationRequest->user;
+            
+            if (!$targetUser) {
+                \DB::rollBack();
+                return response()->json(['error' => 'User not found'], 404);
+            }
+            
+            switch ($modificationRequest->modification_type) {
+                case 'Full Name':
+                    $nameParts = explode(' ', $modificationRequest->correct_value, 2);
+                    $targetUser->update([
+                        'name' => $nameParts[0],
+                        'surname' => $nameParts[1] ?? '',
+                    ]);
+                    break;
+                case 'School':
+                    // When school is changed, also update region and island to match the new school
+                    $newSchoolName = $modificationRequest->correct_value;
+                    $school = \App\Models\School::with('region.island')
+                        ->where('name', $newSchoolName)
+                        ->first();
+                    
+                    if ($school && $school->region) {
+                        $regionId = $school->region->id ?? null;
+                        $regionName = $school->region->name ?? null;
+                        if ($regionName) {
+                            $regionName = preg_replace('/^\d+\s*-\s*/', '', $regionName);
+                            $regionName = trim($regionName);
+                        }
+                        
+                        // Get island name and clean it similarly
+                        $islandName = null;
+                        if ($school->region->island) {
+                            $islandName = $school->region->island->name ?? null;
+                            if ($islandName) {
+                                $islandName = preg_replace('/^\d+\s*-\s*/', '', $islandName);
+                                $islandName = trim($islandName);
+                            }
+                        }
+                        
+                        // Update university, region (ID), and island (name)
+                        $updateData = [
+                            'university' => $newSchoolName,
+                        ];
+                        
+                        if ($regionId !== null) {
+                            $updateData['region'] = $regionId;
+                        }
+                        
+                        if ($islandName) {
+                            $updateData['island'] = $islandName;
+                        }
+                        
+                        $targetUser->update($updateData);
+                    } else {
+                        // If school not found, just update university (fallback)
+                        $targetUser->update(['university' => $newSchoolName]);
+                    }
+                    break;
+                case 'Course':
+                    $targetUser->update(['course' => $modificationRequest->correct_value]);
+                    break;
+            }
+            
+            // Only update status after user data is successfully updated
+            $modificationRequest->update([
+                'status' => 'Approved',
+                'approved_by' => $user->id,
+                'approved_at' => now(),
+            ]);
+            
+            \DB::commit();
+            
+            return response()->json(['success' => true, 'message' => 'Request approved successfully']);
+            
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            
+            return response()->json([
+                'error' => 'Failed to approve request: ' . $e->getMessage()
+            ], 500);
         }
-        
-        return response()->json(['success' => true]);
     });
     
     Route::post('/api/modification-requests/{id}/reject', function (\Illuminate\Http\Request $request, $id) {
@@ -833,13 +898,13 @@ Route::middleware(['auth', 'verified'])->get('/SLAdminApproval', function () {
     ]);
 })->name('SLAdminApproval');
 
-//ADMIN REGIONAL APPROVAL ROUTES - Only Regional Admin role can access
+//ADMIN REGIONAL APPROVAL ROUTES - Regional Admin and Super Admin can access
 Route::middleware(['auth', 'verified'])->get('/RegionalAdminApproval', function () {
     $user = Auth::user();
     
-    // Only Regional Admin role can access this page
-    if ($user->role !== 'Regional Admin') {
-        abort(403, 'Access denied. Only Regional Admins can access this page.');
+    // Regional Admin and Super Admin can access this page
+    if ($user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+        abort(403, 'Access denied. Only Regional Admins and Super Admins can access this page.');
     }
     
     return Inertia::render('ApprovalPages/RegionalAdminApproval', [

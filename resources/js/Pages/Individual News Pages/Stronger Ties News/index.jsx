@@ -5,11 +5,35 @@ import MCCNewsIndividualPageColumnDescription from "./description";
 import NewsArticleSidebar from "../../../Components/NewsArticleSidebar";
 
 export default function StrongerTiesNewsIndex() {
+    // Get absolute URLs for Open Graph
+    const appUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    const articleUrl = `${appUrl}/news/stronger-ties-moonton-umak`;
+    const imageUrl = `${appUrl}/images/MCC/IndivNews/image_3.jpg`;
+    const title = "Stronger Ties: Moonton Philippines, UMAK Seals Partnership";
+    const description = "Renewed and empowered – linkage has been created as University of Makati (UMaK) and Moonton Philippines Technologies, Inc. ties close connection, pursuant to knowledge acquisition and innovation of industry-university endeavors.";
+
     return (
         <MainLayout>
             <Head>
-                <title>Stronger Ties: Moonton Philippines, UMAK Seals Partnership</title>
-                <meta name="description" content="Renewed and empowered – linkage has been created as University of Makati (UMaK) and Moonton Philippines Technologies, Inc. ties close connection" />
+                <title>{title}</title>
+                <meta name="description" content={description} />
+                
+                {/* Open Graph / Facebook */}
+                <meta property="og:type" content="article" />
+                <meta property="og:url" content={articleUrl} />
+                <meta property="og:title" content={title} />
+                <meta property="og:description" content={description} />
+                <meta property="og:image" content={imageUrl} />
+                <meta property="og:image:width" content="1200" />
+                <meta property="og:image:height" content="630" />
+                <meta property="og:site_name" content="MSL" />
+                
+                {/* Twitter Card */}
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:url" content={articleUrl} />
+                <meta name="twitter:title" content={title} />
+                <meta name="twitter:description" content={description} />
+                <meta name="twitter:image" content={imageUrl} />
             </Head>
             
             <div 

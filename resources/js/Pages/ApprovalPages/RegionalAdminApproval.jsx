@@ -112,10 +112,10 @@ export default function RegionalAdminApproval() {
           
           const data = await response.json();
           
-          if (data.success) {
+          if (response.ok && data.success) {
             setModalData({
               title: 'Success',
-              message: 'Request approved successfully!',
+              message: data.message || 'Request approved successfully!',
               type: 'success',
               confirmText: 'OK',
               showCancel: false,
@@ -132,18 +132,25 @@ export default function RegionalAdminApproval() {
               type: 'error',
               confirmText: 'OK',
               showCancel: false,
-              onConfirm: () => setShowMSLModal(false)
+              onConfirm: () => {
+                setShowMSLModal(false);
+                fetchRequests(currentPage); // Refresh to see actual status
+              }
             });
             setShowMSLModal(true);
           }
         } catch (error) {
+          console.error('Error approving request:', error);
           setModalData({
             title: 'Error',
             message: 'Error approving request. Please try again.',
             type: 'error',
             confirmText: 'OK',
             showCancel: false,
-            onConfirm: () => setShowMSLModal(false)
+            onConfirm: () => {
+              setShowMSLModal(false);
+              fetchRequests(currentPage); // Refresh to see actual status
+            }
           });
           setShowMSLModal(true);
         }
