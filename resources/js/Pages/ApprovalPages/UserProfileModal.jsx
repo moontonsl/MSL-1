@@ -10,18 +10,8 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
             return;
         }
 
-        try {
-            const response = await fetch(`/api/view-attachment/${proofOfEnrollment}`);
-            if (response.ok) {
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                window.open(url, '_blank');
-            } else {
-                alert('Error viewing attachment');
-            }
-        } catch (error) {
-            alert('Error viewing attachment');
-        }
+        const fullUrl = `/storage/${proofOfEnrollment}`;
+        window.open(fullUrl, '_blank');
     };
 
     const handleBackdropClick = (e) => {
