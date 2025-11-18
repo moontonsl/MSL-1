@@ -293,9 +293,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         $requests = $query->orderBy('created_at', 'desc')->paginate(10);
         
-        // Ensure relationships are included in JSON response
+        // Ensure relationships are included in JSON response and add verifier info
         $requests->getCollection()->transform(function ($request) {
             $request->load(['user', 'submittedBy', 'approvedBy']);
+            
+            // Add verifier information if user is verified
+            if ($request->user && $request->user->verified_by) {
+                $verifier = \App\Models\User::select('name', 'surname')
+                    ->where('id', $request->user->verified_by)
+                    ->first();
+                if ($verifier) {
+                    $request->user->verifier_name = $verifier->name;
+                    $request->user->verifier_surname = $verifier->surname;
+                }
+            }
+            
             return $request;
         });
         
