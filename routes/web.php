@@ -155,6 +155,7 @@ Route::middleware(['auth', 'verified'])->get('/api/users/search', function (\Ill
     
     $search = $request->query('search', '');
     $limit = $request->query('limit', 10);
+    $modificationType = $request->query('modification_type', '');
     
     if (strlen($search) < 2) {
         return response()->json([]);
@@ -165,8 +166,13 @@ Route::middleware(['auth', 'verified'])->get('/api/users/search', function (\Ill
     );
     
     // Apply role-based filtering
+    // For SL users: if modification type is "School", allow searching everyone regardless of region/university
+    // Otherwise, filter by university (current behavior)
     if ($user->role === 'SL') {
-        $query->where('university', $user->university);
+        if ($modificationType !== 'School') {
+            $query->where('university', $user->university);
+        }
+        // If modificationType is 'School', no region/university filter is applied
     } elseif ($user->role === 'Regional Admin') {
         $assignedRegionIds = $user->getAssignedRegionIds();
         if (!empty($assignedRegionIds)) {
@@ -291,7 +297,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         }
         // Super Admin can see all requests from all regions (no filtering applied)
         
-        $requests = $query->orderBy('created_at', 'desc')->paginate(10);
+        // Order by status: Pending -> Approved -> Rejected, then by created_at desc
+        $requests = $query->orderByRaw("CASE 
+            WHEN status = 'Pending' THEN 1 
+            WHEN status = 'Approved' THEN 2 
+            WHEN status = 'Rejected' THEN 3 
+            ELSE 4 
+        END")
+        ->orderBy('created_at', 'desc')
+        ->paginate(10);
         
         // Ensure relationships are included in JSON response and add verifier info
         $requests->getCollection()->transform(function ($request) {
