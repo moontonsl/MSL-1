@@ -1,5 +1,5 @@
 import styles from "./SLAdmin.module.scss";
-import {BadgeCheck, ArrowDownAZ, Funnel, Search, Users, UserCheck, UserX, RefreshCw, Crown} from 'lucide-react';
+import {BadgeCheck, ArrowDownAZ, Funnel, Search, Users, UserCheck, UserX, RefreshCw, Crown, ShieldUser} from 'lucide-react';
 
 import profilePic from "./assets/42ca9ea53c9f0acd1d273d2864b58719215b59f4.png"
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
@@ -8,7 +8,7 @@ import { Head, usePage } from '@inertiajs/react';
 import React, { useState } from 'react';
 
 const SLAdmin = () => {
-    const { user, verified, new: newUsers, renewed, blocked, studentLeaders } = usePage().props;
+    const { user, verified, new: newUsers, renewed, blocked, studentLeaders, regionalAdmins } = usePage().props;
     const [selectedTab, setSelectedTab] = useState('New');
     const [searchQuery, setSearchQuery] = useState('');
     
@@ -19,10 +19,18 @@ const SLAdmin = () => {
         { label: 'Blocked', value: 'Blocked', icon: UserX, count: blocked },
     ];
     
-    // Add Student Leader tab only for Regional Admin
-    const tabOptions = user.role === 'Regional Admin' 
-        ? [...baseTabOptions, { label: 'Student Leaders', value: 'StudentLeaders', icon: Crown, count: studentLeaders }]
-        : baseTabOptions;
+    // Add Student Leader tab for Regional Admin and Super Admin
+    // Add Regional User tab only for Super Admin
+    let tabOptions = baseTabOptions;
+    if (user.role === 'Regional Admin') {
+        tabOptions = [...baseTabOptions, { label: 'Student Leaders', value: 'StudentLeaders', icon: Crown, count: studentLeaders }];
+    } else if (user.role === 'Super Admin') {
+        tabOptions = [
+            ...baseTabOptions, 
+            { label: 'Student Leaders', value: 'StudentLeaders', icon: Crown, count: studentLeaders },
+            { label: 'Regional User', value: 'RegionalAdmins', icon: ShieldUser, count: regionalAdmins }
+        ];
+    }
 
     const StatCard = ({ icon: Icon, label, value, color }) => (
         <div className="bg-gradient-to-br from-neutral-800/50 to-neutral-900/50 backdrop-blur-sm border border-neutral-700/50 rounded-xl p-4 hover:border-neutral-600/50 transition-all duration-300 group">
@@ -107,7 +115,11 @@ const SLAdmin = () => {
                     </div>
 
                     {/* Statistics Grid */}
-                    <div className={`grid gap-4 mb-8 ${user.role === 'Regional Admin' ? 'grid-cols-2 lg:grid-cols-5' : 'grid-cols-2 lg:grid-cols-4'}`}>
+                    <div className={`grid gap-4 mb-8 ${
+                        user.role === 'Regional Admin' ? 'grid-cols-2 lg:grid-cols-5' : 
+                        user.role === 'Super Admin' ? 'grid-cols-2 lg:grid-cols-6' : 
+                        'grid-cols-2 lg:grid-cols-4'
+                    }`}>
                         <StatCard 
                             icon={UserCheck} 
                             label="Verified" 
@@ -132,12 +144,20 @@ const SLAdmin = () => {
                             value={blocked} 
                             color="text-red-400" 
                         />
-                        {user.role === 'Regional Admin' && (
+                        {(user.role === 'Regional Admin' || user.role === 'Super Admin') && (
                             <StatCard 
                                 icon={Crown} 
                                 label="Student Leaders" 
                                 value={studentLeaders} 
                                 color="text-purple-400" 
+                            />
+                        )}
+                        {user.role === 'Super Admin' && (
+                            <StatCard 
+                                icon={ShieldUser} 
+                                label="Regional Admins" 
+                                value={regionalAdmins} 
+                                color="text-blue-400" 
                             />
                         )}
                     </div>
