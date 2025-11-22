@@ -101,22 +101,13 @@ const MCCS2Home = () => {
             <div className="w-[1920px] h-[3000px] xl:h-[2550px] relative">
               {/* Season chip moved under subtitle */}
 
-              {/* Background hero image - Fit to width, maintain aspect ratio */}
-              <div className="w-[1920px] left-0 top-0 absolute">
-                <img 
-                  className="w-full h-auto" 
-                  src="/images/MCC S2/ChampS2.jpg" 
-                  alt="Hero" 
-                  style={{ 
-                    width: '100%',
-                    height: 'auto',
-                    display: 'block'
-                  }}
-                />
+              {/* Background hero image */}
+              <div className="w-[1920px] left-0 top-0 absolute inline-flex flex-col justify-start items-center gap-2.5">
+                <img className="self-stretch h-[1011px]" src="/images/MCC S2/PHINMA.jpg" alt="Hero" />
               </div>
 
               {/* Four buttons - Desktop grid (2x2), tightened spacing and slightly larger */}
-              <div className="w-[1200px] left-1/2 -translate-x-1/2 top-[1460px] xl:top-[1340px] absolute hidden xl:grid grid-cols-2 gap-6 place-items-center z-20">
+              <div className="w-[1200px] left-1/2 -translate-x-1/2 top-[1620px] absolute hidden xl:grid grid-cols-2 gap-6 place-items-center z-20">
                 <div className="w-[520px] h-[220px] flex items-center justify-center group transition-transform duration-300 ease-out hover:scale-[1.04]">
                   <img
                     className="w-full h-full object-contain select-none group-hover:brightness-110 group-hover:drop-shadow-[0_0_16px_rgba(243,199,24,0.45)]"
@@ -150,7 +141,7 @@ const MCCS2Home = () => {
               </div>
 
               {/* Four buttons - Mobile grid (large 2x2) */}
-              <div className="w-[1920px] left-0 top-[1560px] absolute grid grid-cols-2 gap-4 place-items-center xl:hidden z-20">
+              <div className="w-[1920px] left-0 top-[1720px] absolute grid grid-cols-2 gap-4 place-items-center xl:hidden z-20">
                 {/* Row 1: Rules | Calendar */}
                 <div className="w-[820px] h-[320px] flex items-center justify-center transform translate-x-10 transition-transform duration-200 active:scale-95">
                   <img className="w-full h-full object-contain select-none active:brightness-110" src="/images/MCC S2/Rules Button.png" alt="Rules" />
@@ -170,11 +161,11 @@ const MCCS2Home = () => {
               </div>
 
               {/* MCC logo (separate so title position remains unchanged) */}
-              <div className="absolute left-1/2 -translate-x-1/2 top-[900px] xl:top-[780px] z-20 inline-flex items-center justify-center">
+              <div className="absolute left-1/2 -translate-x-1/2 top-[1120px] z-20 inline-flex items-center justify-center">
                 <img className="w-[260px] h-auto" src="/images/MCC S2/MCCLOGO.png" alt="MCC Logo" />
               </div>
               {/* Centered title block (original position) */}
-              <div className="absolute left-1/2 -translate-x-1/2 top-[1180px] xl:top-[1060px] z-20 inline-flex flex-col items-center justify-center">
+              <div className="absolute left-1/2 -translate-x-1/2 top-[1400px] z-20 inline-flex flex-col items-center justify-center">
                 <img
                   className="w-[1180px] h-auto"
                   src="/images/MCC S2/Pamantasang lakas MSL COLLEGIATE CUP S2.png"
@@ -232,20 +223,20 @@ const MCCS2Home = () => {
                 </div>
               </div>
 
-              {/* Left and Right hero images - positioned to match original */}
+              {/* Left and Right hero images */}
               <img
-                className="absolute left-0 top-[580px] xl:top-[500px] w-[650px] h-auto z-10 select-none pointer-events-none"
+                className="absolute left-0 top-[780px] w-[650px] h-auto z-10 select-none pointer-events-none"
                 src="/images/MCC S2/Lou yi.png"
                 alt="Lou Yi"
               />
               <img
-                className="absolute right-0 top-[580px] xl:top-[530px] w-[740px] h-auto z-10 select-none pointer-events-none"
+                className="absolute right-0 top-[780px] w-[740px] h-auto z-10 select-none pointer-events-none"
                 src="/images/MCC S2/Zhu Xin.png"
                 alt="Zhu Xin"
               />
 
               {/* About section (mobile pushed lower for buttons grid) */}
-              <div className="w-[1920px] min-h-[720px] p-2.5 left-0 absolute top-[2480px] xl:top-[1800px] inline-flex justify-center items-center overflow-visible">
+              <div className="w-[1920px] min-h-[720px] p-2.5 left-0 absolute top-[2480px] xl:top-[2080px] inline-flex justify-center items-center overflow-visible">
                 <div className="flex-1 self-stretch p-2.5 inline-flex flex-col justify-start items-start gap-2.5 overflow-visible">
                   <div className="self-stretch p-2.5 flex flex-col justify-start items-center gap-2.5 overflow-visible">
                     <div className="text-center justify-start text-white text-4xl font-bold font-['Montserrat'] leading-[56px]">MLBB COLLEGIATE CUP</div>
