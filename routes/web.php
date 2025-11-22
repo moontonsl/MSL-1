@@ -156,6 +156,7 @@ Route::middleware(['auth', 'verified'])->get('/api/users/search', function (\Ill
     
     $search = $request->query('search', '');
     $limit = $request->query('limit', 10);
+    $modificationType = $request->query('modification_type', '');
     
     if (strlen($search) < 2) {
         return response()->json([]);
@@ -166,8 +167,13 @@ Route::middleware(['auth', 'verified'])->get('/api/users/search', function (\Ill
     );
     
     // Apply role-based filtering
+    // For SL users: if modification type is "School", allow searching everyone regardless of region/university
+    // Otherwise, filter by university (current behavior)
     if ($user->role === 'SL') {
-        $query->where('university', $user->university);
+        if ($modificationType !== 'School') {
+            $query->where('university', $user->university);
+        }
+        // If modificationType is 'School', no region/university filter is applied
     } elseif ($user->role === 'Regional Admin') {
         $assignedRegionIds = $user->getAssignedRegionIds();
         if (!empty($assignedRegionIds)) {
@@ -275,8 +281,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         // Apply role-based filtering
         if ($user->role === 'SL') {
+            // Student Leaders can only see their own requests
             $query->where('submitted_by', $user->id);
         } elseif ($user->role === 'Regional Admin') {
+            // Regional Admins can see requests from their assigned regions
             $assignedRegionIds = $user->getAssignedRegionIds();
             if (!empty($assignedRegionIds)) {
                 $query->whereHas('user', function($q) use ($assignedRegionIds) {
@@ -288,12 +296,33 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 });
             }
         }
+        // Super Admin can see all requests from all regions (no filtering applied)
         
-        $requests = $query->orderBy('created_at', 'desc')->paginate(10);
+        // Order by status: Pending -> Approved -> Rejected, then by created_at desc
+        $requests = $query->orderByRaw("CASE 
+            WHEN status = 'Pending' THEN 1 
+            WHEN status = 'Approved' THEN 2 
+            WHEN status = 'Rejected' THEN 3 
+            ELSE 4 
+        END")
+        ->orderBy('created_at', 'desc')
+        ->paginate(10);
         
-        // Ensure relationships are included in JSON response
+        // Ensure relationships are included in JSON response and add verifier info
         $requests->getCollection()->transform(function ($request) {
             $request->load(['user', 'submittedBy', 'approvedBy']);
+            
+            // Add verifier information if user is verified
+            if ($request->user && $request->user->verified_by) {
+                $verifier = \App\Models\User::select('name', 'surname')
+                    ->where('id', $request->user->verified_by)
+                    ->first();
+                if ($verifier) {
+                    $request->user->verifier_name = $verifier->name;
+                    $request->user->verifier_surname = $verifier->surname;
+                }
+            }
+            
             return $request;
         });
         
@@ -343,31 +372,93 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return response()->json(['error' => 'Request has already been processed'], 400);
         }
         
-        $modificationRequest->update([
-            'status' => 'Approved',
-            'approved_by' => $user->id,
-            'approved_at' => now(),
-        ]);
+        // Use database transaction to ensure atomicity
+        \DB::beginTransaction();
         
-        // Update the user's data
-        $targetUser = $modificationRequest->user;
-        switch ($modificationRequest->modification_type) {
-            case 'Full Name':
-                $nameParts = explode(' ', $modificationRequest->correct_value, 2);
-                $targetUser->update([
-                    'name' => $nameParts[0],
-                    'surname' => $nameParts[1] ?? '',
-                ]);
-                break;
-            case 'School':
-                $targetUser->update(['university' => $modificationRequest->correct_value]);
-                break;
-            case 'Course':
-                $targetUser->update(['course' => $modificationRequest->correct_value]);
-                break;
+        try {
+            // Update the user's data first (before updating status)
+            $targetUser = $modificationRequest->user;
+            
+            if (!$targetUser) {
+                \DB::rollBack();
+                return response()->json(['error' => 'User not found'], 404);
+            }
+            
+            switch ($modificationRequest->modification_type) {
+                case 'Full Name':
+                    $nameParts = explode(' ', $modificationRequest->correct_value, 2);
+                    $targetUser->update([
+                        'name' => $nameParts[0],
+                        'surname' => $nameParts[1] ?? '',
+                    ]);
+                    break;
+                case 'School':
+                    // When school is changed, also update region and island to match the new school
+                    $newSchoolName = $modificationRequest->correct_value;
+                    $school = \App\Models\School::with('region.island')
+                        ->where('name', $newSchoolName)
+                        ->first();
+                    
+                    if ($school && $school->region) {
+                        $regionId = $school->region->id ?? null;
+                        $regionName = $school->region->name ?? null;
+                        if ($regionName) {
+                            $regionName = preg_replace('/^\d+\s*-\s*/', '', $regionName);
+                            $regionName = trim($regionName);
+                        }
+                        
+                        // Get island name and clean it similarly
+                        $islandName = null;
+                        if ($school->region->island) {
+                            $islandName = $school->region->island->name ?? null;
+                            if ($islandName) {
+                                $islandName = preg_replace('/^\d+\s*-\s*/', '', $islandName);
+                                $islandName = trim($islandName);
+                            }
+                        }
+                        
+                        // Update university, region (ID), and island (name)
+                        $updateData = [
+                            'university' => $newSchoolName,
+                        ];
+                        
+                        if ($regionId !== null) {
+                            $updateData['region'] = $regionId;
+                        }
+                        
+                        if ($islandName) {
+                            $updateData['island'] = $islandName;
+                        }
+                        
+                        $targetUser->update($updateData);
+                    } else {
+                        // If school not found, just update university (fallback)
+                        $targetUser->update(['university' => $newSchoolName]);
+                    }
+                    break;
+                case 'Course':
+                    $targetUser->update(['course' => $modificationRequest->correct_value]);
+                    break;
+            }
+            
+            // Only update status after user data is successfully updated
+            $modificationRequest->update([
+                'status' => 'Approved',
+                'approved_by' => $user->id,
+                'approved_at' => now(),
+            ]);
+            
+            \DB::commit();
+            
+            return response()->json(['success' => true, 'message' => 'Request approved successfully']);
+            
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            
+            return response()->json([
+                'error' => 'Failed to approve request: ' . $e->getMessage()
+            ], 500);
         }
-        
-        return response()->json(['success' => true]);
     });
     
     Route::post('/api/modification-requests/{id}/reject', function (\Illuminate\Http\Request $request, $id) {
@@ -834,13 +925,13 @@ Route::middleware(['auth', 'verified'])->get('/SLAdminApproval', function () {
     ]);
 })->name('SLAdminApproval');
 
-//ADMIN REGIONAL APPROVAL ROUTES - Only Regional Admin role can access
+//ADMIN REGIONAL APPROVAL ROUTES - Regional Admin and Super Admin can access
 Route::middleware(['auth', 'verified'])->get('/RegionalAdminApproval', function () {
     $user = Auth::user();
     
-    // Only Regional Admin role can access this page
-    if ($user->role !== 'Regional Admin') {
-        abort(403, 'Access denied. Only Regional Admins can access this page.');
+    // Regional Admin and Super Admin can access this page
+    if ($user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+        abort(403, 'Access denied. Only Regional Admins and Super Admins can access this page.');
     }
     
     return Inertia::render('ApprovalPages/RegionalAdminApproval', [
@@ -992,8 +1083,16 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
 // MCC Routes
 Route::prefix('MCC')->name('MCC.')->group(function () {
     Route::get('/', function () {
-        return Inertia::render('MCC Season 2/Home');
+        return redirect('/MCC/S2'); // Default to Season 2
     })->name('main');
+    
+    Route::get('/S2', function () {
+        return Inertia::render('MCC Season 2/MCC Season 2');
+    })->name('season2');
+    
+    Route::get('/S1', function () {
+        return Inertia::render('MCC Season 2/MCC Season 1');
+    })->name('season1');
 
     Route::get('/calendar', function () {
         return Inertia::render('MCC/Calendar/index');
@@ -1588,11 +1687,11 @@ Route::post('/msl-network/send-inquiry', function (Request $request) {
 
         // Send email with CC recipients
         $mail = Mail::to($request->to_email);
-
+        
         if (!empty($ccEmails)) {
             $mail->cc($ccEmails);
         }
-
+        
         $mail->send(new MslNetworkInquiryMail($inquiryData));
 
         return response()->json([

@@ -242,7 +242,7 @@ const Header = () => {
                                         Modification
                                     </Link>
                                 )}
-                                {user.role === 'Regional Admin' && (
+                                {(user.role === 'Regional Admin' || user.role === 'Super Admin') && (
                                     <Link
                                         href="/RegionalAdminApproval"
                                         className={styles.dropdownItem}

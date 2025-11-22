@@ -77,19 +77,13 @@ export default function RegionalAdminApproval() {
 
   const mobilePages = computeMobilePages();
 
-  const handleViewProfile = async (userId) => {
-    try {
-      const response = await fetch(`/api/users/${userId}`);
-      const data = await response.json();
-      
-      if (response.ok) {
-        setSelectedUser(data);
-        setShowProfileModal(true);
-      } else {
-        alert('User not found: ' + (data.error || 'Unknown error'));
-      }
-    } catch (error) {
-      alert('Error fetching user data');
+  const handleViewProfile = (userData) => {
+    // Use the user data directly from the request object (no API call needed)
+    if (userData) {
+      setSelectedUser(userData);
+      setShowProfileModal(true);
+    } else {
+      alert('User data not available');
     }
   };
 
@@ -112,10 +106,10 @@ export default function RegionalAdminApproval() {
           
           const data = await response.json();
           
-          if (data.success) {
+          if (response.ok && data.success) {
             setModalData({
               title: 'Success',
-              message: 'Request approved successfully!',
+              message: data.message || 'Request approved successfully!',
               type: 'success',
               confirmText: 'OK',
               showCancel: false,
@@ -132,18 +126,25 @@ export default function RegionalAdminApproval() {
               type: 'error',
               confirmText: 'OK',
               showCancel: false,
-              onConfirm: () => setShowMSLModal(false)
+              onConfirm: () => {
+                setShowMSLModal(false);
+                fetchRequests(currentPage); // Refresh to see actual status
+              }
             });
             setShowMSLModal(true);
           }
         } catch (error) {
+          console.error('Error approving request:', error);
           setModalData({
             title: 'Error',
             message: 'Error approving request. Please try again.',
             type: 'error',
             confirmText: 'OK',
             showCancel: false,
-            onConfirm: () => setShowMSLModal(false)
+            onConfirm: () => {
+              setShowMSLModal(false);
+              fetchRequests(currentPage); // Refresh to see actual status
+            }
           });
           setShowMSLModal(true);
         }
@@ -277,7 +278,7 @@ export default function RegionalAdminApproval() {
                         </td>
                         <td className="px-2 py-3 text-center">
                           <button 
-                            onClick={() => handleViewProfile(req.user_id)}
+                            onClick={() => handleViewProfile(req.user)}
                             className="flex items-center mx-auto px-3 py-1 bg-blue-500/80 text-white rounded-lg hover:bg-blue-600 transition"
                           >
                             <Eye className="w-4 h-4 mr-1" /> View
@@ -354,7 +355,7 @@ export default function RegionalAdminApproval() {
                       <p><span className="font-bold">Submitted By:</span> {req.submittedBy ? `${req.submittedBy.name || ''} ${req.submittedBy.surname || ''}`.trim() : 'N/A'}</p>
                       <div className="flex gap-2 mt-2">
                         <button
-                          onClick={() => handleViewProfile(req.user_id)}
+                          onClick={() => handleViewProfile(req.user)}
                           className="flex-1 flex items-center justify-center gap-1 px-2 py-1 bg-blue-500/80 text-white rounded-md hover:bg-blue-600 transition text-xs"
                         >
                           <Eye className="w-3 h-3" /> View

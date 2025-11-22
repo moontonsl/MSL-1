@@ -182,25 +182,51 @@ const MCCS2Home = () => {
                   alt="Pamantasang Lakas Title"
                 />
                 <div className="mt-2 text-white text-5xl font-bold font-montserrat tracking-wider">MSL COLLEGIATE CUP</div>
-                <div className="mt-3 relative">
+                
+                {/* Improved Season Selector */}
+                <div className="mt-8 relative">
                   <button
                     type="button"
                     onClick={() => setIsSeasonOpen((v) => !v)}
-                    className="w-[360px] h-[64px] px-8 bg-black rounded-[16px] outline outline-2 outline-offset-[-2px] outline-yellow-400 flex items-center justify-center gap-4 shadow-[0_0_8px_-3px_rgba(243,199,24,0.6)]"
+                    className="group w-[380px] h-[68px] px-8 bg-gradient-to-br from-black via-neutral-950 to-black rounded-2xl border-2 border-yellow-400/80 flex items-center justify-center gap-4 shadow-[0_0_20px_rgba(243,199,24,0.3),inset_0_1px_0_rgba(243,199,24,0.1)] hover:shadow-[0_0_30px_rgba(243,199,24,0.5),inset_0_1px_0_rgba(243,199,24,0.2)] hover:border-yellow-400 transition-all duration-300 hover:scale-105 active:scale-100"
                   >
-                    <div className="text-yellow-400 text-3xl font-bold font-montserrat tracking-wider">SEASON 2</div>
-                    <svg className={`w-6 h-6 text-yellow-400 transition-transform ${isSeasonOpen ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <div className="text-yellow-400 text-3xl font-bold font-montserrat tracking-[0.08em] group-hover:text-yellow-300 transition-colors">
+                      SEASON 2
+                    </div>
+                    <svg 
+                      className={`w-7 h-7 text-yellow-400 transition-all duration-300 group-hover:text-yellow-300 ${isSeasonOpen ? 'rotate-180' : ''}`} 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </button>
+                  
+                  {/* Dropdown Menu */}
                   {isSeasonOpen && (
-                    <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-[280px] bg-black/90 rounded-[12px] outline outline-1 outline-yellow-400 shadow-[0_0_10px_rgba(243,199,24,0.35)] z-30">
+                    <div className="absolute left-1/2 -translate-x-1/2 mt-3 w-[380px] bg-gradient-to-br from-neutral-950 via-black to-neutral-950 rounded-xl border border-yellow-400/60 shadow-[0_8px_32px_rgba(0,0,0,0.8),0_0_20px_rgba(243,199,24,0.25)] backdrop-blur-sm overflow-hidden z-40 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <a
+                        href="/MCC/S1"
+                        className="group w-full px-8 py-5 flex items-center justify-between text-yellow-300/90 text-2xl font-bold font-montserrat tracking-[0.06em] hover:bg-gradient-to-r hover:from-yellow-400/20 hover:via-yellow-400/10 hover:to-transparent hover:text-yellow-400 transition-all duration-200 border-b border-yellow-400/20 hover:border-yellow-400/40"
+                      >
+                        <span>SEASON 1</span>
+                        <svg 
+                          className="w-6 h-6 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" 
+                          fill="none" 
+                          viewBox="0 0 24 24" 
+                          stroke="currentColor"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                      </a>
                       <button
                         type="button"
                         onClick={() => setIsSeasonOpen(false)}
-                        className="w-full px-4 py-3 text-yellow-300 text-xl font-bold font-montserrat tracking-wide hover:bg-yellow-400/10 rounded-[12px]"
+                        className="group w-full px-8 py-5 flex items-center justify-between text-yellow-400 text-2xl font-bold font-montserrat tracking-[0.06em] bg-gradient-to-r from-yellow-400/10 via-yellow-400/5 to-transparent cursor-default"
                       >
-                        SEASON 1
+                        <span>SEASON 2</span>
+                        <div className="w-3 h-3 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(243,199,24,0.6)] animate-pulse" />
                       </button>
                     </div>
                   )}
