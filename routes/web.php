@@ -37,6 +37,7 @@ use App\Http\Controllers\Mccs2PredictionsController;
 use App\Http\Controllers\GoogleSheetMCCS2Controller;
 use App\Http\Controllers\Admin\DuplicateUsernameController;
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\CodashopController;
 
 Route::get('/', function () {
     return Inertia::render('Home/Home', [
@@ -1613,6 +1614,19 @@ Route::post('/msl-network/send-inquiry', function (Request $request) {
         ], 500);
     }
 })->name('msl-network.send-inquiry');
+
+// Codashop API endpoint (accessible without /api prefix)
+Route::get('/codashop/init-payment', function () {
+    return response()->json([
+        'message' => 'This endpoint requires a POST request',
+        'usage' => 'Send a POST request with JSON body containing userId and zoneId',
+        'example' => [
+            'userId' => '165865941',
+            'zoneId' => '3232'
+        ]
+    ]);
+})->name('codashop.init-payment.get');
+Route::post('/codashop/init-payment', [\App\Http\Controllers\CodashopController::class, 'initPayment'])->name('codashop.init-payment');
 
 // Custom Event Canonical Routes - Handle dynamic event links like /NewEvent
 // This catch-all route should be placed at the very end to avoid conflicts with other routes
