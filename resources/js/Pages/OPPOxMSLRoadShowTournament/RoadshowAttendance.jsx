@@ -7,17 +7,36 @@ import msllogo from "./msl-logo.png";
 import oppologo from "./oppo-white-logo.png";
 
 export default function OPPOxMSLRoadShowAttendance() {
+  const regions = [
+    "Luzon",
+    "Visayas",
+    "Mindanao"
+  ];
+
+  const venues = [
+    "University of Saint La Salle",
+    "Davao del Norte State College",
+    "Pamantasan ng Lungsod ng Muntinlupa"
+  ];
+
+  const dates = [
+    "November 03, 2025",
+    "November 10, 2025",
+    "November 17, 2025"
+  ];
+
   const [form, setForm] = useState({
     fullname: "",
-    region: "Luzon",
-    venue: "First Asia Institute of Technology and Humanities",
-    date: "November 03, 2025",
+    region: "",
+    venue: "",
+    date: "",
     email: "",
     mlbbid: "",
     mlbbserver: "",
   });
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -25,10 +44,38 @@ export default function OPPOxMSLRoadShowAttendance() {
       ...prev,
       [name]: value,
     }));
+    
+    // Clear validation error for this field when user changes it
+    if (validationErrors[name]) {
+      setValidationErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validation
+    const errors = {};
+    if (!form.region) {
+      errors.region = "Please select a region";
+    }
+    if (!form.venue) {
+      errors.venue = "Please select a venue";
+    }
+    if (!form.date) {
+      errors.date = "Please select a date";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
+
+    setValidationErrors({});
 
     const googleFormURL =
       "https://docs.google.com/forms/d/e/1FAIpQLSegLw_p164UuZanT6oO_P3IA9vw34jn6VOvvhgHvpHgzt7MmA/formResponse";
@@ -52,13 +99,14 @@ export default function OPPOxMSLRoadShowAttendance() {
       setShowConfirmModal(true);
       setForm({
         fullname: "",
-        region: "Luzon",
-        venue: "First Asia Institute of Technology and Humanities",
-        date: "November 03, 2025",
+        region: "",
+        venue: "",
+        date: "",
         email: "",
         mlbbid: "",
         mlbbserver: "",
       });
+      setValidationErrors({});
     } catch (error) {
       console.error("Error submitting form:", error);
     }
@@ -72,6 +120,24 @@ export default function OPPOxMSLRoadShowAttendance() {
           href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap"
           rel="stylesheet"
         />
+        <style>{`
+          select {
+            background-color: transparent !important;
+            color: white !important;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23F2C21A' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 12px;
+            padding-right: 2rem;
+          }
+          select option {
+            background-color: #1f2937;
+            color: white;
+          }
+        `}</style>
       </Helmet>
 
       <div className="relative z-50 min-h-screen flex flex-col items-center justify-center text-white p-4 pt-10 sm:pt-20 font-['Montserrat']">
@@ -80,8 +146,8 @@ export default function OPPOxMSLRoadShowAttendance() {
           <h2 className="font-bold mb-1 text-[20px] sm:text-[26px] lg:text-[32px] text-[#F2C21A] leading-tight">
             OPPO x MSL Roadshow
           </h2>
-          <h3 className="text-white text-[16px] sm:text-[22px] lg:text-[26px] font-extrabold leading-relaxed">
-            First Asia Institute of Technology and Humanities
+          <h3 className="text-white text-[16px] sm:text-[22px] lg:text-[26px] font-extrabold leading-relaxed break-words">
+            {form.venue || "Select Your Venue"}
           </h3>
         </div>
 
@@ -116,52 +182,112 @@ export default function OPPOxMSLRoadShowAttendance() {
             {/* Region Dropdown */}
             <div>
               <label className="block font-medium mb-1 text-sm sm:text-base">
-                Region
+                Region <span className="text-red-400">*</span>
               </label>
-              <div className="flex items-center bg-white/5 rounded-xl p-2.5 sm:p-3 gap-3">
-                <MapPin className="text-[#F2C21A] w-5 h-5" />
-                <input
-                  type="text"
+              <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${
+                validationErrors.region 
+                  ? 'bg-red-500/10 border border-red-500' 
+                  : 'bg-white/5'
+              }`}>
+                <MapPin className="text-[#F2C21A] w-4 h-4 sm:w-5 sm:h-5" />
+                <select
                   name="region"
                   value={form.region}
-                  readOnly
-                  className="bg-transparent flex-1 outline-none text-gray-400 text-sm sm:text-base cursor-not-allowed"
-                  />
+                  onChange={handleChange}
+                  required
+                  className="bg-transparent flex-1 outline-none text-white text-sm sm:text-base appearance-none cursor-pointer"
+                  style={{
+                    WebkitTextFillColor: 'white',
+                    transition: 'background-color 5000s ease-in-out 0s'
+                  }}
+                >
+                  <option value="" className="bg-gray-800 text-white">
+                    Select Region
+                  </option>
+                  {regions.map((region) => (
+                    <option key={region} value={region} className="bg-gray-800 text-white">
+                      {region}
+                    </option>
+                  ))}
+                </select>
               </div>
+              {validationErrors.region && (
+                <p className="text-red-400 text-xs mt-1">{validationErrors.region}</p>
+              )}
             </div>
 
             {/* Venue */}
             <div>
               <label className="block font-medium mb-1 text-sm sm:text-base">
-                Venue
+                Venue <span className="text-red-400">*</span>
               </label>
-              <div className="flex items-center bg-white/5 rounded-xl p-2.5 sm:p-3 gap-3">
-                <Globe className="text-[#F2C21A] w-5 h-5" />
-                <input
-                  type="text"
+              <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${
+                validationErrors.venue 
+                  ? 'bg-red-500/10 border border-red-500' 
+                  : 'bg-white/5'
+              }`}>
+                <Globe className="text-[#F2C21A] w-4 h-4 sm:w-5 sm:h-5" />
+                <select
                   name="venue"
                   value={form.venue}
-                  readOnly
-                  className="bg-transparent flex-1 outline-none text-gray-400 text-sm sm:text-base cursor-not-allowed"
-                />
+                  onChange={handleChange}
+                  required
+                  className="bg-transparent flex-1 outline-none text-white text-sm sm:text-base appearance-none cursor-pointer"
+                  style={{
+                    WebkitTextFillColor: 'white',
+                    transition: 'background-color 5000s ease-in-out 0s'
+                  }}
+                >
+                  <option value="" className="bg-gray-800 text-white">
+                    Select Venue
+                  </option>
+                  {venues.map((venue) => (
+                    <option key={venue} value={venue} className="bg-gray-800 text-white">
+                      {venue}
+                    </option>
+                  ))}
+                </select>
               </div>
+              {validationErrors.venue && (
+                <p className="text-red-400 text-xs mt-1">{validationErrors.venue}</p>
+              )}
             </div>
 
             {/* Date Dropdown */}
             <div>
               <label className="block font-medium mb-1 text-sm sm:text-base">
-                Date
+                Date <span className="text-red-400">*</span>
               </label>
-              <div className="flex items-center bg-white/5 rounded-xl p-2.5 sm:p-3 gap-3">
-                <Calendar className="text-[#F2C21A] w-5 h-5" />
-                <input
-                  type="text"
+              <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${
+                validationErrors.date 
+                  ? 'bg-red-500/10 border border-red-500' 
+                  : 'bg-white/5'
+              }`}>
+                <Calendar className="text-[#F2C21A] w-4 h-4 sm:w-5 sm:h-5" />
+                <select
                   name="date"
                   value={form.date}
-                  readOnly
-                  className="bg-transparent flex-1 outline-none text-gray-400 text-sm sm:text-base cursor-not-allowed"
-                />
+                  onChange={handleChange}
+                  required
+                  className="bg-transparent flex-1 outline-none text-white text-sm sm:text-base appearance-none cursor-pointer"
+                  style={{
+                    WebkitTextFillColor: 'white',
+                    transition: 'background-color 5000s ease-in-out 0s'
+                  }}
+                >
+                  <option value="" className="bg-gray-800 text-white">
+                    Select Date
+                  </option>
+                  {dates.map((date) => (
+                    <option key={date} value={date} className="bg-gray-800 text-white">
+                      {date}
+                    </option>
+                  ))}
+                </select>
               </div>
+              {validationErrors.date && (
+                <p className="text-red-400 text-xs mt-1">{validationErrors.date}</p>
+              )}
             </div>
 
             {/* Email Address */}
