@@ -73,6 +73,11 @@ const MLLogin = forwardRef(({ onLoginInfo, onLoginClose, onLoginSuccess }, ref) 
       const mlbbSocial = document.getElementsByClassName('mlbb-social-box');
       const mlbbCommontip = document.getElementsByClassName('mlbb-common-tip');
       const mtCommonInner = document.getElementsByClassName('mt-common-inner');
+      const signmlbb = document.getElementsByClassName('signmlbb');
+
+      if (signmlbb.length > 0) {
+        signmlbb[0].style.display = 'none';
+      }
 
       if (mtCommonInner.length > 0) {
         mtCommonInner[0].style.backgroundColor = 'black';

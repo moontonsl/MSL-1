@@ -37,6 +37,12 @@ Route::middleware(['auth:admin', 'admin'])->group(function () {
     Route::delete('/admin/carousel/{carousel}', [AdminController::class, 'deleteCarousel'])->name('admin.carousel.delete');
     Route::post('/admin/carousel/reorder', [AdminController::class, 'reorderCarousel'])->name('admin.carousel.reorder');
 
+    // Event Photos Management
+    Route::get('/admin/event-photos', [AdminController::class, 'manageEventPhotos'])->name('admin.event-photos');
+    Route::post('/admin/event-photos', [AdminController::class, 'storeEventPhoto'])->name('admin.event-photos.store');
+    Route::put('/admin/event-photos/{eventPhoto}', [AdminController::class, 'updateEventPhoto'])->name('admin.event-photos.update');
+    Route::delete('/admin/event-photos/{eventPhoto}', [AdminController::class, 'deleteEventPhoto'])->name('admin.event-photos.delete');
+
     // Event Management
     Route::get('/admin/events', [AdminController::class, 'manageEvents'])->name('admin.events');
     Route::get('/admin/events/create', [AdminController::class, 'createEvent'])->name('admin.events.create');
@@ -60,4 +66,14 @@ Route::middleware(['auth:admin', 'admin'])->group(function () {
 
     // Duplicate Username Check
     Route::get('/admin/duplicate-usernames/check', [\App\Http\Controllers\Admin\DuplicateUsernameController::class, 'checkDuplicates'])->name('admin.duplicate-usernames.check');
+
+    // SL Management
+    Route::get('/admin/sl-management', [AdminController::class, 'slManagement'])->name('admin.sl-management');
+    Route::post('/admin/users/{user}/promote-sl', [AdminController::class, 'promoteToSL'])->name('admin.users.promote-sl');
+    Route::post('/admin/users/{user}/demote-sl', [AdminController::class, 'demoteFromSL'])->name('admin.users.demote-sl');
+
+    // Regional Admin Management
+    Route::get('/admin/regional-admin-management', [AdminController::class, 'regionalAdminManagement'])->name('admin.regional-admin-management');
+    Route::post('/admin/users/{user}/promote-regional-admin', [AdminController::class, 'promoteToRegionalAdmin'])->name('admin.users.promote-regional-admin');
+    Route::post('/admin/users/{user}/demote-regional-admin', [AdminController::class, 'demoteFromRegionalAdmin'])->name('admin.users.demote-regional-admin');
 });

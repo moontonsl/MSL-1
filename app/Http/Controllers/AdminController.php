@@ -7,6 +7,7 @@ use App\Models\News;
 use App\Models\Event;
 use App\Models\MslEvent;
 use App\Models\Carousel;
+use App\Models\EventPhoto;
 use App\Services\AnalyticsService;
 use App\Services\GoogleAnalyticsService;
 use Illuminate\Http\Request;
@@ -673,5 +674,208 @@ class AdminController extends Controller
         $mslEvent->delete();
 
         return back()->with('success', 'Event deleted successfully');
+    }
+
+    // SL Management Methods
+    public function slManagement()
+    {
+        $slUsers = User::where('role', 'SL')
+            ->select('id', 'name', 'email', 'ml_id', 'university', 'region', 'state', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        $students = User::where('state', 'Verified')
+            ->where('role', '!=', 'SL')
+            ->where('role', '!=', 'Admin')
+            ->where('role', '!=', 'Super Admin')
+            ->where('role', '!=', 'Regional Admin')
+            ->select('id', 'name', 'email', 'ml_id', 'university', 'region', 'state', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return Inertia::render('Admin/SLManagement', [
+            'slUsers' => $slUsers,
+            'students' => $students
+        ]);
+    }
+
+    public function promoteToSL(User $user)
+    {
+        // Only allow promoting verified students (not admins or SL)
+        $adminRoles = ['SL', 'Admin', 'Super Admin', 'Regional Admin'];
+        if (in_array($user->role, $adminRoles) || $user->state !== 'Verified') {
+            return back()->withErrors(['error' => 'Only verified students can be promoted to Student Leader.']);
+        }
+
+        $user->update([
+            'role' => 'SL'
+        ]);
+
+        return back()->with('success', 'User promoted to Student Leader successfully');
+    }
+
+    public function demoteFromSL(User $user)
+    {
+        // Only allow demoting SL users
+        if ($user->role !== 'SL') {
+            return back()->withErrors(['error' => 'User is not a Student Leader.']);
+        }
+
+        $user->update([
+            'role' => 'user'
+        ]);
+
+        return back()->with('success', 'Student Leader demoted to Student successfully');
+    }
+
+    // Regional Admin Management Methods
+    public function regionalAdminManagement()
+    {
+        $regionalAdmins = User::where('role', 'Regional Admin')
+            ->select('id', 'name', 'email', 'ml_id', 'university', 'region', 'state', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        $students = User::where('state', 'Verified')
+            ->where('role', '!=', 'SL')
+            ->where('role', '!=', 'Admin')
+            ->where('role', '!=', 'Super Admin')
+            ->where('role', '!=', 'Regional Admin')
+            ->select('id', 'name', 'email', 'ml_id', 'university', 'region', 'state', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return Inertia::render('Admin/RegionalAdminManagement', [
+            'regionalAdmins' => $regionalAdmins,
+            'students' => $students
+        ]);
+    }
+
+    public function promoteToRegionalAdmin(User $user)
+    {
+        // Only allow promoting verified students (not admins or SL)
+        $adminRoles = ['SL', 'Admin', 'Super Admin', 'Regional Admin'];
+        if (in_array($user->role, $adminRoles) || $user->state !== 'Verified') {
+            return back()->withErrors(['error' => 'Only verified students can be promoted to Regional Admin.']);
+        }
+
+        $user->update([
+            'role' => 'Regional Admin'
+        ]);
+
+        return back()->with('success', 'User promoted to Regional Admin successfully');
+    }
+
+    public function demoteFromRegionalAdmin(User $user)
+    {
+        // Only allow demoting Regional Admin users
+        if ($user->role !== 'Regional Admin') {
+            return back()->withErrors(['error' => 'User is not a Regional Admin.']);
+        }
+
+        $user->update([
+            'role' => 'user'
+        ]);
+
+        return back()->with('success', 'Regional Admin demoted to Student successfully');
+    }
+
+    // Event Photos Management Methods
+    public function manageEventPhotos()
+    {
+        $eventPhotos = EventPhoto::orderBy('created_at', 'desc')->get();
+        
+        return Inertia::render('Admin/EventPhotos/Index', [
+            'eventPhotos' => $eventPhotos
+        ]);
+    }
+
+    public function storeEventPhoto(Request $request)
+    {
+        $validated = $request->validate([
+            'event_name' => 'required|string|max:255',
+            'school_name' => 'required|string|max:255',
+            'picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
+        ]);
+
+        // Handle image upload
+        if ($request->hasFile('picture')) {
+            $image = $request->file('picture');
+            $imageName = time() . '_' . $image->getClientOriginalName();
+            
+            // Create EventPhotos directory if it doesn't exist
+            $eventPhotosPath = public_path('images/EventPhotos');
+            if (!file_exists($eventPhotosPath)) {
+                mkdir($eventPhotosPath, 0755, true);
+                \Log::info('Created EventPhotos directory', ['path' => $eventPhotosPath]);
+            }
+            
+            $image->move($eventPhotosPath, $imageName);
+            $validated['picture'] = $imageName;
+            
+            \Log::info('Event photo stored successfully', [
+                'image_name' => $imageName,
+                'path' => $eventPhotosPath . '/' . $imageName
+            ]);
+        }
+
+        EventPhoto::create($validated);
+
+        return back()->with('success', 'Event photo added successfully');
+    }
+
+    public function updateEventPhoto(Request $request, EventPhoto $eventPhoto)
+    {
+        $validated = $request->validate([
+            'event_name' => 'required|string|max:255',
+            'school_name' => 'required|string|max:255',
+            'picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+        ]);
+
+        // Handle image update if provided
+        if ($request->hasFile('picture')) {
+            // Delete old image if exists - get raw attribute to get just the filename
+            $oldPictureFilename = $eventPhoto->getAttributes()['picture'] ?? null;
+            if ($oldPictureFilename) {
+                $oldImagePath = public_path('images/EventPhotos/' . $oldPictureFilename);
+                if (file_exists($oldImagePath)) {
+                    unlink($oldImagePath);
+                }
+            }
+
+            $image = $request->file('picture');
+            $imageName = time() . '_' . $image->getClientOriginalName();
+            
+            $eventPhotosPath = public_path('images/EventPhotos');
+            if (!file_exists($eventPhotosPath)) {
+                mkdir($eventPhotosPath, 0755, true);
+            }
+            
+            $image->move($eventPhotosPath, $imageName);
+            $validated['picture'] = $imageName;
+        } else {
+            // Don't update picture if not provided - remove from validated array
+            unset($validated['picture']);
+        }
+
+        $eventPhoto->update($validated);
+
+        return back()->with('success', 'Event photo updated successfully');
+    }
+
+    public function deleteEventPhoto(EventPhoto $eventPhoto)
+    {
+        // Delete image file - get raw attribute to get just the filename
+        $pictureFilename = $eventPhoto->getAttributes()['picture'] ?? null;
+        if ($pictureFilename) {
+            $imagePath = public_path('images/EventPhotos/' . $pictureFilename);
+            if (file_exists($imagePath)) {
+                unlink($imagePath);
+            }
+        }
+
+        $eventPhoto->delete();
+
+        return back()->with('success', 'Event photo deleted successfully');
     }
 }

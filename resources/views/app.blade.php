@@ -18,7 +18,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>MSL Philippines - Mobile Legends Student Leaders</title>
+        <title>MSL Philippines</title>
         
         <!-- Favicon -->
         <link rel="icon" type="image/x-icon" href="/favicon.ico">
