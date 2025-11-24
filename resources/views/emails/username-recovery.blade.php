@@ -60,8 +60,9 @@
         
         <p>If you didn't request this, please ignore this email.</p>
         
-        <p>Best regards,<br>
-        MSL Team</p>
+        <p>Best regards,<br><br>
+        Web Team<br>
+        MSL Philippines</p>
     </div>
     
     <div class="footer">

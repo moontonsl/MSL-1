@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { router } from '@inertiajs/react';
+import { Trash2, AlertTriangle } from 'lucide-react';
 
 export default function EditProfileModal({ user, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -13,9 +14,16 @@ export default function EditProfileModal({ user, onClose, onSave }) {
     facebook_link: user.facebook_link || "",
   });
   const loginRef = useRef();
+  const passwordInputRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  const [deleteSuccess, setDeleteSuccess] = useState(false);
+  const [deleteMessage, setDeleteMessage] = useState('');
   const [emailVerified, setEmailVerified] = useState(false);
   const [emailVerificationSent, setEmailVerificationSent] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
@@ -738,6 +746,98 @@ export default function EditProfileModal({ user, onClose, onSave }) {
     }
   };
 
+  const handleDeleteAccount = () => {
+    setShowDeleteModal(true);
+    setDeletePassword('');
+    setDeleteError('');
+    setDeleteSuccess(false);
+    setDeleteMessage('');
+    setTimeout(() => passwordInputRef.current?.focus(), 100);
+  };
+
+  const confirmDeleteAccount = async () => {
+    if (!deletePassword.trim()) {
+      setDeleteError('Password is required');
+      passwordInputRef.current?.focus();
+      return;
+    }
+
+    setDeleteError('');
+
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (!csrfToken) {
+      setDeleteError('CSRF token not found. Please refresh the page and try again.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/profile', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json',
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({ password: deletePassword }),
+      });
+
+      const responseData = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(responseData.error || responseData.message || `Server error (${response.status})`);
+      }
+      
+      // Close delete modal and show success modal
+      setShowDeleteModal(false);
+      setDeleteSuccess(true);
+      setDeleteMessage(responseData.message || 'Account deleted successfully');
+      setShowSuccessModal(true);
+      
+      // Redirect after showing success message
+      setTimeout(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = '/login';
+      }, 2000);
+    } catch (error) {
+      console.error('Delete account error:', error);
+      // Show error in success modal
+      setShowDeleteModal(false);
+      setDeleteSuccess(false);
+      setDeleteMessage(error.message || 'Failed to delete account. Please check your password and try again.');
+      setShowSuccessModal(true);
+    }
+  };
+
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false);
+    setDeletePassword('');
+    setDeleteError('');
+    setDeleteSuccess(false);
+    setDeleteMessage('');
+  };
+
+  const handleSuccessOkay = () => {
+    setShowSuccessModal(false);
+    if (deleteSuccess) {
+      // Only redirect on success
+      setTimeout(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = '/login';
+      }, 100);
+    } else {
+      // On error, reopen delete modal
+      setShowDeleteModal(true);
+      setDeletePassword('');
+      setDeleteError(deleteMessage);
+      setTimeout(() => passwordInputRef.current?.focus(), 100);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 flex items-center justify-center z-50 px-2"
@@ -1080,6 +1180,14 @@ export default function EditProfileModal({ user, onClose, onSave }) {
         <div className="mt-4 sm:mt-6 md:mt-8">
           <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 md:gap-4">
             <button
+              onClick={handleDeleteAccount}
+              className="w-full sm:w-auto px-4 md:px-5 py-2.5 sm:py-2 rounded-lg bg-red-600 text-white hover:bg-red-500 transition text-sm md:text-base disabled:opacity-50 flex items-center justify-center gap-2"
+              disabled={isLoading}
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete Account
+            </button>
+            <button
               className="w-full sm:w-auto px-4 md:px-5 py-2.5 sm:py-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition text-sm md:text-base disabled:opacity-50"
               onClick={onClose}
               disabled={isLoading}
@@ -1141,6 +1249,132 @@ export default function EditProfileModal({ user, onClose, onSave }) {
           </div>
         </div>
       </div>
+
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]"
+          onClick={(e) => {
+            // Only close if clicking the backdrop, not the modal content
+            if (e.target === e.currentTarget) {
+              closeDeleteModal();
+            }
+          }}
+        >
+          <div 
+            className="bg-[rgba(10,10,10,0.5)] rounded-lg p-6 max-w-md mx-4 border border-[#242424] shadow-[0_4px_8px_rgba(0,0,0,0.1)] backdrop-blur-[10px]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center mb-4">
+              <div className="flex-shrink-0 w-10 h-10 bg-[rgba(10,10,10,0.8)] rounded-full flex items-center justify-center mr-3 border border-[#facc15]">
+                <AlertTriangle className="w-6 h-6 text-[#facc15]" />
+              </div>
+              <h3 className="text-lg font-semibold text-white">
+                Delete Account
+              </h3>
+            </div>
+            <p className="text-gray-300 mb-4">
+              Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently lost.
+            </p>
+            
+            {/* Password Input */}
+            <div className="mb-4">
+              <label htmlFor="deletePassword" className="block text-sm font-medium text-gray-300 mb-2">
+                Enter your password to confirm
+              </label>
+              <input
+                ref={passwordInputRef}
+                type="password"
+                id="deletePassword"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                className="w-full px-3 py-2 bg-[rgba(10,10,10,0.8)] border border-[#242424] rounded-md text-white placeholder-gray-500 focus:outline-none focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15] transition-all duration-200"
+                placeholder="Enter your password"
+                onKeyPress={(e) => e.key === 'Enter' && confirmDeleteAccount()}
+              />
+              {deleteError && (
+                <p className="text-red-400 text-sm mt-1">{deleteError}</p>
+              )}
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={closeDeleteModal}
+                className="px-4 py-2 text-gray-300 bg-[rgba(10,10,10,0.8)] border border-[#242424] rounded-md hover:bg-[rgba(20,20,20,0.8)] hover:border-[#facc15] transition-all duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteAccount}
+                className="px-4 py-2 text-black bg-[#facc15] rounded-md hover:bg-[#e0b90f] transition-all duration-200 flex items-center space-x-2 border border-[#facc15] hover:shadow-[0_0_10px_rgba(250,204,21,0.5)]"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Delete Account</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success/Error Modal */}
+      {showSuccessModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]"
+          onClick={(e) => {
+            // Only close if clicking the backdrop
+            if (e.target === e.currentTarget) {
+              handleSuccessOkay();
+            }
+          }}
+        >
+          <div 
+            className={`bg-[rgba(10,10,10,0.5)] rounded-lg p-6 max-w-md mx-4 border shadow-[0_4px_8px_rgba(0,0,0,0.1)] backdrop-blur-[10px] ${
+              deleteSuccess ? 'border-[#facc15]' : 'border-red-500'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center mb-4">
+              <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center mr-3 border ${
+                deleteSuccess 
+                  ? 'bg-[rgba(250,204,21,0.2)] border-[#facc15]' 
+                  : 'bg-[rgba(239,68,68,0.2)] border-red-500'
+              }`}>
+                {deleteSuccess ? (
+                  <div className="w-6 h-6 text-[#facc15] text-2xl font-bold">✓</div>
+                ) : (
+                  <AlertTriangle className="w-6 h-6 text-red-500" />
+                )}
+              </div>
+              <h3 className={`text-lg font-semibold ${
+                deleteSuccess ? 'text-white' : 'text-red-400'
+              }`}>
+                {deleteSuccess ? 'Account Deleted Successfully' : 'Delete Account Failed'}
+              </h3>
+            </div>
+            <p className={`mb-6 ${
+              deleteSuccess ? 'text-gray-300' : 'text-red-300'
+            }`}>
+              {deleteSuccess 
+                ? 'Your account has been permanently deleted. You will be redirected to the login page.'
+                : deleteMessage || 'Failed to delete account. Please check your password and try again.'
+              }
+            </p>
+            
+            <div className="flex justify-center">
+              <button
+                onClick={handleSuccessOkay}
+                className={`px-6 py-2 rounded-md transition-all duration-200 border hover:shadow-[0_0_10px_rgba(250,204,21,0.5)] ${
+                  deleteSuccess
+                    ? 'text-black bg-[#facc15] hover:bg-[#e0b90f] border-[#facc15]'
+                    : 'text-white bg-red-600 hover:bg-red-500 border-red-500'
+                }`}
+              >
+                {deleteSuccess ? 'Okay' : 'Try Again'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
