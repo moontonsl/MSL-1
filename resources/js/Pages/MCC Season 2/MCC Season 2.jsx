@@ -233,16 +233,16 @@ const MCCS2Home = () => {
                 </div>
               </div>
 
-              {/* Left and Right hero images */}
+              {/* Left and Right hero images - Balanced sizing for visual appeal */}
               <img
-                className="absolute left-0 top-[780px] w-[650px] h-auto z-10 select-none pointer-events-none"
-                src="/images/MCC S2/Lou yi.png"
-                alt="Lou Yi"
+                className="absolute left-0 top-[880px] w-[840px] xl:w-[800px] h-auto z-10 select-none pointer-events-none"
+                src="/images/MCC S2/Joy.png"
+                alt="Joy"
               />
               <img
-                className="absolute right-0 top-[780px] w-[740px] h-auto z-10 select-none pointer-events-none"
-                src="/images/MCC S2/Zhu Xin.png"
-                alt="Zhu Xin"
+                className="absolute right-0 top-[860px] w-[680px] xl:w-[650px] h-auto z-10 select-none pointer-events-none"
+                src="/images/MCC S2/YZhong 1.png"
+                alt="Yu Zhong"
               />
 
               {/* About section (mobile pushed lower for buttons grid) */}
