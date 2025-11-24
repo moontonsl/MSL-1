@@ -37,6 +37,7 @@ use App\Http\Controllers\Mccs2PredictionsController;
 use App\Http\Controllers\GoogleSheetMCCS2Controller;
 use App\Http\Controllers\Admin\DuplicateUsernameController;
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\CodashopController;
 
 Route::get('/', function () {
     return Inertia::render('Home/Home', [
@@ -155,6 +156,7 @@ Route::middleware(['auth', 'verified'])->get('/api/users/search', function (\Ill
     
     $search = $request->query('search', '');
     $limit = $request->query('limit', 10);
+    $modificationType = $request->query('modification_type', '');
     
     if (strlen($search) < 2) {
         return response()->json([]);
@@ -165,8 +167,13 @@ Route::middleware(['auth', 'verified'])->get('/api/users/search', function (\Ill
     );
     
     // Apply role-based filtering
+    // For SL users: if modification type is "School", allow searching everyone regardless of region/university
+    // Otherwise, filter by university (current behavior)
     if ($user->role === 'SL') {
-        $query->where('university', $user->university);
+        if ($modificationType !== 'School') {
+            $query->where('university', $user->university);
+        }
+        // If modificationType is 'School', no region/university filter is applied
     } elseif ($user->role === 'Regional Admin') {
         $assignedRegionIds = $user->getAssignedRegionIds();
         if (!empty($assignedRegionIds)) {
@@ -291,7 +298,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         }
         // Super Admin can see all requests from all regions (no filtering applied)
         
-        $requests = $query->orderBy('created_at', 'desc')->paginate(10);
+        // Order by status: Pending -> Approved -> Rejected, then by created_at desc
+        $requests = $query->orderByRaw("CASE 
+            WHEN status = 'Pending' THEN 1 
+            WHEN status = 'Approved' THEN 2 
+            WHEN status = 'Rejected' THEN 3 
+            ELSE 4 
+        END")
+        ->orderBy('created_at', 'desc')
+        ->paginate(10);
         
         // Ensure relationships are included in JSON response and add verifier info
         $requests->getCollection()->transform(function ($request) {
@@ -794,6 +809,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
             } else {
                 $studentLeaders = User::where('role', 'SL')->where('region', $user->region)->count();
             }
+        } elseif ($user->role === 'Super Admin') {
+            // Super Admin can see all Student Leaders
+            $studentLeaders = User::where('role', 'SL')->count();
+        }
+
+        $regionalAdmins = 0;
+        if ($user->role === 'Super Admin') {
+            $regionalAdmins = User::where('role', 'Regional Admin')->count();
         }
 
         return Inertia::render('SLAdmin/SLAdmin',[
@@ -802,7 +825,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'new' => $new,
             'renewed' => $renewed,
             'blocked' => $blocked,
-            'studentLeaders' => $studentLeaders
+            'studentLeaders' => $studentLeaders,
+            'regionalAdmins' => $regionalAdmins
         ]);
     })->name('sl-admin');
 });
@@ -1250,6 +1274,7 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
         'users.studentId',
         'users.region',
         'users.island',
+        'users.role',
         'users.ml_id', 
         'users.ml_server', 
         'users.university', 
@@ -1290,8 +1315,16 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
     
     // Handle Student Leader filtering
     if ($request->has('state') && $request->query('state') === 'StudentLeaders') {
-        // Show only Student Leaders (SL role) for Regional Admin
+        // Show only Student Leaders (SL role) for Regional Admin and Super Admin
+        // Regional Admin can only see SLs from their assigned regions (already filtered above)
+        // Super Admin can see all SLs (no additional filtering needed)
         $query->where('users.role', 'SL');
+    } elseif ($request->has('state') && $request->query('state') === 'RegionalAdmins') {
+        // Show only Regional Admins for Super Admin
+        if ($user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Access denied. Only Super Admins can view Regional Admins.'], 403);
+        }
+        $query->where('users.role', 'Regional Admin');
     } else {
         // Regular filtering - exclude admin roles
         $query->where('users.role', '!=', 'SL')
@@ -1509,8 +1542,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     //Pang promote sa student to SL
     Route::patch('/api/sladmin/users/{userId}/promote', function ($userId) {
         $user = Auth::user();
-        if ($user->role !== 'Regional Admin') {
-            return response()->json(['error' => 'Access denied. Only Regional Admins can promote users to Student Leader.'], 403);
+        if ($user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Access denied. Only Regional Admins and Super Admins can promote users to Student Leader.'], 403);
         }
         
         $query = \App\Models\User::where('id', $userId)
@@ -1518,8 +1551,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->where('role', '!=', 'Admin')
             ->where('role', '!=', 'Super Admin')
             ->where('role', '!=', 'Regional Admin')
-            ->where('region', $user->region)
             ->where('state', 'Verified'); // Only promote verified users
+        
+        // Regional Admin can only promote users from their region
+        if ($user->role === 'Regional Admin') {
+            $assignedRegionIds = $user->getAssignedRegionIds();
+            if (!empty($assignedRegionIds)) {
+                $query->whereIn('region', $assignedRegionIds);
+            } else {
+                $query->where('region', $user->region);
+            }
+        }
+        // Super Admin can promote any verified student (no region restriction)
         
         $targetUser = $query->first();
             
@@ -1532,6 +1575,32 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
         
         return response()->json(['success' => true, 'message' => 'User promoted to Student Leader successfully']);
+    });
+    
+    //Pang promote sa student to Regional Admin (Super Admin only)
+    Route::patch('/api/sladmin/users/{userId}/promote-regional-admin', function ($userId) {
+        $user = Auth::user();
+        if ($user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Access denied. Only Super Admins can promote users to Regional Admin.'], 403);
+        }
+        
+        $targetUser = \App\Models\User::where('id', $userId)
+            ->where('role', '!=', 'SL')
+            ->where('role', '!=', 'Admin')
+            ->where('role', '!=', 'Super Admin')
+            ->where('role', '!=', 'Regional Admin')
+            ->where('state', 'Verified') // Only promote verified users
+            ->first();
+            
+        if (!$targetUser) {
+            return response()->json(['error' => 'User not found, not verified, or already has an admin role.'], 404);
+        }
+        
+        $targetUser->update([
+            'role' => 'Regional Admin'
+        ]);
+        
+        return response()->json(['success' => true, 'message' => 'User promoted to Regional Admin successfully']);
     });
     
     //pang demote ng student leader
@@ -1556,6 +1625,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
         
         return response()->json(['success' => true, 'message' => 'Student Leader demoted successfully']);
+    });
+    
+    //pang demote ng Regional Admin to Student (Super Admin only)
+    Route::patch('/api/sladmin/users/{userId}/demote-regional-admin', function ($userId) {
+        $user = Auth::user();
+        if ($user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Access denied. Only Super Admins can demote Regional Admins.'], 403);
+        }
+        
+        $targetUser = \App\Models\User::where('id', $userId)
+            ->where('role', 'Regional Admin')
+            ->first();
+            
+        if (!$targetUser) {
+            return response()->json(['error' => 'Regional Admin not found.'], 404);
+        }
+        
+        $targetUser->update([
+            'role' => 'user' 
+        ]);
+        
+        return response()->json(['success' => true, 'message' => 'Regional Admin demoted to Student successfully']);
     });
     
 });
@@ -1698,6 +1789,19 @@ Route::post('/msl-network/send-inquiry', function (Request $request) {
         ], 500);
     }
 })->name('msl-network.send-inquiry');
+
+// Codashop API endpoint (accessible without /api prefix)
+Route::get('/codashop/init-payment', function () {
+    return response()->json([
+        'message' => 'This endpoint requires a POST request',
+        'usage' => 'Send a POST request with JSON body containing userId and zoneId',
+        'example' => [
+            'userId' => '165865941',
+            'zoneId' => '3232'
+        ]
+    ]);
+})->name('codashop.init-payment.get');
+Route::post('/codashop/init-payment', [\App\Http\Controllers\CodashopController::class, 'initPayment'])->name('codashop.init-payment');
 
 // Custom Event Canonical Routes - Handle dynamic event links like /NewEvent
 // This catch-all route should be placed at the very end to avoid conflicts with other routes
