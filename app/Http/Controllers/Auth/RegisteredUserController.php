@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -43,6 +44,19 @@ class RegisteredUserController extends Controller
             'userId' => 'required|string|unique:users,ml_id',
         ]);
         // dd($request);
+        
+        // Convert region name to region ID
+        $regionId = null;
+        if ($request->region) {
+            $region = DB::table('regions')
+                ->where('name', $request->region)
+                ->first();
+            
+            if ($region) {
+                $regionId = $region->id;
+            }
+        }
+        
         $user = User::create([
             'name' => $request->firstName,
             "surname" => $request->lastName,
@@ -55,7 +69,7 @@ class RegisteredUserController extends Controller
             "contact_number" => $request->contactNo,
             "facebook_link" => $request->facebookLink,
             "year_level" => $request->yearLevel,
-            "region" => $request->region,
+            "region" => $regionId,
             "island" => $request->island,
             "studentId" => $request->studentId,
             "course" => $request->course,
