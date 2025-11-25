@@ -87,7 +87,7 @@ export default function FF25Attendance() {
               <div className="relative bg-[#1a1f7a]/80 rounded-xl p-3 flex items-center gap-3">
 
                 {/* Left yellow circle */}
-                <div className="w-5 h-5 rounded-full bg-[#fcd821]"></div>
+                <User className="text-[#fcd821] w-5 h-5" />
 
                 {/* Select */}
                 <select
