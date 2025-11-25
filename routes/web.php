@@ -920,6 +920,18 @@ Route::get('/RoadshowAttendance', function () {
     return Inertia::render('OPPOxMSLRoadShowTournament/RoadshowAttendance');
 })->name('RoadshowAttendance');
 
+//FF25 LANDING PAGE ROUTES
+Route::get('/FF25', function () {
+    return Inertia::render('FF25/FF25');
+})->name('FF25LandingPage');
+
+
+//FF25 ATTENDANCE PAGE ROUTES
+Route::get('/FF25Attendance', function () {
+    return Inertia::render('FF25/FF25Attendance');
+})->name('FF25Attendance');
+
+
 //SL ADMIN APPROVAL ROUTES - Only SL role can access
 Route::middleware(['auth', 'verified'])->get('/SLAdminApproval', function () {
     $user = Auth::user();
