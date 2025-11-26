@@ -16,6 +16,7 @@ export default function AdminLayout({ children }) {
         { name: 'Buffs and Support', href: route('admin.event-photos'), routeName: 'admin.event-photos', icon: FaCamera },
         { name: 'MSL Event Management', href: route('admin.msl-events.index'), routeName: 'admin.msl-events.index', icon: FaGamepad },
         { name: 'Event Calendar', href: route('admin.events'), routeName: 'admin.events', icon: FaCalendar },
+        { name: 'Footer Management', href: route('admin.footer'), routeName: 'admin.footer', icon: FaCog },
         { name: 'Settings', href: route('admin.settings'), routeName: 'admin.settings', icon: FaCog },
     ];
 

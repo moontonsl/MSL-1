@@ -1,59 +1,49 @@
 import styles from './Footer.module.scss';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { Facebook, Youtube } from 'lucide-react';
 import ThemeToggleButton from '../ThemeToggleButton.jsx';
 
-const navSections = [
-    {
-        title: 'Explore',
-        links: [
-            { label: 'Events', href: '/Events' },
-            { label: 'News', href: '/news' },
-            { label: 'Program', href: '/Programs' },
-            { label: 'Resources', href: '/resources' }
-        ]
-    },
-    // {
-    //     title: 'About Us',
-    //     links: [
-    //         { label: 'Our Story', href: '/our-story' },
-    //         { label: 'Team', href: '/team' },
-    //         { label: 'Partnerships', href: '/partnerships' },
-    //         { label: 'News & Updates', href: '/updates' }
-    //     ]
-    // },
-    // {
-    //     title: 'Join Us',
-    //     links: [
-    //         { label: 'SL Apply', href: '/apply' },
-    //         { label: 'MCC Registration', href: '/mcc-registration' },
-    //         { label: 'Network', href: '/network' }
-    //     ]
-    // },
-    {
-        title: 'Legal',
-        links: [
-            { label: 'Privacy Policy', href: '/PrivacyPolicy' },
-            { label: 'Terms of Use', href: '/TermsAndConditions' }
-        ]
-    }
-];
-
 const Footer = () => {
+    const { footer } = usePage().props;
+    
+    // Fallback to default values if footer data is not available
+    const navSections = footer?.nav_sections || [
+        {
+            title: 'Explore',
+            links: [
+                { label: 'Events', href: '/Events' },
+                { label: 'News', href: '/news' },
+                { label: 'Program', href: '/Programs' },
+                { label: 'Resources', href: '/resources' }
+            ]
+        },
+        {
+            title: 'Legal',
+            links: [
+                { label: 'Privacy Policy', href: '/PrivacyPolicy' },
+                { label: 'Terms of Use', href: '/TermsAndConditions' }
+            ]
+        }
+    ];
+
+    const description = footer?.description || 'This website is under the use of Moonton Student Leaders Philippines supervised and monitored by the SERP Department. For inquiries and website concerns, send it to us using this link or you may contact us through contact@moontonslph.org';
+    const copyright = footer?.copyright || '© 2025 — Moonton Student Leaders Philippines';
+    const logo = footer?.logo || '/msl-logo.png';
+    const facebookUrl = footer?.facebook_url || 'https://www.facebook.com/MSLPhilippines';
+    const youtubeUrl = footer?.youtube_url || 'https://www.youtube.com/@MSLPhilippines';
+    const mlbbLogo = footer?.mlbb_logo || '/mlbb-logo.png';
+    const moontonLogo = footer?.moonton_logo || '/moonton-logo.png';
+
     return (
         <footer className={styles.footer + ' text-white'}>
             <div className={styles.footerTop}>
                 <div className={styles.footerInfo}>
                     <div className={styles.logo}>
                         <Link href="/">
-                            <img src="/msl-logo.png" alt="MSL Logo" />
+                            <img src={logo} alt="MSL Logo" />
                         </Link>
                     </div>
-                    <p>
-                        This website is under the use of Moonton Student Leaders Philippines supervised and monitored by
-                        the SERP Department. For inquiries and website concerns, send it to us using this link or you
-                        may contact us through contact@moontonslph.org
-                    </p>
+                    <p>{description}</p>
                 </div>
                 <div className={styles.navGrid}>
                     {navSections.map((section, index) => (
@@ -79,24 +69,24 @@ const Footer = () => {
             <div className={styles.partnered}>
                 <div className={styles.partneredLogo}>
                     <Link href="/">
-                        <img src="/mlbb-logo.png" alt="MSL Logo" />
+                        <img src={mlbbLogo} alt="MLBB Logo" />
                     </Link>
                 </div>
                 <div className={styles.partneredLogo}>
                     <Link href="/">
-                        <img src="/moonton-logo.png" alt="MSL Logo" />
+                        <img src={moontonLogo} alt="Moonton Logo" />
                     </Link>
                 </div>
             </div>
 
             <div className={styles.footerBottom}>
-                <div className={styles.footerCopyright}>© 2025 — Moonton Student Leaders Philippines</div>
+                <div className={styles.footerCopyright}>{copyright}</div>
 				<div className={styles.socials}>
 					<div className="hidden"><ThemeToggleButton /></div>
-					<a href="https://www.youtube.com/@MSLPhilippines" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+					<a href={youtubeUrl} target="_blank" rel="noopener noreferrer" aria-label="YouTube">
 						<Youtube size={20} />
 					</a>
-					<a href="https://www.facebook.com/MSLPhilippines" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+					<a href={facebookUrl} target="_blank" rel="noopener noreferrer" aria-label="Facebook">
 						<Facebook size={20} />
 					</a>
 				</div>

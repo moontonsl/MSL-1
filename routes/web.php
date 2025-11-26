@@ -33,6 +33,7 @@ use App\Http\Controllers\BracketTeamController;
 use App\Http\Controllers\MlAuthController;
 use App\Http\Controllers\GoogleSheetController;
 use App\Http\Controllers\SpreadSheetAutomationController;
+use App\Http\Controllers\FF25AttendanceController;
 use App\Http\Controllers\Mccs2PredictionsController;
 use App\Http\Controllers\GoogleSheetMCCS2Controller;
 use App\Http\Controllers\Admin\DuplicateUsernameController;
@@ -591,6 +592,79 @@ Route::get('/check-username-tournament', function (\Illuminate\Http\Request $req
     }
 });
 
+// FF25 attendance username checker
+Route::get('/ff25/check-username', function (\Illuminate\Http\Request $request) {
+    try {
+        $username = trim($request->query('username', ''));
+        $regionName = trim($request->query('region', ''));
+        $schoolName = trim($request->query('school', ''));
+
+        if (!$username || !$regionName || !$schoolName) {
+            return response()->json([
+                'exists' => false,
+                'matches' => ['region' => false, 'school' => false],
+                'message' => 'Username, region, and school are required.'
+            ], 422);
+        }
+
+        $user = \App\Models\User::where('username', $username)->first();
+
+        if (!$user) {
+            return response()->json([
+                'exists' => false,
+                'matches' => ['region' => false, 'school' => false],
+                'message' => 'Username not found.'
+            ]);
+        }
+
+        $userRegionName = '';
+        if ($user->region) {
+            if (is_numeric($user->region)) {
+                $region = \App\Models\Region::find($user->region);
+                $userRegionName = $region->name ?? '';
+            } else {
+                $userRegionName = $user->region;
+            }
+        }
+
+        $normalizedUserSchool = $user->university ?? '';
+        $schoolMatches = strcasecmp($normalizedUserSchool, $schoolName) === 0;
+        $regionMatches = $userRegionName
+            ? strcasecmp($userRegionName, $regionName) === 0
+            : false;
+
+        if ($schoolMatches && $regionMatches) {
+            $message = 'Username matches the selected region and school.';
+        } elseif ($schoolMatches && !$regionMatches) {
+            $message = 'Username found but region does not match.';
+        } elseif (!$schoolMatches && $regionMatches) {
+            $message = 'Username found but school does not match.';
+        } else {
+            $message = 'Username found but region and school do not match.';
+        }
+
+        // Build full name from name and surname
+        $fullName = trim(($user->name ?? '') . ' ' . ($user->surname ?? ''));
+        
+        return response()->json([
+            'exists' => true,
+            'matches' => ['region' => $regionMatches, 'school' => $schoolMatches],
+            'user_region' => $userRegionName ?: null,
+            'user_school' => $normalizedUserSchool ?: null,
+            'message' => $message,
+            'user_data' => [
+                'full_name' => $fullName ?: null,
+                'email' => $user->email ?? null,
+                'mlbb_id' => $user->ml_id ?? null,
+                'mlbb_server' => $user->ml_server ?? null,
+            ],
+        ]);
+    } catch (\Exception $e) {
+        \Log::error('FF25 username check error: ' . $e->getMessage());
+        return response()->json(['error' => 'Check failed', 'message' => 'Unable to verify username right now.'], 500);
+    }
+});
+
 Route::post('/validate-credentials', function (\Illuminate\Http\Request $request) {
     $request->validate([
         'username' => 'required|string',
@@ -850,6 +924,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::inertia('/upload', 'SchoolUploader');
 Route::post('/upload-schools', [SchoolUploadController::class, 'store'])->name('upload-schools');
 Route::get('/schools/search', [SchoolController::class, 'search']);
+Route::get('/regions', [SchoolController::class, 'getRegions']);
 
 //LOGIN ROUTES
 Route::get('/login', function () {
@@ -930,6 +1005,7 @@ Route::get('/FF25', function () {
 Route::get('/FF25Attendance', function () {
     return Inertia::render('FF25/FF25Attendance');
 })->name('FF25Attendance');
+Route::post('/FF25Attendance', [FF25AttendanceController::class, 'store'])->name('ff25.attendance.store');
 
 
 //SL ADMIN APPROVAL ROUTES - Only SL role can access

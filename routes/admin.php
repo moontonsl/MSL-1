@@ -64,6 +64,10 @@ Route::middleware(['auth:admin', 'admin'])->group(function () {
     Route::get('/admin/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('admin.settings');
     Route::post('/admin/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update']);
 
+    // Footer Management
+    Route::get('/admin/footer', [\App\Http\Controllers\Admin\FooterController::class, 'index'])->name('admin.footer');
+    Route::post('/admin/footer', [\App\Http\Controllers\Admin\FooterController::class, 'update'])->name('admin.footer.update');
+
     // Duplicate Username Check
     Route::get('/admin/duplicate-usernames/check', [\App\Http\Controllers\Admin\DuplicateUsernameController::class, 'checkDuplicates'])->name('admin.duplicate-usernames.check');
 

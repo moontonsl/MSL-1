@@ -10,14 +10,21 @@ class SchoolController extends Controller
     public function search(Request $request)
     {
         $query = $request->query('query');
+        $regionId = $request->query('region_id');
 
         if (!$query) {
             return response()->json([]);
         }
 
-        $schools = School::with('region.island')
-                ->where('name', 'like', '%' . $query . '%')
-                ->select('id', 'name', 'region_id')
+        $schoolsQuery = School::with('region.island')
+                ->where('name', 'like', '%' . $query . '%');
+
+        // Filter by region if provided
+        if ($regionId) {
+            $schoolsQuery->where('region_id', $regionId);
+        }
+
+        $schools = $schoolsQuery->select('id', 'name', 'region_id')
                 ->limit(10)
                 ->get();
 
@@ -32,6 +39,12 @@ class SchoolController extends Controller
                 
 
         return response()->json($formatted);
+    }
+
+    public function getRegions()
+    {
+        $regions = \App\Models\Region::orderBy('name')->get(['id', 'name']);
+        return response()->json($regions);
     }
 
 }
