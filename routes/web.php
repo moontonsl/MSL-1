@@ -33,6 +33,7 @@ use App\Http\Controllers\BracketTeamController;
 use App\Http\Controllers\MlAuthController;
 use App\Http\Controllers\GoogleSheetController;
 use App\Http\Controllers\SpreadSheetAutomationController;
+use App\Http\Controllers\FF25AttendanceController;
 use App\Http\Controllers\Mccs2PredictionsController;
 use App\Http\Controllers\GoogleSheetMCCS2Controller;
 use App\Http\Controllers\Admin\DuplicateUsernameController;
@@ -591,6 +592,9 @@ Route::get('/check-username-tournament', function (\Illuminate\Http\Request $req
     }
 });
 
+// FF25 attendance username checker
+Route::get('/ff25/check-username', [FF25AttendanceController::class, 'checkUsername'])->name('ff25.check-username');
+
 Route::post('/validate-credentials', function (\Illuminate\Http\Request $request) {
     $request->validate([
         'username' => 'required|string',
@@ -850,6 +854,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::inertia('/upload', 'SchoolUploader');
 Route::post('/upload-schools', [SchoolUploadController::class, 'store'])->name('upload-schools');
 Route::get('/schools/search', [SchoolController::class, 'search']);
+Route::get('/regions', [SchoolController::class, 'getRegions']);
 
 //LOGIN ROUTES
 Route::get('/login', function () {
@@ -919,6 +924,19 @@ Route::get('/RoadshowTournament', function () {
 Route::get('/RoadshowAttendance', function () {
     return Inertia::render('OPPOxMSLRoadShowTournament/RoadshowAttendance');
 })->name('RoadshowAttendance');
+
+//FF25 LANDING PAGE ROUTES
+Route::get('/FF25', function () {
+    return Inertia::render('FF25/FF25');
+})->name('FF25LandingPage');
+
+
+//FF25 ATTENDANCE PAGE ROUTES
+Route::get('/FF25Attendance', function () {
+    return Inertia::render('FF25/FF25Attendance');
+})->name('FF25Attendance');
+Route::post('/FF25Attendance', [FF25AttendanceController::class, 'store'])->name('ff25.attendance.store');
+
 
 //SL ADMIN APPROVAL ROUTES - Only SL role can access
 Route::middleware(['auth', 'verified'])->get('/SLAdminApproval', function () {

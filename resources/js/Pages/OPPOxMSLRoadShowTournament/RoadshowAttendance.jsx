@@ -21,7 +21,8 @@ export default function OPPOxMSLRoadShowAttendance() {
 
   const dates = [
     "November 23, 2025",
-    "November 25, 2025"
+    "November 25, 2025",
+    "November 28, 2025"
   ];
 
   const [form, setForm] = useState({
