@@ -266,6 +266,9 @@ export default function FF25Attendance() {
         const errorMessage =
           serverErrors?.username ||
           serverErrors?.fullname ||
+          serverErrors?.mlbbid ||
+          serverErrors?.mlbb_server ||
+          serverErrors?.event_date ||
           "Something went wrong. Please check your inputs and try again.";
 
         setModalInfo({
