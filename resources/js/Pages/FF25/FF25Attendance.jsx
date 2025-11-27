@@ -25,6 +25,8 @@ function debounce(func, delay) {
   };
 }
 
+const ISLANDS = ["Luzon", "Visayas", "Mindanao"];
+
 const FEATURED_SCHOOLS = [
   { name: "Ateneo de Davao University", region: "11 - Davao Region", island: "Mindanao" },
   { name: "Batangas State University-Alangilan", region: "04 - CALABARZON", island: "Luzon" },
@@ -38,17 +40,11 @@ const FEATURED_SCHOOLS = [
   { name: "University of San Carlos - Cebu", region: "07 - Central Visayas", island: "Visayas" },
 ];
 
-const FEATURED_REGION_NAMES = Array.from(new Set(FEATURED_SCHOOLS.map((school) => school.region)));
-
 export default function FF25Attendance() {
   const { flash, errors } = usePage().props;
   const [hasAccount, setHasAccount] = useState("yes");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [regions, setRegions] = useState([]);
-  const [regionId, setRegionId] = useState("");
-  const [filteredSchools, setFilteredSchools] = useState([]);
-  const [schoolQuery, setSchoolQuery] = useState("");
-  const [isSchoolValid, setIsSchoolValid] = useState(true);
+  const [selectedIsland, setSelectedIsland] = useState("");
   const [usernameStatus, setUsernameStatus] = useState({ message: "", type: "" });
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [modalInfo, setModalInfo] = useState({
@@ -57,7 +53,6 @@ export default function FF25Attendance() {
     title: "",
     message: "",
   });
-  const dropdownRef = useRef(null);
   const [form, setForm] = useState({
     region: "",
     school: "",
@@ -69,33 +64,25 @@ export default function FF25Attendance() {
     mlbbserver: "",
   });
 
-  // Load regions on mount
-  useEffect(() => {
-    axios.get("/regions")
-      .then((response) => {
-        const limitedRegions = response.data.filter((region) =>
-          FEATURED_REGION_NAMES.includes(region.name)
-        );
-        setRegions(limitedRegions);
-      })
-      .catch((error) => {
-        console.error("Error fetching regions:", error);
-      });
-  }, []);
+  // Get schools filtered by selected island
+  const getFilteredSchools = () => {
+    if (!selectedIsland) return [];
+    return FEATURED_SCHOOLS.filter((school) => school.island === selectedIsland);
+  };
 
   const debouncedUsernameCheck = useMemo(
     () =>
-      debounce(async ({ username, region, school }) => {
+      debounce(async ({ username, island, school }) => {
         try {
           setIsCheckingUsername(true);
           const response = await axios.get("/ff25/check-username", {
-            params: { username, region, school },
+            params: { username, island, school },
           });
           const data = response.data;
 
-          if (data.exists && data.matches?.region && data.matches?.school) {
+          if (data.exists && data.verified && data.matches?.island && data.matches?.school) {
             setUsernameStatus({
-              message: data.message || "Username matches the selected region and school.",
+              message: data.message || "Username is verified and matches the selected region and school.",
               type: "success",
             });
             
@@ -109,6 +96,11 @@ export default function FF25Attendance() {
                 mlbbserver: data.user_data.mlbb_server || prev.mlbbserver,
               }));
             }
+          } else if (data.exists && !data.verified) {
+            setUsernameStatus({
+              message: data.message || "Username found but account is not verified.",
+              type: "error",
+            });
           } else if (data.exists) {
             setUsernameStatus({
               message: data.message || "Username found but details do not match.",
@@ -144,17 +136,9 @@ export default function FF25Attendance() {
       return;
     }
 
-    if (!currentFormState.region || !currentFormState.school) {
+    if (!selectedIsland || !currentFormState.school) {
       setUsernameStatus({
         message: "Select your region and school first.",
-        type: "warning",
-      });
-      return;
-    }
-
-    if (!isSchoolValid) {
-      setUsernameStatus({
-        message: "Please choose a valid school from the list.",
         type: "warning",
       });
       return;
@@ -163,7 +147,7 @@ export default function FF25Attendance() {
     setUsernameStatus({ message: "Checking username...", type: "info" });
     debouncedUsernameCheck({
       username: trimmedUsername,
-      region: currentFormState.region,
+      island: selectedIsland,
       school: currentFormState.school,
     });
   };
@@ -178,20 +162,7 @@ export default function FF25Attendance() {
       triggerUsernameValidation(form.username, form);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasAccount, form.region, form.school]);
-
-  // Handle click outside dropdown
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        // Keep dropdown open on click outside for better UX
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+  }, [hasAccount, selectedIsland, form.school]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -204,70 +175,53 @@ export default function FF25Attendance() {
     });
   };
 
-  const handleRegionChange = (e) => {
-    const selectedRegionId = e.target.value;
-    const selectedRegion = regions.find(r => r.id.toString() === selectedRegionId);
-    
-    setRegionId(selectedRegionId);
+  const handleIslandChange = (e) => {
+    const island = e.target.value;
+    setSelectedIsland(island);
     setForm((prev) => ({ 
       ...prev, 
-      region: selectedRegion ? selectedRegion.name : "",
-      school: "" // Clear school when region changes
+      region: island, // Store island as region for backend
+      school: "" // Clear school when island changes
     }));
-    setSchoolQuery("");
-    setFilteredSchools([]);
-  };
-
-  const filterSchools = (value, selectedRegionName) => {
-    if (!value || value.trim() === "") {
-      setFilteredSchools([]);
-      setIsSchoolValid(true);
-      return;
+    // Trigger username validation if username exists
+    if (form.username.trim()) {
+      triggerUsernameValidation(form.username, { ...form, region: island, school: "" });
     }
-
-    const normalizedValue = value.toLowerCase();
-    let schools = FEATURED_SCHOOLS.filter((school) =>
-      school.name.toLowerCase().includes(normalizedValue)
-    );
-
-    if (selectedRegionName) {
-      schools = schools.filter((school) => school.region === selectedRegionName);
-    }
-
-    setFilteredSchools(schools);
-    const isValid = schools.some(
-      (school) => school.name.toLowerCase() === normalizedValue
-    );
-    setIsSchoolValid(isValid);
   };
 
   const handleSchoolChange = (e) => {
     const value = e.target.value;
-    setSchoolQuery(value);
     setForm((prev) => ({ ...prev, school: value }));
-    const selectedRegion = regions.find((r) => r.id.toString() === regionId);
-    filterSchools(value, selectedRegion ? selectedRegion.name : "");
-  };
-
-  const handleSchoolSelect = (school) => {
-    setForm((prev) => ({ ...prev, school: school.name }));
-    setSchoolQuery(school.name);
-    setFilteredSchools([]);
-    setIsSchoolValid(true);
+    // Trigger username validation if username exists
+    if (form.username.trim()) {
+      triggerUsernameValidation(form.username, { ...form, school: value });
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Validate school selection - if school is entered but not valid, prevent submission
-    if (form.school.trim() && !isSchoolValid) {
-      alert("Please select a valid school from the dropdown list.");
+    // Validate region selection
+    if (!selectedIsland) {
+      alert("Please select a region.");
+      return;
+    }
+    
+    // Validate school selection
+    if (!form.school.trim()) {
+      alert("Please select a school.");
       return;
     }
     
     // Validate MSL username when account is yes
     if (hasAccount === "yes" && !form.username.trim()) {
       alert("Please enter your MSL username.");
+      return;
+    }
+    
+    // Validate username status if account is yes
+    if (hasAccount === "yes" && usernameStatus.type !== "success") {
+      alert("Please ensure your username is verified and matches the selected region and school.");
       return;
     }
     
@@ -299,10 +253,8 @@ export default function FF25Attendance() {
           mlbbserver: "",
         });
         setHasAccount("yes");
-        setRegionId("");
-        setSchoolQuery("");
-        setFilteredSchools([]);
-        setIsSchoolValid(true);
+        setSelectedIsland("");
+        setUsernameStatus({ message: "", type: "" });
         setModalInfo({
           open: true,
           type: "success",
@@ -417,15 +369,15 @@ export default function FF25Attendance() {
                 <MapPin className="text-[#fcd821] w-5 h-5" />
 
                 <select
-                  name="region"
-                  value={regionId}
-                  onChange={handleRegionChange}
+                  name="island"
+                  value={selectedIsland}
+                  onChange={handleIslandChange}
                   required
                   className="bg-transparent w-full outline-none text-white appearance-none pl-3 rounded-md border border-white/50" 
                 >
                   <option value="" disabled className="text-black">Select your region</option>
-                  {regions.map((region) => (
-                    <option key={region.id} value={region.id} className="text-black">{region.name}</option>
+                  {ISLANDS.map((island) => (
+                    <option key={island} value={island} className="text-black">{island}</option>
                   ))}
                 </select>
 
@@ -437,47 +389,28 @@ export default function FF25Attendance() {
             {/* SCHOOL */}
             <div>
               <label className="block font-medium mb-1 text-sm sm:text-base">School</label>
-              <div className="relative" ref={dropdownRef}>
-                <div className="relative bg-[#1a1f7a]/80 rounded-xl p-3 flex items-center gap-3">
-                  <School className="text-[#fcd821] w-5 h-5" />
-                  <input
-                    type="text"
-                    name="school"
-                    value={schoolQuery}
-                    onChange={handleSchoolChange}
-                    required
-                    placeholder="Type to search your school"
-                    className={`bg-transparent w-full outline-none text-white appearance-none pl-3 rounded-md border ${
-                      isSchoolValid ? 'border-white/50' : 'border-red-500'
-                    }`}
-                  />
-                </div>
-                
-                {/* School Dropdown */}
-                {filteredSchools.length > 0 && (
-                  <div className="absolute z-50 w-full mt-1 bg-[#1a1f7a]/95 rounded-xl border border-[#fcd821]/50 max-h-60 overflow-y-auto">
-                    {filteredSchools.map((school) => (
-                      <div
-                        key={school.id}
-                        onClick={() => handleSchoolSelect(school)}
-                        className="px-4 py-2 hover:bg-[#fcd821]/20 cursor-pointer text-white border-b border-white/10 last:border-b-0"
-                      >
-                        <div className="font-medium">{school.name}</div>
-                        {(school.region || school.island) && (
-                          <div className="text-xs text-white/70">
-                            {school.region && <span>{school.region}</span>}
-                            {school.region && school.island && <span> • </span>}
-                            {school.island && <span>{school.island}</span>}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                {!isSchoolValid && schoolQuery && (
-                  <p className="mt-1 text-xs text-red-400">Please select a school from the dropdown</p>
-                )}
+              <div className="relative bg-[#1a1f7a]/80 rounded-xl p-3 flex items-center gap-3">
+                <School className="text-[#fcd821] w-5 h-5" />
+
+                <select
+                  name="school"
+                  value={form.school}
+                  onChange={handleSchoolChange}
+                  required
+                  disabled={!selectedIsland}
+                  className="bg-transparent w-full outline-none text-white appearance-none pl-3 rounded-md border border-white/50 disabled:opacity-50 disabled:cursor-not-allowed" 
+                >
+                  <option value="" disabled className="text-black">
+                    {selectedIsland ? "Select your school" : "Select region first"}
+                  </option>
+                  {getFilteredSchools().map((school) => (
+                    <option key={school.name} value={school.name} className="text-black">
+                      {school.name}
+                    </option>
+                  ))}
+                </select>
+
+                <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 text-[#fcd821] w-5 h-5 pointer-events-none" />
               </div>
             </div>
 

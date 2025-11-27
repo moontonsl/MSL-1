@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\FF25Attendance;
+use App\Models\User;
+use App\Models\Region;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -133,6 +135,120 @@ class FF25AttendanceController extends Controller
         }
 
         return back()->with('success', 'Attendance submitted successfully!');
+    }
+
+    /**
+     * Check if username exists, is verified, and matches the selected island and school.
+     */
+    public function checkUsername(Request $request)
+    {
+        $request->validate([
+            'username' => 'required|string',
+            'island' => 'required|string|in:Luzon,Visayas,Mindanao',
+            'school' => 'required|string',
+        ]);
+
+        $username = $request->input('username');
+        $selectedIsland = $request->input('island');
+        $selectedSchool = $request->input('school');
+
+        // Find user by username
+        $user = User::where('username', $username)->first();
+
+        if (!$user) {
+            return response()->json([
+                'exists' => false,
+                'verified' => false,
+                'message' => 'Username not found.',
+            ]);
+        }
+
+        // Check if user is verified
+        if ($user->state !== 'Verified') {
+            return response()->json([
+                'exists' => true,
+                'verified' => false,
+                'message' => 'Username found but account is not verified. Please verify your account first.',
+            ]);
+        }
+
+        // Check if user's region belongs to the selected island
+        $userRegion = null;
+        if ($user->region) {
+            $userRegion = Region::with('island')->find($user->region);
+        }
+
+        $islandMatches = false;
+        if ($userRegion && $userRegion->island) {
+            $userIslandName = $userRegion->island->name;
+            // Normalize island names (remove any prefix numbers or extra spaces)
+            $normalizedUserIsland = trim(preg_replace('/^\d+\s*-\s*/', '', $userIslandName));
+            $normalizedSelectedIsland = trim($selectedIsland);
+            $islandMatches = strcasecmp($normalizedUserIsland, $normalizedSelectedIsland) === 0;
+        }
+
+        // Also check user's island field directly as fallback
+        if (!$islandMatches && $user->island) {
+            $normalizedUserIsland = trim(preg_replace('/^\d+\s*-\s*/', '', $user->island));
+            $normalizedSelectedIsland = trim($selectedIsland);
+            $islandMatches = strcasecmp($normalizedUserIsland, $normalizedSelectedIsland) === 0;
+        }
+
+        // Check if user's university/school matches the selected school
+        $schoolMatches = false;
+        if ($user->university) {
+            $normalizedUserSchool = trim(strtolower($user->university));
+            $normalizedSelectedSchool = trim(strtolower($selectedSchool));
+            $schoolMatches = $normalizedUserSchool === $normalizedSelectedSchool;
+        }
+
+        if ($islandMatches && $schoolMatches) {
+            return response()->json([
+                'exists' => true,
+                'verified' => true,
+                'matches' => [
+                    'island' => true,
+                    'school' => true,
+                ],
+                'message' => 'Username is verified and matches the selected region and school.',
+                'user_data' => [
+                    'full_name' => trim($user->name . ' ' . $user->surname),
+                    'email' => $user->email,
+                    'mlbb_id' => $user->ml_id,
+                    'mlbb_server' => $user->ml_server,
+                ],
+            ]);
+        } elseif (!$islandMatches && !$schoolMatches) {
+            return response()->json([
+                'exists' => true,
+                'verified' => true,
+                'matches' => [
+                    'island' => false,
+                    'school' => false,
+                ],
+                'message' => 'Username is verified but does not match the selected region and school.',
+            ]);
+        } elseif (!$islandMatches) {
+            return response()->json([
+                'exists' => true,
+                'verified' => true,
+                'matches' => [
+                    'island' => false,
+                    'school' => true,
+                ],
+                'message' => 'Username is verified but does not match the selected region.',
+            ]);
+        } else {
+            return response()->json([
+                'exists' => true,
+                'verified' => true,
+                'matches' => [
+                    'island' => true,
+                    'school' => false,
+                ],
+                'message' => 'Username is verified but does not match the selected school.',
+            ]);
+        }
     }
 }
 
