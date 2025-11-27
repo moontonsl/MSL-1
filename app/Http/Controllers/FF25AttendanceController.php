@@ -39,23 +39,26 @@ class FF25AttendanceController extends Controller
 
         // Check for duplicate entries
         if ($data['has_msl_account'] === 'yes') {
-            // Check if username already exists
+            // Allow only one submission per username per event date
             $existingAttendance = FF25Attendance::where('msl_username', $data['msl_username'])
+                ->where('event_date', $data['event_date'])
                 ->first();
             
             if ($existingAttendance) {
                 return back()->withErrors([
-                    'username' => 'This username has already registered for attendance.'
+                    'username' => 'This username has already submitted an entry for this date.'
                 ])->withInput();
             }
         } else {
-            // Check if full name already exists
-            $existingAttendance = FF25Attendance::where('full_name', $data['full_name'])
+            // Allow only one submission per MLBB ID + server per event date
+            $existingAttendance = FF25Attendance::where('mlbb_id', $data['mlbb_id'])
+                ->where('mlbb_server', $data['mlbb_server'])
+                ->where('event_date', $data['event_date'])
                 ->first();
             
             if ($existingAttendance) {
                 return back()->withErrors([
-                    'fullname' => 'This name has already registered for attendance.'
+                    'mlbbid' => 'This MLBB ID and server already submitted an entry for this date.'
                 ])->withInput();
             }
         }
@@ -74,6 +77,7 @@ class FF25AttendanceController extends Controller
             'entry.1651511427' => $data['full_name'] ?? '',
             'entry.985879935' => $data['email'] ?? '',
             'entry.1669502927' => $data['mlbb_id'] ?? '',
+            'entry.480671491' => $data['mlbb_server'] ?? '',
             'entry.1384804081' => $data['event_date'],
         ];
 
