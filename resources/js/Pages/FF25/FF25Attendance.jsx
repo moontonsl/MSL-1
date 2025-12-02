@@ -27,8 +27,20 @@ function debounce(func, delay) {
 
 const ISLANDS = ["Luzon", "Visayas", "Mindanao"];
 
+// const FEATURED_SCHOOLS = [
+//   { name: "Ateneo de Davao University", region: "11 - Davao Region", island: "Mindanao" },
+//   { name: "Batangas State University-Alangilan", region: "04 - CALABARZON", island: "Luzon" },
+//   { name: "Talisay City College", region: "07 - Central Visayas", island: "Visayas" },
+//   { name: "City College of San Fernando", region: "03 - Central Luzon", island: "Luzon" },
+//   { name: "Laguna State Polytechnic University-Los Baños", region: "04 - CALABARZON", island: "Luzon" },
+//   { name: "La Salle University", region: "10 - Northern Mindanao", island: "Mindanao" },
+//   { name: "Mindanao State University - Iligan Institute of Technology", region: "10 - Northern Mindanao", island: "Mindanao" },
+//   { name: "PHINMA St. Jude College", region: "13 - Nat. Capital Region", island: "Luzon" },
+//   { name: "University of the Philippines-Diliman", region: "13 - Nat. Capital Region", island: "Luzon" },
+//   { name: "University of San Carlos - Cebu", region: "07 - Central Visayas", island: "Visayas" },
+// ];
 const FEATURED_SCHOOLS = [
-  { name: "Ateneo de Davao University", region: "11 - Davao Region", island: "Mindanao" },
+  { name: "Father Saturnino Urios University", region: "16 - Caraga", island: "Mindanao" },
   { name: "Batangas State University-Alangilan", region: "04 - CALABARZON", island: "Luzon" },
   { name: "Talisay City College", region: "07 - Central Visayas", island: "Visayas" },
   { name: "City College of San Fernando", region: "03 - Central Luzon", island: "Luzon" },
@@ -37,7 +49,7 @@ const FEATURED_SCHOOLS = [
   { name: "Mindanao State University - Iligan Institute of Technology", region: "10 - Northern Mindanao", island: "Mindanao" },
   { name: "PHINMA St. Jude College", region: "13 - Nat. Capital Region", island: "Luzon" },
   { name: "University of the Philippines-Diliman", region: "13 - Nat. Capital Region", island: "Luzon" },
-  { name: "University of San Carlos - Cebu", region: "07 - Central Visayas", island: "Visayas" },
+  { name: "Bulacan State University - Sarmiento Campus", region: "03 - Central Luzon", island: "Luzon" },
 ];
 
 export default function FF25Attendance() {
