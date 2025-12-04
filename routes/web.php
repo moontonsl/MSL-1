@@ -612,6 +612,14 @@ Route::post('/validate-credentials', function (\Illuminate\Http\Request $request
     return response()->json(['message' => 'Invalid credentials'], 401);
 });
 
+// Faulty Username Update Route (Signed)
+Route::get('/update-username/{user}', [\App\Http\Controllers\FaultyUsernameController::class, 'showUpdateForm'])
+    ->name('username.update.form')
+    ->middleware('signed');
+
+Route::post('/update-username/{user}', [\App\Http\Controllers\FaultyUsernameController::class, 'updateUsername'])
+    ->name('username.update.submit');
+
 Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
     // Validate the request
     $request->validate([
