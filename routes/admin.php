@@ -10,6 +10,21 @@ Route::middleware('guest')->group(function () {
     Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
 });
 
+// Custom User List Routes (Simple Password Protection)
+Route::group(['prefix' => 'admin/custom-user-list'], function () {
+    // Login Routes
+    Route::get('/login', [\App\Http\Controllers\CustomUserListController::class, 'showLogin'])->name('admin.custom-user-list.login');
+    Route::post('/login', [\App\Http\Controllers\CustomUserListController::class, 'login'])->name('admin.custom-user-list.login.submit');
+    Route::post('/logout', [\App\Http\Controllers\CustomUserListController::class, 'logout'])->name('admin.custom-user-list.logout');
+
+    // Protected Routes
+    Route::middleware(['web', \App\Http\Middleware\CheckCustomUserListPassword::class])->group(function () {
+        Route::get('/', [\App\Http\Controllers\CustomUserListController::class, 'index'])->name('admin.custom-user-list');
+        Route::post('/email', [\App\Http\Controllers\CustomUserListController::class, 'sendSelectedEmails']);
+        Route::post('/delete', [\App\Http\Controllers\CustomUserListController::class, 'deleteSelected']);
+    });
+});
+
 // Protected Admin Routes
 Route::middleware(['auth:admin', 'admin'])->group(function () {
     // Logout Route
@@ -70,6 +85,13 @@ Route::middleware(['auth:admin', 'admin'])->group(function () {
 
     // Duplicate Username Check
     Route::get('/admin/duplicate-usernames/check', [\App\Http\Controllers\Admin\DuplicateUsernameController::class, 'checkDuplicates'])->name('admin.duplicate-usernames.check');
+
+    // Faulty Username Management
+    Route::get('/admin/faulty-username', [\App\Http\Controllers\FaultyUsernameController::class, 'index'])->name('admin.faulty-username');
+    Route::post('/faulty-username/send-email/{user}', [\App\Http\Controllers\FaultyUsernameController::class, 'sendEmailToUser']);
+    Route::post('/faulty-username/send-selected', [\App\Http\Controllers\FaultyUsernameController::class, 'sendEmailToSelected']);
+    Route::post('/faulty-username/send-all', [\App\Http\Controllers\FaultyUsernameController::class, 'sendEmailToAll']);
+    Route::get('/faulty-username/stats', [\App\Http\Controllers\FaultyUsernameController::class, 'getStats']);
 
     // SL Management
     Route::get('/admin/sl-management', [AdminController::class, 'slManagement'])->name('admin.sl-management');
