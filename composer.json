@@ -16,10 +16,13 @@
         "laravel/framework": "^11.0",
         "laravel/sanctum": "^4.1",
         "laravel/tinker": "^2.10.1",
-        "maennchen/zipstream-php": "^3.1",
+        "maennchen/zipstream-php": "3.1.*",
         "phpoffice/phpspreadsheet": "^2.0",
         "spatie/laravel-googletagmanager": "^2.8",
+        "symfony/clock": "7.4.*",
+        "symfony/event-dispatcher": "7.4.*",
         "symfony/string": "7.4.*",
+        "symfony/translation": "7.4.*",
         "tightenco/ziggy": "^2.0"
     },
     "require-dev": {
