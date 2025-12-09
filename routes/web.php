@@ -107,6 +107,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/campus-tournaments/{id}/approve', [\App\Http\Controllers\CampusTournamentController::class, 'approve'])->name('campus.tournaments.approve');
     Route::post('/campus-tournaments/{id}/reject', [\App\Http\Controllers\CampusTournamentController::class, 'reject'])->name('campus.tournaments.reject');
     Route::post('/campus-tournaments/{id}/submit-results', [\App\Http\Controllers\CampusTournamentController::class, 'submitResults'])->name('campus.tournaments.submit-results');
+    Route::get('/campus-tournaments/{id}/export', [\App\Http\Controllers\CampusTournamentController::class, 'exportToExcel'])->name('campus.tournaments.export');
     Route::delete('/campus-tournaments/{id}', [\App\Http\Controllers\CampusTournamentController::class, 'destroy'])->name('campus.tournaments.destroy');
 });
 
