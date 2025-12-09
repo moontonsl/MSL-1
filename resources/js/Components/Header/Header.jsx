@@ -20,7 +20,7 @@ const Header = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State for dropdown visibility
 
     const [showModificationModal, setShowModificationModal] = useState(false);//For the Account Modification Modal
-    
+
     const { auth } = usePage().props;
     const user = auth.user;
 
@@ -117,8 +117,8 @@ const Header = () => {
                             href={user ? "#" : "/login"}
                             className={user ? styles.headerAuth : styles.signInIcon}
                             onClick={handleAccountIconClick} // New handler for icon click
-                            // Optional: If you strictly want no navigation and only onClick, use as="button"
-                            // as={user ? "button" : "a"}
+                        // Optional: If you strictly want no navigation and only onClick, use as="button"
+                        // as={user ? "button" : "a"}
                         >
                             {/* Make icon bigger */}
                             <MdAccountCircle size={40} />
@@ -129,7 +129,7 @@ const Header = () => {
                                 <Link
                                     href="/studentportal"
                                     className={styles.dropdownItem}
-                                    onClick={() => setIsDropdownOpen(false)} 
+                                    onClick={() => setIsDropdownOpen(false)}
                                 >
                                     Profile
                                 </Link>
@@ -144,13 +144,13 @@ const Header = () => {
                                 )}
                                 {/* Campus Tournament - only for SL and Regional Admin */}
                                 {(user.role === 'SL' || user.role === 'Regional Admin') && (
-                                    <Link
+                                    <a
                                         href="/campus-tournament"
                                         className={styles.dropdownItem}
                                         onClick={() => setIsDropdownOpen(false)}
                                     >
                                         Campus Tournament
-                                    </Link>
+                                    </a>
                                 )}
                                 {/* Modification - different URLs based on role */}
                                 {user.role === 'SL' && (
@@ -194,7 +194,7 @@ const Header = () => {
                                     onClick={handleLogout}
                                     className={styles.dropdownItem}
                                 >
-                                    Log out 
+                                    Log out
                                 </button>
                             </div>
                         )}
@@ -202,12 +202,12 @@ const Header = () => {
                 </div>
             </div>
 
-             {/* Modify Account Modal */}
+            {/* Modify Account Modal */}
             {showModificationModal && (
-            <AccountModificationModal
-                isOpen={showModificationModal}
-                onClose={() => setShowModificationModal(false)}
-            />
+                <AccountModificationModal
+                    isOpen={showModificationModal}
+                    onClose={() => setShowModificationModal(false)}
+                />
             )}
         </header>
     );
