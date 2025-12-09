@@ -14,6 +14,7 @@ import {
   ChevronDown,
   School,
 } from "lucide-react";
+import { Link } from "@inertiajs/react";
 
 // Dummy data
 const regionsData = ["Region 1", "Region 2", "Region 3"]; 
@@ -47,6 +48,7 @@ export default function FF25Attendance() {
     <AuthenticatedLayout>
       <Head title="FF25 Attendance Registration" />
       <Helmet>
+        <title>FF25 Attendance Registration</title>
         <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet" />
       </Helmet>
 
@@ -54,19 +56,17 @@ export default function FF25Attendance() {
         className="relative z-50 min-h-screen flex flex-col items-center justify-center text-white p-4 pt-5 sm:pt-5 font-['Montserrat'] bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${BG})`, backgroundAttachment: "fixed" }}
       >
-
-        {/* Header */}
-        <div className="text-center mb-6 sm:mb-8">
+        <Link href="/FF25">
           <img 
             src={FFLogo} 
-            alt="FF25 MSL Logo" 
-            className="w-48 sm:w-56 mx-auto mb-4 drop-shadow-lg" 
+            alt="FF25 MSL Logo"
+            className="w-64 sm:w-80 drop-shadow-lg mb-6 cursor-pointer" 
           />
-        </div>
+        </Link>
 
         {/* Form Card */}
           <div
-            className="rounded-2xl p-5 sm:p-8 w-full max-w-sm sm:max-w-3xl shadow-lg mx-auto border backdrop-blur-md bg-[#1a1f7a]/75 ]"
+            className="rounded-2xl p-5 sm:p-8 w-full max-w-sm sm:max-w-3xl shadow-lg mx-auto border-2 backdrop-blur-md bg-[#1a1f7a]/75 ]"
             style={{
               borderColor: "#fcd821",
               borderWidth: "2px",
