@@ -6,6 +6,7 @@ import BG from "./BG.png";
 import FFLogo from "./FF2xMSL_logo.png";
 import { User, Hash, Globe, Link as LinkIcon } from "lucide-react";
 import { Link } from "@inertiajs/react";
+import MechanicsFFBattleEmote from "./mechanicsFFBattleEmote.jsx";
 
 export default function FFBattleEnote() {
   const [form, setForm] = useState({
@@ -15,9 +16,11 @@ export default function FFBattleEnote() {
     ign: "",
     fblink: "",
     fbpost: "",
+    agree: false,
   });
 
   const [showModal, setShowModal] = useState(false);
+  const [showMechanics, setShowMechanics] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -34,9 +37,11 @@ export default function FFBattleEnote() {
     formData.append("entry.233770124", form.ign);
     formData.append("entry.1933347602", form.fblink);
     formData.append("entry.1579063636", form.fbpost);
+    formData.append("entry.2102359487", form.agree ? "Yes" : "No");
 
     await fetch(
       "https://docs.google.com/forms/d/e/1FAIpQLSdU1OrHAlBSEsSOMiUwU8uN_jTzjxYuuIUu95SS-2lWL6RYew/formResponse",
+      
       { method: "POST", mode: "no-cors", body: formData }
     );
 
@@ -48,6 +53,7 @@ export default function FFBattleEnote() {
         ign: "",
         fblink: "",
         fbpost: "",
+        agree: false,
     });
 
     setShowModal(true);
@@ -55,9 +61,9 @@ export default function FFBattleEnote() {
 
   return (
     <AuthenticatedLayout>
-      <Head title="FF25 Attendance Registration" /> 
+      <Head title="FF25 Battle Emote Registration" /> 
       <Helmet>
-        <title>FF25 Attendance Registration</title>
+        <title>FF25 Battle Emote Registration</title>
         <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet" />
       </Helmet>
 
@@ -70,7 +76,8 @@ export default function FFBattleEnote() {
           backgroundAttachment: "fixed",
         }}
       >
-        <Link href="/FF25">
+        {/* <Link href="/FF25"> */}
+        <Link href="#">
           <img 
             src={FFLogo} 
             alt="FF25 MSL Logo"
@@ -188,6 +195,31 @@ export default function FFBattleEnote() {
               </div>
             </div>
 
+            {/* AGREEMENT CHECKBOX */}
+            <div className="flex items-start gap-3 bg-white p-3 rounded-xl border border-yellow-300">
+              <input
+                type="checkbox"
+                name="agree"
+                checked={form.agree}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, agree: e.target.checked }))
+                }
+                required
+                className="w-5 h-5 mt-1 text-pink-600"
+              />
+
+              <label className="text-[#1a1f7a] font-semibold">
+                I agree to the{" "}
+                <span
+                  onClick={() => setShowMechanics(true)}
+                  className="text-pink-600 underline cursor-pointer"
+                >
+                  game mechanics.
+                </span>
+              </label>
+            </div>
+
+
             {/* SUBMIT */}
             <button
               type="submit"
@@ -217,6 +249,11 @@ export default function FFBattleEnote() {
             </div>
           </div>
         )}
+
+        {showMechanics && (
+          <MechanicsFFBattleEmote onClose={() => setShowMechanics(false)} />
+        )}
+
       </div>
     </AuthenticatedLayout>
   );

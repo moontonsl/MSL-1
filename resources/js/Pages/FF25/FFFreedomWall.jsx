@@ -6,6 +6,7 @@ import BG from "./BG.png";
 import FFLogo from "./FF2xMSL_logo.png";
 import { User, Hash, Globe, Link as LinkIcon, Image as ImageIcon, FileText } from "lucide-react";
 import { Link } from "@inertiajs/react";
+import MechanicsFFFreedomWall from "./mechanicsFFFreedomWall.jsx";
 
 export default function FFFreedomWall() {
   const [form, setForm] = useState({
@@ -17,9 +18,11 @@ export default function FFFreedomWall() {
     story: "",
     picture: "",
     codename: "",
+    agree: false,
   });
 
   const [showModal, setShowModal] = useState(false);
+  const [showMechanics, setShowMechanics] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -41,6 +44,7 @@ export default function FFFreedomWall() {
     formData.append("entry.268110709", form.story);
     formData.append("entry.1933308767", form.picture);
     formData.append("entry.1180792450", form.codename);
+    formData.append("entry.1795577190", form.agree ? "Yes" : "No");
 
     await fetch(
       "https://docs.google.com/forms/d/e/1FAIpQLSeohjDp5OjEwBs_3aqq-7VmfGg8zUsPzxr6gk2Yu0zjFAzL0g/formResponse",
@@ -57,6 +61,7 @@ export default function FFFreedomWall() {
       story: "",
       picture: "",
       codename: "",
+      agree: false,
     });
 
     setShowModal(true);
@@ -80,7 +85,8 @@ export default function FFFreedomWall() {
           backgroundAttachment: "fixed",
         }}
       >
-        <Link href="/FF25">
+        {/* <Link href="/FF25"> */}
+        <Link href="#">
           <img 
             src={FFLogo} 
             alt="FF25 MSL Logo"
@@ -98,7 +104,7 @@ export default function FFFreedomWall() {
             {/* FULL NAME */}
             <div>
               <label className="font-bold text-yellow-300">Full Name</label>
-              <div className="flex items-center bg-white p-3 rounded-xl border border-yellow-300">
+              <div className="flex items-center bg-white p-3 rounded-xl border border-pink-500">
                 <User className="text-[#1a1f7a] w-5 h-5" />
                 <input
                   type="text"
@@ -115,7 +121,7 @@ export default function FFFreedomWall() {
             {/* MLBB ID */}
             <div>
               <label className="font-bold text-yellow-300">MLBB ID</label>
-              <div className="flex items-center bg-white p-3 rounded-xl border border-yellow-300">
+              <div className="flex items-center bg-white p-3 rounded-xl border border-pink-500">
                 <Hash className="text-[#1a1f7a] w-5 h-5" />
                 <input
                   type="text"
@@ -132,7 +138,7 @@ export default function FFFreedomWall() {
             {/* SERVER */}
             <div>
               <label className="font-bold  text-yellow-300">MLBB Server</label>
-              <div className="flex items-center bg-white p-3 rounded-xl border border-yellow-300">
+              <div className="flex items-center bg-white p-3 rounded-xl border border-pink-500">
                 <Globe className="text-[#1a1f7a] w-5 h-5" />
                 <input
                   type="text"
@@ -149,7 +155,7 @@ export default function FFFreedomWall() {
             {/* IGN */}
             <div>
               <label className="font-bold  text-yellow-300">In-Game Name (IGN)</label>
-              <div className="flex items-center bg-white p-3 rounded-xl border border-yellow-300">
+              <div className="flex items-center bg-white p-3 rounded-xl border border-pink-500">
                 <User className="text-[#1a1f7a] w-5 h-5" />
                 <input
                   type="text"
@@ -166,7 +172,7 @@ export default function FFFreedomWall() {
             {/* FB LINK */}
             <div>
               <label className="font-bold  text-yellow-300">Facebook Profile Link</label>
-              <div className="flex items-center bg-white p-3 rounded-xl border border-yellow-300">
+              <div className="flex items-center bg-white p-3 rounded-xl border border-pink-500">
                 <LinkIcon className="text-[#1a1f7a] w-5 h-5" />
                 <input
                   type="url"
@@ -183,7 +189,7 @@ export default function FFFreedomWall() {
             {/* STORY */}
             <div>
               <label className="font-bold  text-yellow-300">Friends Fest Story</label>
-              <div className="flex items-center bg-white p-3 rounded-xl border border-yellow-300">
+              <div className="flex items-center bg-white p-3 rounded-xl border border-pink-500">
                 <FileText className="text-[#1a1f7a] w-5 h-5" />
                 <input
                   type="url"
@@ -200,7 +206,7 @@ export default function FFFreedomWall() {
             {/* PICTURE UPLOAD */}
             <div>
               <label className="font-bold  text-yellow-300">Picture with the Friend (Link of the Photos)</label>
-              <div className="flex items-center bg-white p-3 rounded-xl border border-yellow-300">
+              <div className="flex items-center bg-white p-3 rounded-xl border border-pink-500">
                 <ImageIcon className="text-[#1a1f7a] w-5 h-5" />
                 <input
                   type="url"
@@ -217,7 +223,7 @@ export default function FFFreedomWall() {
             {/* CODENAME */}
             <div>
               <label className="font-bold  text-yellow-300">Code Name</label>
-              <div className="flex items-center bg-white p-3 rounded-xl border border-yellow-300">
+              <div className="flex items-center bg-white p-3 rounded-xl border border-pink-500">
                 <User className="text-[#1a1f7a] w-5 h-5" />
                 <input
                   type="text"
@@ -229,6 +235,30 @@ export default function FFFreedomWall() {
                   className="bg-transparent w-full outline-none ml-3 text-[#1a1f7a]"
                 />
               </div>
+            </div>
+
+            {/* AGREEMENT CHECKBOX */}
+            <div className="flex items-start gap-3 bg-white p-3 rounded-xl border border-pink-500">
+              <input
+                type="checkbox"
+                name="agree"
+                checked={form.agree}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, agree: e.target.checked }))
+                }
+                required
+                className="w-5 h-5 mt-1 text-pink-600"
+              />
+
+              <label className="text-[#1a1f7a] font-semibold">
+                I agree to the{" "}
+                <span
+                  onClick={() => setShowMechanics(true)}
+                  className="text-pink-600 underline cursor-pointer"
+                >
+                  game mechanics.
+                </span>
+              </label>
             </div>
 
             <button
@@ -257,6 +287,11 @@ export default function FFFreedomWall() {
             </div>
           </div>
         )}
+
+        {showMechanics && (
+          <MechanicsFFFreedomWall onClose={() => setShowMechanics(false)} />
+        )}
+        
       </div>
     </AuthenticatedLayout>
   );
