@@ -113,7 +113,7 @@ function Events({ events = [] }) {
     alt="Layla Character Art"
     className="block lg:hidden absolute top-0 left-0 w-full h-full object-cover z-0"
     style={{
-        objectPosition: "right",
+        objectPosition: "center",
         opacity: 0.3,
         maxHeight: "100%",
         overflow: "hidden"
