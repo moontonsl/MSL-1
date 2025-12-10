@@ -11,8 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('msl_news_data')) {
+            return;
+        }
+
         Schema::table('msl_news_data', function (Blueprint $table) {
-            $table->timestamps();
+            if (!Schema::hasColumn('msl_news_data', 'created_at')) {
+                $table->timestamp('created_at')->nullable();
+            }
+
+            if (!Schema::hasColumn('msl_news_data', 'updated_at')) {
+                $table->timestamp('updated_at')->nullable();
+            }
         });
     }
 
@@ -21,8 +31,19 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (!Schema::hasTable('msl_news_data')) {
+            return;
+        }
+
         Schema::table('msl_news_data', function (Blueprint $table) {
-            $table->dropColumn(['created_at', 'updated_at']);
+            $columns = array_filter(
+                ['created_at', 'updated_at'],
+                fn (string $column) => Schema::hasColumn('msl_news_data', $column)
+            );
+
+            if (!empty($columns)) {
+                $table->dropColumn($columns);
+            }
         });
     }
 };
