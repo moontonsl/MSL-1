@@ -47,11 +47,10 @@ const FEATURED_SCHOOLS = [
   { name: "Laguna State Polytechnic University - Los Baños", region: "04 - CALABARZON", island: "Luzon" },
   { name: "La Salle University - Ozamiz City", region: "10 - Northern Mindanao", island: "Mindanao" },
   { name: "Mindanao State University - Iligan Institute of Technology", region: "10 - Northern Mindanao", island: "Mindanao" },
-  { name: "PHINMA St. Jude College", region: "13 - Nat. Capital Region", island: "Luzon" },
+  { name: "Colegio de Muntinlupa", region: "13 - Nat. Capital Region", island: "Luzon" },
   { name: "University of the Philippines-Diliman", region: "13 - Nat. Capital Region", island: "Luzon" },
   { name: "Bulacan State University - Sarmiento Campus", region: "03 - Central Luzon", island: "Luzon" },
   { name: "Carlos Hilado Memorial State University", region: "07 - Western Visayas", island: "Visayas" },
-  { name: "PHINMA Saint Jude College", region: "04 - CALABARZON", island: "Luzon" },
   { name: "SM Butuan", region: "16 - Caraga", island: "Mindanao" },
   { name: "Colegio de Los Baños", region: "04 - CALABARZON", island: "Luzon" },
 ];
