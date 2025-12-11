@@ -937,7 +937,7 @@ Route::get('/RoadshowAttendance', function () {
 //FF25 LANDING PAGE ROUTES
 Route::get('/FF25', function () {
     return Inertia::render('FF25/FF25');
-})->name('FF25LandingPage');
+})->name('FF25');
 
 
 //FF25 ATTENDANCE PAGE ROUTES
@@ -945,6 +945,18 @@ Route::get('/FF25Attendance', function () {
     return Inertia::render('FF25/FF25Attendance');
 })->name('FF25Attendance');
 Route::post('/FF25Attendance', [FF25AttendanceController::class, 'store'])->name('ff25.attendance.store');
+
+//FFBattleEmote PAGE ROUTES
+Route::get('/FFBattleEmote', function () {
+    return Inertia::render('FF25/FFBattleEmote');
+})->name('FFBattleEmote');
+
+//FFFreedomWall PAGE ROUTES
+Route::get('/FFFreedomWall', function () {
+    return Inertia::render('FF25/FFFreedomWall');
+})->name('FFFreedomWall');
+
+
 
 
 //SL ADMIN APPROVAL ROUTES - Only SL role can access
