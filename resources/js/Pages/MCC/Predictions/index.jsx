@@ -146,20 +146,19 @@ const BracketSection = ({ title, status, existingVotes = [], bracketStatus = {} 
     };
 
 
+    const isDimmed = (teamId) => {
+        if (hasVoted) return !selectedTeams.includes(teamId);
+        if (status !== 'open') return true;
+        return selectedTeams.length === 2 && !selectedTeams.includes(teamId);
+    };
+
     return (
         <div className="w-full max-w-[1640px] relative mb-24 px-4 md:px-8">
             {/* Section Title */}
             <div className="text-center mb-4">
-                <h2 className="text-4xl md:text-6xl font-bold font-space leading-tight">
+                <h2 className="text-3xl md:text-5xl font-bold font-space leading-tight">
                     {title}
                 </h2>
-            </div>
-
-            {/* Subtitle */}
-            <div className="flex justify-center items-center mb-6">
-                <p className="text-base font-medium font-poppins leading-snug">
-                    Choose 1 or 2 Teams
-                </p>
             </div>
 
             {/* pag may votes na ang users */}
@@ -184,94 +183,169 @@ const BracketSection = ({ title, status, existingVotes = [], bracketStatus = {} 
                 </div>
             )}
 
-            {/* Teams Container */}
-            <div className="relative">
-                <div className="flex flex-col gap-4">
-                    <div className="flex justify-between items-center gap-2 md:gap-4 p-4 md:p-8 outline outline-[3px] outline-white">
-                        {/* Cover Overlay - Always show if hasVoted or status is not open */}
-                        {(status !== 'open' || hasVoted) && (
-                            <div className={`absolute inset-0 z-20 flex items-center justify-center ${getOverlayStyle()}`}>
-                                <h3 className="text-4xl md:text-6xl font-bold font-space text-white text-center">
-                                    {getCoverMessage()}
-                                </h3>
-                            </div>
-                        )}
-                        
-                        <div className="flex flex-wrap md:flex-nowrap justify-center md:justify-between w-full gap-4">
+            {/* Teams Container - Single Line Horizontal Layout */}
+            <div className="w-full flex flex-col items-center relative">
+                {/* Subtitle */}
+                <p className="text-base md:text-lg font-semibold text-center text-white mb-4">
+                    {hasVoted ? 'Your Selected Teams' : 'Choose 1 or 2 Teams'}
+                </p>
+                
+                {/* Teams Horizontal Scroll Container */}
+                <div className="w-full rounded-2xl p-4 md:p-6 bg-black/40 relative">
+                    {/* Cover Overlay - Always show if hasVoted or status is not open */}
+                    {(status !== 'open' || hasVoted) && (
+                        <div className={`absolute inset-0 z-20 flex items-center justify-center rounded-2xl ${getOverlayStyle()}`}>
+                            <h3 className="text-4xl md:text-6xl font-bold font-space text-white text-center">
+                                {getCoverMessage()}
+                            </h3>
+                        </div>
+                    )}
+                    
+                    {/* Teams Grid Layout - Mobile (2 columns) */}
+                    <div className="grid grid-cols-2 gap-4 md:hidden">
+                        {shuffledTeams.map((team, index) => {
+                            const isSelected = selectedTeams.includes(team.id);
+                            const isDisabled = !isTeamSelectable(team.id) || hasVoted;
+                            const dimmed = isDimmed(team.id);
+                            const isLastItem = index === shuffledTeams.length - 1;
+                            const isOddNumber = shuffledTeams.length % 2 === 1;
+                            const shouldCenter = isLastItem && isOddNumber;
+
+                            return (
+                                <div
+                                    key={team.id}
+                                    className={`relative bg-black/80 rounded-xl overflow-hidden flex flex-col items-center group transition-all duration-200 ${
+                                        isSelected ? 'ring-4 ring-yellow-400' : ''
+                                    } ${
+                                        !hasVoted && status === 'open' ? 'cursor-pointer' : 'cursor-not-allowed'
+                                    } ${
+                                        shouldCenter ? 'col-span-2 justify-self-center' : ''
+                                    }`}
+                                    onClick={() => !isDisabled && handleTeamSelect(team.id)}
+                                    style={{ 
+                                        opacity: dimmed ? 0.3 : 1,
+                                        ...(shouldCenter && { 
+                                            maxWidth: '45%',
+                                            width: '45%'
+                                        })
+                                    }}
+                                >
+                                    {/* Checkmark */}
+                                    <div className="absolute top-2 right-2 z-10">
+                                        <CheckCircle 
+                                            size={32} 
+                                            className={`transition-opacity duration-300 ${
+                                                isSelected 
+                                                    ? 'opacity-100 text-yellow-400' 
+                                                    : 'opacity-0'
+                                            }`}
+                                        />
+                                    </div>
+                                    {/* Team Image - Fixed dimensions for uniformity - 175x175 for all cards */}
+                                    <div 
+                                        className="relative"
+                                        style={{ 
+                                            width: '175px',
+                                            height: '175px',
+                                            overflow: 'hidden',
+                                            margin: '0 auto'
+                                        }}
+                                    >
+                                        <img 
+                                            src={team.image}
+                                            alt={team.name}
+                                            style={{
+                                                width: '175px',
+                                                height: '175px',
+                                                objectFit: 'cover',
+                                                objectPosition: 'center',
+                                                display: 'block'
+                                            }}
+                                        />
+                                    </div>
+                                    {/* Dimming Overlay */}
+                                    {dimmed && <div className="absolute inset-0 bg-black/60 z-10" />}
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Teams Horizontal Scroll - Desktop */}
+                    <div className="hidden md:block w-full overflow-x-auto custom-scrollbar py-2 pl-4">
+                        <div className="flex flex-row gap-4 md:gap-8 justify-start items-start" style={{ minWidth: 'max-content' }}>
                             {shuffledTeams.map((team) => {
                                 const isSelected = selectedTeams.includes(team.id);
                                 const isDisabled = !isTeamSelectable(team.id) || hasVoted;
+                                const dimmed = isDimmed(team.id);
 
                                 return (
                                     <div
                                         key={team.id}
-                                        className={`w-[45%] md:w-[19%] ${
-                                            hasVoted ? 'cursor-not-allowed' : 'cursor-pointer'
-                                        } transition-all duration-300 ${
-                                            isDisabled && !isSelected ? 'opacity-50' : 'opacity-100'
+                                        className={`relative bg-black/80 rounded-xl overflow-hidden flex flex-col items-center group transition-all duration-200 flex-shrink-0 ${
+                                            isSelected ? 'ring-4 ring-yellow-400' : ''
+                                        } ${
+                                            !hasVoted && status === 'open' ? 'cursor-pointer' : 'cursor-not-allowed'
                                         }`}
                                         onClick={() => !isDisabled && handleTeamSelect(team.id)}
+                                        style={{ 
+                                            opacity: dimmed ? 0.3 : 1,
+                                            width: '275px',
+                                            height: 'auto'
+                                        }}
+
+                                        
                                     >
-                                        {/* Team Card */}
-                                        <div 
-                                            className={`relative rounded-[20px] overflow-hidden ${
-                                                isSelected 
-                                                    ? 'outline outline-[3px] outline-yellow-400' 
-                                                    : ''
-                                            }`}
-                                        >
-                                            {/* Checkmark */}
-                                            <div className="absolute top-4 right-4 z-10">
-                                                <CheckCircle 
-                                                    size={32} 
-                                                    className={`transition-opacity duration-300 ${
-                                                        isSelected 
-                                                            ? 'opacity-100 text-yellow-400' 
-                                                            : 'opacity-0'
-                                                    }`}
-                                                />
-                                            </div>
-                                            {/* Team Image */}
-                                            <div className="aspect-[620/570] relative">
-                                                <img 
-                                                    src={team.image}
-                                                    alt={team.name}
-                                                    className="w-full h-full object-contain"
-                                                />
-                                                {/* Overlay for unselected and disabled state */}
-                                                <div 
-                                                    className={`absolute inset-0 bg-black transition-opacity duration-300 ${
-                                                        isDisabled ? 'opacity-50' : 'opacity-0'
-                                                    }
-                                                    ${
-                                                        isDisabled ? 'opacity-50' : 'opacity-0'
-                                                    }
-                                                    `}
-                                                />
-                                            </div>
-                                            {/* Team Name */}
-                                            {/* <div className="mt-2 text-center font-bold">
-                                                {team.name}
-                                            </div> */}
+                                        {/* Checkmark */}
+                                        <div className="absolute top-4 right-4 z-10">
+                                            <CheckCircle 
+                                                size={32} 
+                                                className={`transition-opacity duration-300 ${
+                                                    isSelected 
+                                                        ? 'opacity-100 text-yellow-400' 
+                                                        : 'opacity-0'
+                                                }`}
+                                            />
                                         </div>
+                                        {/* Team Image */}
+                                        <div 
+                                            className="relative w-full"
+                                            style={{ 
+                                                height: '250px',
+                                                overflow: 'hidden'
+                                            }}
+                                        >
+                                            <img 
+                                                src={team.image}
+                                                alt={team.name}
+                                                className="w-full h-full"
+                                                style={{
+                                                    height: '250px',
+                                                    objectFit: 'cover',
+                                                    objectPosition: '80% center',
+                                                    display: 'block'
+                                                }}
+                                            />
+                                        </div>
+                                        {/* Dimming Overlay */}
+                                        {dimmed && <div className="absolute inset-0 bg-black/60 z-10" />}
                                     </div>
                                 );
                             })}
                         </div>
                     </div>
-
-                    {/* Submit Button - Only show if bracket is open and user hasn't voted */}
-                    {status === 'open' && !hasVoted && selectedTeams.length > 0 && (
-                        <div className="flex justify-center">
-                            <button
-                                onClick={handleSubmit}
-                                className="bg-[#F3C718] text-black px-8 py-3 rounded-lg font-bold text-lg hover:bg-[#F3C718]/90 transition-all duration-300 transform hover:scale-105"
-                            >
-                                Submit Vote
-                            </button>
-                        </div>
-                    )}
                 </div>
+
+                {/* Submit Button - Only show if bracket is open and user hasn't voted */}
+                {status === 'open' && !hasVoted && selectedTeams.length > 0 && (
+                    <div className="flex justify-center mt-6">
+                        <button
+                            onClick={handleSubmit}
+                            className="bg-[#F3C718] text-black px-8 py-3 rounded-lg font-bold text-lg hover:bg-[#F3C718]/90 transition-all duration-300 transform hover:scale-105"
+                        >
+                            Submit Vote
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
