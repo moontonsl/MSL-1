@@ -188,17 +188,19 @@ export default function FFFreedomWall() {
 
             {/* STORY */}
             <div>
-              <label className="font-bold  text-yellow-300">Friends Fest Story</label>
-              <div className="flex items-center bg-white p-3 rounded-xl border border-pink-500">
-                <FileText className="text-[#1a1f7a] w-5 h-5" />
-                <input
-                  type="text"
+              <label className="font-bold text-yellow-300">Friends Fest Story</label>
+              <div className="flex items-start bg-white p-3 rounded-xl border border-pink-500">
+                {/* Changed items-center to items-start so the icon stays at the top */}
+                <FileText className="text-[#1a1f7a] w-5 h-5 mt-1" />
+                <textarea
                   name="story"
                   value={form.story}
                   onChange={handleChange}
                   required
                   placeholder="Tell your Friends Fest story"
-                  className="bg-transparent w-full outline-none ml-3 text-[#1a1f7a]"
+                  rows={4} // Sets the initial height
+                  className="bg-transparent w-full outline-none ml-3 text-[#1a1f7a] resize-y" 
+                  // 'resize-y' makes it stretchable vertically
                 />
               </div>
             </div>
