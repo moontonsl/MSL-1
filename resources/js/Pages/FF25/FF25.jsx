@@ -66,7 +66,8 @@ export default function FF25() {
           </Link>
 
           {/* Battle Emote */}
-          <Link href="/FFBattleEmote">
+          {/* <Link href="/FFBattleEmote"> */}
+          <Link href="">
             <img
               src={FFBattleEmote}
               alt="Battle Emote"

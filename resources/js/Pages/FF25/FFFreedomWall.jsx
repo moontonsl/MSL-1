@@ -86,7 +86,7 @@ export default function FFFreedomWall() {
         }}
       >
         {/* <Link href="/FF25"> */}
-        <Link href="#">
+        <Link href="/FF25">
           <img 
             src={FFLogo} 
             alt="FF25 MSL Logo"
@@ -192,7 +192,7 @@ export default function FFFreedomWall() {
               <div className="flex items-center bg-white p-3 rounded-xl border border-pink-500">
                 <FileText className="text-[#1a1f7a] w-5 h-5" />
                 <input
-                  type="url"
+                  type="text"
                   name="story"
                   value={form.story}
                   onChange={handleChange}
