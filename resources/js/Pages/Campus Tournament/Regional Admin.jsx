@@ -17,13 +17,20 @@ const RegionalAdmin = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false); // Show success modal
   const [pendingAction, setPendingAction] = useState(null); // Store pending action data
 
+  // Results Editing State
+  const [selectedTournamentId, setSelectedTournamentId] = useState(null);
+  const [isEditingResults, setIsEditingResults] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitModalData, setSubmitModalData] = useState(null); // { type, title, message }
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
+
   // Extension State
   const [extendingTournament, setExtendingTournament] = useState(null);
   const [newEndDate, setNewEndDate] = useState('');
   const [isExtending, setIsExtending] = useState(false);
 
   // Use real approved tournaments data instead of mock data
-  const [staticTournaments] = useState(approvedTournaments || []);
+  const [staticTournaments, setStaticTournaments] = useState(approvedTournaments || []);
 
   // Transform real tournament data to match the expected format
   const transformedTournaments = useMemo(() => {
@@ -34,9 +41,12 @@ const RegionalAdmin = () => {
       schoolName: tournament.school_name,
       startDate: tournament.start_date,
       endDate: tournament.end_date,
+      results_submitted: tournament.results_submitted,
+      results_submitted_at: tournament.results_submitted_at,
       teams: tournament.teams ? tournament.teams.map(team => ({
         id: team.id,
         name: team.team_name,
+        result: team.result,
         players: team.members ? team.members.map(member => ({
           id: member.player_id,
           name: member.player ? `${member.player.name} ${member.player.surname}`.trim() : 'Unknown Player',
@@ -46,6 +56,22 @@ const RegionalAdmin = () => {
       })) : []
     }));
   }, [staticTournaments]);
+
+  // Split tournaments into Active (Ongoing) and Completed
+  const activeTournaments = useMemo(() => transformedTournaments.filter(t => !t.results_submitted), [transformedTournaments]);
+  const completedTournaments = useMemo(() => transformedTournaments.filter(t => t.results_submitted), [transformedTournaments]);
+
+  // Set default selected tournament
+  React.useEffect(() => {
+    if (completedTournaments.length > 0 && !selectedTournamentId) {
+      setSelectedTournamentId(completedTournaments[0].id);
+    }
+  }, [completedTournaments, selectedTournamentId]);
+
+  const handleTournamentChange = (tournamentId) => {
+    setSelectedTournamentId(tournamentId);
+    setIsEditingResults(false); // Reset edit mode on change
+  };
 
   const hasPending = useMemo(() => localTournaments.some(r => r.status === 'pending'), [localTournaments]);
 
@@ -219,12 +245,7 @@ const RegionalAdmin = () => {
     setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const getStatusClasses = (value) => {
-    const v = value || 'participant';
-    if (v === 'win') return 'bg-yellow-400/60 border border-yellow-300/80 text-white';
-    if (v === 'invalid') return 'bg-red-700/40 border border-red-600/70 text-white';
-    return 'bg-green-500/30 border border-green-400/70 text-white';
-  };
+
 
   const PlayerCell = ({ player }) => {
     return (
@@ -249,6 +270,107 @@ const RegionalAdmin = () => {
         </div>
       </div>
     );
+  };
+
+  const getStatusClasses = (status) => {
+    switch (status) {
+      case '1st': return 'bg-yellow-500/20 text-yellow-300 border border-yellow-400/30';
+      case '2nd': return 'bg-gray-400/20 text-gray-300 border border-gray-400/30';
+      case '3rd': return 'bg-orange-700/20 text-orange-400 border border-orange-500/30';
+      case 'participant': return 'bg-blue-500/20 text-blue-300 border border-blue-400/30';
+      default: return 'bg-white/10 text-white/70 border border-white/20';
+    }
+  };
+
+  const handleSetResult = (tournamentId, teamId, newResult) => {
+    setStaticTournaments(prev => prev.map(t => {
+      if (t.id === tournamentId) {
+        return {
+          ...t,
+          teams: t.teams.map(team =>
+            team.id === teamId ? { ...team, result: newResult } : team
+          )
+        };
+      }
+      return t;
+    }));
+  };
+
+  const handleSubmitResults = async (tournamentId) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
+    try {
+      const tournament = staticTournaments.find(t => t.id === tournamentId);
+      if (!tournament) return;
+
+      const results = tournament.teams.map(team => ({
+        team_id: team.id,
+        result: team.result || 'participant'
+      }));
+
+      // For Regional Admin, we always use update-results since they are likely editing existing or finalizing
+      // But if it was never submitted, we might need submit-results. 
+      // However, the backend updateResults now allows Admins.
+      // Let's use update-results if results_submitted is true, else submit-results if we supported that.
+      // Ideally we use one endpoint or logic. Given the user context "Edit results", update-results applies.
+
+      const endpoint = `/campus-tournaments/${tournamentId}/update-results`;
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+        body: JSON.stringify({ results }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Update local state to mark results as submitted
+        setStaticTournaments((prev) =>
+          prev.map((t) =>
+            t.id === tournamentId
+              ? { ...t, results_submitted: true, results_submitted_at: new Date().toISOString() }
+              : t
+          )
+        );
+        setIsEditingResults(false);
+        setSubmitModalData({
+          type: 'success',
+          title: 'Results Updated',
+          message: 'Tournament results have been updated successfully.',
+          showCancel: false
+        });
+        setShowSubmitModal(true);
+      } else {
+        setSubmitModalData({
+          type: 'error',
+          title: 'Update Failed',
+          message: data.error || 'Unknown error occurred.',
+          showCancel: false
+        });
+        setShowSubmitModal(true);
+      }
+    } catch (error) {
+      console.error('Error submitting results:', error);
+      setSubmitModalData({
+        type: 'error',
+        title: 'Error',
+        message: 'An error occurred while communicating with the server.',
+        showCancel: false
+      });
+      setShowSubmitModal(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCloseSubmitModal = () => {
+    setShowSubmitModal(false);
+    setSubmitModalData(null);
   };
 
   return (
@@ -412,7 +534,7 @@ const RegionalAdmin = () => {
               </div>
             )}
 
-            {/* Ongoing Tournaments (read-only) */}
+            {/* Ongoing Tournaments (Active Only) */}
             <div className="mt-10">
               <div className="flex items-center gap-3 md:gap-4">
                 <div className="text-white font-montserrat font-extrabold text-[22px] md:text-[28px] leading-tight">
@@ -421,53 +543,172 @@ const RegionalAdmin = () => {
               </div>
 
               <div className="mt-4 flex flex-col gap-4">
-                {transformedTournaments.map((item) => (
-                  <div
-                    key={item.id}
-                    className="relative w-full max-w-7xl mx-auto text-white rounded-2xl overflow-hidden transition-all duration-300 shadow-2xl bg-gradient-to-br from-neutral-800/80 to-neutral-900/80 backdrop-blur-sm border border-neutral-700/50"
-                  >
-                    {/* Header */}
-                    <div className="relative z-10 w-full h-16 md:h-20 flex items-center justify-between bg-neutral-900/70 px-4 md:px-6">
-                      <div className="flex-1 text-center">
-                        <div className="font-montserrat text-lg md:text-2xl tracking-wide uppercase">{item.schoolName ? `${item.schoolName.toUpperCase()} TOURNAMENT` : 'TOURNAMENT'}</div>
-                        <div className="font-montserrat text-xs md:text-sm text-white/70">
-                          {formatDate(item.startDate)} - {formatDate(item.endDate)}
+                {activeTournaments.length > 0 ? (
+                  activeTournaments.map((item) => (
+                    <div
+                      key={item.id}
+                      className="relative w-full max-w-7xl mx-auto text-white rounded-2xl overflow-hidden transition-all duration-300 shadow-2xl bg-gradient-to-br from-neutral-800/80 to-neutral-900/80 backdrop-blur-sm border border-neutral-700/50"
+                    >
+                      {/* Ongoing Tournament Card Content */}
+                      {/* Header */}
+                      <div className="relative z-10 w-full h-16 md:h-20 flex items-center justify-between bg-neutral-900/70 px-4 md:px-6">
+                        <div className="flex-1 text-center">
+                          <div className="font-montserrat text-lg md:text-2xl tracking-wide uppercase">{item.schoolName ? `${item.schoolName.toUpperCase()} TOURNAMENT` : 'TOURNAMENT'}</div>
+                          <div className="font-montserrat text-xs md:text-sm text-white/70">
+                            {formatDate(item.startDate)} - {formatDate(item.endDate)}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleExtendClick(item); }}
+                            className="px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 text-white/90 text-xs font-montserrat transition-colors"
+                          >
+                            Extend
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => toggleExpand(item.id)}
+                            aria-label="Toggle teams"
+                            className="grid place-items-center w-9 h-9 rounded-lg border border-white/20 hover:bg-white/10 transition"
+                          >
+                            <svg
+                              className={`w-5 h-5 transition-transform duration-300 ${expanded[item.id] ? 'rotate-180' : ''}`}
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {/* Extend Registration Button */}
-                        <button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); handleExtendClick(item); }}
-                          className="px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 text-white/90 text-xs font-montserrat transition-colors"
-                        >
-                          Extend
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => toggleExpand(item.id)}
-                          aria-label="Toggle teams"
-                          className="grid place-items-center w-9 h-9 rounded-lg border border-white/20 hover:bg-white/10 transition"
-                        >
-                          <svg
-                            className={`w-5 h-5 transition-transform duration-300 ${expanded[item.id] ? 'rotate-180' : ''}`}
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </button>
+
+                      {/* Dropdown Content */}
+                      <div
+                        className={`transition-all duration-500 ease-in-out ${expanded[item.id] ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}
+                      >
+                        <div className="px-0 pb-0">
+                          <div className="mt-0 rounded-b-2xl bg-neutral-800/70 backdrop-blur-sm border-t border-neutral-700/40">
+                            {/* Table Header - Desktop */}
+                            <div className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 px-6 md:px-10 py-2 text-white/70 text-xs md:text-sm border-b border-white/10 font-montserrat">
+                              <div className="self-center">Team name</div>
+                              <div className="text-center">Player 1</div>
+                              <div className="text-center">Player 2</div>
+                              <div className="text-center">Player 3</div>
+                              <div className="text-center">Player 4</div>
+                              <div className="text-center">Player 5</div>
+                              <div className="grid place-items-center">Status</div>
+                            </div>
+                            {/* Table Header - Mobile (Team + Status) */}
+                            <div className="md:hidden grid [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-5 px-4 py-2 text-white/70 text-xs border-b border-white/10 font-montserrat">
+                              <div className="self-center">Team name</div>
+                              <div className="justify-self-start text-left">Status</div>
+                              <div className="text-right"></div>
+                            </div>
+
+                            {/* Team Rows */}
+                            {Array.isArray(item.teams) && item.teams.length > 0 ? (
+                              item.teams.map((team) => (
+                                <React.Fragment key={team.id}>
+                                  {/* Desktop Row */}
+                                  <div className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3 border-t border-white/10 hover:bg-white/5 transition">
+                                    <div className="text-white/90 font-montserrat md:truncate">{team.name}</div>
+                                    {team.players.slice(0, 5).map((player, idx) => (
+                                      <div className="flex justify-center" key={idx}>
+                                        <PlayerCell player={player} />
+                                      </div>
+                                    ))}
+                                    <div className="flex justify-center">
+                                      <span className={`rounded-md px-2 py-1 text-xs md:text-sm min-w-[128px] text-center ${getStatusClasses(team.result || 'participant')}`}>
+                                        {(team.result || 'participant').charAt(0).toUpperCase() + (team.result || 'participant').slice(1)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  {/* Mobile Row */}
+                                  <div className="grid md:hidden [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-2 items-center px-4 py-3 border-t border-white/10 hover:bg-white/5 transition">
+                                    <div className="text-white/90 font-montserrat truncate">{team.name}</div>
+                                    <div className="flex justify-start">
+                                      <span className={`rounded-md px-2 py-1 text-xs min-w-[112px] text-center ${getStatusClasses(team.result || 'participant')}`}>
+                                        {(team.result || 'participant').charAt(0).toUpperCase() + (team.result || 'participant').slice(1)}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-end">
+                                      <button
+                                        type="button"
+                                        onClick={() => setMobileViewTeam(team)}
+                                        className="px-3 py-1 rounded-md border border-white/30 text-white/90 text-xs bg-white/10 hover:bg-white/20"
+                                      >
+                                        View
+                                      </button>
+                                    </div>
+                                  </div>
+                                </React.Fragment>
+                              ))
+                            ) : (
+                              <div className="px-4 py-6 text-center text-white/60 font-montserrat">No teams registered yet.</div>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="text-white/60 text-center py-8 font-montserrat italic">No ongoing tournaments.</div>
+                )}
+              </div>
+            </div>
 
-                    {/* Dropdown Content */}
-                    <div
-                      className={`transition-all duration-500 ease-in-out ${expanded[item.id] ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}
+            {/* Tournament Results Viewer (Completed Tournaments) */}
+            {completedTournaments.length > 0 && (
+              <div className="mt-16">
+                <div className="flex items-center gap-3 md:gap-4 mb-6">
+                  <div className="text-white font-montserrat font-extrabold text-[22px] md:text-[28px] leading-tight">
+                    Tournament Results
+                  </div>
+                </div>
+
+                {/* Dropdown Selector */}
+                <div className="relative w-full max-w-7xl mx-auto mb-6">
+                  <div className="bg-neutral-800/80 rounded-2xl border border-neutral-700/50 p-4">
+                    <label className="block text-white/80 font-montserrat text-sm mb-2">Select Tournament:</label>
+                    <select
+                      value={selectedTournamentId || ''}
+                      onChange={(e) => handleTournamentChange(parseInt(e.target.value))}
+                      className="w-full bg-neutral-700/50 border border-white/20 rounded-lg px-4 py-2 text-white font-montserrat focus:outline-none focus:border-[#F2C21A] focus:ring-1 focus:ring-[#F2C21A]"
                     >
+                      {completedTournaments.map((tournament) => (
+                        <option key={tournament.id} value={tournament.id}>
+                          {tournament.schoolName.toUpperCase()} TOURNAMENT - {formatDate(tournament.startDate)} to {formatDate(tournament.endDate)} (Completed)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Single Result Viewer & Editor */}
+                {selectedTournamentId && (() => {
+                  const item = completedTournaments.find(t => t.id === selectedTournamentId);
+                  if (!item) return null;
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="relative w-full max-w-7xl mx-auto text-white rounded-2xl overflow-hidden transition-all duration-300 shadow-2xl bg-gradient-to-br from-neutral-800/80 to-neutral-900/80 backdrop-blur-sm border border-neutral-700/50"
+                    >
+                      {/* Header */}
+                      <div className="relative z-10 w-full h-16 md:h-20 flex items-center justify-between bg-neutral-900/70 px-4 md:px-6">
+                        <div className="flex-1 text-center">
+                          <div className="font-montserrat text-lg md:text-2xl tracking-wide uppercase">{item.schoolName ? `${item.schoolName.toUpperCase()} TOURNAMENT` : 'TOURNAMENT'}</div>
+                          <div className="font-montserrat text-xs md:text-sm text-white/70">
+                            {formatDate(item.startDate)} - {formatDate(item.endDate)}
+                          </div>
+                        </div>
+                      </div>
+
                       <div className="px-0 pb-0">
                         <div className="mt-0 rounded-b-2xl bg-neutral-800/70 backdrop-blur-sm border-t border-neutral-700/40">
-                          {/* Table Header - Desktop */}
+                          {/* Headers */}
                           <div className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 px-6 md:px-10 py-2 text-white/70 text-xs md:text-sm border-b border-white/10 font-montserrat">
                             <div className="self-center">Team name</div>
                             <div className="text-center">Player 1</div>
@@ -477,22 +718,18 @@ const RegionalAdmin = () => {
                             <div className="text-center">Player 5</div>
                             <div className="grid place-items-center">Status</div>
                           </div>
-                          {/* Table Header - Mobile (Team + Status) */}
                           <div className="md:hidden grid [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-5 px-4 py-2 text-white/70 text-xs border-b border-white/10 font-montserrat">
                             <div className="self-center">Team name</div>
                             <div className="justify-self-start text-left">Status</div>
                             <div className="text-right"></div>
                           </div>
 
-                          {/* Team Rows */}
+                          {/* Rows */}
                           {Array.isArray(item.teams) && item.teams.length > 0 ? (
                             item.teams.map((team) => (
-                              <>
+                              <React.Fragment key={team.id}>
                                 {/* Desktop Row */}
-                                <div
-                                  key={`d-${team.id}`}
-                                  className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3 border-t border-white/10 hover:bg-white/5 transition"
-                                >
+                                <div className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3 border-t border-white/10 hover:bg-white/5 transition">
                                   <div className="text-white/90 font-montserrat md:truncate">{team.name}</div>
                                   {team.players.slice(0, 5).map((player, idx) => (
                                     <div className="flex justify-center" key={idx}>
@@ -500,21 +737,44 @@ const RegionalAdmin = () => {
                                     </div>
                                   ))}
                                   <div className="flex justify-center">
-                                    <span className={`rounded-md px-2 py-1 text-xs md:text-sm min-w-[128px] text-center ${getStatusClasses(team.result || 'participant')}`}>
-                                      {(team.result || 'participant').charAt(0).toUpperCase() + (team.result || 'participant').slice(1)}
-                                    </span>
+                                    {isEditingResults ? (
+                                      <select
+                                        value={team.result || 'participant'}
+                                        onChange={(e) => handleSetResult(item.id, team.id, e.target.value)}
+                                        className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[128px]`}
+                                      >
+                                        <option className="text-black" value="participant">Participant</option>
+                                        <option className="text-black" value="1st">1st</option>
+                                        <option className="text-black" value="2nd">2nd</option>
+                                        <option className="text-black" value="3rd">3rd</option>
+                                      </select>
+                                    ) : (
+                                      <span className={`rounded-md px-2 py-1 text-xs md:text-sm min-w-[128px] text-center ${getStatusClasses(team.result || 'participant')}`}>
+                                        {(team.result || 'participant').charAt(0).toUpperCase() + (team.result || 'participant').slice(1)}
+                                      </span>
+                                    )}
                                   </div>
                                 </div>
                                 {/* Mobile Row */}
-                                <div
-                                  key={`m-${team.id}`}
-                                  className="grid md:hidden [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-2 items-center px-4 py-3 border-t border-white/10 hover:bg-white/5 transition"
-                                >
+                                <div className="grid md:hidden [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-2 items-center px-4 py-3 border-t border-white/10 hover:bg-white/5 transition">
                                   <div className="text-white/90 font-montserrat truncate">{team.name}</div>
                                   <div className="flex justify-start">
-                                    <span className={`rounded-md px-2 py-1 text-xs min-w-[112px] text-center ${getStatusClasses(team.result || 'participant')}`}>
-                                      {(team.result || 'participant').charAt(0).toUpperCase() + (team.result || 'participant').slice(1)}
-                                    </span>
+                                    {isEditingResults ? (
+                                      <select
+                                        value={team.result || 'participant'}
+                                        onChange={(e) => handleSetResult(item.id, team.id, e.target.value)}
+                                        className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[112px]`}
+                                      >
+                                        <option className="text-black" value="participant">Participant</option>
+                                        <option className="text-black" value="1st">1st</option>
+                                        <option className="text-black" value="2nd">2nd</option>
+                                        <option className="text-black" value="3rd">3rd</option>
+                                      </select>
+                                    ) : (
+                                      <span className={`rounded-md px-2 py-1 text-xs min-w-[112px] text-center ${getStatusClasses(team.result || 'participant')}`}>
+                                        {(team.result || 'participant').charAt(0).toUpperCase() + (team.result || 'participant').slice(1)}
+                                      </span>
+                                    )}
                                   </div>
                                   <div className="flex justify-end">
                                     <button
@@ -526,19 +786,71 @@ const RegionalAdmin = () => {
                                     </button>
                                   </div>
                                 </div>
-                              </>
+                              </React.Fragment>
                             ))
                           ) : (
-                            <div className="px-4 py-6 text-center text-white/60 font-montserrat">No teams registered yet.</div>
+                            <div className="px-4 py-6 text-center text-white/60 font-montserrat">No results available.</div>
+                          )}
+
+                          {/* Footer */}
+                          {item.results_submitted && (
+                            <div className="px-4 md:px-10 py-2 md:py-3 border-t border-white/10 flex justify-center sticky bottom-0 bg-neutral-900/70">
+                              <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4">
+                                <div className="bg-green-500/20 text-green-400 font-montserrat text-sm px-4 py-2 rounded-lg border border-green-400/30">
+                                  ✓ Results Submitted
+                                </div>
+                                {item.results_submitted_at && (
+                                  <div className="text-white/60 font-montserrat text-xs">
+                                    Submitted on {new Date(item.results_submitted_at).toLocaleDateString()}
+                                  </div>
+                                )}
+                                <a
+                                  href={`/campus-tournaments/${item.id}/export`}
+                                  className="bg-[#F2C21A] text-black font-montserrat font-semibold rounded-lg px-5 py-2 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] hover:bg-[#d4a817] transition-colors flex items-center gap-2"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                  </svg>
+                                  Export to Excel
+                                </a>
+                                {isEditingResults ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSubmitResults(item.id)}
+                                      disabled={isSubmitting}
+                                      className="bg-[#F2C21A] text-black font-montserrat font-semibold rounded-lg px-5 py-2 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] hover:bg-[#d4a817] transition-colors"
+                                    >
+                                      {isSubmitting ? 'Saving...' : 'Save Changes'}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setIsEditingResults(false)}
+                                      disabled={isSubmitting}
+                                      className="bg-gray-600 text-white font-montserrat font-semibold rounded-lg px-5 py-2 hover:bg-gray-700 transition-colors"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsEditingResults(true)}
+                                    className="bg-blue-600 text-white font-montserrat font-semibold rounded-lg px-5 py-2 shadow-md hover:bg-blue-700 transition-colors"
+                                  >
+                                    Edit Results
+                                  </button>
+                                )}
+                              </div>
+                            </div>
                           )}
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })()}
               </div>
-            </div>
-
+            )}
             {/* Mobile Players Modal */}
             {mobileViewTeam && (
               <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -584,6 +896,45 @@ const RegionalAdmin = () => {
           </div>
         </div>
       </div>
+
+      {/* Submit/Update Result Modal */}
+      {showSubmitModal && submitModalData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10" onClick={handleCloseSubmitModal} />
+          <div className="relative z-20 w-full max-w-md bg-black/40 backdrop-blur-md text-white border border-white/20 rounded-2xl p-6 md:p-8 shadow-2xl">
+            <div className="text-center">
+              {submitModalData.type === 'success' ? (
+                <div className="w-16 h-16 mx-auto mb-4 bg-green-500/20 rounded-full flex items-center justify-center">
+                  <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              ) : (
+                <div className="w-16 h-16 mx-auto mb-4 bg-red-500/20 rounded-full flex items-center justify-center">
+                  <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+              )}
+
+              <h3 className={`font-montserrat text-xl md:text-2xl font-semibold mb-3 ${submitModalData.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                {submitModalData.title}
+              </h3>
+
+              <p className="font-montserrat text-sm md:text-base text-white/80 mb-6 leading-relaxed">
+                {submitModalData.message}
+              </p>
+
+              <button
+                onClick={handleCloseSubmitModal}
+                className="w-full bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-6 py-3 hover:bg-[#F2C21A]/90 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Confirmation Modal */}
       {showConfirmModal && pendingAction && (

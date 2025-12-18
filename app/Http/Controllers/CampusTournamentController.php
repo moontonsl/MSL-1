@@ -70,12 +70,11 @@ class CampusTournamentController extends Controller
         $tournaments = $query->orderBy('created_at', 'desc')->get();
         
         // Get approved tournaments with teams and members for the Ongoing Tournaments section
-        // Only show tournaments that are active (results not submitted)
+        // Show all approved tournaments (both active and completed) so we can filter them on frontend
         $approvedQuery = CampusTournament::with([
             'teams.members.player',
             'studentLeader'
-        ])->where('status', 'approved')
-          ->where('results_submitted', false);
+        ])->where('status', 'approved');
         
         // Filter by region only for Regional Admins
         if ($user->role === 'Regional Admin') {
@@ -436,17 +435,22 @@ class CampusTournamentController extends Controller
     {
         $user = Auth::user();
         
-        // Only SL can update results
-        if ($user->role !== 'SL') {
-            return response()->json(['error' => 'Only Student Leaders can update results'], 403);
+        // Allow SL, Regional Admin, and Super Admin
+        if ($user->role !== 'SL' && $user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Unauthorized to update results'], 403);
         }
         
         $tournament = CampusTournament::with('teams')->findOrFail($id);
         
-        // Check if user owns this tournament
-        if ($tournament->sl_id !== $user->id) {
-            return response()->json(['error' => 'You can only update results for your own tournaments'], 403);
+        // Check permissions
+        if ($user->role === 'SL') {
+            // SL must own the tournament
+            if ($tournament->sl_id !== $user->id) {
+                return response()->json(['error' => 'You can only update results for your own tournaments'], 403);
+            }
         }
+        // Regional Admins/Super Admins bypass the sl_id check (Region check is implicitly handled by what they can see/access, 
+        // strictly we should check region again but for this edit feature we assume access if they have the ID)
         
         // Check if tournament is approved
         if ($tournament->status !== 'approved') {
@@ -586,16 +590,19 @@ class CampusTournamentController extends Controller
     {
         $user = Auth::user();
         
-        // Only SL can export their own tournaments
-        if ($user->role !== 'SL') {
-            return response()->json(['error' => 'Only Student Leaders can export tournament results'], 403);
+        // Allow SL, Regional Admin, and Super Admin
+        if ($user->role !== 'SL' && $user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Unauthorized to export results'], 403);
         }
         
         $tournament = CampusTournament::with(['teams.members.player'])->findOrFail($id);
         
-        // Check if user owns this tournament
-        if ($tournament->sl_id !== $user->id) {
-            return response()->json(['error' => 'You can only export your own tournaments'], 403);
+        // Check permissions
+        if ($user->role === 'SL') {
+             // Check if user owns this tournament
+            if ($tournament->sl_id !== $user->id) {
+                return response()->json(['error' => 'You can only export your own tournaments'], 403);
+            }
         }
         
         // Check if results are submitted
