@@ -65,7 +65,7 @@ Route::get('/campus-tournament', function () {
     // Redirect based on user role
     if ($user->role === 'SL') {
         return redirect()->route('campus.tournament.sl');
-    } elseif ($user->role === 'Regional Admin') {
+    } elseif ($user->role === 'Regional Admin' || $user->role === 'Super Admin') {
         return redirect()->route('campus.tournament.regionaladmin');
     } else {
         // For other users, redirect to SL view or show access denied
@@ -107,6 +107,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/campus-tournaments/{id}/approve', [\App\Http\Controllers\CampusTournamentController::class, 'approve'])->name('campus.tournaments.approve');
     Route::post('/campus-tournaments/{id}/reject', [\App\Http\Controllers\CampusTournamentController::class, 'reject'])->name('campus.tournaments.reject');
     Route::post('/campus-tournaments/{id}/submit-results', [\App\Http\Controllers\CampusTournamentController::class, 'submitResults'])->name('campus.tournaments.submit-results');
+    Route::post('/campus-tournaments/{id}/update-results', [\App\Http\Controllers\CampusTournamentController::class, 'updateResults'])->name('campus.tournaments.update-results');
+    Route::post('/campus-tournaments/{id}/extend', [\App\Http\Controllers\CampusTournamentController::class, 'extendRegistration'])->name('campus.tournaments.extend');
     Route::get('/campus-tournaments/{id}/export', [\App\Http\Controllers\CampusTournamentController::class, 'exportToExcel'])->name('campus.tournaments.export');
     Route::delete('/campus-tournaments/{id}', [\App\Http\Controllers\CampusTournamentController::class, 'destroy'])->name('campus.tournaments.destroy');
 });

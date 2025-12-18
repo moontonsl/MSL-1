@@ -2,70 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { usePage } from '@inertiajs/react';
 import MainLayout from "@/Layouts/MainLayout.jsx";
 
-// Temporary mock requests until backend is wired
-const generateMockRequests = () => ([
-  { id: 1, schoolName: 'West Visayas State University - Main', startDate: '2025-09-18', endDate: '2025-09-25', slName: 'Dave Lima' },
-  { id: 2, schoolName: 'City College of San Jose del Monte', startDate: '2025-10-02', endDate: '2025-10-09', slName: 'Zheena Duero' },
-  { id: 3, schoolName: 'Iloilo Science and Technology University', startDate: '2025-10-16', endDate: '2025-10-23', slName: 'Caezar Flores' },
-]);
+// Mock data removed
 
-// Temporary mock tournaments (read-only view)
-const generateMockTeams = () => [
-  {
-    id: 1,
-    name: 'Team Alpha',
-    players: [
-      { name: 'Player 1', verified: true },
-      { name: 'Player 2', verified: true },
-      { name: 'Player 3', verified: true },
-      { name: 'Player 4', verified: true },
-      { name: 'Player 5', verified: true },
-    ],
-  },
-  {
-    id: 2,
-    name: 'Team Bravo',
-    players: [
-      { name: 'Player 1', verified: true },
-      { name: 'Player 2', verified: false },
-      { name: 'Player 3', verified: true },
-      { name: 'Player 4', verified: true },
-      { name: 'Player 5', verified: false },
-    ],
-  },
-  {
-    id: 3,
-    name: 'Team Charlie',
-    players: [
-      { name: 'Player 1', verified: false },
-      { name: 'Player 2', verified: false },
-      { name: 'Player 3', verified: true },
-      { name: 'Player 4', verified: true },
-      { name: 'Player 5', verified: true },
-    ],
-  },
-];
-
-const generateMockTournaments = () => ([
-  {
-    id: 101,
-    startDate: '2025-09-01',
-    endDate: '2025-09-07',
-    teams: generateMockTeams().map((team, index) => ({
-      ...team,
-      result: index === 0 ? 'win' : index === 1 ? 'invalid' : 'participant',
-    })),
-  },
-  {
-    id: 102,
-    startDate: '2025-09-15',
-    endDate: '2025-09-22',
-    teams: generateMockTeams().map((team, index) => ({
-      ...team,
-      result: index === 0 ? 'participant' : index === 1 ? 'win' : 'participant',
-    })),
-  },
-]);
 
 const RegionalAdmin = () => {
   const { tournaments, approvedTournaments, user } = usePage().props;
@@ -78,16 +16,22 @@ const RegionalAdmin = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false); // Show confirmation modal
   const [showSuccessModal, setShowSuccessModal] = useState(false); // Show success modal
   const [pendingAction, setPendingAction] = useState(null); // Store pending action data
-  
+
+  // Extension State
+  const [extendingTournament, setExtendingTournament] = useState(null);
+  const [newEndDate, setNewEndDate] = useState('');
+  const [isExtending, setIsExtending] = useState(false);
+
   // Use real approved tournaments data instead of mock data
   const [staticTournaments] = useState(approvedTournaments || []);
 
   // Transform real tournament data to match the expected format
   const transformedTournaments = useMemo(() => {
     if (!staticTournaments || staticTournaments.length === 0) return [];
-    
+
     return staticTournaments.map(tournament => ({
       id: tournament.id,
+      schoolName: tournament.school_name,
       startDate: tournament.start_date,
       endDate: tournament.end_date,
       teams: tournament.teams ? tournament.teams.map(team => ({
@@ -122,7 +66,7 @@ const RegionalAdmin = () => {
   const formatDate = (value) => {
     try {
       if (!value) return '';
-      
+
       // Handle different date formats
       let date;
       if (typeof value === 'string') {
@@ -136,13 +80,13 @@ const RegionalAdmin = () => {
       } else {
         date = new Date(value);
       }
-      
+
       // Check if date is valid
       if (isNaN(date.getTime())) {
         console.error('Invalid date:', value);
         return 'Invalid Date';
       }
-      
+
       return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
     } catch (e) {
       console.error('Date formatting error:', e, 'Value:', value);
@@ -157,7 +101,7 @@ const RegionalAdmin = () => {
 
   const executeApprove = async (id) => {
     setIsProcessing(prev => ({ ...prev, [id]: true }));
-    
+
     try {
       const response = await fetch(`/campus-tournaments/${id}/approve`, {
         method: 'POST',
@@ -166,9 +110,9 @@ const RegionalAdmin = () => {
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
         },
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         // Update local state to remove the approved tournament
         setLocalTournaments(prev => prev.filter(t => t.id !== id));
@@ -188,9 +132,9 @@ const RegionalAdmin = () => {
   const handleReject = async (id) => {
     const reason = prompt('Please provide a reason for rejection:');
     if (!reason) return;
-    
+
     setIsProcessing(prev => ({ ...prev, [id]: true }));
-    
+
     try {
       const response = await fetch(`/campus-tournaments/${id}/reject`, {
         method: 'POST',
@@ -202,9 +146,9 @@ const RegionalAdmin = () => {
           rejection_reason: reason,
         }),
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         // Update local state to remove the rejected tournament
         setLocalTournaments(prev => prev.filter(t => t.id !== id));
@@ -216,6 +160,58 @@ const RegionalAdmin = () => {
       alert('Error rejecting tournament. Please try again.');
     } finally {
       setIsProcessing(prev => ({ ...prev, [id]: false }));
+    }
+  };
+
+
+  const handleExtendClick = (tournament) => {
+    setExtendingTournament(tournament);
+    // Set default date to current end date (formatted for input)
+    if (tournament.endDate) {
+      const date = new Date(tournament.endDate);
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const dd = String(date.getDate()).padStart(2, '0');
+      setNewEndDate(`${yyyy}-${mm}-${dd}`);
+    } else {
+      setNewEndDate('');
+    }
+  };
+
+  const handleExtendSubmit = async () => {
+    if (!extendingTournament || !newEndDate) return;
+
+    setIsExtending(true);
+
+    try {
+      const response = await fetch(`/campus-tournaments/${extendingTournament.id}/extend`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+        body: JSON.stringify({
+          end_date: newEndDate,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Update the staticTournaments/transformedTournaments locally to reflect change
+        // Since transformedTournaments is derived from staticTournaments, we can just reload the page or update state if we had a setter for staticTournaments (which we don't really have exposed easily for partial updates without refetching, but we can try to force a reload or just use Inertia reload).
+        // Better: use Inertia reload, but for now simple alert and reload
+        alert('Tournament registration extended successfully!');
+        setExtendingTournament(null);
+        window.location.reload();
+      } else {
+        alert('Error extending tournament: ' + (data.error || JSON.stringify(data.errors) || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error extending tournament:', error);
+      alert('Error extending tournament. Please try again.');
+    } finally {
+      setIsExtending(false);
     }
   };
 
@@ -433,12 +429,20 @@ const RegionalAdmin = () => {
                     {/* Header */}
                     <div className="relative z-10 w-full h-16 md:h-20 flex items-center justify-between bg-neutral-900/70 px-4 md:px-6">
                       <div className="flex-1 text-center">
-                        <div className="font-montserrat text-lg md:text-2xl tracking-wide">TOURNAMENT</div>
+                        <div className="font-montserrat text-lg md:text-2xl tracking-wide uppercase">{item.schoolName ? `${item.schoolName.toUpperCase()} TOURNAMENT` : 'TOURNAMENT'}</div>
                         <div className="font-montserrat text-xs md:text-sm text-white/70">
                           {formatDate(item.startDate)} - {formatDate(item.endDate)}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
+                        {/* Extend Registration Button */}
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); handleExtendClick(item); }}
+                          className="px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 text-white/90 text-xs font-montserrat transition-colors"
+                        >
+                          Extend
+                        </button>
                         <button
                           type="button"
                           onClick={() => toggleExpand(item.id)}
@@ -554,7 +558,7 @@ const RegionalAdmin = () => {
                     </button>
                   </div>
                   <div className="space-y-3">
-                    {mobileViewTeam.players.slice(0,5).map((player, idx) => (
+                    {mobileViewTeam.players.slice(0, 5).map((player, idx) => (
                       <div key={idx} className="flex items-center justify-between border border-white/10 rounded-lg px-3 py-2 bg-white/5">
                         <div className="flex items-center gap-3">
                           <div className="relative w-9 h-9 rounded-full overflow-hidden border border-white/20 bg-white/10">
@@ -593,16 +597,16 @@ const RegionalAdmin = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
               </div>
-              
+
               {/* Confirmation Message */}
               <h3 className="font-montserrat text-xl md:text-2xl font-semibold mb-3 text-yellow-400">
                 Confirm Action
               </h3>
-              
+
               <p className="font-montserrat text-sm md:text-base text-white/80 mb-6 leading-relaxed">
                 Are you sure you want to <strong>{pendingAction.action}</strong> the tournament request from <strong>{pendingAction.tournament?.school_name}</strong>?
               </p>
-              
+
               {/* Action Buttons */}
               <div className="flex gap-3">
                 <button
@@ -636,22 +640,64 @@ const RegionalAdmin = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              
+
               {/* Success Message */}
               <h3 className="font-montserrat text-xl md:text-2xl font-semibold mb-3 text-green-400">
                 Tournament Approved Successfully!
               </h3>
-              
+
               <p className="font-montserrat text-sm md:text-base text-white/80 mb-6 leading-relaxed">
                 The tournament request has been approved and is now available for student registration.
               </p>
-              
+
               {/* Close Button */}
               <button
                 onClick={handleSuccessClose}
                 className="w-full bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-6 py-3 hover:bg-[#F2C21A]/90 transition-colors"
               >
                 Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Extension Modal */}
+      {extendingTournament && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10" onClick={() => setExtendingTournament(null)} />
+          <div className="relative z-20 w-full max-w-md bg-neutral-900 border border-white/20 rounded-2xl p-6 shadow-2xl text-white">
+            <h3 className="font-montserrat text-xl font-bold mb-1">Extend Registration</h3>
+            <p className="text-white/60 text-sm font-montserrat mb-6">
+              Update the registration end date for <span className="text-white font-semibold">{extendingTournament.schoolName}</span>.
+              <br />
+              <span className="text-yellow-500 text-xs mt-1 block">Note: This will overwrite the current end date.</span>
+            </p>
+
+            <div className="mb-6">
+              <label className="block text-white/70 text-sm font-montserrat mb-2">New Deadline</label>
+              <input
+                type="date"
+                value={newEndDate}
+                onChange={(e) => setNewEndDate(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white font-montserrat focus:outline-none focus:border-[#F2C21A] transition-colors"
+                min={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setExtendingTournament(null)}
+                className="px-4 py-2 rounded-lg text-white/70 hover:text-white font-montserrat text-sm transition-colors"
+                disabled={isExtending}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleExtendSubmit}
+                disabled={isExtending || !newEndDate}
+                className="px-4 py-2 rounded-lg bg-[#F2C21A] text-black font-bold font-montserrat text-sm hover:brightness-110 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isExtending ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>
