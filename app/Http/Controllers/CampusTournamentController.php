@@ -26,7 +26,11 @@ class CampusTournamentController extends Controller
         
         // Get tournaments created by this SL with teams and members
         $tournaments = CampusTournament::where('sl_id', $user->id)
-            ->with(['teams.members.player'])
+            ->with(['teams.members' => function($query) {
+                // Ensure captain comes first (assuming role 'captain' is alphabetically before 'member'?? No, 'c' comes before 'm'. Perfect.)
+                // Or explicit sort:
+                $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
+            }, 'teams.members.player'])
             ->orderBy('created_at', 'desc')
             ->get();
             
@@ -72,6 +76,9 @@ class CampusTournamentController extends Controller
         // Get approved tournaments with teams and members for the Ongoing Tournaments section
         // Show all approved tournaments (both active and completed) so we can filter them on frontend
         $approvedQuery = CampusTournament::with([
+            'teams.members' => function($query) {
+                $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
+            },
             'teams.members.player',
             'studentLeader'
         ])->where('status', 'approved');
@@ -248,7 +255,7 @@ class CampusTournamentController extends Controller
         }
         
         $validator = Validator::make($request->all(), [
-            'end_date' => 'required|date|after:today',
+            'end_date' => 'required|date|after_or_equal:today',
         ]);
         
         if ($validator->fails()) {
@@ -315,7 +322,9 @@ class CampusTournamentController extends Controller
     {
         // Get all approved tournaments with teams and members
         $tournaments = CampusTournament::where('status', 'approved')
-            ->with(['teams.members.player', 'studentLeader'])
+            ->with(['teams.members' => function($query) {
+                $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
+            }, 'teams.members.player', 'studentLeader'])
             ->orderBy('start_date', 'desc')
             ->get();
             
