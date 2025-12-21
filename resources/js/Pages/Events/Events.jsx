@@ -265,7 +265,7 @@ function Events({ events = [] }) {
                                                 </div>
                                             </div>
                                         </div>
-                                    </Link>
+                                    </LinkComponent>
                                 );
                             })}
                         </div>
