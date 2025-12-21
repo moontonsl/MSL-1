@@ -143,7 +143,7 @@ const Header = () => {
                                     </Link>
                                 )}
                                 {/* Campus Tournament - only for SL and Regional Admin */}
-                                {(user.role === 'SL' || user.role === 'Regional Admin') && (
+                                {(user.role === 'SL' || user.role === 'Regional Admin' || user.role === 'Super Admin') && (
                                     <a
                                         href="/campus-tournament"
                                         className={styles.dropdownItem}
