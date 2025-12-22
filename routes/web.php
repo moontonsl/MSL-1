@@ -138,10 +138,13 @@ Route::get('/team-check', function (\Illuminate\Http\Request $request) {
     }
     
     // Only check for teams in active tournaments (results not submitted)
+    // AND prioritize the LATEST created team to avoid showing old/done records
     $teamMember = \App\Models\CampusTournamentTeamMember::whereHas('team.tournament', function($query) {
         $query->where('status', 'approved')
               ->where('results_submitted', false);
-    })->where('player_id', $userId)->first();
+    })->where('player_id', $userId)
+      ->latest() // Important: Get the most recent team membership
+      ->first();
     
     return response()->json([
         'isInTeam' => $teamMember ? true : false,
@@ -640,12 +643,44 @@ Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
     
     $captain = $request->captain;
     
+    // COLLECT ALL PLAYER IDs TO CHECK (Captain + Members)
+    $playerIdsToCheck = [
+        $captain['id'],
+        $request->players['player2']['id'] ?? null,
+        $request->players['player3']['id'] ?? null,
+        $request->players['player4']['id'] ?? null,
+        $request->players['player5']['id'] ?? null,
+    ];
+    // Remove nulls
+    $playerIdsToCheck = array_filter($playerIdsToCheck);
+
+    // CHECK FOR EXISTING ACTIVE MEMBERSHIPS
+    // A player cannot be in another team if that team belongs to a tournament that is:
+    // 1. Approved
+    // 2. Not yet submitted results
+    // 3. STILL ONGOING (end_date >= now)
+    $existingMembership = \App\Models\CampusTournamentTeamMember::whereIn('player_id', $playerIdsToCheck)
+        ->whereHas('team.tournament', function($query) {
+            $query->where('status', 'approved')
+                  ->where('results_submitted', false)
+                  ->whereDate('end_date', '>=', now()); // Only block if tournament is still ongoing
+        })
+        ->first();
+
+    if ($existingMembership) {
+        // Find which player is the culprit for the error message
+        $duplicatePlayerId = $existingMembership->player_id;
+        $player = \App\Models\User::find($duplicatePlayerId);
+        $name = $player ? $player->username : 'A player';
+        return response()->json(['message' => "$name is already registered in an ongoing tournament."], 400);
+    }
+    
     // Check if captain's school has an active approved tournament
     $tournament = \App\Models\CampusTournament::where('school_name', $captain['university'])
         ->where('status', 'approved')
         ->where('results_submitted', false)
-        ->where('start_date', '<=', now())
-        ->where('end_date', '>=', now())
+        ->whereDate('start_date', '<=', now())
+        ->whereDate('end_date', '>=', now())
         ->first();
     
     if (!$tournament) {
