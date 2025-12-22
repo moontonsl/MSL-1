@@ -123,8 +123,8 @@ Route::get('/approved-tournaments', function () {
     // Only return approved tournaments that are active (results not submitted and within registration period)
     $tournaments = \App\Models\CampusTournament::where('status', 'approved')
         ->where('results_submitted', false)
-        ->where('start_date', '<=', now())
-        ->where('end_date', '>=', now())
+        ->whereDate('start_date', '<=', now())
+        ->whereDate('end_date', '>=', now())
         ->get();
     return response()->json($tournaments);
 });

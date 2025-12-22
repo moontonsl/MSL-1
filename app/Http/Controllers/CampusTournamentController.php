@@ -571,7 +571,9 @@ class CampusTournamentController extends Controller
         
         // Find the team where this user is a member
         $teamMember = \App\Models\CampusTournamentTeamMember::where('player_id', $user->id)
-            ->with(['team.tournament', 'team.members.player'])
+            ->with(['team.tournament', 'team.members' => function($query) {
+                $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
+            }, 'team.members.player'])
             ->first();
         
         if (!$teamMember) {
