@@ -570,10 +570,20 @@ class CampusTournamentController extends Controller
         }
         
         // Find the team where this user is a member
+        // Prioritize teams in active tournaments (results not submitted) and recent teams
         $teamMember = \App\Models\CampusTournamentTeamMember::where('player_id', $user->id)
+            ->whereHas('team.tournament', function($query) {
+                $query->where('status', 'approved')
+                     // Prefer active tournaments first, so we don't show old ones
+                      ->orderBy('results_submitted', 'asc') 
+                      ->orderBy('end_date', 'desc');
+            })
             ->with(['team.tournament', 'team.members' => function($query) {
+                // Sorting logic for members
                 $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
             }, 'team.members.player'])
+            // Order by creation time to get the NEWEST team (resolves duplicate issue)
+            ->latest() 
             ->first();
         
         if (!$teamMember) {
