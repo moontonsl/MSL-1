@@ -22,7 +22,10 @@ export default function OPPOxMSLRoadShowAttendance() {
   const dates = [
     "November 23, 2025",
     "November 25, 2025",
-    "November 28, 2025"
+    "November 28, 2025",
+    "December 12, 2025",
+    "December 13, 2025",
+
   ];
 
   const [form, setForm] = useState({
@@ -44,7 +47,7 @@ export default function OPPOxMSLRoadShowAttendance() {
       ...prev,
       [name]: value,
     }));
-    
+
     // Clear validation error for this field when user changes it
     if (validationErrors[name]) {
       setValidationErrors((prev) => {
@@ -184,11 +187,10 @@ export default function OPPOxMSLRoadShowAttendance() {
               <label className="block font-medium mb-1 text-sm sm:text-base">
                 Region <span className="text-red-400">*</span>
               </label>
-              <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${
-                validationErrors.region 
-                  ? 'bg-red-500/10 border border-red-500' 
+              <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${validationErrors.region
+                  ? 'bg-red-500/10 border border-red-500'
                   : 'bg-white/5'
-              }`}>
+                }`}>
                 <MapPin className="text-[#F2C21A] w-4 h-4 sm:w-5 sm:h-5" />
                 <select
                   name="region"
@@ -221,11 +223,10 @@ export default function OPPOxMSLRoadShowAttendance() {
               <label className="block font-medium mb-1 text-sm sm:text-base">
                 Venue <span className="text-red-400">*</span>
               </label>
-              <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${
-                validationErrors.venue 
-                  ? 'bg-red-500/10 border border-red-500' 
+              <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${validationErrors.venue
+                  ? 'bg-red-500/10 border border-red-500'
                   : 'bg-white/5'
-              }`}>
+                }`}>
                 <Globe className="text-[#F2C21A] w-4 h-4 sm:w-5 sm:h-5" />
                 <select
                   name="venue"
@@ -258,11 +259,10 @@ export default function OPPOxMSLRoadShowAttendance() {
               <label className="block font-medium mb-1 text-sm sm:text-base">
                 Date <span className="text-red-400">*</span>
               </label>
-              <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${
-                validationErrors.date 
-                  ? 'bg-red-500/10 border border-red-500' 
+              <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${validationErrors.date
+                  ? 'bg-red-500/10 border border-red-500'
                   : 'bg-white/5'
-              }`}>
+                }`}>
                 <Calendar className="text-[#F2C21A] w-4 h-4 sm:w-5 sm:h-5" />
                 <select
                   name="date"

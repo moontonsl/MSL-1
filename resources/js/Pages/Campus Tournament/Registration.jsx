@@ -29,34 +29,34 @@ export default function Registration() {
 
       if (response.ok) {
         const userData = await response.json();
-        
+
         if (userData.user) {
-          // Check if user's school has any approved tournaments
-          const tournamentResponse = await fetch('/approved-tournaments');
-          const tournaments = await tournamentResponse.json();
-          
-          const hasApprovedTournament = tournaments.some(t => 
-            t.school_name === userData.user.university
-          );
-          
-          if (hasApprovedTournament) {
-            // Check if user is verified
-            if (userData.user.state !== 'Verified') {
-              setError("Only verified users can participate in campus tournaments. Please complete your verification first.");
+          // Check if user is verified
+          if (userData.user.state !== 'Verified') {
+            setError("Only verified users can participate in campus tournaments. Please complete your verification first.");
+            return;
+          }
+
+          // Check if user is already in a team (PRIORITY CHECK)
+          const teamCheckResponse = await fetch(`/team-check?user_id=${userData.user.id}`);
+          if (teamCheckResponse.ok) {
+            const teamData = await teamCheckResponse.json();
+            if (teamData.isInTeam) {
+              // User is already in a team, redirect to team view
+              router.visit(`/Tournament/CampusTournamentTeam?user_id=${userData.user.id}`);
               return;
             }
-            
-            // Check if user is already in a team
-            const teamCheckResponse = await fetch(`/team-check?user_id=${userData.user.id}`);
-            if (teamCheckResponse.ok) {
-              const teamData = await teamCheckResponse.json();
-              if (teamData.isInTeam) {
-                // User is already in a team, redirect to team view
-                router.visit(`/Tournament/CampusTournamentTeam?user_id=${userData.user.id}`);
-                return;
-              }
-            }
-            
+          }
+
+          // If not in a team, THEN check for available tournaments
+          const tournamentResponse = await fetch('/approved-tournaments');
+          const tournaments = await tournamentResponse.json();
+
+          const hasApprovedTournament = tournaments.some(t =>
+            t.school_name === userData.user.university
+          );
+
+          if (hasApprovedTournament) {
             // Store captain data in session storage and redirect
             sessionStorage.setItem('campusTournamentCaptain', JSON.stringify(userData.user));
             router.visit('/Tournament/CampusTournamentReg');
@@ -115,7 +115,7 @@ export default function Registration() {
                   {error}
                 </div>
               )}
-              
+
               <div>
                 <label className="block text-[12px] md:text-sm text-white/70 font-medium mb-1">
                   MSL Username

@@ -15,6 +15,7 @@ import {
   ChevronDown,
   School,
 } from "lucide-react";
+import { Link } from "@inertiajs/react";
 
 // Simple debounce helper
 function debounce(func, delay) {
@@ -41,15 +42,18 @@ const ISLANDS = ["Luzon", "Visayas", "Mindanao"];
 // ];
 const FEATURED_SCHOOLS = [
   { name: "Father Saturnino Urios University", region: "16 - Caraga", island: "Mindanao" },
-  { name: "Batangas State University-Alangilan", region: "04 - CALABARZON", island: "Luzon" },
+  { name: "Batangas State University - Alangilan", region: "04 - CALABARZON", island: "Luzon" },
   { name: "Talisay City College", region: "07 - Central Visayas", island: "Visayas" },
   { name: "City College of San Fernando", region: "03 - Central Luzon", island: "Luzon" },
-  { name: "Laguna State Polytechnic University-Los Baños", region: "04 - CALABARZON", island: "Luzon" },
-  { name: "La Salle University", region: "10 - Northern Mindanao", island: "Mindanao" },
+  { name: "Laguna State Polytechnic University - Los Baños", region: "04 - CALABARZON", island: "Luzon" },
+  { name: "La Salle University - Ozamiz City", region: "10 - Northern Mindanao", island: "Mindanao" },
   { name: "Mindanao State University - Iligan Institute of Technology", region: "10 - Northern Mindanao", island: "Mindanao" },
-  { name: "PHINMA St. Jude College", region: "13 - Nat. Capital Region", island: "Luzon" },
+  { name: "Colegio de Muntinlupa", region: "13 - Nat. Capital Region", island: "Luzon" },
   { name: "University of the Philippines-Diliman", region: "13 - Nat. Capital Region", island: "Luzon" },
   { name: "Bulacan State University - Sarmiento Campus", region: "03 - Central Luzon", island: "Luzon" },
+  { name: "Carlos Hilado Memorial State University", region: "07 - Western Visayas", island: "Visayas" },
+  { name: "SM Butuan", region: "16 - Caraga", island: "Mindanao" },
+  { name: "Colegio de Los Baños", region: "04 - CALABARZON", island: "Luzon" },
 ];
 
 export default function FF25Attendance() {
@@ -97,7 +101,7 @@ export default function FF25Attendance() {
               message: data.message || "Username is verified and matches the selected region and school.",
               type: "success",
             });
-            
+
             // Auto-populate user data if available
             if (data.user_data) {
               setForm((prev) => ({
@@ -190,8 +194,8 @@ export default function FF25Attendance() {
   const handleIslandChange = (e) => {
     const island = e.target.value;
     setSelectedIsland(island);
-    setForm((prev) => ({ 
-      ...prev, 
+    setForm((prev) => ({
+      ...prev,
       region: island, // Store island as region for backend
       school: "" // Clear school when island changes
     }));
@@ -212,31 +216,31 @@ export default function FF25Attendance() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     // Validate region selection
     if (!selectedIsland) {
       alert("Please select a region.");
       return;
     }
-    
+
     // Validate school selection
     if (!form.school.trim()) {
       alert("Please select a school.");
       return;
     }
-    
+
     // Validate MSL username when account is yes
     if (hasAccount === "yes" && !form.username.trim()) {
       alert("Please enter your MSL username.");
       return;
     }
-    
+
     // Validate username status if account is yes
     if (hasAccount === "yes" && usernameStatus.type !== "success") {
       alert("Please ensure your username is verified and matches the selected region and school.");
       return;
     }
-    
+
     setIsSubmitting(true);
 
     const payload = {
@@ -304,6 +308,7 @@ export default function FF25Attendance() {
     <AuthenticatedLayout>
       <Head title="FF25 Attendance Registration" />
       <Helmet>
+        <title>FF25 Attendance Registration</title>
         <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet" />
       </Helmet>
 
@@ -311,19 +316,17 @@ export default function FF25Attendance() {
         className="relative z-50 min-h-screen flex flex-col items-center justify-center text-white p-4 pt-5 sm:pt-5 font-['Montserrat'] bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${BG})`, backgroundAttachment: "fixed" }}
       >
-
-        {/* Header */}
-        <div className="text-center mb-6 sm:mb-8">
+        <Link href="/FF25">
           <img 
             src={FFLogo} 
-            alt="FF25 MSL Logo" 
-            className="w-48 sm:w-56 mx-auto mb-4 drop-shadow-lg" 
+            alt="FF25 MSL Logo"
+            className="w-64 sm:w-80 drop-shadow-lg mb-6 cursor-pointer" 
           />
-        </div>
+        </Link>
 
         {/* Form Card */}
           <div
-            className="rounded-2xl p-5 sm:p-8 w-full max-w-sm sm:max-w-3xl shadow-lg mx-auto border backdrop-blur-md bg-[#1a1f7a]/75 ]"
+            className="rounded-2xl p-5 sm:p-8 w-full max-w-sm sm:max-w-3xl shadow-lg mx-auto border-2 backdrop-blur-md bg-[#1a1f7a]/75 ]"
             style={{
               borderColor: "#fcd821",
               borderWidth: "2px",
@@ -366,7 +369,7 @@ export default function FF25Attendance() {
                   name="hasAccount"
                   value={hasAccount}
                   onChange={(e) => setHasAccount(e.target.value)}
-                  className="bg-transparent w-full outline-none text-white appearance-none pl-3 rounded-md border border-white/50"  
+                  className="bg-transparent w-full outline-none text-white appearance-none pl-3 rounded-md border border-white/50"
                 >
                   <option value="yes" className="text-black">Yes</option>
                   <option value="no" className="text-black">No</option>
@@ -388,7 +391,7 @@ export default function FF25Attendance() {
                   value={selectedIsland}
                   onChange={handleIslandChange}
                   required
-                  className="bg-transparent w-full outline-none text-white appearance-none pl-3 rounded-md border border-white/50" 
+                  className="bg-transparent w-full outline-none text-white appearance-none pl-3 rounded-md border border-white/50"
                 >
                   <option value="" disabled className="text-black">Select your region</option>
                   {ISLANDS.map((island) => (
@@ -413,7 +416,7 @@ export default function FF25Attendance() {
                   onChange={handleSchoolChange}
                   required
                   disabled={!selectedIsland}
-                  className="bg-transparent w-full outline-none text-white appearance-none pl-3 rounded-md border border-white/50 disabled:opacity-50 disabled:cursor-not-allowed" 
+                  className="bg-transparent w-full outline-none text-white appearance-none pl-3 rounded-md border border-white/50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="" disabled className="text-black">
                     {selectedIsland ? "Select your school" : "Select region first"}
@@ -443,19 +446,18 @@ export default function FF25Attendance() {
                   readOnly={hasAccount === "no"}
                   required={hasAccount === "yes"}
                   placeholder="Enter your MSL username"
-                  className="bg-transparent w-full outline-none text-white appearance-none pl-3 rounded-md border border-white/50" 
+                  className="bg-transparent w-full outline-none text-white appearance-none pl-3 rounded-md border border-white/50"
                 />
               </div>
               {hasAccount === "yes" && usernameStatus.message && (
                 <p
-                  className={`mt-1 text-base font-semibold ${
-                    {
-                      success: "text-green-400",
-                      error: "text-red-400",
-                      warning: "text-yellow-300",
-                      info: "text-white/70",
-                    }[usernameStatus.type] || "text-white/70"
-                  }`}
+                  className={`mt-1 text-base font-semibold ${{
+                    success: "text-green-400",
+                    error: "text-red-400",
+                    warning: "text-yellow-300",
+                    info: "text-white/70",
+                  }[usernameStatus.type] || "text-white/70"
+                    }`}
                 >
                   {isCheckingUsername ? "Checking username..." : usernameStatus.message}
                 </p>
@@ -475,8 +477,8 @@ export default function FF25Attendance() {
                   <label className="block font-medium mb-1 text-sm sm:text-base">Full Name</label>
                   <div className="relative bg-[#1a1f7a]/80 rounded-xl p-3 flex items-center gap-3">
                     <User className="text-[#fcd821] w-5 h-5" />
-                    <input type="text" name="fullname" value={form.fullname} onChange={handleChange} required placeholder="Enter your full name" 
-                    className="bg-transparent w-full outline-none text-white appearance-none pl-3 rounded-md border border-white/50" />
+                    <input type="text" name="fullname" value={form.fullname} onChange={handleChange} required placeholder="Enter your full name"
+                      className="bg-transparent w-full outline-none text-white appearance-none pl-3 rounded-md border border-white/50" />
                   </div>
                   {errors?.fullname && (
                     <p className="mt-1 text-base font-semibold text-red-300">
@@ -489,8 +491,8 @@ export default function FF25Attendance() {
                   <label className="block font-medium mb-1 text-sm sm:text-base">Email Address</label>
                   <div className="relative bg-[#1a1f7a]/80 rounded-xl p-3 flex items-center gap-3">
                     <Mail className="text-[#fcd821] w-5 h-5" />
-                    <input type="email" name="email" value={form.email} onChange={handleChange} required placeholder="Enter your email" 
-                    className="bg-transparent w-full outline-none text-white appearance-none pl-3 rounded-md border border-white/50"  />
+                    <input type="email" name="email" value={form.email} onChange={handleChange} required placeholder="Enter your email"
+                      className="bg-transparent w-full outline-none text-white appearance-none pl-3 rounded-md border border-white/50" />
                   </div>
                 </div>
 
@@ -498,8 +500,8 @@ export default function FF25Attendance() {
                   <label className="block font-medium mb-1 text-sm sm:text-base">MLBB ID</label>
                   <div className="relative bg-[#1a1f7a]/80 rounded-xl p-3 flex items-center gap-3">
                     <Hash className="text-[#fcd821] w-5 h-5" />
-                    <input type="text" name="mlbbid" value={form.mlbbid} onChange={handleChange} required placeholder="Enter MLBB ID" 
-                    className="bg-transparent w-full outline-none text-white appearance-none pl-3 rounded-md border border-white/50" />
+                    <input type="text" name="mlbbid" value={form.mlbbid} onChange={handleChange} required placeholder="Enter MLBB ID"
+                      className="bg-transparent w-full outline-none text-white appearance-none pl-3 rounded-md border border-white/50" />
                   </div>
                 </div>
 
@@ -507,8 +509,8 @@ export default function FF25Attendance() {
                   <label className="block font-medium mb-1 text-sm sm:text-base">MLBB Server</label>
                   <div className="relative bg-[#1a1f7a]/80 rounded-xl p-3 flex items-center gap-3">
                     <Globe className="text-[#fcd821] w-5 h-5" />
-                    <input type="text" name="mlbbserver" value={form.mlbbserver} onChange={handleChange} required placeholder="Enter MLBB server" 
-                    className="bg-transparent w-full outline-none text-white appearance-none pl-3 rounded-md border border-white/50"  />
+                    <input type="text" name="mlbbserver" value={form.mlbbserver} onChange={handleChange} required placeholder="Enter MLBB server"
+                      className="bg-transparent w-full outline-none text-white appearance-none pl-3 rounded-md border border-white/50" />
                   </div>
                 </div>
               </>
@@ -526,7 +528,7 @@ export default function FF25Attendance() {
                   value={form.date}
                   onChange={handleChange}
                   required
-                  className="bg-transparent w-full outline-none text-white appearance-none pl-3 rounded-md border border-white/50" 
+                  className="bg-transparent w-full outline-none text-white appearance-none pl-3 rounded-md border border-white/50"
                 />
               </div>
             </div>
@@ -547,20 +549,18 @@ export default function FF25Attendance() {
           <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 px-4">
             <div className="w-full max-w-md rounded-2xl bg-[#1a1f7a] border border-[#fcd821] p-6 text-center shadow-2xl">
               <h3
-                className={`text-2xl font-bold mb-3 ${
-                  modalInfo.type === "success" ? "text-[#fcd821]" : "text-red-400"
-                }`}
+                className={`text-2xl font-bold mb-3 ${modalInfo.type === "success" ? "text-[#fcd821]" : "text-red-400"
+                  }`}
               >
                 {modalInfo.title}
               </h3>
               <p className="text-white text-base mb-6">{modalInfo.message}</p>
               <button
                 onClick={closeModal}
-                className={`w-full py-2 rounded-xl font-semibold ${
-                  modalInfo.type === "success"
-                    ? "bg-[#fcd821] text-[#1a1f7a]"
-                    : "bg-red-500 text-white"
-                }`}
+                className={`w-full py-2 rounded-xl font-semibold ${modalInfo.type === "success"
+                  ? "bg-[#fcd821] text-[#1a1f7a]"
+                  : "bg-red-500 text-white"
+                  }`}
               >
                 Close
               </button>
