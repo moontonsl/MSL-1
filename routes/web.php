@@ -65,7 +65,7 @@ Route::get('/campus-tournament', function () {
     // Redirect based on user role
     if ($user->role === 'SL') {
         return redirect()->route('campus.tournament.sl');
-    } elseif ($user->role === 'Regional Admin') {
+    } elseif ($user->role === 'Regional Admin' || $user->role === 'Super Admin') {
         return redirect()->route('campus.tournament.regionaladmin');
     } else {
         // For other users, redirect to SL view or show access denied
@@ -107,6 +107,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/campus-tournaments/{id}/approve', [\App\Http\Controllers\CampusTournamentController::class, 'approve'])->name('campus.tournaments.approve');
     Route::post('/campus-tournaments/{id}/reject', [\App\Http\Controllers\CampusTournamentController::class, 'reject'])->name('campus.tournaments.reject');
     Route::post('/campus-tournaments/{id}/submit-results', [\App\Http\Controllers\CampusTournamentController::class, 'submitResults'])->name('campus.tournaments.submit-results');
+    Route::post('/campus-tournaments/{id}/update-results', [\App\Http\Controllers\CampusTournamentController::class, 'updateResults'])->name('campus.tournaments.update-results');
+    Route::post('/campus-tournaments/{id}/extend', [\App\Http\Controllers\CampusTournamentController::class, 'extendRegistration'])->name('campus.tournaments.extend');
+    Route::get('/campus-tournaments/{id}/export', [\App\Http\Controllers\CampusTournamentController::class, 'exportToExcel'])->name('campus.tournaments.export');
     Route::delete('/campus-tournaments/{id}', [\App\Http\Controllers\CampusTournamentController::class, 'destroy'])->name('campus.tournaments.destroy');
 });
 
@@ -120,8 +123,8 @@ Route::get('/approved-tournaments', function () {
     // Only return approved tournaments that are active (results not submitted and within registration period)
     $tournaments = \App\Models\CampusTournament::where('status', 'approved')
         ->where('results_submitted', false)
-        ->where('start_date', '<=', now())
-        ->where('end_date', '>=', now())
+        ->whereDate('start_date', '<=', now())
+        ->whereDate('end_date', '>=', now())
         ->get();
     return response()->json($tournaments);
 });
@@ -135,10 +138,13 @@ Route::get('/team-check', function (\Illuminate\Http\Request $request) {
     }
     
     // Only check for teams in active tournaments (results not submitted)
+    // AND prioritize the LATEST created team to avoid showing old/done records
     $teamMember = \App\Models\CampusTournamentTeamMember::whereHas('team.tournament', function($query) {
         $query->where('status', 'approved')
               ->where('results_submitted', false);
-    })->where('player_id', $userId)->first();
+    })->where('player_id', $userId)
+      ->latest() // Important: Get the most recent team membership
+      ->first();
     
     return response()->json([
         'isInTeam' => $teamMember ? true : false,
@@ -612,6 +618,14 @@ Route::post('/validate-credentials', function (\Illuminate\Http\Request $request
     return response()->json(['message' => 'Invalid credentials'], 401);
 });
 
+// Faulty Username Update Route (Signed)
+Route::get('/update-username/{user}', [\App\Http\Controllers\FaultyUsernameController::class, 'showUpdateForm'])
+    ->name('username.update.form')
+    ->middleware('signed');
+
+Route::post('/update-username/{user}', [\App\Http\Controllers\FaultyUsernameController::class, 'updateUsername'])
+    ->name('username.update.submit');
+
 Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
     // Validate the request
     $request->validate([
@@ -629,12 +643,44 @@ Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
     
     $captain = $request->captain;
     
+    // COLLECT ALL PLAYER IDs TO CHECK (Captain + Members)
+    $playerIdsToCheck = [
+        $captain['id'],
+        $request->players['player2']['id'] ?? null,
+        $request->players['player3']['id'] ?? null,
+        $request->players['player4']['id'] ?? null,
+        $request->players['player5']['id'] ?? null,
+    ];
+    // Remove nulls
+    $playerIdsToCheck = array_filter($playerIdsToCheck);
+
+    // CHECK FOR EXISTING ACTIVE MEMBERSHIPS
+    // A player cannot be in another team if that team belongs to a tournament that is:
+    // 1. Approved
+    // 2. Not yet submitted results
+    // 3. STILL ONGOING (end_date >= now)
+    $existingMembership = \App\Models\CampusTournamentTeamMember::whereIn('player_id', $playerIdsToCheck)
+        ->whereHas('team.tournament', function($query) {
+            $query->where('status', 'approved')
+                  ->where('results_submitted', false)
+                  ->whereDate('end_date', '>=', now()); // Only block if tournament is still ongoing
+        })
+        ->first();
+
+    if ($existingMembership) {
+        // Find which player is the culprit for the error message
+        $duplicatePlayerId = $existingMembership->player_id;
+        $player = \App\Models\User::find($duplicatePlayerId);
+        $name = $player ? $player->username : 'A player';
+        return response()->json(['message' => "$name is already registered in an ongoing tournament."], 400);
+    }
+    
     // Check if captain's school has an active approved tournament
     $tournament = \App\Models\CampusTournament::where('school_name', $captain['university'])
         ->where('status', 'approved')
         ->where('results_submitted', false)
-        ->where('start_date', '<=', now())
-        ->where('end_date', '>=', now())
+        ->whereDate('start_date', '<=', now())
+        ->whereDate('end_date', '>=', now())
         ->first();
     
     if (!$tournament) {
@@ -928,7 +974,7 @@ Route::get('/RoadshowAttendance', function () {
 //FF25 LANDING PAGE ROUTES
 Route::get('/FF25', function () {
     return Inertia::render('FF25/FF25');
-})->name('FF25LandingPage');
+})->name('FF25');
 
 
 //FF25 ATTENDANCE PAGE ROUTES
@@ -936,6 +982,18 @@ Route::get('/FF25Attendance', function () {
     return Inertia::render('FF25/FF25Attendance');
 })->name('FF25Attendance');
 Route::post('/FF25Attendance', [FF25AttendanceController::class, 'store'])->name('ff25.attendance.store');
+
+//FFBattleEmote PAGE ROUTES
+Route::get('/FFBattleEmote', function () {
+    return Inertia::render('FF25/FFBattleEmote');
+})->name('FFBattleEmote');
+
+//FFFreedomWall PAGE ROUTES
+Route::get('/FFFreedomWall', function () {
+    return Inertia::render('FF25/FFFreedomWall');
+})->name('FFFreedomWall');
+
+
 
 
 //SL ADMIN APPROVAL ROUTES - Only SL role can access

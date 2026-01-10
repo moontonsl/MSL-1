@@ -5,6 +5,7 @@ import { FaNewspaper, FaCalendar, FaUsers, FaTachometerAlt, FaSignOutAlt, FaBed,
 export default function AdminLayout({ children }) {
     const { auth } = usePage().props;
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
 
     const navigation = [
         { name: 'Dashboard', href: route('admin.dashboard'), routeName: 'admin.dashboard', icon: FaTh },
@@ -30,7 +31,7 @@ export default function AdminLayout({ children }) {
             )}
 
             {/* Background noise effect */}
-            <div 
+            <div
                 className="fixed inset-0 opacity-5 pointer-events-none z-0"
                 style={{
                     background: 'url(/noise.svg) lightgray 0% 0% / 100px 100px repeat',
@@ -52,44 +53,28 @@ export default function AdminLayout({ children }) {
                         <Link
                             key={item.name}
                             href={item.href}
-                            className={`group flex items-center px-4 py-3 text-base font-medium rounded-lg transition-all duration-200 ${
-                                route().current(item.routeName)
-                                    ? 'bg-[#f0f0f0] text-[#2C2C3E] border-2 border-gray-200 shadow font-bold'
-                                    : 'text-gray-300 hover:bg-[#4A4A60] hover:text-white'
-                            }`}
+                            className={`group flex items-center px-4 py-3 text-base font-medium rounded-lg transition-all duration-200 ${route().current(item.routeName)
+                                ? 'bg-[#f0f0f0] text-[#2C2C3E] border-2 border-gray-200 shadow font-bold'
+                                : 'text-gray-300 hover:bg-[#4A4A60] hover:text-white'
+                                }`}
                             onClick={() => setSidebarOpen(false)}
                         >
                             <item.icon
-                                className={`mr-3 flex-shrink-0 h-5 w-5 transition-colors duration-200 ${
-                                    route().current(item.routeName)
-                                        ? 'text-[#2C2C3E]'
-                                        : 'text-gray-300 group-hover:text-white'
-                                }`}
+                                className={`mr-3 flex-shrink-0 h-5 w-5 transition-colors duration-200 ${route().current(item.routeName)
+                                    ? 'text-[#2C2C3E]'
+                                    : 'text-gray-300 group-hover:text-white'
+                                    }`}
                             />
                             {item.name}
                         </Link>
                     ))}
                 </nav>
-
-                {/* Logout Button */}
-                <div className="p-4 mt-auto bottom-0 absolute w-full">
-                    <Link
-                        href={route('admin.logout')}
-                        method="post"
-                        as="button"
-                        className="w-full flex items-center justify-start py-3 px-4 rounded-lg bg-[#f0f0f0] text-[#212121] font-medium hover:bg-[#4A4A60] hover:text-white transition-colors duration-200"
-                        onClick={() => setSidebarOpen(false)}
-                    >
-                        <FaSignOutAlt className="w-5 h-5 mr-2" />
-                        Logout
-                    </Link>
-                </div>
             </div>
 
             {/* Main content area */}
             <div className="flex-1 flex flex-col md:ml-64">
                 {/* Top Navigation */}
-                <nav className="relative z-10 bg-white border-b border-gray-200 shadow-sm p-4" style={{marginLeft: -20,zIndex: 1}}>
+                <nav className="relative z-10 bg-white border-b border-gray-200 shadow-sm p-4" style={{ marginLeft: -20, zIndex: 1 }}>
                     <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex justify-between h-16 items-center">
                             <div className="flex items-center">
@@ -107,10 +92,49 @@ export default function AdminLayout({ children }) {
                                 )}
                                 <span className="text-gray-800 font-semibold text-xl">{activeNav ? activeNav.name : ''}</span>
                             </div>
-                            <div className="flex items-center space-x-4">
-                                
-                                <div className="flex items-center space-x-3 font-medium bg-[#212121] rounded-lg px-4 py-2">
-                                    <span className="text-white font-medium">{auth.user.name}</span>
+                            <div className="flex items-center space-x-4 relative">
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setDropdownOpen(!dropdownOpen)}
+                                        className="flex items-center space-x-3 font-medium bg-[#212121] rounded-lg px-4 py-2 hover:bg-[#4A4A60] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#212121]"
+                                    >
+                                        <span className="text-white font-medium">Super Admin</span>
+                                        <svg
+                                            className={`w-4 h-4 text-white transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`}
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+
+                                    {/* Dropdown Menu */}
+                                    {dropdownOpen && (
+                                        <>
+                                            {/* Invisible overlay to close dropdown when clicking outside */}
+                                            <div
+                                                className="fixed inset-0 z-10"
+                                                onClick={() => setDropdownOpen(false)}
+                                            />
+                                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-20 border border-gray-200">
+                                                <div className="px-4 py-2 border-b border-gray-200">
+                                                    <p className="text-sm text-gray-500">Signed in as</p>
+                                                    <p className="text-sm font-medium text-gray-900 truncate">{auth.user.name}</p>
+                                                </div>
+                                                <Link
+                                                    href={route('admin.logout')}
+                                                    method="post"
+                                                    as="button"
+                                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center transition-colors duration-200"
+                                                    onClick={() => setDropdownOpen(false)}
+                                                >
+                                                    <FaSignOutAlt className="w-4 h-4 mr-2" />
+                                                    Logout
+                                                </Link>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </div>
