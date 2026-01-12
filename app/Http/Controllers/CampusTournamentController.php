@@ -302,9 +302,9 @@ class CampusTournamentController extends Controller
         
         $tournament = CampusTournament::findOrFail($id);
         
-        // Only SL who created it can delete, and only if pending
-        if ($tournament->sl_id !== $user->id || $tournament->status !== 'pending') {
-            return response()->json(['error' => 'You can only delete your own pending tournaments'], 403);
+        // Only SL who created it can delete, and only if pending or rejected
+        if ($tournament->sl_id !== $user->id || !in_array($tournament->status, ['pending', 'rejected'])) {
+            return response()->json(['error' => 'You can only delete your own pending or rejected tournaments'], 403);
         }
         
         $tournament->delete();
@@ -635,68 +635,14 @@ class CampusTournamentController extends Controller
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         
-        // Set document properties
-        $spreadsheet->getProperties()
-            ->setCreator('MSL Campus Tournament')
-            ->setTitle('Tournament Results - ' . $tournament->school_name)
-            ->setSubject('Tournament Results')
-            ->setDescription('Campus Tournament Results Export');
-        
-        // Title
-        $sheet->setCellValue('A1', strtoupper($tournament->school_name) . ' TOURNAMENT RESULTS');
-        $sheet->mergeCells('A1:V1');
-        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
-        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        
-        // Tournament Information
-        $row = 3;
-        $sheet->setCellValue('A' . $row, 'Registration Start Date:');
-        $sheet->setCellValue('B' . $row, $tournament->start_date->format('F d, Y'));
-        $sheet->getStyle('A' . $row)->getFont()->setBold(true);
-        
-        $row++;
-        $sheet->setCellValue('A' . $row, 'Registration End Date:');
-        $sheet->setCellValue('B' . $row, $tournament->end_date->format('F d, Y'));
-        $sheet->getStyle('A' . $row)->getFont()->setBold(true);
-        
-        $row++;
-        $sheet->setCellValue('A' . $row, 'Results Submitted:');
-        $sheet->setCellValue('B' . $row, $tournament->results_submitted_at->format('F d, Y h:i A'));
-        $sheet->getStyle('A' . $row)->getFont()->setBold(true);
-        
-        // Add spacing
-        $row += 2;
-        
-        // Headers - Main columns
-        $mainHeaders = ['Rank', 'Team Name'];
+        // Headers
+        $headers = ['Rank', 'Team Name', 'Player Name', 'IGN', 'Server', 'UID'];
         $col = 'A';
-        foreach ($mainHeaders as $header) {
-            $sheet->setCellValue($col . $row, $header);
-            $sheet->getStyle($col . $row)->getFont()->setBold(true);
-            $sheet->getStyle($col . $row)->getFill()
-                ->setFillType(Fill::FILL_SOLID)
-                ->getStartColor()->setARGB('FFD3D3D3');
-            $sheet->getStyle($col . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        foreach ($headers as $header) {
+            $sheet->setCellValue($col . '1', $header);
+            $sheet->getStyle($col . '1')->getFont()->setBold(true);
+            $sheet->getStyle($col . '1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             $col++;
-        }
-        
-        // Headers - Player columns (Name, IGN, ID, Server for each of 5 players)
-        for ($i = 1; $i <= 5; $i++) {
-            $playerHeaders = [
-                "Player $i Name",
-                "Player $i IGN",
-                "Player $i ID",
-                "Player $i Server"
-            ];
-            foreach ($playerHeaders as $header) {
-                $sheet->setCellValue($col . $row, $header);
-                $sheet->getStyle($col . $row)->getFont()->setBold(true);
-                $sheet->getStyle($col . $row)->getFill()
-                    ->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('FFD3D3D3');
-                $sheet->getStyle($col . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $col++;
-            }
         }
         
         // Sort teams by result
@@ -706,101 +652,62 @@ class CampusTournamentController extends Controller
         });
         
         // Data rows
-        $row++;
+        $row = 2;
         foreach ($teams as $team) {
-            // Determine rank display text
+            // Determine rank display text and color
             $result = $team->result ?? 'participant';
-            if ($result === 'participant') {
-                $rank = 'Participant';
-            } elseif ($result === '1st') {
-                $rank = '1st';
+            $rankString = 'Participant';
+            $rankColor = null;
+
+            if ($result === '1st') {
+                $rankString = '1st';
+                $rankColor = 'FFFFCC00'; // Yellow/Gold
             } elseif ($result === '2nd') {
-                $rank = '2nd';
+                $rankString = '2nd';
+                $rankColor = 'FFC0C0C0'; // Silver
             } elseif ($result === '3rd') {
-                $rank = '3rd';
-            } else {
-                $rank = 'Participant';
+                $rankString = '3rd';
+                $rankColor = 'FFCD7F32'; // Bronze
             }
-            
-            $sheet->setCellValue('A' . $row, $rank);
-            $sheet->setCellValue('B' . $row, $team->team_name);
-            
-            // Add player data (Name, IGN, ID, Server for each player)
-            $players = $team->members->sortBy('role', SORT_REGULAR, true); // Captain first
-            $playerCol = 'C';
-            $columnIndex = 2; // Starting from column C (0=A, 1=B, 2=C)
-            
-            foreach ($players->take(5) as $member) {
+
+            // Get members sorted: Captain first, then others
+            $members = $team->members->sortBy('role', SORT_REGULAR, true);
+
+            foreach ($members as $member) {
                 $player = $member->player;
                 
-                // Player Name
-                $playerName = $player ? trim($player->name . ' ' . $player->surname) : 'Unknown';
-                $sheet->setCellValue($playerCol . $row, $playerName);
-                $playerCol++;
-                $columnIndex++;
-                
-                // ML IGN - clean and validate
-                $mlIgn = '-';
-                if ($player && !empty($player->ml_ign)) {
-                    $mlIgn = trim($player->ml_ign);
-                    // Limit length to prevent display issues
-                    if (strlen($mlIgn) > 50) {
-                        $mlIgn = substr($mlIgn, 0, 50);
-                    }
+                // Set Row Values
+                $sheet->setCellValue('A' . $row, $rankString);
+                $sheet->setCellValue('B' . $row, $team->team_name);
+                $sheet->setCellValue('C' . $row, $player ? trim($player->name . ' ' . $player->surname) : 'Unknown');
+                $sheet->setCellValue('D' . $row, $player ? $player->ml_ign : '-');
+                $sheet->setCellValue('E' . $row, $player ? $player->ml_server : '-');
+                $sheet->setCellValue('F' . $row, $player ? $player->ml_id : '-');
+
+                // Apply rank color to the rank and team name columns (A and B) as per image
+                if ($rankColor) {
+                    $sheet->getStyle('A' . $row . ':B' . $row)->getFill()
+                        ->setFillType(Fill::FILL_SOLID)
+                        ->getStartColor()->setARGB($rankColor);
                 }
-                $sheet->setCellValue($playerCol . $row, $mlIgn);
-                $playerCol++;
-                $columnIndex++;
-                
-                // ML ID - clean and validate
-                $mlId = '-';
-                if ($player && !empty($player->ml_id)) {
-                    $mlId = trim($player->ml_id);
-                }
-                $sheet->setCellValue($playerCol . $row, $mlId);
-                $playerCol++;
-                $columnIndex++;
-                
-                // ML Server - clean and validate
-                $mlServer = '-';
-                if ($player && !empty($player->ml_server)) {
-                    $mlServer = trim($player->ml_server);
-                }
-                $sheet->setCellValue($playerCol . $row, $mlServer);
-                $playerCol++;
-                $columnIndex++;
+
+                $row++;
             }
-            
-            // Color code ranks - apply to entire row for better visibility
-            if ($result === '1st') {
-                $sheet->getStyle('A' . $row)->getFill()
-                    ->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('FFFFD700'); // Gold
-            } elseif ($result === '2nd') {
-                $sheet->getStyle('A' . $row)->getFill()
-                    ->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('FFC0C0C0'); // Silver
-            } elseif ($result === '3rd') {
-                $sheet->getStyle('A' . $row)->getFill()
-                    ->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('FFCD7F32'); // Bronze
-            }
-            
-            $row++;
         }
         
-        // Auto-size columns (A to V = 22 columns: Rank, Team + 5 players × 4 fields)
-        foreach (range('A', 'V') as $col) {
+        // Auto-size columns A to F
+        foreach (range('A', 'F') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
         
-        // Disable text wrapping for all data cells to prevent display issues
-        $sheet->getStyle('A7:V' . ($row - 1))->getAlignment()->setWrapText(false);
-        
         // Add borders to the table
         $lastRow = $row - 1;
-        $sheet->getStyle('A7:V' . $lastRow)->getBorders()->getAllBorders()
+        $sheet->getStyle('A1:F' . $lastRow)->getBorders()->getAllBorders()
             ->setBorderStyle(Border::BORDER_THIN);
+        
+        // Center alignment for certain columns
+        $sheet->getStyle('A1:A' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('E1:F' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
         
         // Create filename
         $filename = 'Tournament_Results_' . str_replace(' ', '_', $tournament->school_name) . '_' . date('Y-m-d') . '.xlsx';

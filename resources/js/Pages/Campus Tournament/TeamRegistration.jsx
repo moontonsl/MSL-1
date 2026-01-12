@@ -208,7 +208,6 @@ export default function TeamRegistration() {
             // Pre-fill selected players
             setSelectedPlayers(prev => ({
                 ...prev,
-                // Captain is handled by the dependency on `captain` state above
                 captain: captain,
                 player2: memberPlayers[0] || null,
                 player3: memberPlayers[1] || null,
@@ -240,6 +239,18 @@ export default function TeamRegistration() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
+
+        const playerIds = Object.values(selectedPlayers)
+            .filter(p => p !== null)
+            .map(p => p.id);
+
+        const hasDuplicates = new Set(playerIds).size !== playerIds.length;
+        if (hasDuplicates) {
+            setModalMessage('Duplicate players found in the roster. Please ensure each player is unique.');
+            setShowErrorModal(true);
+            setIsSubmitting(false);
+            return;
+        }
 
         try {
             const url = isEditMode ? `/team-update/${existingTeam.id}` : '/team-registration';
