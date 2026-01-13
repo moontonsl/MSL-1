@@ -1830,6 +1830,13 @@ Route::get('/codashop/init-payment', function () {
 })->name('codashop.init-payment.get');
 Route::post('/codashop/init-payment', [\App\Http\Controllers\CodashopController::class, 'initPayment'])->name('codashop.init-payment');
 
+// Community Routes
+Route::get('/community/create', [\App\Http\Controllers\CommunityController::class, 'create'])->name('community.create');
+Route::post('/community', [\App\Http\Controllers\CommunityController::class, 'store'])->name('community.store');
+Route::get('/api/community/schools', [\App\Http\Controllers\CommunityController::class, 'getSchoolsByIsland'])->name('community.getSchools');
+Route::get('/api/community/provinces', [\App\Http\Controllers\CommunityController::class, 'getProvincesByRegion'])->name('community.getProvinces');
+Route::get('/api/community/municipalities', [\App\Http\Controllers\CommunityController::class, 'getMunicipalitiesByProvince'])->name('community.getMunicipalities');
+
 // Custom Event Canonical Routes - Handle dynamic event links like /NewEvent
 // This catch-all route should be placed at the very end to avoid conflicts with other routes
 Route::get('/{canonical}', function ($canonical) {
@@ -1845,3 +1852,7 @@ Route::get('/{canonical}', function ($canonical) {
     // If no event found, return 404
     abort(404, 'Event not found');
 })->where('canonical', '^[a-zA-Z0-9\-_]+$'); // Only match alphanumeric, hyphens, underscores
+
+
+
+
