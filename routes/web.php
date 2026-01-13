@@ -1022,6 +1022,11 @@ Route::get('/FFFreedomWall', function () {
     return Inertia::render('FF25/FFFreedomWall');
 })->name('FFFreedomWall');
 
+//FFFreedomWall PAGE ROUTES
+Route::get('/M7WFRegistration', function () {
+    return Inertia::render('M7/M7WFRegistration');
+})->name('M7WFRegistration');
+
 
 
 
