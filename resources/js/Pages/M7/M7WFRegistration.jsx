@@ -9,9 +9,9 @@ import { Link } from "@inertiajs/react";
 import { Info } from "lucide-react";
 
 const regionsData = {
-  "Region 1": ["Region 1 - Venue 1", "Region 1 - Venue 2", "Region 1 - Venue 3"],
-  "Region 2": ["Region 2 - Venue 1", "Region 2 - Venue 2"],
-  "Region 3": ["Region 3 - Venue 1", "Region 3 - Venue 2", "Region 3 - Venue 3"],
+  "Luzon": ["Region 1 - Venue 1", "Region 1 - Venue 2", "Region 1 - Venue 3"],
+  "Visayas": ["Region 2 - Venue 1", "Region 2 - Venue 2"],
+  "Mindanao": ["Region 3 - Venue 1", "Region 3 - Venue 2", "Region 3 - Venue 3"],
 };
 const eventDatesData = ["2026-02-20", "2026-03-05", "2026-03-20"];
 
@@ -54,14 +54,18 @@ export default function M7WFRegistration() {
 
 
   // Update handleChange to reset venue when region changes
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
+const handleChange = (e) => {
+  const { name, value } = e.target;
   let newValue = value;
 
-  // Allow numbers only for MLBB fields
-  if (name === "mlbbId" || name === "mlbbServer") {
-    newValue = value.replace(/\D/g, "");
+  // MLBB USER ID → numbers only, max 12 digits
+  if (name === "mlbbId") {
+    newValue = value.replace(/\D/g, "").slice(0, 12);
+  }
+
+  // MLBB SERVER → numbers only, max 6 digits
+  if (name === "mlbbServer") {
+    newValue = value.replace(/\D/g, "").slice(0, 6);
   }
 
   setForm((prev) => {
@@ -267,24 +271,22 @@ export default function M7WFRegistration() {
               </label>
               <div className="relative bg-black/75 rounded-xl p-3 flex items-center gap-3 border border-[#fff4d0]">
                 <Calendar className="text-[#fff4d0] w-5 h-5" />
-                <select
+                <input
+                  type="date"
                   name="eventDate"
                   value={form.eventDate}
                   onChange={handleChange}
-                  className="bg-transparent w-full outline-none text-white appearance-none"
-                >
-                  <option value="" disabled className="text-black">
-                    Select event date
-                  </option>
-                  {eventDatesData.map((dt, idx) => (
-                    <option key={idx} value={dt} className="text-black">
-                      {dt}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-5 text-[#fff4d0] pointer-events-none" />
+                  min="2026-02-01"
+                  max="2026-03-31"
+                  className="
+                    bg-transparent w-full outline-none text-white
+                    [color-scheme:dark]
+                  "
+                />
               </div>
-              {errors.eventDate && <p className="text-red-400 text-sm mt-1">{errors.eventDate}</p>}
+              {errors.eventDate && (
+                <p className="text-red-400 text-sm mt-1">{errors.eventDate}</p>
+              )}
             </div>
 
             {/* EMAIL */}
