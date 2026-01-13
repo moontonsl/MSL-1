@@ -18,10 +18,10 @@ export default function PhilippinesMap({ className, hoveredMapCode }) {
                         cursor: pointer;
                     }
                     .philippines-map-svg path:hover {
-                        fill: #fca5a5; /* Red-300 on local hover */
+                        fill: #ffe710ff; /* Red-300 on local hover */
                     }
                     .philippines-map-svg .highlighted {
-                        fill: #ef4444 !important; /* Red-500 for active highlight */
+                        fill: #ffe710ff !important; /* Red-500 for active highlight */
                         filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.6));
                         z-index: 50;
                         stroke: #ffffff;
