@@ -186,7 +186,7 @@ const handleChange = (e) => {
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
             <div className="text-center">
               <h2 className="font-bold mb-1 text-[20px] sm:text-[26px] lg:text-[32px] text-[#fff4d0]">
-                M7WF REGISTRATION
+                M7 WATCH FEST REGISTRATION
               </h2>
             </div>
 
