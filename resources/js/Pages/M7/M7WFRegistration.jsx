@@ -276,7 +276,7 @@ const handleChange = (e) => {
                   name="eventDate"
                   value={form.eventDate}
                   onChange={handleChange}
-                  min="2026-02-01"
+                  min="2026-01-01"
                   max="2026-03-31"
                   className="
                     bg-transparent w-full outline-none text-white
