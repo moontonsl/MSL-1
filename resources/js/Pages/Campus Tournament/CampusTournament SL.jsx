@@ -54,6 +54,7 @@ const CampusTournament = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [submitModalData, setSubmitModalData] = useState(null);
+  const [isEditingResults, setIsEditingResults] = useState(false); // New state for edit mode
 
   // Transform real tournament data to match the expected format
   const transformedTournaments = useMemo(() => {
@@ -255,6 +256,7 @@ const CampusTournament = () => {
 
   const handleTournamentChange = (tournamentId) => {
     setSelectedTournamentId(tournamentId);
+    setIsEditingResults(false); // Reset edit mode when changing tournament
   };
 
   const handleSetResult = (tournamentId, teamId, result) => {
@@ -381,8 +383,8 @@ const CampusTournament = () => {
     const thirdPlaceTeam = thirdPlaceTeams[0];
     setSubmitModalData({
       type: 'confirm',
-      title: 'Confirm Results Submission',
-      message: `Are you sure you want to submit the results?\n\n1st Place: ${firstPlaceTeam.name}\n2nd Place: ${secondPlaceTeam.name}\n3rd Place: ${thirdPlaceTeam.name}\n\nThis action cannot be undone.`,
+      title: isEditingResults ? 'Confirm Update Results' : 'Confirm Results Submission',
+      message: `Are you sure you want to ${isEditingResults ? 'update' : 'submit'} the results?\n\n1st Place: ${firstPlaceTeam.name}\n2nd Place: ${secondPlaceTeam.name}\n3rd Place: ${thirdPlaceTeam.name}\n\n${isEditingResults ? 'This will update the existing rankings.' : 'This action cannot be undone.'}`,
       showCancel: true,
       tournamentId: tournamentId,
       tournament: tournament
@@ -403,7 +405,12 @@ const CampusTournament = () => {
         result: team.result
       }));
 
-      const response = await fetch(`/campus-tournaments/${submitModalData.tournamentId}/submit-results`, {
+      // Determine endpoint based on whether we are editing or submitting new
+      const endpoint = isEditingResults
+        ? `/campus-tournaments/${submitModalData.tournamentId}/update-results`
+        : `/campus-tournaments/${submitModalData.tournamentId}/submit-results`;
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -424,11 +431,14 @@ const CampusTournament = () => {
           )
         );
 
+        // Turn off edit mode
+        setIsEditingResults(false);
+
         // Show success modal
         setSubmitModalData({
           type: 'success',
-          title: 'Results Submitted Successfully!',
-          message: 'Tournament results have been submitted and cannot be changed.',
+          title: isEditingResults ? 'Results Updated Successfully!' : 'Results Submitted Successfully!',
+          message: isEditingResults ? 'Tournament results have been updated.' : 'Tournament results have been submitted and cannot be changed.',
           showCancel: false
         });
         setShowSubmitModal(true);
@@ -553,6 +563,47 @@ const CampusTournament = () => {
                 </div>
               </div>
 
+              {/* Rejected Requests Section */}
+              <div className="w-full max-w-7xl mx-auto bg-neutral-800/80 rounded-2xl border border-red-900/30 p-4 md:p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-white font-montserrat font-semibold text-lg md:text-xl">Rejected Requests</h2>
+                    <span className="px-2 py-0.5 rounded text-[10px] bg-red-500/20 text-red-300 border border-red-500/30">Not Entertained</span>
+                  </div>
+                  <span className="text-white/70 text-sm">{localTournaments.filter(t => t.status === 'rejected').length} rejected</span>
+                </div>
+                <div className="space-y-3">
+                  {localTournaments.filter(t => t.status === 'rejected').length > 0 ? (
+                    localTournaments
+                      .filter(t => t.status === 'rejected')
+                      .sort((a, b) => new Date(b.created_at || b.id) - new Date(a.created_at || a.id))
+                      .map((t) => (
+                        <div key={t.id} className="flex flex-col md:flex-row md:items-center justify-between bg-neutral-900/40 border border-red-500/20 rounded-xl px-4 py-3 gap-3">
+                          <div className="flex flex-col">
+                            <div className="text-white font-montserrat text-sm md:text-base">{(t.school_name || '').toUpperCase()} TOURNAMENT</div>
+                            <div className="text-white/60 text-xs md:text-sm">{formatDate(t.start_date)} - {formatDate(t.end_date)}</div>
+                            {t.rejection_reason && (
+                              <div className="text-red-300/80 text-xs mt-1 italic">Reason: {t.rejection_reason}</div>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 self-end md:self-auto">
+                            <span className="px-2 py-1 rounded-md text-xs font-montserrat bg-red-500/20 text-red-300 border border-red-400/30">Rejected</span>
+                            <button
+                              type="button"
+                              onClick={() => openDeleteModal(t)}
+                              className="bg-red-600 hover:bg-red-700 text-white font-montserrat text-xs font-semibold rounded-lg px-3 py-1.5"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                  ) : (
+                    <div className="text-white/60 text-sm">No rejected tournament requests.</div>
+                  )}
+                </div>
+              </div>
+
               <div className="flex flex-col gap-4">
                 {/* Tournament Selector Dropdown */}
                 {transformedTournaments.filter(t => t.status === 'approved').length > 1 && (
@@ -645,8 +696,8 @@ const CampusTournament = () => {
                                     <select
                                       value={team.result || 'participant'}
                                       onChange={(e) => handleSetResult(selectedTournament.id, team.id, e.target.value)}
-                                      disabled={selectedTournament.results_submitted}
-                                      className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[128px] ${selectedTournament.results_submitted ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                      disabled={selectedTournament.results_submitted && !isEditingResults}
+                                      className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[128px] ${selectedTournament.results_submitted && !isEditingResults ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                       <option className="text-black" value="participant">Participant</option>
                                       <option className="text-black" value="1st">1st</option>
@@ -665,8 +716,8 @@ const CampusTournament = () => {
                                     <select
                                       value={team.result || 'participant'}
                                       onChange={(e) => handleSetResult(selectedTournament.id, team.id, e.target.value)}
-                                      disabled={selectedTournament.results_submitted}
-                                      className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[112px] ${selectedTournament.results_submitted ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                      disabled={selectedTournament.results_submitted && !isEditingResults}
+                                      className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[112px] ${selectedTournament.results_submitted && !isEditingResults ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                       <option className="text-black" value="participant">Participant</option>
                                       <option className="text-black" value="1st">1st</option>
@@ -710,6 +761,34 @@ const CampusTournament = () => {
                                   </svg>
                                   Export to Excel
                                 </a>
+                                {isEditingResults ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSubmitResults(selectedTournament.id)}
+                                      disabled={isSubmitting}
+                                      className="bg-[#F2C21A] text-black font-montserrat font-semibold rounded-lg px-5 py-2 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] hover:bg-[#d4a817] transition-colors"
+                                    >
+                                      {isSubmitting ? 'Saving...' : 'Save Changes'}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setIsEditingResults(false)}
+                                      disabled={isSubmitting}
+                                      className="bg-gray-600 text-white font-montserrat font-semibold rounded-lg px-5 py-2 hover:bg-gray-700 transition-colors"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsEditingResults(true)}
+                                    className="bg-blue-600 text-white font-montserrat font-semibold rounded-lg px-5 py-2 shadow-md hover:bg-blue-700 transition-colors"
+                                  >
+                                    Edit Results
+                                  </button>
+                                )}
                               </div>
                             ) : (
                               <button
@@ -937,8 +1016,8 @@ const CampusTournament = () => {
                   <button
                     onClick={handleCloseSubmitModal}
                     className={`px-6 py-2 font-montserrat text-sm font-semibold rounded-lg transition-colors ${submitModalData.type === 'error'
-                        ? 'bg-red-500 hover:bg-red-600 text-white'
-                        : 'bg-green-500 hover:bg-green-600 text-white'
+                      ? 'bg-red-500 hover:bg-red-600 text-white'
+                      : 'bg-green-500 hover:bg-green-600 text-white'
                       }`}
                   >
                     OK
@@ -1006,7 +1085,7 @@ const CampusTournament = () => {
           </div>
         )}
       </div>
-    </MainLayout>
+    </MainLayout >
   );
 };
 

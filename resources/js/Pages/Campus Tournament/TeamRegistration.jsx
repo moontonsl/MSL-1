@@ -64,7 +64,7 @@ function PlayerSearchInput({ label, placeholder, subtext, value, onChange, onSel
             {subtext && (
                 <p className="text-[10px] text-white/60 mt-1 font-['Montserrat']">{subtext}</p>
             )}
-            
+
             {/* Search Results Dropdown */}
             {showResults && (
                 <div className="absolute top-full left-0 right-0 z-10 mt-1 bg-neutral-800 border border-white/20 rounded-lg shadow-lg max-h-48 overflow-y-auto">
@@ -116,34 +116,34 @@ function InputGroup({ label, placeholder, subtext, value, onChange }) {
 export default function TeamRegistration() {
     const { auth } = usePage().props;
     const user = auth.user;
-    
+
     // Get captain data from session storage
     const [captain, setCaptain] = useState(null);
     const [isEditMode, setIsEditMode] = useState(false);
     const [existingTeam, setExistingTeam] = useState(null);
-    
+
     useEffect(() => {
         try {
             const captainData = sessionStorage.getItem('campusTournamentCaptain');
             const editTeamData = sessionStorage.getItem('campusTournamentEditTeam');
-            
+
             if (captainData) {
                 setCaptain(JSON.parse(captainData));
                 // Clear the session storage after reading
                 sessionStorage.removeItem('campusTournamentCaptain');
             }
-            
+
             if (editTeamData) {
                 const teamData = JSON.parse(editTeamData);
                 setExistingTeam(teamData);
                 setIsEditMode(true);
-                
+
                 // Find captain from team members
                 const captainMember = teamData.members?.find(member => member.role === 'captain');
                 if (captainMember?.player) {
                     setCaptain(captainMember.player);
                 }
-                
+
                 // Clear the session storage after reading
                 sessionStorage.removeItem('campusTournamentEditTeam');
             }
@@ -153,7 +153,7 @@ export default function TeamRegistration() {
             setIsLoading(false);
         }
     }, []);
-    
+
     const [formData, setFormData] = useState({
         captain: '',
         discordId: '',
@@ -163,7 +163,7 @@ export default function TeamRegistration() {
         player4: '',
         player5: ''
     });
-    
+
     const [selectedPlayers, setSelectedPlayers] = useState({
         captain: null,
         player2: null,
@@ -171,7 +171,7 @@ export default function TeamRegistration() {
         player4: null,
         player5: null
     });
-    
+
     // Update form data when captain is loaded or when editing existing team
     useEffect(() => {
         if (captain) {
@@ -184,34 +184,39 @@ export default function TeamRegistration() {
                 captain: captain
             }));
         }
-        
+
         // Pre-fill form data when editing existing team
         if (isEditMode && existingTeam) {
+            // Filter members by role to ensure correct mapping regardless of array order
+            // This prevents the captain (who might be at index 0, 2, etc.) from being mapped to a "Member" slot
+            const membersList = existingTeam.members || [];
+            const memberPlayers = membersList
+                .filter(m => m.role === 'member')
+                .map(m => m.player);
+
             setFormData(prev => ({
                 ...prev,
                 discordId: existingTeam.discord_id || '',
                 teamName: existingTeam.team_name || '',
-                player2: existingTeam.members?.[1]?.player?.username || '',
-                player3: existingTeam.members?.[2]?.player?.username || '',
-                player4: existingTeam.members?.[3]?.player?.username || '',
-                player5: existingTeam.members?.[4]?.player?.username || ''
+                // Map the found members to slots 2-5
+                player2: memberPlayers[0]?.username || '',
+                player3: memberPlayers[1]?.username || '',
+                player4: memberPlayers[2]?.username || '',
+                player5: memberPlayers[3]?.username || ''
             }));
-            
+
             // Pre-fill selected players
-            if (existingTeam.members) {
-                const members = existingTeam.members;
-                setSelectedPlayers(prev => ({
-                    ...prev,
-                    captain: captain,
-                    player2: members[1]?.player || null,
-                    player3: members[2]?.player || null,
-                    player4: members[3]?.player || null,
-                    player5: members[4]?.player || null
-                }));
-            }
+            setSelectedPlayers(prev => ({
+                ...prev,
+                captain: captain,
+                player2: memberPlayers[0] || null,
+                player3: memberPlayers[1] || null,
+                player4: memberPlayers[2] || null,
+                player5: memberPlayers[3] || null
+            }));
         }
     }, [captain, isEditMode, existingTeam]);
-    
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [showErrorModal, setShowErrorModal] = useState(false);
@@ -234,11 +239,23 @@ export default function TeamRegistration() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
-        
+
+        const playerIds = Object.values(selectedPlayers)
+            .filter(p => p !== null)
+            .map(p => p.id);
+
+        const hasDuplicates = new Set(playerIds).size !== playerIds.length;
+        if (hasDuplicates) {
+            setModalMessage('Duplicate players found in the roster. Please ensure each player is unique.');
+            setShowErrorModal(true);
+            setIsSubmitting(false);
+            return;
+        }
+
         try {
             const url = isEditMode ? `/team-update/${existingTeam.id}` : '/team-registration';
             const method = isEditMode ? 'PUT' : 'POST';
-            
+
             const response = await fetch(url, {
                 method: method,
                 headers: {
@@ -347,15 +364,15 @@ export default function TeamRegistration() {
                             alt="SL Logo"
                             className="w-16 h-16 md:w-20 md:h-20 object-contain select-none pointer-events-none"
                         />
-                            <h1 className="text-white font-bold font-['Montserrat'] tracking-tight text-[24px] md:text-[32px] lg:text-[40px]">
-                                CAMPUS TOURNAMENT
-                            </h1>
-                            <p className="text-white/80 font-['Montserrat'] text-[14px] md:text-[16px] lg:text-[16px] text-center max-w-2xl">
-                                {isEditMode 
-                                    ? "Edit your team details for the ongoing Campus Tournament."
-                                    : "Campus Tournament is a local campus event where student players compete every two weeks for diamond rewards."
-                                }
-                            </p>
+                        <h1 className="text-white font-bold font-['Montserrat'] tracking-tight text-[24px] md:text-[32px] lg:text-[40px]">
+                            CAMPUS TOURNAMENT
+                        </h1>
+                        <p className="text-white/80 font-['Montserrat'] text-[14px] md:text-[16px] lg:text-[16px] text-center max-w-2xl">
+                            {isEditMode
+                                ? "Edit your team details for the ongoing Campus Tournament."
+                                : "Campus Tournament is a local campus event where student players compete every two weeks for diamond rewards."
+                            }
+                        </p>
                     </div>
 
                     <div className="bg-neutral-900/70 rounded-xl border border-white/10 shadow-xl backdrop-blur p-4 md:p-6">
@@ -363,14 +380,14 @@ export default function TeamRegistration() {
                             {(captain?.university || 'SCHOOL').toUpperCase()}
                         </div>
 
-                            <div className="bg-yellow-400/15 border border-yellow-400/40 rounded-md p-3 md:p-4 mb-4">
-                                <p className="text-[12px] md:text-sm font-semibold text-yellow-300 mb-1">Important Requirements:</p>
-                                <ul className="list-disc list-inside text-[11px] md:text-[12px] text-yellow-100/90 space-y-1">
-                                    <li><strong>Verification Required:</strong> All team members must be verified users to participate in campus tournaments.</li>
-                                    <li>Each team may include only one senior high school student in their roster.</li>
-                                 
-                                </ul>
-                            </div>
+                        <div className="bg-yellow-400/15 border border-yellow-400/40 rounded-md p-3 md:p-4 mb-4">
+                            <p className="text-[12px] md:text-sm font-semibold text-yellow-300 mb-1">Important Requirements:</p>
+                            <ul className="list-disc list-inside text-[11px] md:text-[12px] text-yellow-100/90 space-y-1">
+                                <li><strong>Verification Required:</strong> All team members must be verified users to participate in campus tournaments.</li>
+                                <li>Each team may include only one senior high school student in their roster.</li>
+
+                            </ul>
+                        </div>
 
                         <form className="space-y-4" onSubmit={handleSubmit}>
 
@@ -404,57 +421,57 @@ export default function TeamRegistration() {
                             />
 
                             <div className="pt-2 space-y-3">
-                                    <div>
-                                        <h3 className="text-white/90 font-semibold text-sm mb-1">Player 2</h3>
-                                        <PlayerSearchInput
-                                            placeholder="Search the MSL Username of your teammate"
-                                            subtext="* Player must be from your school, verified, and have an MSL account"
-                                            value={formData.player2}
-                                            onChange={(value) => setFormData(prev => ({ ...prev, player2: value }))}
-                                            onSelect={(player) => handlePlayerSelect('player2', player)}
-                                            excludeIds={getExcludeIds()}
-                                            university={captain?.university || user?.university}
-                                        />
-                                    </div>
+                                <div>
+                                    <h3 className="text-white/90 font-semibold text-sm mb-1">Player 2</h3>
+                                    <PlayerSearchInput
+                                        placeholder="Search the MSL Username of your teammate"
+                                        subtext="* Player must be from your school, verified, and have an MSL account"
+                                        value={formData.player2}
+                                        onChange={(value) => setFormData(prev => ({ ...prev, player2: value }))}
+                                        onSelect={(player) => handlePlayerSelect('player2', player)}
+                                        excludeIds={getExcludeIds()}
+                                        university={captain?.university || user?.university}
+                                    />
+                                </div>
 
-                                    <div>
-                                        <h3 className="text-white/90 font-semibold text-sm mb-1">Player 3</h3>
-                                        <PlayerSearchInput
-                                            placeholder="Search the MSL Username of your teammate"
-                                            subtext="* Player must be from your school, verified, and have an MSL account"
-                                            value={formData.player3}
-                                            onChange={(value) => setFormData(prev => ({ ...prev, player3: value }))}
-                                            onSelect={(player) => handlePlayerSelect('player3', player)}
-                                            excludeIds={getExcludeIds()}
-                                            university={captain?.university || user?.university}
-                                        />
-                                    </div>
+                                <div>
+                                    <h3 className="text-white/90 font-semibold text-sm mb-1">Player 3</h3>
+                                    <PlayerSearchInput
+                                        placeholder="Search the MSL Username of your teammate"
+                                        subtext="* Player must be from your school, verified, and have an MSL account"
+                                        value={formData.player3}
+                                        onChange={(value) => setFormData(prev => ({ ...prev, player3: value }))}
+                                        onSelect={(player) => handlePlayerSelect('player3', player)}
+                                        excludeIds={getExcludeIds()}
+                                        university={captain?.university || user?.university}
+                                    />
+                                </div>
 
-                                    <div>
-                                        <h3 className="text-white/90 font-semibold text-sm mb-1">Player 4</h3>
-                                        <PlayerSearchInput
-                                            placeholder="Search the MSL Username of your teammate"
-                                            subtext="* Player must be from your school, verified, and have an MSL account"
-                                            value={formData.player4}
-                                            onChange={(value) => setFormData(prev => ({ ...prev, player4: value }))}
-                                            onSelect={(player) => handlePlayerSelect('player4', player)}
-                                            excludeIds={getExcludeIds()}
-                                            university={captain?.university || user?.university}
-                                        />
-                                    </div>
+                                <div>
+                                    <h3 className="text-white/90 font-semibold text-sm mb-1">Player 4</h3>
+                                    <PlayerSearchInput
+                                        placeholder="Search the MSL Username of your teammate"
+                                        subtext="* Player must be from your school, verified, and have an MSL account"
+                                        value={formData.player4}
+                                        onChange={(value) => setFormData(prev => ({ ...prev, player4: value }))}
+                                        onSelect={(player) => handlePlayerSelect('player4', player)}
+                                        excludeIds={getExcludeIds()}
+                                        university={captain?.university || user?.university}
+                                    />
+                                </div>
 
-                                    <div>
-                                        <h3 className="text-white/90 font-semibold text-sm mb-1">Player 5</h3>
-                                        <PlayerSearchInput
-                                            placeholder="Search the MSL Username of your teammate"
-                                            subtext="* Player must be from your school, verified, and have an MSL account"
-                                            value={formData.player5}
-                                            onChange={(value) => setFormData(prev => ({ ...prev, player5: value }))}
-                                            onSelect={(player) => handlePlayerSelect('player5', player)}
-                                            excludeIds={getExcludeIds()}
-                                            university={captain?.university || user?.university}
-                                        />
-                                    </div>
+                                <div>
+                                    <h3 className="text-white/90 font-semibold text-sm mb-1">Player 5</h3>
+                                    <PlayerSearchInput
+                                        placeholder="Search the MSL Username of your teammate"
+                                        subtext="* Player must be from your school, verified, and have an MSL account"
+                                        value={formData.player5}
+                                        onChange={(value) => setFormData(prev => ({ ...prev, player5: value }))}
+                                        onSelect={(player) => handlePlayerSelect('player5', player)}
+                                        excludeIds={getExcludeIds()}
+                                        university={captain?.university || user?.university}
+                                    />
+                                </div>
                             </div>
 
                             <div className="flex justify-center pt-2">
@@ -504,16 +521,16 @@ export default function TeamRegistration() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
-                            
+
                             {/* Success Message */}
                             <h3 className="font-montserrat text-xl md:text-2xl font-semibold mb-3 text-green-400">
                                 Success!
                             </h3>
-                            
+
                             <p className="font-montserrat text-sm md:text-base text-white/80 mb-6 leading-relaxed">
                                 {modalMessage}
                             </p>
-                            
+
                             {/* Close Button */}
                             <button
                                 onClick={() => {
@@ -542,16 +559,16 @@ export default function TeamRegistration() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </div>
-                            
+
                             {/* Error Message */}
                             <h3 className="font-montserrat text-xl md:text-2xl font-semibold mb-3 text-red-400">
                                 Error
                             </h3>
-                            
+
                             <p className="font-montserrat text-sm md:text-base text-white/80 mb-6 leading-relaxed">
                                 {modalMessage}
                             </p>
-                            
+
                             {/* Close Button */}
                             <button
                                 onClick={() => setShowErrorModal(false)}
