@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { FaNewspaper, FaCalendar, FaUsers, FaTachometerAlt, FaSignOutAlt, FaBed, FaBook, FaConciergeBell, FaCog, FaTh, FaEllipsisH, FaImages, FaGamepad, FaUserGraduate, FaUserShield, FaCamera } from 'react-icons/fa';
+import { FaNewspaper, FaCalendar, FaUsers, FaTachometerAlt, FaSignOutAlt, FaBed, FaBook, FaConciergeBell, FaCog, FaTh, FaEllipsisH, FaImages, FaGamepad, FaUserGraduate, FaUserShield, FaCamera, FaTrophy } from 'react-icons/fa';
 
 export default function AdminLayout({ children }) {
     const { auth } = usePage().props;
@@ -16,6 +16,7 @@ export default function AdminLayout({ children }) {
         { name: 'Carousel Management', href: route('admin.carousel'), routeName: 'admin.carousel', icon: FaImages },
         { name: 'Buffs and Support', href: route('admin.event-photos'), routeName: 'admin.event-photos', icon: FaCamera },
         { name: 'MSL Event Management', href: route('admin.msl-events.index'), routeName: 'admin.msl-events.index', icon: FaGamepad },
+        { name: 'MCC Season Management', href: route('admin.mcc-seasons.index'), routeName: 'admin.mcc-seasons.index', icon: FaTrophy },
         { name: 'Event Calendar', href: route('admin.events'), routeName: 'admin.events', icon: FaCalendar },
         { name: 'Footer Management', href: route('admin.footer'), routeName: 'admin.footer', icon: FaCog },
         { name: 'Settings', href: route('admin.settings'), routeName: 'admin.settings', icon: FaCog },

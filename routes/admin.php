@@ -98,6 +98,21 @@ Route::middleware(['auth:admin', 'admin'])->group(function () {
     Route::post('/admin/users/{user}/promote-sl', [AdminController::class, 'promoteToSL'])->name('admin.users.promote-sl');
     Route::post('/admin/users/{user}/demote-sl', [AdminController::class, 'demoteFromSL'])->name('admin.users.demote-sl');
 
+    // MCC Season Management
+    Route::resource('admin/mcc-seasons', \App\Http\Controllers\Admin\MCCSeasonController::class)->names([
+        'index' => 'admin.mcc-seasons.index',
+        'create' => 'admin.mcc-seasons.create',
+        'store' => 'admin.mcc-seasons.store',
+        'show' => 'admin.mcc-seasons.show',
+        'edit' => 'admin.mcc-seasons.edit',
+        'update' => 'admin.mcc-seasons.update',
+        'destroy' => 'admin.mcc-seasons.destroy',
+    ]);
+    Route::post('/admin/mcc-seasons/{id}/toggle-active', [\App\Http\Controllers\Admin\MCCSeasonController::class, 'toggleActive'])->name('admin.mcc-seasons.toggle-active');
+    Route::post('/admin/mcc-seasons/upload-image', [\App\Http\Controllers\Admin\MCCSeasonController::class, 'uploadImage'])->name('admin.mcc-seasons.upload-image');
+    Route::post('/admin/mcc-seasons/{id}/content', [\App\Http\Controllers\Admin\MCCSeasonController::class, 'updateContent'])->name('admin.mcc-seasons.update-content');
+    Route::delete('/admin/mcc-seasons/{seasonId}/content/{contentId}', [\App\Http\Controllers\Admin\MCCSeasonController::class, 'deleteContent'])->name('admin.mcc-seasons.delete-content');
+
     // Regional Admin Management
     Route::get('/admin/regional-admin-management', [AdminController::class, 'regionalAdminManagement'])->name('admin.regional-admin-management');
     Route::post('/admin/users/{user}/promote-regional-admin', [AdminController::class, 'promoteToRegionalAdmin'])->name('admin.users.promote-regional-admin');

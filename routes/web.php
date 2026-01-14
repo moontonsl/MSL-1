@@ -1167,21 +1167,14 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
 
 // MCC Routes
 Route::prefix('MCC')->name('MCC.')->group(function () {
-    Route::get('/', function () {
-        return redirect('/MCC/S2'); // Default to Season 2
-    })->name('main');
+    Route::get('/', [\App\Http\Controllers\MCCSeasonPublicController::class, 'redirectToActive'])->name('main');
     
-    Route::get('/S2', function () {
-        return Inertia::render('MCC Season 2/MCC Season 2');
-    })->name('season2');
-    
-    Route::get('/S1', function () {
-        return Inertia::render('MCC Season 2/MCC Season 1');
-    })->name('season1');
-
     Route::get('/calendar', function () {
         return Inertia::render('MCC/Calendar/index');
     })->name('calendar');
+
+    // Dynamic season route - must be last to avoid conflicts
+    Route::get('/{slug}', [\App\Http\Controllers\MCCSeasonPublicController::class, 'show'])->name('season');
 
     // Voting Routes
     Route::prefix('voting')->name('voting.')->group(function () {
