@@ -1,15 +1,15 @@
 // resources/js/Layouts/MainLayout.jsx
-import {Footer, Header} from '@/Components/index.js';
-import {Toaster} from 'react-hot-toast';
+import { Footer, Header } from '@/Components/index.js';
+import { Toaster } from 'react-hot-toast';
 
-export default function MainLayout({children}) {
+export default function MainLayout({ children, ...props }) {
     return (
-        <div className="app">
-            <Header/>
+        <div className="app" {...props}>
+            <Header />
             <main>
                 {children}
             </main>
-            <Footer/>
+            <Footer />
             <Toaster
                 position="top-right"
                 toastOptions={{

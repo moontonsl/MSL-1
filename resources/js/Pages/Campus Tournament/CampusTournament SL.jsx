@@ -563,6 +563,47 @@ const CampusTournament = () => {
                 </div>
               </div>
 
+              {/* Rejected Requests Section */}
+              <div className="w-full max-w-7xl mx-auto bg-neutral-800/80 rounded-2xl border border-red-900/30 p-4 md:p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-white font-montserrat font-semibold text-lg md:text-xl">Rejected Requests</h2>
+                    <span className="px-2 py-0.5 rounded text-[10px] bg-red-500/20 text-red-300 border border-red-500/30">Not Entertained</span>
+                  </div>
+                  <span className="text-white/70 text-sm">{localTournaments.filter(t => t.status === 'rejected').length} rejected</span>
+                </div>
+                <div className="space-y-3">
+                  {localTournaments.filter(t => t.status === 'rejected').length > 0 ? (
+                    localTournaments
+                      .filter(t => t.status === 'rejected')
+                      .sort((a, b) => new Date(b.created_at || b.id) - new Date(a.created_at || a.id))
+                      .map((t) => (
+                        <div key={t.id} className="flex flex-col md:flex-row md:items-center justify-between bg-neutral-900/40 border border-red-500/20 rounded-xl px-4 py-3 gap-3">
+                          <div className="flex flex-col">
+                            <div className="text-white font-montserrat text-sm md:text-base">{(t.school_name || '').toUpperCase()} TOURNAMENT</div>
+                            <div className="text-white/60 text-xs md:text-sm">{formatDate(t.start_date)} - {formatDate(t.end_date)}</div>
+                            {t.rejection_reason && (
+                              <div className="text-red-300/80 text-xs mt-1 italic">Reason: {t.rejection_reason}</div>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 self-end md:self-auto">
+                            <span className="px-2 py-1 rounded-md text-xs font-montserrat bg-red-500/20 text-red-300 border border-red-400/30">Rejected</span>
+                            <button
+                              type="button"
+                              onClick={() => openDeleteModal(t)}
+                              className="bg-red-600 hover:bg-red-700 text-white font-montserrat text-xs font-semibold rounded-lg px-3 py-1.5"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                  ) : (
+                    <div className="text-white/60 text-sm">No rejected tournament requests.</div>
+                  )}
+                </div>
+              </div>
+
               <div className="flex flex-col gap-4">
                 {/* Tournament Selector Dropdown */}
                 {transformedTournaments.filter(t => t.status === 'approved').length > 1 && (
