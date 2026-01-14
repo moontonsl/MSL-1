@@ -39,6 +39,7 @@ use App\Http\Controllers\GoogleSheetMCCS2Controller;
 use App\Http\Controllers\Admin\DuplicateUsernameController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\CodashopController;
+use App\Http\Controllers\EventRegistrationController;
 
 Route::get('/', function () {
     return Inertia::render('Home/Home', [
@@ -600,6 +601,8 @@ Route::get('/check-username-tournament', function (\Illuminate\Http\Request $req
 
 // FF25 attendance username checker
 Route::get('/ff25/check-username', [FF25AttendanceController::class, 'checkUsername'])->name('ff25.check-username');
+
+Route::post('/event-registration', [EventRegistrationController::class, 'store'])->name('event.registration.store');
 
 Route::post('/validate-credentials', function (\Illuminate\Http\Request $request) {
     $request->validate([
