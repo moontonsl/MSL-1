@@ -1,7 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 const UserProfileModal = ({ isOpen, onClose, user }) => {
+    const [showAttachmentModal, setShowAttachmentModal] = useState(false);
+    const [attachmentUrl, setAttachmentUrl] = useState('');
+    const [fileExists, setFileExists] = useState(true);
+    const [zoomLevel, setZoomLevel] = useState(1);
+    const [pan, setPan] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
     if (!isOpen || !user) return null;
 
     const handleViewAttachment = async (proofOfEnrollment) => {
@@ -10,19 +19,68 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
             return;
         }
 
+        const fullUrl = `/storage/${proofOfEnrollment}`;
+        
+        // Check if file exists on server
         try {
-            const response = await fetch(`/api/view-attachment/${proofOfEnrollment}`);
+            const response = await fetch(fullUrl, { method: 'HEAD' });
             if (response.ok) {
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                window.open(url, '_blank');
+                setFileExists(true);
+                setAttachmentUrl(fullUrl);
+                setShowAttachmentModal(true);
             } else {
-                alert('Error viewing attachment');
+                setFileExists(false);
+                setAttachmentUrl(fullUrl);
+                setShowAttachmentModal(true);
             }
         } catch (error) {
-            console.error('Error viewing attachment:', error);
-            alert('Error viewing attachment');
+            console.error('Error checking file:', error);
+            setFileExists(false);
+            setAttachmentUrl(fullUrl);
+            setShowAttachmentModal(true);
         }
+    };
+
+    const closeAttachmentModal = () => {
+        setShowAttachmentModal(false);
+        setAttachmentUrl('');
+        // Reset zoom and pan when closing modal
+        setZoomLevel(1);
+        setPan({ x: 0, y: 0 });
+        setIsDragging(false);
+        setFileExists(true);
+    };
+
+    // Zoom and Pan handlers for images
+    const handleWheel = (e) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.25 : 0.25;
+        setZoomLevel(prev => {
+            const newZoom = Math.max(0.5, Math.min(3, prev + delta));
+            return newZoom;
+        });
+    };
+
+    const handleMouseDown = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+        setDragStart({
+            x: e.clientX - pan.x,
+            y: e.clientY - pan.y
+        });
+    };
+
+    const handleMouseMove = (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        setPan({
+            x: e.clientX - dragStart.x,
+            y: e.clientY - dragStart.y
+        });
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
     };
 
     const handleBackdropClick = (e) => {
@@ -32,6 +90,7 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
     };
 
     return (
+        <>
         <div
             className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
             onClick={handleBackdropClick}
@@ -247,6 +306,127 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
                 </div>
             </div>
         </div>
+
+        {/* Attachment Modal - Same as SL Admin */}
+        {showAttachmentModal && createPortal(
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                <div className="absolute inset-0 bg-black/80" onClick={closeAttachmentModal}></div>
+                <div className="relative bg-black text-white p-4 rounded-lg max-w-[95vw] w-[800px] max-h-[90vh] overflow-auto border border-neutral-700">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-xl font-bold">Proof of Enrollment</h3>
+                        <div className="flex items-center gap-2">
+                            {/* Zoom Controls */}
+                            <div className="flex items-center gap-2 bg-neutral-800/50 rounded-lg px-3 py-1 border border-neutral-700">
+                                <button 
+                                    onClick={() => setZoomLevel(prev => Math.max(0.5, prev - 0.25))}
+                                    className="text-white hover:text-blue-400 transition-colors p-1 rounded hover:bg-neutral-700"
+                                    title="Zoom Out"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+                                    </svg>
+                                </button>
+                                <span className="text-sm text-gray-300 min-w-[3rem] text-center">
+                                    {Math.round(zoomLevel * 100)}%
+                                </span>
+                                <button 
+                                    onClick={() => setZoomLevel(prev => Math.min(3, prev + 0.25))}
+                                    className="text-white hover:text-blue-400 transition-colors p-1 rounded hover:bg-neutral-700"
+                                    title="Zoom In"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                                    </svg>
+                                </button>
+                                <button 
+                                    onClick={() => setZoomLevel(1)}
+                                    className="text-white hover:text-green-400 transition-colors p-1 rounded hover:bg-neutral-700 text-xs"
+                                    title="Reset Zoom"
+                                >
+                                    Reset
+                                </button>
+                            </div>
+                            <button 
+                                onClick={closeAttachmentModal}
+                                className="text-white hover:text-gray-300 text-2xl font-bold ml-4"
+                            >
+                                ×
+                            </button>
+                        </div>
+                    </div>
+                    <div className="flex justify-center overflow-hidden w-full">
+                        {!fileExists ? (
+                            // File not found message
+                            <div className="text-center p-8 text-red-400 bg-red-500/10 rounded-lg border border-red-500/30 w-full">
+                                <svg className="w-16 h-16 mx-auto mb-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <p className="text-xl font-semibold mb-2">File Not Found</p>
+                                <div className="flex flex-col items-center">
+                                    <p className="text-sm text-red-300">The proof of enrollment file could not be located on the server.</p>
+                                </div>
+                            </div>
+                        ) : attachmentUrl.toLowerCase().endsWith('.pdf') ? (
+                            // PDF Viewer with Zoom
+                            <div className="relative w-full h-[75vh] overflow-auto">
+                                <iframe
+                                    src={`${attachmentUrl}#toolbar=0&navpanes=0&scrollbar=0&zoom=${Math.round(zoomLevel * 100)}`}
+                                    className="w-full h-full rounded-lg border border-neutral-700"
+                                    title="Proof of Enrollment PDF"
+                                    style={{
+                                        transform: `scale(${zoomLevel})`,
+                                        transformOrigin: 'top left',
+                                        width: `${100 / zoomLevel}%`,
+                                        height: `${100 / zoomLevel}%`
+                                    }}
+                                    onError={(e) => {
+                                        e.target.style.display = 'none';
+                                        if (e.target.nextSibling) {
+                                            e.target.nextSibling.style.display = 'block';
+                                        }
+                                    }}
+                                />
+                            </div>
+                        ) : (
+                            // Image Viewer with Zoom and Pan
+                            <div 
+                                className="relative overflow-hidden rounded-lg border border-neutral-700 w-full"
+                                style={{ 
+                                    height: '75vh',
+                                    cursor: isDragging ? 'grabbing' : 'grab'
+                                }}
+                                onMouseDown={handleMouseDown}
+                                onMouseMove={handleMouseMove}
+                                onMouseUp={handleMouseUp}
+                                onMouseLeave={handleMouseUp}
+                                onWheel={handleWheel}
+                            >
+                                <img 
+                                    src={attachmentUrl} 
+                                    alt="Proof of Enrollment" 
+                                    className="transition-transform duration-200 ease-out"
+                                    style={{
+                                        transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoomLevel})`,
+                                        transformOrigin: 'center',
+                                        width: '100%',
+                                        height: '100%',
+                                        objectFit: 'contain'
+                                    }}
+                                    onError={(e) => {
+                                        e.target.style.display = 'none';
+                                        if (e.target.nextSibling) {
+                                            e.target.nextSibling.style.display = 'block';
+                                        }
+                                    }}
+                                />
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>,
+            document.body
+        )}
+    </>
     );
 };
 

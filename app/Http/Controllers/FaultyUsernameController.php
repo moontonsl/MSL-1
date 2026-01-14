@@ -314,4 +314,43 @@ class FaultyUsernameController extends Controller
 
         return $stats;
     }
-} 
+    /**
+     * Show the form for updating the username
+     */
+    public function showUpdateForm(Request $request, User $user)
+    {
+        // Ensure the signed URL is for this user
+        if (!$request->hasValidSignature()) {
+            abort(403, 'Invalid or expired link.');
+        }
+
+        return view('auth.update-username', compact('user'));
+    }
+
+    /**
+     * Update the username
+     */
+    public function updateUsername(Request $request, User $user)
+    {
+        $request->validate([
+            'username' => [
+                'required',
+                'string',
+                'min:4',
+                'max:15',
+                'unique:users,username,' . $user->id,
+                'regex:/^\S*$/', // No spaces
+            ],
+        ], [
+            'username.regex' => 'The username must not contain spaces.',
+            'username.min' => 'The username must be at least 4 characters.',
+            'username.max' => 'The username must not be greater than 15 characters.',
+        ]);
+
+        $user->username = $request->username;
+        $user->save();
+
+        return redirect()->route('login')->with('status', 'Username updated successfully! You can now login.');
+    }
+}
+ 

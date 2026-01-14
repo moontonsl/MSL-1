@@ -9,6 +9,7 @@ import oppologo from "./oppo-white-logo.png";
 
 export default function OPPOxMSLRoadShowTournament() {
   const [form, setForm] = useState({
+    university: "",
     teamName: "",
     captain: "",
     player2: "",
@@ -17,6 +18,12 @@ export default function OPPOxMSLRoadShowTournament() {
     player5: "",
     agree: false,
   });
+
+  const universities = [
+    "University of Saint La Salle",
+    "Davao del Norte State College",
+    "Pamantasan ng Lungsod ng Muntinlupa"
+  ];
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showMechanics, setShowMechanics] = useState(false);
@@ -33,34 +40,99 @@ export default function OPPOxMSLRoadShowTournament() {
     };
   }, []);
 
-  const validateUsername = async (username, fieldName) => {
+  const checkDuplicateUsernames = (fieldName, username, allUsernames) => {
+    if (!username || typeof username !== 'string' || !username.trim()) {
+      return null; // No duplicate check for empty or invalid fields
+    }
+
+    const duplicates = [];
+    const usernameLower = username.toLowerCase().trim();
+    const usernameFields = ["captain", "player2", "player3", "player4", "player5"];
+    
+    usernameFields.forEach(field => {
+      if (field !== fieldName) {
+        const value = allUsernames[field];
+        // Ensure value is a string before calling toLowerCase
+        if (value && typeof value === 'string' && value.toLowerCase().trim() === usernameLower) {
+          duplicates.push(field);
+        }
+      }
+    });
+
+    return duplicates.length > 0 ? duplicates : null;
+  };
+
+  const validateUsername = async (username, fieldName, currentForm) => {
     if (!username.trim()) {
       setValidationErrors(prev => ({ ...prev, [fieldName]: "" }));
       return;
     }
 
+    // Use currentForm if provided, otherwise fall back to form state
+    const formToCheck = currentForm || form;
+
+    // Check for duplicates first
+    const duplicateFields = checkDuplicateUsernames(fieldName, username, formToCheck);
+    if (duplicateFields) {
+      setValidationErrors(prev => ({ 
+        ...prev, 
+        [fieldName]: "Duplicate username. Each player must have a unique username." 
+      }));
+      // Also update duplicate fields
+      duplicateFields.forEach(field => {
+        setValidationErrors(prev => ({ 
+          ...prev, 
+          [field]: "Duplicate username. Each player must have a unique username." 
+        }));
+      });
+      return;
+    }
+
     setValidatingUsernames(prev => ({ ...prev, [fieldName]: true }));
     
+    // Get university from currentForm or form state
+    const universityToCheck = (currentForm || form).university;
+    if (!universityToCheck) {
+      setValidationErrors(prev => ({ 
+        ...prev, 
+        [fieldName]: "Please select a university first" 
+      }));
+      return;
+    }
+
     try {
-      const response = await fetch(`/school-players?search=${encodeURIComponent(username)}&university=${encodeURIComponent("First Asia Institute of Technology and Humanities")}`);
+      const response = await fetch(`/check-username-tournament?username=${encodeURIComponent(username)}&university=${encodeURIComponent(universityToCheck)}`);
       const data = await response.json();
       
-        if (data && data.length > 0) {
-          const user = data.find(u => u.username.toLowerCase() === username.toLowerCase());
-          if (user) {
-            setValidationErrors(prev => ({ ...prev, [fieldName]: "VALID" }));
-          } else {
-            setValidationErrors(prev => ({ 
-              ...prev, 
-              [fieldName]: "Username not found in First Asia Institute of Technology and Humanities" 
-            }));
-          }
+      if (data.exists && data.verified) {
+        // User exists and is verified - check duplicates again after validation
+        // Use the currentForm parameter or form state
+        const formForDuplicateCheck = currentForm || form;
+        const duplicateFieldsAfter = checkDuplicateUsernames(fieldName, username, formForDuplicateCheck);
+        if (duplicateFieldsAfter) {
+          setValidationErrors(prevErrors => {
+            const newErrors = { ...prevErrors, [fieldName]: "Duplicate username. Each player must have a unique username." };
+            duplicateFieldsAfter.forEach(field => {
+              newErrors[field] = "Duplicate username. Each player must have a unique username.";
+            });
+            return newErrors;
+          });
         } else {
-          setValidationErrors(prev => ({ 
-            ...prev, 
-            [fieldName]: "Username not found in First Asia Institute of Technology and Humanities" 
-          }));
+          setValidationErrors(prevErrors => ({ ...prevErrors, [fieldName]: "VALID" }));
         }
+      } else if (data.exists && !data.verified) {
+        // User exists but is not verified
+        setValidationErrors(prev => ({ 
+          ...prev, 
+          [fieldName]: "Username not verified" 
+        }));
+      } else {
+        // User does not exist
+        setValidationErrors(prev => ({ 
+          ...prev, 
+          [fieldName]: `Username not found in ${universityToCheck}`
+        }));
+      }
     } catch (error) {
       console.error("Error validating username:", error);
       setValidationErrors(prev => ({ 
@@ -74,25 +146,91 @@ export default function OPPOxMSLRoadShowTournament() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setForm((prev) => ({
-      ...prev,
+    const newForm = {
+      ...form,
       [name]: type === "checkbox" ? checked : value,
-    }));
+    };
+    
+    setForm(newForm);
+
+    // If university changes, clear all validation errors and re-validate usernames
+    if (name === "university") {
+      setValidationErrors({});
+      // Re-validate all username fields with the new university
+      const usernameFields = ["captain", "player2", "player3", "player4", "player5"];
+      usernameFields.forEach(field => {
+        if (newForm[field] && newForm[field].trim()) {
+          if (timeoutRefs.current[field]) {
+            clearTimeout(timeoutRefs.current[field]);
+          }
+          timeoutRefs.current[field] = setTimeout(() => {
+            validateUsername(newForm[field], field, newForm);
+          }, 500);
+        }
+      });
+      return;
+    }
 
     // Validate username fields
     if (name === "captain" || name.startsWith("player")) {
-      // Clear previous error
-      setValidationErrors(prev => ({ ...prev, [name]: "" }));
+      // Check if university is selected before validating
+      if (!newForm.university) {
+        setValidationErrors(prev => ({ 
+          ...prev, 
+          [name]: "Please select a university first" 
+        }));
+        return;
+      }
+
+      // Check for duplicates immediately
+      const duplicateFields = checkDuplicateUsernames(name, value, newForm);
+      if (duplicateFields && value.trim()) {
+        setValidationErrors(prev => ({ 
+          ...prev, 
+          [name]: "Duplicate username. Each player must have a unique username." 
+        }));
+        // Also mark duplicate fields
+        duplicateFields.forEach(field => {
+          setValidationErrors(prev => ({ 
+            ...prev, 
+            [field]: "Duplicate username. Each player must have a unique username." 
+          }));
+        });
+      } else {
+        // Clear previous error for this field if no duplicates
+        setValidationErrors(prev => ({ ...prev, [name]: "" }));
+        
+        // Re-validate other fields that might have been marked as duplicate
+        const usernameFields = ["captain", "player2", "player3", "player4", "player5"];
+        usernameFields.forEach(field => {
+          if (field !== name && newForm[field] && validationErrors[field] === "Duplicate username. Each player must have a unique username.") {
+            // Re-check this field for duplicates
+            const otherDuplicates = checkDuplicateUsernames(field, newForm[field], newForm);
+            if (!otherDuplicates && validationErrors[field] === "Duplicate username. Each player must have a unique username.") {
+              // Clear duplicate error and re-validate
+              setValidationErrors(prev => ({ ...prev, [field]: "" }));
+              if (timeoutRefs.current[field]) {
+                clearTimeout(timeoutRefs.current[field]);
+              }
+              timeoutRefs.current[field] = setTimeout(() => {
+                validateUsername(newForm[field], field, newForm);
+              }, 500);
+            }
+          }
+        });
+      }
       
       // Clear existing timeout
       if (timeoutRefs.current[name]) {
         clearTimeout(timeoutRefs.current[name]);
       }
       
-      // Debounce validation
-      timeoutRefs.current[name] = setTimeout(() => {
-        validateUsername(value, name);
-      }, 500);
+      // Debounce validation (only if no duplicates)
+      if (!duplicateFields || !value.trim()) {
+        timeoutRefs.current[name] = setTimeout(() => {
+          validateUsername(value, name, newForm);
+        }, 500);
+      }
     }
   };
 
@@ -111,23 +249,55 @@ export default function OPPOxMSLRoadShowTournament() {
       return;
     }
 
-    // Check if all usernames are validated
+    // Check for duplicate usernames before submission
     const usernameFields = ["captain", "player2", "player3", "player4", "player5"];
+    const usernames = {};
+    usernameFields.forEach(field => {
+      usernames[field] = form[field];
+    });
+    
+    // Check all fields for duplicates
+    let hasDuplicates = false;
+    usernameFields.forEach(field => {
+      if (form[field]) {
+        const duplicateFields = checkDuplicateUsernames(field, form[field], form);
+        if (duplicateFields) {
+          hasDuplicates = true;
+          setValidationErrors(prev => ({ 
+            ...prev, 
+            [field]: "Duplicate username. Each player must have a unique username." 
+          }));
+        }
+      }
+    });
+
+    if (hasDuplicates) {
+      alert("Please ensure all usernames are unique. Duplicate usernames are not allowed.");
+      return;
+    }
+
+    // Check if all usernames are validated
     const allUsernamesValid = usernameFields.every(field => {
       const username = form[field];
       return username.trim() === "" || validationErrors[field] === "VALID";
     });
 
     if (!allUsernamesValid) {
-      alert("Please wait for username validation to complete.");
+      alert("Please wait for username validation to complete or fix validation errors.");
       return;
     }
 
     const googleFormURL =
       "https://docs.google.com/forms/d/e/1FAIpQLSdbHbI2DnJB3d0DcdoSR1nmTt_T5Af0MaN4w2MivO5k8ieEtg/formResponse";
 
+    // Validate university is selected
+    if (!form.university) {
+      alert("Please select a university before submitting.");
+      return;
+    }
+
     const formBody = new FormData();
-    formBody.append("entry.2008089998", "First Asia Institute of Technology and Humanities");
+    formBody.append("entry.2008089998", form.university);
     formBody.append("entry.1615860502", form.teamName);
     formBody.append("entry.2087994405", form.captain);
     formBody.append("entry.1748019360", form.player2);
@@ -145,6 +315,7 @@ export default function OPPOxMSLRoadShowTournament() {
 
       setShowConfirmModal(true);
       setForm({
+        university: "",
         teamName: "",
         captain: "",
         player2: "",
@@ -167,6 +338,34 @@ export default function OPPOxMSLRoadShowTournament() {
           href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap"
           rel="stylesheet"
         />
+        <style>{`
+          input[type="text"]:-webkit-autofill,
+          input[type="text"]:-webkit-autofill:hover,
+          input[type="text"]:-webkit-autofill:focus,
+          input[type="text"]:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+            box-shadow: 0 0 0 1000px transparent inset !important;
+            -webkit-text-fill-color: white !important;
+            background-color: transparent !important;
+            transition: background-color 5000s ease-in-out 0s;
+          }
+          select {
+            background-color: transparent !important;
+            color: white !important;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23F2C21A' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 12px;
+            padding-right: 2rem;
+          }
+          select option {
+            background-color: #1f2937;
+            color: white;
+          }
+        `}</style>
       </Helmet>
 
       <div className="relative z-50 min-h-screen flex flex-col items-center justify-center text-white p-4 pt-10 sm:pt-20 font-['Montserrat']">
@@ -176,7 +375,7 @@ export default function OPPOxMSLRoadShowTournament() {
             Oppo x MSL Roadshow
           </h2>
           <h3 className="text-white text-[16px] sm:text-[22px] lg:text-[26px] font-extrabold leading-relaxed break-words">
-            First Asia Institute of Technology and Humanities
+            {form.university || "Select Your University"}
           </h3>
         </div>
 
@@ -189,6 +388,36 @@ export default function OPPOxMSLRoadShowTournament() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* University Selection */}
+            <div>
+              <label className="block font-medium mb-1 text-sm sm:text-base">
+                University <span className="text-red-400">*</span>
+              </label>
+              <div className="flex items-center bg-white/5 rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3">
+                <Users className="text-[#F2C21A] w-4 h-4 sm:w-5 sm:h-5" />
+                <select
+                  name="university"
+                  value={form.university}
+                  onChange={handleChange}
+                  required
+                  className="bg-transparent flex-1 outline-none text-white text-sm sm:text-base appearance-none cursor-pointer"
+                  style={{
+                    WebkitTextFillColor: 'white',
+                    transition: 'background-color 5000s ease-in-out 0s'
+                  }}
+                >
+                  <option value="" className="bg-gray-800 text-white">
+                    Select University
+                  </option>
+                  {universities.map((university) => (
+                    <option key={university} value={university} className="bg-gray-800 text-white">
+                      {university}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             {/* Team Name */}
             <div>
               <label className="block font-medium mb-1 text-sm sm:text-base">
@@ -270,7 +499,11 @@ export default function OPPOxMSLRoadShowTournament() {
                     onChange={handleChange}
                     required
                     placeholder={`Enter player ${num} username`}
-                    className="bg-transparent flex-1 outline-none text-white placeholder-gray-400 text-sm sm:text-base"
+                    className="bg-transparent flex-1 outline-none text-white placeholder-gray-400 text-sm sm:text-base autofill:bg-transparent autofill:text-white"
+                    style={{
+                      WebkitTextFillColor: 'white',
+                      transition: 'background-color 5000s ease-in-out 0s'
+                    }}
                   />
                 </div>
                 {validationErrors[`player${num}`] && validationErrors[`player${num}`] !== "VALID" && (

@@ -79,11 +79,11 @@
             <p>To update your username, please click the link below:</p>
             
             <p style="text-align: center;">
-                <a href="{{ \Illuminate\Support\Facades\URL::temporarySignedRoute('admin.duplicate-usernames.form', now()->addDays(30), ['user_id' => $user->id]) }}" class="button">Update Username</a>
+                <a href="{{ \Illuminate\Support\Facades\URL::temporarySignedRoute('username.update.form', now()->addDays(30), ['user' => $user->id]) }}" class="button">Update Username</a>
             </p>
 
             <div class="warning">
-                <p><strong>⚠️ Please note:</strong> Failure to update your username on or before <strong>September 27, 2025</strong> will result in the deletion of your MSL account.</p>
+                <p><strong>⚠️ Please note:</strong> Failure to update your username will result in the deletion of your MSL account.</p>
                 <p>If you have already updated your username and completed verification, kindly disregard this message.</p>
             </div>
 

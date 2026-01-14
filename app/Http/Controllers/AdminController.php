@@ -5,10 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\News;
 use App\Models\Event;
+use App\Models\MslEvent;
+use App\Models\Carousel;
+use App\Models\EventPhoto;
 use App\Services\AnalyticsService;
 use App\Services\GoogleAnalyticsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class AdminController extends Controller
@@ -284,13 +289,14 @@ class AdminController extends Controller
                 \Log::info('Created carousel directory', ['path' => $carouselPath]);
             }
             
-            $imagePath = $image->storeAs('public/carousel', $imageName);
-            $imageName = str_replace('public/carousel/', '', $imagePath);
+            $destination = $carouselPath . '/' . $imageName;
+            $image->move($carouselPath, $imageName);
             
             \Log::info('Image stored successfully', [
-                'image_path' => $imagePath,
-                'final_name' => $imageName,
-                'full_storage_path' => storage_path('app/' . $imagePath),
+                'image_name' => $imageName,
+                'destination' => $destination,
+                'file_exists' => file_exists($destination),
+                'file_size' => file_exists($destination) ? filesize($destination) : null,
                 'web_path' => '/storage/carousel/' . $imageName,
                 'directory_exists' => file_exists($carouselPath)
             ]);
@@ -369,7 +375,7 @@ class AdminController extends Controller
                 \Storage::delete('public/carousel/' . $carousel->image_path);
             }
 
-            // Store new image using Laravel's storage system
+            // Store new image using move() for VPS compatibility
             $imageName = time() . '_' . $image->getClientOriginalName();
             
             // Ensure carousel directory exists
@@ -379,8 +385,8 @@ class AdminController extends Controller
                 \Log::info('Created carousel directory during update', ['path' => $carouselPath]);
             }
             
-            $imagePath = $image->storeAs('public/carousel', $imageName);
-            $imageName = str_replace('public/carousel/', '', $imagePath);
+            $destination = $carouselPath . '/' . $imageName;
+            $image->move($carouselPath, $imageName);
             $validated['image_path'] = $imageName;
         }
 
@@ -470,5 +476,406 @@ class AdminController extends Controller
     {
         $event->delete();
         return back()->with('success', 'Event deleted successfully');
+    }
+
+    // MSL Event Management Methods
+    public function mslEventIndex()
+    {
+        $events = MslEvent::orderBy('created_at', 'desc')->get();
+        
+        return Inertia::render('Admin/Events/MslEventIndex', [
+            'events' => $events
+        ]);
+    }
+
+    public function mslEventCreate()
+    {
+        return Inertia::render('Admin/Events/MslEventCreate');
+    }
+
+    public function storeMslEvent(Request $request)
+    {
+        \Log::info('MSL Event store request started', [
+            'request_data' => $request->except(['event_logo']),
+            'has_image' => $request->hasFile('event_logo'),
+            'image_size' => $request->hasFile('event_logo') ? $request->file('event_logo')->getSize() : null
+        ]);
+
+        $validated = $request->validate([
+            'event_name' => 'required|string|max:255',
+            'event_title' => 'required|string|max:255',
+            'event_subtitle' => 'required|string|max:500',
+            'event_canonical' => 'required|string|max:255',
+            'event_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'event_state' => 'required|in:Active,Inactive',
+            'is_featured' => 'boolean',
+            'event_content01' => 'nullable|string',
+            'event_content02' => 'nullable|string',
+            'event_img01' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'event_img02' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'event_img03' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'event_img04' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'event_img05' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        \Log::info('MSL Event validation passed', ['validated_data' => $validated]);
+
+        // Handle event logo upload
+        if ($request->hasFile('event_logo')) {
+            $image = $request->file('event_logo');
+            $imageName = time() . '_' . $image->getClientOriginalName();
+            
+            // Create events directory if it doesn't exist
+            $eventsPath = public_path('images/MCC/Events');
+            if (!file_exists($eventsPath)) {
+                mkdir($eventsPath, 0755, true);
+                \Log::info('Created events directory', ['path' => $eventsPath]);
+            }
+            
+            $image->move($eventsPath, $imageName);
+            $validated['event_logo'] = $imageName;
+            
+            \Log::info('Event logo stored successfully', [
+                'image_name' => $imageName,
+                'path' => $eventsPath . '/' . $imageName
+            ]);
+        } else {
+            $validated['event_logo'] = '';
+        }
+
+        // Handle additional event images
+        $imageFields = ['event_img01', 'event_img02', 'event_img03', 'event_img04', 'event_img05'];
+        foreach ($imageFields as $field) {
+            if ($request->hasFile($field)) {
+                $image = $request->file($field);
+                $imageName = time() . '_' . $image->getClientOriginalName();
+                $image->move($eventsPath, $imageName);
+                $validated[$field] = $imageName;
+            } else {
+                $validated[$field] = '';
+            }
+        }
+
+        // Set default values
+        $validated['is_featured'] = $request->has('is_featured') ? 1 : 0;
+
+        $event = MslEvent::create($validated);
+
+        \Log::info('MSL Event created successfully', [
+            'event_id' => $event->id,
+            'event_name' => $event->event_name,
+            'event_canonical' => $event->event_canonical
+        ]);
+
+        return redirect()->route('admin.msl-events.index')->with('success', 'Event created successfully');
+    }
+
+    public function mslEventEdit(MslEvent $mslEvent)
+    {
+        return Inertia::render('Admin/Events/MslEventEdit', [
+            'event' => $mslEvent
+        ]);
+    }
+
+    public function updateMslEvent(Request $request, MslEvent $mslEvent)
+    {
+        \Log::info('MSL Event update request started', [
+            'event_id' => $mslEvent->id,
+            'request_data' => $request->except(['event_logo']),
+            'has_image' => $request->hasFile('event_logo')
+        ]);
+
+        $validated = $request->validate([
+            'event_name' => 'required|string|max:255',
+            'event_title' => 'required|string|max:255',
+            'event_subtitle' => 'required|string|max:500',
+            'event_canonical' => 'required|string|max:255',
+            'event_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'event_state' => 'required|in:Active,Inactive',
+            'is_featured' => 'boolean',
+            'event_content01' => 'nullable|string',
+            'event_content02' => 'nullable|string',
+            'event_img01' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'event_img02' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'event_img03' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'event_img04' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'event_img05' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        // Handle event logo upload
+        if ($request->hasFile('event_logo')) {
+            // Delete old image if exists
+            if ($mslEvent->event_logo && file_exists(public_path('images/MCC/Events/' . $mslEvent->event_logo))) {
+                unlink(public_path('images/MCC/Events/' . $mslEvent->event_logo));
+            }
+
+            $image = $request->file('event_logo');
+            $imageName = time() . '_' . $image->getClientOriginalName();
+            
+            $eventsPath = public_path('images/MCC/Events');
+            if (!file_exists($eventsPath)) {
+                mkdir($eventsPath, 0755, true);
+            }
+            
+            $image->move($eventsPath, $imageName);
+            $validated['event_logo'] = $imageName;
+        }
+
+        // Handle additional event images
+        $imageFields = ['event_img01', 'event_img02', 'event_img03', 'event_img04', 'event_img05'];
+        foreach ($imageFields as $field) {
+            if ($request->hasFile($field)) {
+                // Delete old image if exists
+                if ($mslEvent->$field && file_exists(public_path('images/MCC/Events/' . $mslEvent->$field))) {
+                    unlink(public_path('images/MCC/Events/' . $mslEvent->$field));
+                }
+
+                $image = $request->file($field);
+                $imageName = time() . '_' . $image->getClientOriginalName();
+                $image->move($eventsPath, $imageName);
+                $validated[$field] = $imageName;
+            }
+        }
+
+        // Set default values
+        $validated['is_featured'] = $request->has('is_featured') ? 1 : 0;
+
+        $mslEvent->update($validated);
+
+        \Log::info('MSL Event updated successfully', [
+            'event_id' => $mslEvent->id,
+            'event_name' => $mslEvent->event_name
+        ]);
+
+        return redirect()->route('admin.msl-events.index')->with('success', 'Event updated successfully');
+    }
+
+    public function updateMslEventStatus(Request $request, MslEvent $mslEvent)
+    {
+        $validated = $request->validate([
+            'event_state' => 'required|in:Active,Inactive'
+        ]);
+
+        $mslEvent->update($validated);
+
+        return back()->with('success', 'Event status updated successfully');
+    }
+
+    public function destroyMslEvent(MslEvent $mslEvent)
+    {
+        // Delete associated images
+        $imageFields = ['event_logo', 'event_img01', 'event_img02', 'event_img03', 'event_img04', 'event_img05'];
+        foreach ($imageFields as $field) {
+            if ($mslEvent->$field && file_exists(public_path('images/MCC/Events/' . $mslEvent->$field))) {
+                unlink(public_path('images/MCC/Events/' . $mslEvent->$field));
+            }
+        }
+
+        $mslEvent->delete();
+
+        return back()->with('success', 'Event deleted successfully');
+    }
+
+    // SL Management Methods
+    public function slManagement()
+    {
+        $slUsers = User::where('role', 'SL')
+            ->select('id', 'name', 'email', 'ml_id', 'university', 'region', 'state', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        $students = User::where('state', 'Verified')
+            ->where('role', '!=', 'SL')
+            ->where('role', '!=', 'Admin')
+            ->where('role', '!=', 'Super Admin')
+            ->where('role', '!=', 'Regional Admin')
+            ->select('id', 'name', 'email', 'ml_id', 'university', 'region', 'state', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return Inertia::render('Admin/SLManagement', [
+            'slUsers' => $slUsers,
+            'students' => $students
+        ]);
+    }
+
+    public function promoteToSL(User $user)
+    {
+        // Only allow promoting verified students (not admins or SL)
+        $adminRoles = ['SL', 'Admin', 'Super Admin', 'Regional Admin'];
+        if (in_array($user->role, $adminRoles) || $user->state !== 'Verified') {
+            return back()->withErrors(['error' => 'Only verified students can be promoted to Student Leader.']);
+        }
+
+        $user->update([
+            'role' => 'SL'
+        ]);
+
+        return back()->with('success', 'User promoted to Student Leader successfully');
+    }
+
+    public function demoteFromSL(User $user)
+    {
+        // Only allow demoting SL users
+        if ($user->role !== 'SL') {
+            return back()->withErrors(['error' => 'User is not a Student Leader.']);
+        }
+
+        $user->update([
+            'role' => 'user'
+        ]);
+
+        return back()->with('success', 'Student Leader demoted to Student successfully');
+    }
+
+    // Regional Admin Management Methods
+    public function regionalAdminManagement()
+    {
+        $regionalAdmins = User::where('role', 'Regional Admin')
+            ->select('id', 'name', 'email', 'ml_id', 'university', 'region', 'state', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        $students = User::where('state', 'Verified')
+            ->where('role', '!=', 'SL')
+            ->where('role', '!=', 'Admin')
+            ->where('role', '!=', 'Super Admin')
+            ->where('role', '!=', 'Regional Admin')
+            ->select('id', 'name', 'email', 'ml_id', 'university', 'region', 'state', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return Inertia::render('Admin/RegionalAdminManagement', [
+            'regionalAdmins' => $regionalAdmins,
+            'students' => $students
+        ]);
+    }
+
+    public function promoteToRegionalAdmin(User $user)
+    {
+        // Only allow promoting verified students (not admins or SL)
+        $adminRoles = ['SL', 'Admin', 'Super Admin', 'Regional Admin'];
+        if (in_array($user->role, $adminRoles) || $user->state !== 'Verified') {
+            return back()->withErrors(['error' => 'Only verified students can be promoted to Regional Admin.']);
+        }
+
+        $user->update([
+            'role' => 'Regional Admin'
+        ]);
+
+        return back()->with('success', 'User promoted to Regional Admin successfully');
+    }
+
+    public function demoteFromRegionalAdmin(User $user)
+    {
+        // Only allow demoting Regional Admin users
+        if ($user->role !== 'Regional Admin') {
+            return back()->withErrors(['error' => 'User is not a Regional Admin.']);
+        }
+
+        $user->update([
+            'role' => 'user'
+        ]);
+
+        return back()->with('success', 'Regional Admin demoted to Student successfully');
+    }
+
+    // Event Photos Management Methods
+    public function manageEventPhotos()
+    {
+        $eventPhotos = EventPhoto::orderBy('created_at', 'desc')->get();
+        
+        return Inertia::render('Admin/EventPhotos/Index', [
+            'eventPhotos' => $eventPhotos
+        ]);
+    }
+
+    public function storeEventPhoto(Request $request)
+    {
+        $validated = $request->validate([
+            'event_name' => 'required|string|max:255',
+            'school_name' => 'required|string|max:255',
+            'picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
+        ]);
+
+        // Handle image upload
+        if ($request->hasFile('picture')) {
+            $image = $request->file('picture');
+            $imageName = time() . '_' . $image->getClientOriginalName();
+            
+            // Create EventPhotos directory if it doesn't exist
+            $eventPhotosPath = public_path('images/EventPhotos');
+            if (!file_exists($eventPhotosPath)) {
+                mkdir($eventPhotosPath, 0755, true);
+                \Log::info('Created EventPhotos directory', ['path' => $eventPhotosPath]);
+            }
+            
+            $image->move($eventPhotosPath, $imageName);
+            $validated['picture'] = $imageName;
+            
+            \Log::info('Event photo stored successfully', [
+                'image_name' => $imageName,
+                'path' => $eventPhotosPath . '/' . $imageName
+            ]);
+        }
+
+        EventPhoto::create($validated);
+
+        return back()->with('success', 'Event photo added successfully');
+    }
+
+    public function updateEventPhoto(Request $request, EventPhoto $eventPhoto)
+    {
+        $validated = $request->validate([
+            'event_name' => 'required|string|max:255',
+            'school_name' => 'required|string|max:255',
+            'picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+        ]);
+
+        // Handle image update if provided
+        if ($request->hasFile('picture')) {
+            // Delete old image if exists - get raw attribute to get just the filename
+            $oldPictureFilename = $eventPhoto->getAttributes()['picture'] ?? null;
+            if ($oldPictureFilename) {
+                $oldImagePath = public_path('images/EventPhotos/' . $oldPictureFilename);
+                if (file_exists($oldImagePath)) {
+                    unlink($oldImagePath);
+                }
+            }
+
+            $image = $request->file('picture');
+            $imageName = time() . '_' . $image->getClientOriginalName();
+            
+            $eventPhotosPath = public_path('images/EventPhotos');
+            if (!file_exists($eventPhotosPath)) {
+                mkdir($eventPhotosPath, 0755, true);
+            }
+            
+            $image->move($eventPhotosPath, $imageName);
+            $validated['picture'] = $imageName;
+        } else {
+            // Don't update picture if not provided - remove from validated array
+            unset($validated['picture']);
+        }
+
+        $eventPhoto->update($validated);
+
+        return back()->with('success', 'Event photo updated successfully');
+    }
+
+    public function deleteEventPhoto(EventPhoto $eventPhoto)
+    {
+        // Delete image file - get raw attribute to get just the filename
+        $pictureFilename = $eventPhoto->getAttributes()['picture'] ?? null;
+        if ($pictureFilename) {
+            $imagePath = public_path('images/EventPhotos/' . $pictureFilename);
+            if (file_exists($imagePath)) {
+                unlink($imagePath);
+            }
+        }
+
+        $eventPhoto->delete();
+
+        return back()->with('success', 'Event photo deleted successfully');
     }
 }

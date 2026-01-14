@@ -52,7 +52,7 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
                 schoolCache.current[value] = schools;
                 setFilteredSchools(schools);
             } catch (error) {
-                console.error("Error fetching schools", error);
+                // Error fetching schools
             }
         }, 300), []
     );
@@ -69,14 +69,21 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
                 courseCache.current[value] = courses;
                 setFilteredCourses(courses);
             } catch (error) {
-                console.error("Error fetching courses", error);
+                // Error fetching courses
             }
         }, 300), []
     );
 
-    // Search users when username changes
+    // Search users when username changes (only if modification type is selected)
     useEffect(() => {
         const searchUsers = async () => {
+            // Don't search if modification type is not selected
+            if (!modificationType) {
+                setUserSearchResults([]);
+                setShowSearchResults(false);
+                return;
+            }
+
             if (username.length < 2) {
                 setUserSearchResults([]);
                 setShowSearchResults(false);
@@ -96,12 +103,12 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
 
             setIsSearching(true);
             try {
-                const response = await fetch(`/api/users/search?search=${encodeURIComponent(username)}`);
+                // Include modification_type in the search API call
+                const response = await fetch(`/api/users/search?search=${encodeURIComponent(username)}&modification_type=${encodeURIComponent(modificationType)}`);
                 const users = await response.json();
                 setUserSearchResults(users);
                 setShowSearchResults(true);
             } catch (error) {
-                console.error('Error searching users:', error);
                 setUserSearchResults([]);
             } finally {
                 setIsSearching(false);
@@ -110,7 +117,7 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
 
         const timeoutId = setTimeout(searchUsers, 300);
         return () => clearTimeout(timeoutId);
-    }, [username, selectedUser]);
+    }, [username, selectedUser, modificationType]);
 
     // Reset dropdown states when modal opens or modification type changes
     useEffect(() => {
@@ -220,25 +227,17 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
     const handleModificationTypeChange = (type) => {
         setModificationType(type);
         
-        // Reset all values
+        // Reset all values including username search
+        setUsername("");
+        setSelectedUser(null);
+        setUserSearchResults([]);
+        setShowSearchResults(false);
         setWrongFirstName("");
         setWrongLastName("");
         setCorrectFirstName("");
         setCorrectLastName("");
         setWrongValue("");
         setCorrectValue("");
-        
-        // Auto-fill wrong values if user is selected
-        if (selectedUser) {
-            if (type === "Full Name") {
-                setWrongFirstName(selectedUser.name);
-                setWrongLastName(selectedUser.surname);
-            } else if (type === "School") {
-                setWrongValue(selectedUser.university || "");
-            } else if (type === "Course") {
-                setWrongValue(selectedUser.course || "");
-            }
-        }
     };
 
     const handleSubmit = async (e) => {
@@ -358,7 +357,6 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
                 setShowMSLModal(true);
             }
         } catch (error) {
-            console.error('Error submitting request:', error);
             setModalData({
                 title: 'Error',
                 message: 'Error submitting request. Please try again.',
@@ -417,7 +415,25 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-4 text-sm">
                     
-                    {/* Username Search */}
+                    {/* Modification Type - Must be selected first */}
+                    <div>
+                        <label className="block text-gray-300 mb-1">
+                            What modifications do you want to apply?
+                        </label>
+                        <select
+                            value={modificationType}
+                            required
+                            onChange={(e) => handleModificationTypeChange(e.target.value)}
+                            className="w-full px-3 py-2 bg-[rgba(10,10,10,0.8)] border border-[#242424] rounded-md text-white placeholder-gray-500 focus:outline-none focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15]"
+                        >
+                            <option value="" disabled>Select</option>
+                            <option value="Full Name">Full Name</option>
+                            <option value="School">School</option>
+                            <option value="Course">Course</option>
+                        </select>
+                    </div>
+
+                    {/* Username Search - Disabled until modification type is selected */}
                     <div className="relative">
                         <label className="block text-gray-300 mb-1">
                             MSL Account Username
@@ -427,11 +443,14 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
                                 type="text"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
-                                className="w-full px-3 py-2 bg-[rgba(10,10,10,0.8)] border border-[#242424] rounded-md text-white placeholder-gray-500 focus:outline-none focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15]"
-                                placeholder="Search by username, name, or email..."
+                                disabled={!modificationType}
+                                className={`w-full px-3 py-2 bg-[rgba(10,10,10,0.8)] border border-[#242424] rounded-md text-white placeholder-gray-500 focus:outline-none focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15] ${
+                                    !modificationType ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
+                                placeholder={modificationType ? "Search by username, name, or email..." : "Please select modification type first..."}
                                 required
                             />
-                            <Search className="absolute right-3 top-2.5 w-4 h-4 text-gray-400" />
+                            <Search className={`absolute right-3 top-2.5 w-4 h-4 ${!modificationType ? 'text-gray-600' : 'text-gray-400'}`} />
                         </div>
                         
                         {/* Search Results Dropdown */}
@@ -485,23 +504,6 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
                         </div>
                     )}
 
-                    {/* Modification Type */}
-                    <div>
-                        <label className="block text-gray-300 mb-1">
-                            What modifications do you want to apply?
-                        </label>
-                        <select
-                            value={modificationType}
-                            required
-                            onChange={(e) => handleModificationTypeChange(e.target.value)}
-                            className="w-full px-3 py-2 bg-[rgba(10,10,10,0.8)] border border-[#242424] rounded-md text-white placeholder-gray-500 focus:outline-none focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15]"
-                        >
-                            <option value="" disabled>Select</option>
-                            <option value="Full Name">Full Name</option>
-                            <option value="School">School</option>
-                            <option value="Course">Course</option>
-                        </select>
-                    </div>
 
                     {/* Full Name Fields */}
                     {modificationType === "Full Name" && (

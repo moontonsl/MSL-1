@@ -83,6 +83,7 @@ Route::middleware(['web'])->group(function () {
         ]);
         
         // Check for duplicate region assignments (only for Admin, not Super Admin)
+        // Super Admin can assign the same region to multiple users
         if ($user->role === 'Admin') {
             $requestedRegions = $request->regions;
             $existingAssignments = \App\Models\UserRegion::whereIn('region_name', $requestedRegions)
@@ -106,13 +107,8 @@ Route::middleware(['web'])->group(function () {
             }
         }
         
-        // For Super Admin: Remove existing assignments for requested regions from other users
-        if ($user->role === 'Super Admin') {
-            $requestedRegions = $request->regions;
-            \App\Models\UserRegion::whereIn('region_name', $requestedRegions)
-                ->where('user_id', '!=', $targetUser->id)
-                ->delete();
-        }
+        // Note: Super Admin can assign the same region to multiple users
+        // We don't delete existing assignments - multiple users can have the same region
         
         // Clear existing regions
         $targetUser->assignedRegions()->delete();
@@ -410,6 +406,155 @@ Route::get('/carousel-images', function () {
         
         return response()->json(['error' => 'Failed to fetch carousel images'], 500);
     }
+});
+
+// Send email verification code API
+Route::post('/send-email-verification-code', function (Request $request) {
+    $request->validate([
+        'email' => 'required|email',
+        'user_id' => 'required|integer'
+    ]);
+    
+    $user = \App\Models\User::find($request->input('user_id'));
+    
+    if (!$user) {
+        return response()->json([
+            'success' => false,
+            'message' => 'User not found'
+        ], 404);
+    }
+    
+    $newEmail = $request->input('email');
+    
+    // Check if email is different from current email
+    if ($newEmail === $user->email) {
+        return response()->json([
+            'success' => false,
+            'message' => 'New email must be different from current email'
+        ], 400);
+    }
+    
+    // Check if email is already taken by another user
+    $existingUser = \App\Models\User::where('email', $newEmail)->where('id', '!=', $user->id)->first();
+    if ($existingUser) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Email is already taken by another user'
+        ], 400);
+    }
+    
+    // Generate 6-digit verification code
+    $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    
+    // Store the new email temporarily in the verification code field
+    // Format: "new_email|verification_code"
+    $user->email_verification_code = $newEmail . '|' . $verificationCode;
+    $user->email_verification_code_expires_at = now()->addMinutes(10);
+    $user->save();
+    
+    // Send verification email
+    try {
+        \Illuminate\Support\Facades\Mail::to($newEmail)->send(new \App\Mail\EmailChangeVerificationMail($user, $verificationCode, $newEmail));
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Verification code sent to your new email address',
+            'expires_at' => $user->email_verification_code_expires_at
+        ]);
+    } catch (\Exception $e) {
+        // Clear the verification data if email sending fails
+        $user->email_verification_code = null;
+        $user->email_verification_code_expires_at = null;
+        $user->save();
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to send verification email. Please try again.'
+        ], 500);
+    }
+});
+
+// Email verification code API
+Route::post('/verify-email-code', function (Request $request) {
+    $request->validate([
+        'verification_code' => 'required|string|size:6',
+        'user_id' => 'required|integer'
+    ]);
+    
+    $user = \App\Models\User::find($request->input('user_id'));
+    
+    if (!$user) {
+        return response()->json([
+            'success' => false,
+            'message' => 'User not found'
+        ], 404);
+    }
+    
+    // Check if verification code matches and is not expired
+    if (!$user->email_verification_code || $user->email_verification_code_expires_at < now()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Verification code has expired'
+        ], 400);
+    }
+    
+    // Parse the stored data: "new_email|verification_code"
+    $storedData = explode('|', $user->email_verification_code);
+    if (count($storedData) !== 2) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid verification data'
+        ], 400);
+    }
+    
+    $storedEmail = $storedData[0];
+    $storedCode = $storedData[1];
+    
+    if ($storedCode !== $request->input('verification_code')) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid verification code'
+        ], 400);
+    }
+    
+    // Update the email
+    $user->email = $storedEmail;
+    $user->email_verified_at = now();
+    $user->email_verification_code = null;
+    $user->email_verification_code_expires_at = null;
+    $user->save();
+    
+    return response()->json([
+        'success' => true,
+        'message' => 'Email verified and updated successfully',
+        'user' => $user->fresh()
+    ]);
+});
+
+// Email validation API for profile updates
+Route::post('/validate-email', function (Request $request) {
+    $request->validate([
+        'email' => 'required|email',
+        'user_id' => 'nullable|integer'
+    ]);
+    
+    $email = $request->input('email');
+    $userId = $request->input('user_id'); // Current user's ID to exclude from check
+    
+    $query = \App\Models\User::where('email', $email);
+    
+    // Exclude current user from the check
+    if ($userId) {
+        $query->where('id', '!=', $userId);
+    }
+    
+    $existingUser = $query->first();
+    
+    return response()->json([
+        'exists' => $existingUser ? true : false,
+        'available' => !$existingUser,
+        'message' => $existingUser ? 'Email is already taken' : 'Email is available'
+    ]);
 });
 
 // Username validation API for tournament registration

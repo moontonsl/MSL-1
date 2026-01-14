@@ -38,13 +38,27 @@ export default function SLAdminApproval() {
       }
     } catch (err) {
       setError('Network error occurred');
-      console.error('Error fetching requests:', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    // Force hard refresh on first visit to ensure fresh CSRF token after login
+    // Check if we've already reloaded in this session
+    const hasReloaded = sessionStorage.getItem('slAdminApprovalReloaded') === 'true';
+    
+    if (!hasReloaded) {
+      // Mark that we're about to reload
+      sessionStorage.setItem('slAdminApprovalReloaded', 'true');
+      // Force hard refresh without modifying URL
+      window.location.reload();
+      return;
+    }
+    
+    // Clear the reload flag so next navigation will refresh again
+    sessionStorage.removeItem('slAdminApprovalReloaded');
+    
     fetchRequests();
   }, []);
 
@@ -66,20 +80,13 @@ export default function SLAdminApproval() {
 
   const mobilePages = computeMobilePages();
 
-  const handleViewProfile = async (userId) => {
-    try {
-      const response = await fetch(`/api/users/${userId}`);
-      const data = await response.json();
-      
-      if (response.ok) {
-        setSelectedUser(data);
-        setShowProfileModal(true);
-      } else {
-        alert('User not found: ' + (data.error || 'Unknown error'));
-      }
-    } catch (error) {
-      console.error('Error fetching user:', error);
-      alert('Error fetching user data');
+  const handleViewProfile = (userData) => {
+    // Use the user data directly from the request object (no API call needed)
+    if (userData) {
+      setSelectedUser(userData);
+      setShowProfileModal(true);
+    } else {
+      alert('User data not available');
     }
   };
 
@@ -127,7 +134,6 @@ export default function SLAdminApproval() {
             setShowMSLModal(true);
           }
         } catch (error) {
-          console.error('Error approving request:', error);
           setModalData({
             title: 'Error',
             message: 'Error approving request. Please try again.',
@@ -187,7 +193,6 @@ export default function SLAdminApproval() {
             setShowMSLModal(true);
           }
         } catch (error) {
-          console.error('Error rejecting request:', error);
           setModalData({
             title: 'Error',
             message: 'Error rejecting request. Please try again.',
@@ -291,7 +296,7 @@ export default function SLAdminApproval() {
                         <td className="px-4 py-3 text-green-400">{req.correct_value}</td>
                         <td className="px-4 py-3 text-center">
                           <button 
-                            onClick={() => handleViewProfile(req.user_id)}
+                            onClick={() => handleViewProfile(req.user)}
                             className="flex items-center mx-auto px-3 py-1 bg-blue-500/80 text-white rounded-lg hover:bg-blue-600 transition"
                           >
                             <Eye className="w-4 h-4 mr-1" /> View
@@ -353,7 +358,7 @@ export default function SLAdminApproval() {
                       <p><span className="font-bold">Approved By:</span> {req.approved_by ? `${req.approved_by.name || ''} ${req.approved_by.surname || ''}`.trim() : 'Pending Approval'}</p>
                       <div className="flex gap-2 mt-2">
                         <button
-                          onClick={() => handleViewProfile(req.user_id)}
+                          onClick={() => handleViewProfile(req.user)}
                           className="flex-1 flex items-center justify-center gap-1 px-2 py-1 bg-blue-500/80 text-white rounded-md hover:bg-blue-600 transition text-xs"
                         >
                           <Eye className="w-3 h-3" /> View

@@ -76,15 +76,10 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             }
             
             const data = await response.json();
-            console.log('Fetched users data:', data);
             
             // Validate data structure
             if (!data || typeof data !== 'object') {
                 throw new Error('Server returned invalid data structure');
-            }
-            
-            if (data.data && data.data.length > 0) {
-                console.log('First user sample:', data.data[0]);
             }
             
             setUsers(data.data || []);
@@ -93,8 +88,6 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             setTotalUsers(data.total || 0);
             
         } catch (error) {
-            console.error('Error fetching users:', error);
-            
             // Retry logic for temporary server issues
             if (retryCount < 2 && (
                 error.message.includes('Server error: 500') ||
@@ -103,7 +96,6 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                 error.message.includes('Server error: 504') ||
                 error.message.includes('HTML instead of data')
             )) {
-                console.log(`Retrying fetchUsers (attempt ${retryCount + 1})...`);
                 setTimeout(() => {
                     fetchUsers(page, retryCount + 1);
                 }, 2000 * (retryCount + 1)); // Exponential backoff: 2s, 4s
@@ -149,10 +141,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
 
     useEffect(() => {
         if (showModal && selectedUser) {
-            console.log('Selected user:', selectedUser);
-            console.log('User name:', selectedUser.name);
-            console.log('User surname:', selectedUser.surname);
-            console.log('User email:', selectedUser.email);
+            // Modal opened with selected user
         }
     }, [showModal, selectedUser]);
 
@@ -188,17 +177,6 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
     };
 
     const openModal = (user) => {
-        // Log user data for debugging
-        console.log('Opening modal for user:', {
-            id: user.id,
-            name: user.name,
-            surname: user.surname,
-            email: user.email,
-            state: user.state,
-            hasProofOfEnrollment: !!user.proofOfEnrollment,
-            dataKeys: Object.keys(user)
-        });
-        
         setSelectedUser(user);
         setShowModal(true);
     };
@@ -326,8 +304,16 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                     url = `/api/sladmin/users/${userId}/promote`;
                     method = 'PATCH';
                     break;
+                case 'promote-regional-admin':
+                    url = `/api/sladmin/users/${userId}/promote-regional-admin`;
+                    method = 'PATCH';
+                    break;
                 case 'demote':
                     url = `/api/sladmin/users/${userId}/demote`;
+                    method = 'PATCH';
+                    break;
+                case 'demote-regional-admin':
+                    url = `/api/sladmin/users/${userId}/demote-regional-admin`;
                     method = 'PATCH';
                     break;
                 default:
@@ -417,7 +403,9 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                 'renew': data.message || 'User renewed successfully',
                 'delete': 'User deleted successfully',
                 'promote': data.message || 'User promoted to Student Leader successfully',
-                'demote': data.message || 'Student Leader demoted successfully'
+                'promote-regional-admin': data.message || 'User promoted to Regional Admin successfully',
+                'demote': data.message || 'Student Leader demoted successfully',
+                'demote-regional-admin': data.message || 'Regional Admin demoted to Student successfully'
             };
             showToast(actionMessages[action] || 'Action completed successfully', 'success');
             
@@ -470,11 +458,15 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             {/* Summary Section */}
             {users.length > 0 && (
                 <div className="mb-4 p-4 bg-neutral-800 rounded-lg border border-neutral-700">
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <div className="text-white">
-                                <span className="font-semibold">{stateFilter === 'StudentLeaders' ? 'Student Leaders:' : 'Students:'}</span> {totalUsers}
-                            </div>
+                        <div className="flex flex-wrap items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="text-white">
+                                    <span className="font-semibold">
+                                        {stateFilter === 'StudentLeaders' ? 'Student Leaders:' : 
+                                         stateFilter === 'RegionalAdmins' ? 'Regional Admins:' : 
+                                         'Students:'}
+                                    </span> {totalUsers}
+                                </div>
                             {(() => {
                                 const usersWithoutAttachment = users.filter(user => !user.proofOfEnrollment && (user.state === 'New' || user.state === 'Renew'));
                                 return usersWithoutAttachment.length > 0 ? (
@@ -536,6 +528,10 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                     {stateFilter === 'StudentLeaders' ? (
                                         <span className="rounded px-2 py-1 text-xs font-medium bg-purple-600/10 text-purple-400">
                                             Student Leader
+                                        </span>
+                                    ) : stateFilter === 'RegionalAdmins' ? (
+                                        <span className="rounded px-2 py-1 text-xs font-medium bg-blue-600/10 text-blue-400">
+                                            Regional Admin
                                         </span>
                                     ) : (
                                         <>
@@ -657,6 +653,13 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                                                 Student Leader
                                                             </span>
                                                         </>
+                                                    ) : stateFilter === 'RegionalAdmins' ? (
+                                                        <>
+                                                            <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
+                                                            <span className="font-semibold text-xs uppercase tracking-wider text-blue-400">
+                                                                Regional Admin
+                                                            </span>
+                                                        </>
                                                     ) : (
                                                         <>
                                                             <div className={`w-2 h-2 rounded-full ${selectedUser.state === 'Verified' ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'}`}></div>
@@ -686,6 +689,29 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                             </div>
                                         </div>
                                     </div>
+                                    
+                                    {/* Promote Buttons for Super Admin */}
+                                    {user?.role === 'Super Admin' && stateFilter === 'Verified' && (
+                                        <div className="mt-6 pt-6 border-t border-gray-700/50">
+                                            <div className="text-xs text-gray-400 uppercase tracking-wider mb-3 text-center">Promote User</div>
+                                            <div className="space-y-2">
+                                                <button 
+                                                    className="w-full px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-all duration-200 disabled:opacity-50"
+                                                    onClick={() => handleAction('promote', selectedUser.id)}
+                                                    disabled={actionLoading}
+                                                >
+                                                    {actionLoading ? 'Promoting...' : 'Student Leader'}
+                                                </button>
+                                                <button 
+                                                    className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all duration-200 disabled:opacity-50"
+                                                    onClick={() => handleAction('promote-regional-admin', selectedUser.id)}
+                                                    disabled={actionLoading}
+                                                >
+                                                    {actionLoading ? 'Promoting...' : 'Regional Admin'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -805,6 +831,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                                 </div>
                                             </div>
                                         )}
+                                        
                                     </div>
 
                                     {/* Action Buttons */}
@@ -832,7 +859,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                                     </div>
                                                 </button>
 
-                                                {(stateFilter === 'New' || stateFilter === 'Renew') && stateFilter !== 'StudentLeaders' && (
+                                                {(stateFilter === 'New' || stateFilter === 'Renew') && stateFilter !== 'StudentLeaders' && stateFilter !== 'RegionalAdmins' && (
                                                     <button 
                                                         className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none ${
                                                             !selectedUser.proofOfEnrollment 
@@ -851,13 +878,14 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                                     </button>
                                                 )}
                                                 
+                                                
                                             </div>
 
                                             {/* Right Side Actions */}
                                             <div className="flex flex-col sm:flex-row gap-3">
                                                 
 
-                                                {(stateFilter === 'Verified' || stateFilter === 'Renew' || stateFilter === 'New') && stateFilter !== 'StudentLeaders' && (
+                                                {(stateFilter === 'Verified' || stateFilter === 'Renew' || stateFilter === 'New') && stateFilter !== 'StudentLeaders' && stateFilter !== 'RegionalAdmins' && (
                                                     <button 
                                                         className="px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
                                                         onClick={() => handleAction('renew', selectedUser.id)}
@@ -867,7 +895,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                                     </button>
                                                 )}
                                                 
-                                                {stateFilter !== 'StudentLeaders' && (
+                                                {stateFilter !== 'StudentLeaders' && stateFilter !== 'RegionalAdmins' && (
                                                     <button 
                                                         className="px-6 py-3 bg-red-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
                                                         onClick={() => {
@@ -891,6 +919,8 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                                     </button>
                                                 )}
                                                 
+                                                
+                                                
                                                 {user?.role === 'Regional Admin' && stateFilter === 'StudentLeaders' && (
                                                     <button 
                                                         className="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
@@ -901,7 +931,17 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                                     </button>
                                                 )}
                                                 
-                                                {user?.role === 'Super Admin' && (
+                                                {user?.role === 'Super Admin' && stateFilter === 'RegionalAdmins' && (
+                                                    <button 
+                                                        className="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
+                                                        onClick={() => handleAction('demote-regional-admin', selectedUser.id)}
+                                                        disabled={actionLoading}
+                                                    >
+                                                        {actionLoading ? 'Demoting...' : 'Demote to Student'}
+                                                    </button>
+                                                )}
+                                                
+                                                {(user?.role === 'Super Admin' || (user?.role === 'Regional Admin' && stateFilter === 'Blocked' && selectedUser.state === 'Blocked')) && (
                                                     <button 
                                                         className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
                                                         onClick={() => handleAction('delete', selectedUser.id)}

@@ -64,7 +64,6 @@ post(route('login'), {
 //   setError('⚠️Wrong username or password.');
 //   return;
 setError('');
-console.log(formData);
 };
     // Main "choose login" state
     if (!showLoginForm && !showMLBBModal) {
