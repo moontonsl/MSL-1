@@ -22,12 +22,9 @@ return new class extends Migration {
             $table->string('mlbb_server');
             $table->timestamps();
 
-            $table->foreign(['mlbb_id', 'mlbb_server'])
-                  ->references(['ml_id', 'server_id'])
-                  ->on('ml_users')
-                  ->onDelete('cascade');
 
-            $table->unique(['mlbb_id', 'mlbb_server', 'event_date'], 'unique_registration_per_day');
+
+            $table->unique(['mlbb_id', 'mlbb_server', 'event_name'], 'unique_registration_per_event');
         });
     }
 

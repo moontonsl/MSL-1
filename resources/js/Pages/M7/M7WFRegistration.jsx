@@ -154,7 +154,7 @@ export default function M7WFRegistration() {
     } catch (err) {
       console.error(err);
       if (err.response && err.response.status === 422) {
-        setSubmissionMessage(err.response.data.message || "You have already registered for this day.");
+        setSubmissionMessage(err.response.data.message || "You have already registered for this event.");
       } else {
         setSubmissionMessage("Submission failed. Please try again later.");
       }

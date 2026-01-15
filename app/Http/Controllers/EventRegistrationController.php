@@ -38,27 +38,17 @@ class EventRegistrationController extends Controller
             'mlbb_server' => $data['mlbbServer'],
         ];
 
-        // Check if user exists in ml_users table (required by foreign key)
-        $userExists = \DB::table('ml_users')
-            ->where('ml_id', $dbData['mlbb_id'])
-            ->where('server_id', $dbData['mlbb_server'])
-            ->exists();
 
-        if (!$userExists) {
-            return response()->json([
-                'message' => 'The provided MLBB ID and Server were not found in our records. Please ensure you are registered and verified.'
-            ], 422);
-        }
 
-        // Check for duplicate registration for the same day
+        // Check for duplicate registration for the same event
         $existing = EventRegistration::where('mlbb_id', $dbData['mlbb_id'])
             ->where('mlbb_server', $dbData['mlbb_server'])
-            ->where('event_date', $dbData['event_date'])
+            ->where('event_name', $dbData['event_name'])
             ->first();
 
         if ($existing) {
             return response()->json([
-                'message' => 'You have already registered for this event on this date.'
+                'message' => 'You have already registered for this event.'
             ], 422);
         }
 
