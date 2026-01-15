@@ -124,7 +124,7 @@ export default function M7WFRegistration() {
     }
 
     const payload = {
-      event_name: "M7", // Hardcoded for this page
+      event_name: "M7 WP", // Hardcoded lang muna
       fullName: form.fullName.trim(),
       region: form.region,
       venue: form.venue.trim(),
@@ -193,7 +193,7 @@ export default function M7WFRegistration() {
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
             <div className="text-center">
               <h2 className="font-bold mb-1 text-[20px] sm:text-[26px] lg:text-[32px] text-[#fff4d0]">
-                M7 WATCH FEST REGISTRATION
+                M7 Watch Party Registration
               </h2>
             </div>
 
