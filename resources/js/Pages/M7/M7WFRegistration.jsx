@@ -119,8 +119,8 @@ export default function M7WFRegistration() {
 
     setForm((prev) => {
       if (name === "region" || name === "attendanceMode") {
-    return { ...prev, [name]: newValue, venue: "" };
-    }
+        return { ...prev, [name]: newValue, venue: "" };
+      }
       return { ...prev, [name]: newValue };
     });
 
@@ -180,6 +180,7 @@ export default function M7WFRegistration() {
       email: form.email.trim(),
       mlbbId: form.mlbbId.trim(),
       mlbbServer: form.mlbbServer.trim(),
+      attendanceMode: form.attendanceMode,
     };
 
     try {
