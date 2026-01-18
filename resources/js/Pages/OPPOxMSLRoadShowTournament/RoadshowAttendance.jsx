@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Head } from "@inertiajs/react";
 import { Helmet } from "react-helmet";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutEventsWatchFest.jsx";
-import { User, Mail, MapPin, Calendar, Globe, Hash } from "lucide-react";
+import { User, Mail, MapPin, Calendar, Globe, Hash, Loader2 } from "lucide-react";
 import msllogo from "./msl-logo.png";
 import oppologo from "./oppo-white-logo.png";
 
@@ -13,17 +13,9 @@ export default function OPPOxMSLRoadShowAttendance() {
     "Mindanao"
   ];
 
-  const venues = [
-    "University of Saint La Salle",
-    "Davao del Norte State College",
-    "Pamantasan ng Lungsod ng Muntinlupa"
-  ];
-
-  const dates = [
-    "November 23, 2025",
-    "November 25, 2025",
-    "November 28, 2025"
-  ];
+  const [venues, setVenues] = useState([]);
+  const [dates, setDates] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [form, setForm] = useState({
     fullname: "",
@@ -38,13 +30,30 @@ export default function OPPOxMSLRoadShowAttendance() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
 
+  useEffect(() => {
+    fetchRoadshowData();
+  }, []);
+
+  const fetchRoadshowData = async () => {
+    try {
+      const response = await fetch('/api/oppo/roadshow-data');
+      const data = await response.json();
+      setVenues(data.schools || []);
+      setDates(data.dates || []);
+    } catch (error) {
+      console.error('Error fetching roadshow data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
       [name]: value,
     }));
-    
+
     // Clear validation error for this field when user changes it
     if (validationErrors[name]) {
       setValidationErrors((prev) => {
@@ -184,11 +193,10 @@ export default function OPPOxMSLRoadShowAttendance() {
               <label className="block font-medium mb-1 text-sm sm:text-base">
                 Region <span className="text-red-400">*</span>
               </label>
-              <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${
-                validationErrors.region 
-                  ? 'bg-red-500/10 border border-red-500' 
+              <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${validationErrors.region
+                  ? 'bg-red-500/10 border border-red-500'
                   : 'bg-white/5'
-              }`}>
+                }`}>
                 <MapPin className="text-[#F2C21A] w-4 h-4 sm:w-5 sm:h-5" />
                 <select
                   name="region"
@@ -221,17 +229,17 @@ export default function OPPOxMSLRoadShowAttendance() {
               <label className="block font-medium mb-1 text-sm sm:text-base">
                 Venue <span className="text-red-400">*</span>
               </label>
-              <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${
-                validationErrors.venue 
-                  ? 'bg-red-500/10 border border-red-500' 
+              <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${validationErrors.venue
+                  ? 'bg-red-500/10 border border-red-500'
                   : 'bg-white/5'
-              }`}>
+                }`}>
                 <Globe className="text-[#F2C21A] w-4 h-4 sm:w-5 sm:h-5" />
                 <select
                   name="venue"
                   value={form.venue}
                   onChange={handleChange}
                   required
+                  disabled={isLoading}
                   className="bg-transparent flex-1 outline-none text-white text-sm sm:text-base appearance-none cursor-pointer"
                   style={{
                     WebkitTextFillColor: 'white',
@@ -239,7 +247,7 @@ export default function OPPOxMSLRoadShowAttendance() {
                   }}
                 >
                   <option value="" className="bg-gray-800 text-white">
-                    Select Venue
+                    {isLoading ? "Loading venues..." : "Select Venue"}
                   </option>
                   {venues.map((venue) => (
                     <option key={venue} value={venue} className="bg-gray-800 text-white">
@@ -247,6 +255,7 @@ export default function OPPOxMSLRoadShowAttendance() {
                     </option>
                   ))}
                 </select>
+                {isLoading && <Loader2 className="w-4 h-4 animate-spin text-[#F2C21A]" />}
               </div>
               {validationErrors.venue && (
                 <p className="text-red-400 text-xs mt-1">{validationErrors.venue}</p>
@@ -258,17 +267,17 @@ export default function OPPOxMSLRoadShowAttendance() {
               <label className="block font-medium mb-1 text-sm sm:text-base">
                 Date <span className="text-red-400">*</span>
               </label>
-              <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${
-                validationErrors.date 
-                  ? 'bg-red-500/10 border border-red-500' 
+              <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${validationErrors.date
+                  ? 'bg-red-500/10 border border-red-500'
                   : 'bg-white/5'
-              }`}>
+                }`}>
                 <Calendar className="text-[#F2C21A] w-4 h-4 sm:w-5 sm:h-5" />
                 <select
                   name="date"
                   value={form.date}
                   onChange={handleChange}
                   required
+                  disabled={isLoading}
                   className="bg-transparent flex-1 outline-none text-white text-sm sm:text-base appearance-none cursor-pointer"
                   style={{
                     WebkitTextFillColor: 'white',
@@ -276,7 +285,7 @@ export default function OPPOxMSLRoadShowAttendance() {
                   }}
                 >
                   <option value="" className="bg-gray-800 text-white">
-                    Select Date
+                    {isLoading ? "Loading dates..." : "Select Date"}
                   </option>
                   {dates.map((date) => (
                     <option key={date} value={date} className="bg-gray-800 text-white">
@@ -284,6 +293,7 @@ export default function OPPOxMSLRoadShowAttendance() {
                     </option>
                   ))}
                 </select>
+                {isLoading && <Loader2 className="w-4 h-4 animate-spin text-[#F2C21A]" />}
               </div>
               {validationErrors.date && (
                 <p className="text-red-400 text-xs mt-1">{validationErrors.date}</p>
@@ -350,7 +360,7 @@ export default function OPPOxMSLRoadShowAttendance() {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full mt-4 font-bold py-3 rounded-xl bg-[#F2C21A] hover:bg-[#ddb518] text-black transition-colors text-sm sm:text-base"
+              className="w-full mt-4 font-bold py-3 rounded-xl bg-[#F2C21A] hover:bg-[#ddb518] text-black transition-colors text-sm sm:text-base shadow-[0_10px_20px_-10px_rgba(242,194,26,0.3)]"
             >
               Submit Registration
             </button>

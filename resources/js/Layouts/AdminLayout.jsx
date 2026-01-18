@@ -17,6 +17,7 @@ export default function AdminLayout({ children }) {
         { name: 'MSL Event Management', href: route('admin.msl-events.index'), routeName: 'admin.msl-events.index', icon: FaGamepad },
         { name: 'Event Calendar', href: route('admin.events'), routeName: 'admin.events', icon: FaCalendar },
         { name: 'Footer Management', href: route('admin.footer'), routeName: 'admin.footer', icon: FaCog },
+        { name: 'Oppo Settings', href: route('admin.oppo-settings.index'), routeName: 'admin.oppo-settings.index', icon: FaCog },
         { name: 'Settings', href: route('admin.settings'), routeName: 'admin.settings', icon: FaCog },
     ];
 
@@ -30,7 +31,7 @@ export default function AdminLayout({ children }) {
             )}
 
             {/* Background noise effect */}
-            <div 
+            <div
                 className="fixed inset-0 opacity-5 pointer-events-none z-0"
                 style={{
                     background: 'url(/noise.svg) lightgray 0% 0% / 100px 100px repeat',
@@ -52,19 +53,17 @@ export default function AdminLayout({ children }) {
                         <Link
                             key={item.name}
                             href={item.href}
-                            className={`group flex items-center px-4 py-3 text-base font-medium rounded-lg transition-all duration-200 ${
-                                route().current(item.routeName)
+                            className={`group flex items-center px-4 py-3 text-base font-medium rounded-lg transition-all duration-200 ${route().current(item.routeName)
                                     ? 'bg-[#f0f0f0] text-[#2C2C3E] border-2 border-gray-200 shadow font-bold'
                                     : 'text-gray-300 hover:bg-[#4A4A60] hover:text-white'
-                            }`}
+                                }`}
                             onClick={() => setSidebarOpen(false)}
                         >
                             <item.icon
-                                className={`mr-3 flex-shrink-0 h-5 w-5 transition-colors duration-200 ${
-                                    route().current(item.routeName)
+                                className={`mr-3 flex-shrink-0 h-5 w-5 transition-colors duration-200 ${route().current(item.routeName)
                                         ? 'text-[#2C2C3E]'
                                         : 'text-gray-300 group-hover:text-white'
-                                }`}
+                                    }`}
                             />
                             {item.name}
                         </Link>
@@ -89,7 +88,7 @@ export default function AdminLayout({ children }) {
             {/* Main content area */}
             <div className="flex-1 flex flex-col md:ml-64">
                 {/* Top Navigation */}
-                <nav className="relative z-10 bg-white border-b border-gray-200 shadow-sm p-4" style={{marginLeft: -20,zIndex: 1}}>
+                <nav className="relative z-10 bg-white border-b border-gray-200 shadow-sm p-4" style={{ marginLeft: -20, zIndex: 1 }}>
                     <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex justify-between h-16 items-center">
                             <div className="flex items-center">
@@ -108,7 +107,7 @@ export default function AdminLayout({ children }) {
                                 <span className="text-gray-800 font-semibold text-xl">{activeNav ? activeNav.name : ''}</span>
                             </div>
                             <div className="flex items-center space-x-4">
-                                
+
                                 <div className="flex items-center space-x-3 font-medium bg-[#212121] rounded-lg px-4 py-2">
                                     <span className="text-white font-medium">{auth.user.name}</span>
                                 </div>
