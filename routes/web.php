@@ -112,6 +112,55 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/campus-tournaments/{id}/extend', [\App\Http\Controllers\CampusTournamentController::class, 'extendRegistration'])->name('campus.tournaments.extend');
     Route::get('/campus-tournaments/{id}/export', [\App\Http\Controllers\CampusTournamentController::class, 'exportToExcel'])->name('campus.tournaments.export');
     Route::delete('/campus-tournaments/{id}', [\App\Http\Controllers\CampusTournamentController::class, 'destroy'])->name('campus.tournaments.destroy');
+    
+    // Team Invite Routes
+    Route::post('/team-invite/{teamId}/accept', function ($teamId) {
+        $user = Auth::user();
+        $member = \App\Models\CampusTournamentTeamMember::where('team_id', $teamId)
+            ->where('player_id', $user->id)
+            ->first();
+            
+        if (!$member) {
+            return response()->json(['message' => 'Invite not found'], 404);
+        }
+        
+        $member->update(['status' => 'accepted']);
+        return response()->json(['message' => 'Invite accepted']);
+    })->name('team.invite.accept');
+
+    Route::post('/team-invite/{teamId}/reject', function ($teamId) {
+        $user = Auth::user();
+        $member = \App\Models\CampusTournamentTeamMember::where('team_id', $teamId)
+            ->where('player_id', $user->id)
+            ->first();
+            
+        if (!$member) {
+            return response()->json(['message' => 'Invite not found'], 404);
+        }
+        
+        $member->update(['status' => 'rejected']);
+        return response()->json(['message' => 'Invite rejected']);
+    })->name('team.invite.reject');
+
+    Route::get('/api/my-team-invites', function () {
+        $user = Auth::user();
+        $invites = \App\Models\CampusTournamentTeamMember::where('player_id', $user->id)
+            ->where('status', 'pending')
+            ->whereHas('team.tournament', function($query) {
+                // Only showing active tournament invites
+                $query->where('status', 'approved')
+                      ->where('results_submitted', false);
+            })
+            ->with(['team.tournament', 'team.captain' => function($q) {
+                $q->select('id', 'name', 'surname', 'username');
+            }])
+            ->get();
+            
+        return response()->json($invites);
+    })->name('team.invites.pending');
+
+    // Team Submit Route - MOVED OUTSIDE AUTH
+    // Route::post('/team-submit/{id}', [\App\Http\Controllers\CampusTournamentController::class, 'submitTeam'])->name('team.submit');
 });
 
 // API endpoints for Campus Tournament registration
@@ -711,6 +760,7 @@ Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
             'team_name' => $request->teamName,
             'discord_id' => $request->discordId,
             'captain_id' => $captain['id'],
+            'status' => 'assembling', // Default status
         ]);
         
         // Add all players to team
@@ -727,6 +777,7 @@ Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
                 'team_id' => $team->id,
                 'player_id' => $player['id'],
                 'role' => $player['id'] === $captain['id'] ? 'captain' : 'member',
+                'status' => $player['id'] === $captain['id'] ? 'accepted' : 'pending',
             ]);
         }
         
@@ -739,95 +790,13 @@ Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
     }
 });
 
-Route::put('/team-update/{teamId}', function (\Illuminate\Http\Request $request, $teamId) {
-    // Validate the request
-    $request->validate([
-        'teamName' => 'required|string|max:50',
-        'discordId' => 'required|string|max:50',
-        'captain' => 'required|array',
-        'captain.id' => 'required|integer',
-        'captain.university' => 'required|string',
-        'players' => 'required|array',
-        'players.captain' => 'required|array',
-        'players.player2' => 'required|array',
-        'players.player3' => 'required|array',
-        'players.player4' => 'required|array',
-        'players.player5' => 'required|array',
-    ]);
-    
-    $captain = $request->captain;
-    
-    // Find the existing team
-    $team = \App\Models\CampusTournamentTeam::find($teamId);
-    if (!$team) {
-        return response()->json(['message' => 'Team not found'], 404);
-    }
-    
-    // Check if captain is the team captain
-    if ($team->captain_id !== $captain['id']) {
-        return response()->json(['message' => 'Only the team captain can edit the team'], 403);
-    }
 
-    // COLLECT ALL PLAYER IDs TO CHECK (Captain + Members)
-    $playerIdsToCheck = [
-        $captain['id'],
-        $request->players['player2']['id'] ?? null,
-        $request->players['player3']['id'] ?? null,
-        $request->players['player4']['id'] ?? null,
-        $request->players['player5']['id'] ?? null,
-    ];
-    // Remove nulls and check for duplicates
-    $playerIdsToCheck = array_filter($playerIdsToCheck);
-    if (count($playerIdsToCheck) !== count(array_unique($playerIdsToCheck))) {
-        return response()->json(['message' => "Duplicate players found in the roster."], 400);
-    }
-    
-    // Check if team name already exists (excluding current team)
-    $existingTeamName = \App\Models\CampusTournamentTeam::where('team_name', $request->teamName)
-        ->where('tournament_id', $team->tournament_id)
-        ->where('id', '!=', $teamId)
-        ->first();
-    
-    if ($existingTeamName) {
-        return response()->json(['message' => 'Team name already exists'], 400);
-    }
-    
-    \DB::beginTransaction();
-    try {
-        // Update team details
-        $team->update([
-            'team_name' => $request->teamName,
-            'discord_id' => $request->discordId,
-        ]);
-        
-        // Delete existing team members
-        \App\Models\CampusTournamentTeamMember::where('team_id', $teamId)->delete();
-        
-        // Add all players to team
-        $players = [
-            $request->players['captain'],
-            $request->players['player2'],
-            $request->players['player3'],
-            $request->players['player4'],
-            $request->players['player5'],
-        ];
-        
-        foreach ($players as $player) {
-            \App\Models\CampusTournamentTeamMember::create([
-                'team_id' => $teamId,
-                'player_id' => $player['id'],
-                'role' => $player['id'] === $captain['id'] ? 'captain' : 'member',
-            ]);
-        }
-        
-        \DB::commit();
-        return response()->json(['message' => 'Team updated successfully', 'team_id' => $teamId]);
-    } catch (\Exception $e) {
-        \DB::rollBack();
-        \Log::error('Team update error: ' . $e->getMessage());
-        return response()->json(['message' => 'Update failed. Please try again.'], 500);
-    }
-});
+
+
+// PUBLIC ROUTES for Team Submission and Update (Explicitly requested for unauth flow via user_id)
+Route::post('/team-submit/{id}', [\App\Http\Controllers\CampusTournamentController::class, 'submitTeam'])->name('team.submit');
+Route::put('/team-update/{id}', [\App\Http\Controllers\CampusTournamentController::class, 'updateTeam'])->name('team.update');
+
 
 
 // Admin routes are defined in routes/admin.php

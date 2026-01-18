@@ -256,23 +256,33 @@ export default function TeamRegistration() {
             const url = isEditMode ? `/team-update/${existingTeam.id}` : '/team-registration';
             const method = isEditMode ? 'PUT' : 'POST';
 
+            // Get user_id from URL if present (for unauthenticated access)
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('user_id');
+
             const response = await fetch(url, {
                 method: method,
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                 },
                 body: JSON.stringify({
                     teamName: formData.teamName,
                     discordId: formData.discordId,
                     captain: captain,
-                    players: selectedPlayers
+                    players: selectedPlayers,
+                    user_id: userId // Send user_id if present
                 }),
             });
 
             if (response.ok) {
                 const result = await response.json();
-                setModalMessage(isEditMode ? 'Team updated successfully!' : 'Team registered successfully!');
+                setModalMessage(isEditMode
+                    ? 'Team updated successfully! New members have been invited.'
+                    : 'Team registered successfully! Invites have been sent to your teammates.'
+                );
                 setShowSuccessModal(true);
             } else {
                 const errorData = await response.json();
