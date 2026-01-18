@@ -10,11 +10,65 @@ import { Info } from "lucide-react";
 import axios from "axios";
 
 const regionsData = {
-  "Luzon": ["Region 1 - Venue 1", "Region 1 - Venue 2", "Region 1 - Venue 3"],
-  "Visayas": ["Region 2 - Venue 1", "Region 2 - Venue 2"],
-  "Mindanao": ["Region 3 - Venue 1", "Region 3 - Venue 2", "Region 3 - Venue 3"],
+  Luzon: {
+    Online: [
+      "University of Makati",
+      "Lyceum of Subic Bay",
+      "Laguna State Polytechnic University - Los Baños Campus",
+    ],
+    Onsite: [
+      "University of Makati",
+      "Lyceum of Subic Bay",
+      "Laguna State Polytechnic University - Los Baños Campus",
+    ],
+  },
+
+  Visayas: {
+    Online: [
+      "Visayas State University Main",
+      "University of Saint La Salle",
+      "University of San Carlos",
+      "Southwestern University PHINMA",
+      "Cebu Institute of Technology - University",
+      "Iloilo Science and Technology University - La Paz Campus",
+      "West Visayas State University - Main Campus",
+    ],
+    Onsite: [
+      "Visayas State University Main",
+      "University of Saint La Salle",
+      "University of San Carlos",
+      "Southwestern University PHINMA",
+      "Cebu Institute of Technology - University",
+      "Iloilo Science and Technology University - La Paz Campus",
+      "West Visayas State University - Main Campus",
+    ],
+  },
+
+  Mindanao: {
+    Online: [
+      "Mindanao State University - Iligan Institute of Technology",
+      "Davao Del Norte State College",
+      "Father Saturnino Urios University",
+      "Caraga State University - Main Campus",
+      "Ateneo De Davao University",
+      "Holy Cross Davao College",
+      "University of Immaculate Conception",
+    ],
+    Onsite: [
+      "Mindanao State University - Iligan Institute of Technology",
+      "Davao Del Norte State College",
+      "Father Saturnino Urios University",
+      "Caraga State University - Main Campus",
+      "Ateneo De Davao University",
+      "Holy Cross Davao College",
+      "University of Immaculate Conception",
+    ],
+  },
 };
+
+
 const eventDatesData = ["2026-02-20", "2026-03-05", "2026-03-20"];
+const attendanceModes = ["Online", "Onsite"];
 
 const Tooltip = ({ text }) => (
   <div className="relative group ml-auto">
@@ -40,6 +94,7 @@ export default function M7WFRegistration() {
   const [form, setForm] = useState({
     fullName: "",
     region: "",
+    attendanceMode: "",
     venue: "",
     eventDate: "",
     email: "",
@@ -70,9 +125,9 @@ export default function M7WFRegistration() {
     }
 
     setForm((prev) => {
-      if (name === "region") {
-        return { ...prev, region: newValue, venue: "" };
-      }
+      if (name === "region" || name === "attendanceMode") {
+    return { ...prev, [name]: newValue, venue: "" };
+    }
       return { ...prev, [name]: newValue };
     });
 
@@ -243,6 +298,36 @@ export default function M7WFRegistration() {
               {errors.region && <p className="text-red-400 text-sm mt-1">{errors.region}</p>}
             </div>
 
+            {/* ATTENDANCE MODE */}
+            <div>
+              <label className="block font-medium mb-1 text-[#fff4d0]">
+                Attendance Mode
+              </label>
+
+              <div className="relative bg-black/75 rounded-xl p-3 flex items-center gap-3 border border-[#fff4d0]">
+                <Globe className="text-[#fff4d0] w-5 h-5" />
+
+                <select
+                  name="attendanceMode"
+                  value={form.attendanceMode}
+                  onChange={handleChange}
+                  className="bg-transparent w-full outline-none text-white appearance-none"
+                >
+                  <option value="" disabled className="text-black">
+                    Select Online or Onsite
+                  </option>
+
+                  {attendanceModes.map((mode) => (
+                    <option key={mode} value={mode} className="text-black">
+                      {mode}
+                    </option>
+                  ))}
+                </select>
+
+                <ChevronDown className="absolute right-5 text-[#fff4d0] pointer-events-none" />
+              </div>
+            </div>
+
             {/* VENUE */}
             <div>
               <label className="block font-medium mb-1 text-sm sm:text-base text-[#fff4d0]">
@@ -254,17 +339,21 @@ export default function M7WFRegistration() {
                   name="venue"
                   value={form.venue}
                   onChange={handleChange}
-                  disabled={!form.region}
+                  disabled={!form.region || !form.attendanceMode}
                   className="bg-transparent w-full outline-none text-white appearance-none disabled:opacity-50"
                 >
                   <option value="" disabled className="text-black">
-                    {form.region ? "Select your venue" : "Select a region first"}
+                    {form.region && form.attendanceMode
+                      ? "Select your school / venue"
+                      : "Select region & attendance mode first"}
                   </option>
-                  {(regionsData[form.region] || []).map((venue, idx) => (
-                    <option key={idx} value={venue} className="text-black">
-                      {venue}
-                    </option>
-                  ))}
+                  {(regionsData[form.region]?.[form.attendanceMode] || []).map(
+                    (venue, idx) => (
+                      <option key={idx} value={venue} className="text-black">
+                        {venue}
+                      </option>
+                    )
+                  )}
                 </select>
                 <ChevronDown className="absolute right-5 text-[#fff4d0] pointer-events-none" />
               </div>
