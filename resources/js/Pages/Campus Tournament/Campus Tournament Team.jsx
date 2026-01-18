@@ -455,118 +455,119 @@ const CampusTournamentTeam = () => {
               </div>
             )}
           </div>
-        </div>
-      </div>
-    </div>
-
-      {/* Confirmation/Submit Modal */ }
-  {
-    showConfirmModal && (
-      <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-10" onClick={isProcessingInvite ? null : () => setShowConfirmModal(false)} />
-        <div className="relative z-20 w-full max-w-md bg-neutral-900 border border-[#F2C21A]/30 rounded-2xl p-6 shadow-[0_0_30px_-5px_rgba(242,194,26,0.15)] flex flex-col items-center text-center">
-
-          <div className="w-16 h-16 rounded-full bg-[#F2C21A]/20 flex items-center justify-center mb-4 border border-[#F2C21A]/50">
-            <svg className="w-8 h-8 text-[#F2C21A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
+          <div className="flex justify-center mt-10">
+            {/* Placeholder for center content if needed */}
           </div>
 
-          <h3 className="text-2xl font-bold text-white font-montserrat mb-2">
-            Submit Team?
-          </h3>
+          {/* Confirmation/Submit Modal */}
+          {showConfirmModal && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+              <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-10" onClick={isProcessingInvite ? null : () => setShowConfirmModal(false)} />
+              <div className="relative z-20 w-full max-w-md bg-neutral-900 border border-[#F2C21A]/30 rounded-2xl p-6 shadow-[0_0_30px_-5px_rgba(242,194,26,0.15)] flex flex-col items-center text-center">
 
-          <p className="text-white/70 font-montserrat text-sm mb-6 max-w-[80%]">
-            Are you sure you want to finalize your roster? This action cannot be undone. Your team will be officially registered.
-          </p>
-
-          {errorMessage && (
-            <div className="w-full mb-4 px-4 py-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-xs text-left">
-              <strong>Error:</strong> {errorMessage}
-            </div>
-          )}
-
-          <div className="flex w-full gap-3">
-            <button
-              onClick={() => {
-                setShowConfirmModal(false);
-                setErrorMessage(null);
-              }}
-              disabled={isProcessingInvite}
-              className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white font-montserrat font-semibold rounded-xl transition-colors disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleConfirmSubmit}
-              disabled={isProcessingInvite}
-              className="flex-1 py-3 bg-[#F2C21A] hover:bg-[#d9ae18] text-black font-montserrat font-bold rounded-xl shadow-lg transition-transform transform active:scale-95 disabled:opacity-50 disabled:transform-none"
-            >
-              {isProcessingInvite ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <div className="w-16 h-16 rounded-full bg-[#F2C21A]/20 flex items-center justify-center mb-4 border border-[#F2C21A]/50">
+                  <svg className="w-8 h-8 text-[#F2C21A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
-                  Processing...
-                </span>
-              ) : 'Confirm Submit'}
-            </button>
-          </div>
+                </div>
+
+                <h3 className="text-2xl font-bold text-white font-montserrat mb-2">
+                  Submit Team?
+                </h3>
+
+                <p className="text-white/70 font-montserrat text-sm mb-6 max-w-[80%]">
+                  Are you sure you want to finalize your roster? This action cannot be undone. Your team will be officially registered.
+                </p>
+
+                {errorMessage && (
+                  <div className="w-full mb-4 px-4 py-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-xs text-left">
+                    <strong>Error:</strong> {errorMessage}
+                  </div>
+                )}
+
+                <div className="flex w-full gap-3">
+                  <button
+                    onClick={() => {
+                      setShowConfirmModal(false);
+                      setErrorMessage(null);
+                    }}
+                    disabled={isProcessingInvite}
+                    className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white font-montserrat font-semibold rounded-xl transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConfirmSubmit}
+                    disabled={isProcessingInvite}
+                    className="flex-1 py-3 bg-[#F2C21A] hover:bg-[#d9ae18] text-black font-montserrat font-bold rounded-xl shadow-lg transition-transform transform active:scale-95 disabled:opacity-50 disabled:transform-none"
+                  >
+                    {isProcessingInvite ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg className="animate-spin h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Processing...
+                      </span>
+                    ) : 'Confirm Submit'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )
+          }
+
+          {/* Player Details Modal */}
+          {
+            selectedPlayer && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10" onClick={() => setSelectedPlayer(null)} />
+                <div className="relative z-20 w-full max-w-sm bg-neutral-900 border border-white/20 rounded-2xl p-6 shadow-2xl">
+                  <div className="flex flex-col items-center mb-4">
+                    <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-yellow-400 mb-3 bg-neutral-800 relative">
+                      <svg className="absolute inset-0 m-auto w-10 h-10 text-white/30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
+                        <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      </svg>
+                      {selectedPlayer.avatarUrl && (
+                        <img src={selectedPlayer.avatarUrl} alt={formatPlayer(selectedPlayer)} className="w-full h-full object-cover" />
+                      )}
+                    </div>
+                    <h3 className="text-white text-xl font-bold font-montserrat">{formatPlayer(selectedPlayer)}</h3>
+                    <p className="text-white/60 text-sm font-montserrat">{selectedPlayer.email}</p>
+                  </div>
+
+                  <div className="space-y-3 bg-white/5 p-4 rounded-xl border border-white/10">
+                    <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                      <span className="text-white/50 text-xs uppercase font-semibold">MLBB Data</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/70 text-sm">IGN</span>
+                      <span className="text-white font-mono text-sm">{selectedPlayer.ml_ign || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/70 text-sm">Server ID</span>
+                      <span className="text-white font-mono text-sm">{selectedPlayer.ml_server || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/70 text-sm">User ID</span>
+                      <span className="text-white font-mono text-sm">{selectedPlayer.ml_id || 'N/A'}</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setSelectedPlayer(null)}
+                    className="w-full mt-6 bg-white/10 hover:bg-white/20 text-white font-montserrat text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )
+          }
         </div>
       </div>
-    )
-  }
-
-  {/* Player Details Modal */ }
-  {
-    selectedPlayer && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10" onClick={() => setSelectedPlayer(null)} />
-        <div className="relative z-20 w-full max-w-sm bg-neutral-900 border border-white/20 rounded-2xl p-6 shadow-2xl">
-          <div className="flex flex-col items-center mb-4">
-            <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-yellow-400 mb-3 bg-neutral-800 relative">
-              <svg className="absolute inset-0 m-auto w-10 h-10 text-white/30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-              {selectedPlayer.avatarUrl && (
-                <img src={selectedPlayer.avatarUrl} alt={formatPlayer(selectedPlayer)} className="w-full h-full object-cover" />
-              )}
-            </div>
-            <h3 className="text-white text-xl font-bold font-montserrat">{formatPlayer(selectedPlayer)}</h3>
-            <p className="text-white/60 text-sm font-montserrat">{selectedPlayer.email}</p>
-          </div>
-
-          <div className="space-y-3 bg-white/5 p-4 rounded-xl border border-white/10">
-            <div className="flex justify-between items-center border-b border-white/10 pb-2">
-              <span className="text-white/50 text-xs uppercase font-semibold">MLBB Data</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-white/70 text-sm">IGN</span>
-              <span className="text-white font-mono text-sm">{selectedPlayer.ml_ign || 'N/A'}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-white/70 text-sm">Server ID</span>
-              <span className="text-white font-mono text-sm">{selectedPlayer.ml_server || 'N/A'}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-white/70 text-sm">User ID</span>
-              <span className="text-white font-mono text-sm">{selectedPlayer.ml_id || 'N/A'}</span>
-            </div>
-          </div>
-
-          <button
-            onClick={() => setSelectedPlayer(null)}
-            className="w-full mt-6 bg-white/10 hover:bg-white/20 text-white font-montserrat text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    )
-  }
-    </MainLayout >
+    </MainLayout>
   );
 };
 
