@@ -602,6 +602,11 @@ Route::get('/check-username-tournament', function (\Illuminate\Http\Request $req
 // FF25 attendance username checker
 Route::get('/ff25/check-username', [FF25AttendanceController::class, 'checkUsername'])->name('ff25.check-username');
 
+// Secure Attachment Viewing
+Route::get('/user/attachment/{user}', [\App\Http\Controllers\AttachmentController::class, 'show'])
+    ->middleware(['auth', 'verified'])
+    ->name('user.attachment.show');
+
 Route::post('/event-registration', [EventRegistrationController::class, 'store'])->name('event.registration.store');
 
 Route::post('/validate-credentials', function (\Illuminate\Http\Request $request) {
@@ -1160,7 +1165,7 @@ Route::post('/api/user/upload-proof', function (\Illuminate\Http\Request $reques
             $filename = $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
             
             // Store the file in user-specific directory
-            $path = $file->storeAs('users/proofOfEnrollment/' . $user->id, $filename, 'public');
+            $path = $file->storeAs('users/proofOfEnrollment/' . $user->id, $filename, 'local');
             
             if (!$path) {
                 \Log::error('File storage failed for user ' . $user->id);
