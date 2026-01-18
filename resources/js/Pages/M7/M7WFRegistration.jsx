@@ -12,9 +12,8 @@ import axios from "axios";
 const regionsData = {
   Luzon: {
     Online: [
-      "University of Makati",
-      "Lyceum of Subic Bay",
-      "Laguna State Polytechnic University - Los Baños Campus",
+      "Philippine Normal University Manila",
+      "Urdaneta City University",
     ],
     Onsite: [
       "University of Makati",
@@ -25,13 +24,9 @@ const regionsData = {
 
   Visayas: {
     Online: [
-      "Visayas State University Main",
-      "University of Saint La Salle",
-      "University of San Carlos",
-      "Southwestern University PHINMA",
-      "Cebu Institute of Technology - University",
-      "Iloilo Science and Technology University - La Paz Campus",
-      "West Visayas State University - Main Campus",
+      "Northwest Samar State University",
+      "Eastern Visayas State University - Ormoc City Campus",
+      "University of Cebu - Banilad"
     ],
     Onsite: [
       "Visayas State University Main",
@@ -46,13 +41,11 @@ const regionsData = {
 
   Mindanao: {
     Online: [
-      "Mindanao State University - Iligan Institute of Technology",
-      "Davao Del Norte State College",
-      "Father Saturnino Urios University",
-      "Caraga State University - Main Campus",
-      "Ateneo De Davao University",
-      "Holy Cross Davao College",
-      "University of Immaculate Conception",
+      "PHINMA Cagayan de Oro College",
+      "University of Southern Mindanao Kabacan Main Campus",
+      "ACLC College of Bukidnon",
+      "Surigao Del Norte State University ",
+      "Josefina Herrera Cerilles State College",
     ],
     Onsite: [
       "Mindanao State University - Iligan Institute of Technology",
