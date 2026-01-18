@@ -5,6 +5,7 @@ import { FaNewspaper, FaCalendar, FaUsers, FaTachometerAlt, FaSignOutAlt, FaBed,
 export default function AdminLayout({ children }) {
     const { auth } = usePage().props;
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
 
     const navigation = [
         { name: 'Dashboard', href: route('admin.dashboard'), routeName: 'admin.dashboard', icon: FaTh },
@@ -54,35 +55,21 @@ export default function AdminLayout({ children }) {
                             key={item.name}
                             href={item.href}
                             className={`group flex items-center px-4 py-3 text-base font-medium rounded-lg transition-all duration-200 ${route().current(item.routeName)
-                                    ? 'bg-[#f0f0f0] text-[#2C2C3E] border-2 border-gray-200 shadow font-bold'
-                                    : 'text-gray-300 hover:bg-[#4A4A60] hover:text-white'
+                                ? 'bg-[#f0f0f0] text-[#2C2C3E] border-2 border-gray-200 shadow font-bold'
+                                : 'text-gray-300 hover:bg-[#4A4A60] hover:text-white'
                                 }`}
                             onClick={() => setSidebarOpen(false)}
                         >
                             <item.icon
                                 className={`mr-3 flex-shrink-0 h-5 w-5 transition-colors duration-200 ${route().current(item.routeName)
-                                        ? 'text-[#2C2C3E]'
-                                        : 'text-gray-300 group-hover:text-white'
+                                    ? 'text-[#2C2C3E]'
+                                    : 'text-gray-300 group-hover:text-white'
                                     }`}
                             />
                             {item.name}
                         </Link>
                     ))}
                 </nav>
-
-                {/* Logout Button */}
-                <div className="p-4 mt-auto bottom-0 absolute w-full">
-                    <Link
-                        href={route('admin.logout')}
-                        method="post"
-                        as="button"
-                        className="w-full flex items-center justify-start py-3 px-4 rounded-lg bg-[#f0f0f0] text-[#212121] font-medium hover:bg-[#4A4A60] hover:text-white transition-colors duration-200"
-                        onClick={() => setSidebarOpen(false)}
-                    >
-                        <FaSignOutAlt className="w-5 h-5 mr-2" />
-                        Logout
-                    </Link>
-                </div>
             </div>
 
             {/* Main content area */}

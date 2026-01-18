@@ -32,6 +32,7 @@ class CheckUserState
                 'ml.logout', // ML logout route
                 'force-logout', // Force logout route
                 'profile.destroy', // Allow account deletion for all states
+                'user.attachment.show', // Allow viewing own attachment
             ];
             
             // Check user state and restrict access accordingly

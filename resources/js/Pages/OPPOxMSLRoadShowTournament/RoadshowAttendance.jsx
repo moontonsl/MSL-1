@@ -194,8 +194,8 @@ export default function OPPOxMSLRoadShowAttendance() {
                 Region <span className="text-red-400">*</span>
               </label>
               <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${validationErrors.region
-                  ? 'bg-red-500/10 border border-red-500'
-                  : 'bg-white/5'
+                ? 'bg-red-500/10 border border-red-500'
+                : 'bg-white/5'
                 }`}>
                 <MapPin className="text-[#F2C21A] w-4 h-4 sm:w-5 sm:h-5" />
                 <select
@@ -230,8 +230,8 @@ export default function OPPOxMSLRoadShowAttendance() {
                 Venue <span className="text-red-400">*</span>
               </label>
               <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${validationErrors.venue
-                  ? 'bg-red-500/10 border border-red-500'
-                  : 'bg-white/5'
+                ? 'bg-red-500/10 border border-red-500'
+                : 'bg-white/5'
                 }`}>
                 <Globe className="text-[#F2C21A] w-4 h-4 sm:w-5 sm:h-5" />
                 <select
@@ -268,8 +268,8 @@ export default function OPPOxMSLRoadShowAttendance() {
                 Date <span className="text-red-400">*</span>
               </label>
               <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${validationErrors.date
-                  ? 'bg-red-500/10 border border-red-500'
-                  : 'bg-white/5'
+                ? 'bg-red-500/10 border border-red-500'
+                : 'bg-white/5'
                 }`}>
                 <Calendar className="text-[#F2C21A] w-4 h-4 sm:w-5 sm:h-5" />
                 <select
