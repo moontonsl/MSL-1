@@ -4,6 +4,7 @@ import { Facebook } from 'lucide-react';
 import avatar from '../assets/42ca9ea53c9f0acd1d273d2864b58719215b59f4.png';
 import Modal from '@/Components/Modal.jsx';
 import Toast from '@/Components/Toast.jsx';
+import SecurePdfViewer from '@/Components/SecurePdfViewer';
 
 const TableComponent = ({ stateFilter, searchQuery, user }) => {
     const [users, setUsers] = useState([]);
@@ -38,13 +39,13 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             if (searchQuery && searchQuery.trim()) {
                 url += `&search=${encodeURIComponent(searchQuery.trim())}`;
             }
-            
+
             const response = await fetch(url);
-            
+
             // Check response status first
             if (!response.ok) {
                 let errorMessage = `Server error: ${response.status} ${response.statusText}`;
-                
+
                 // Try to get more specific error information
                 try {
                     const contentType = response.headers.get('content-type');
@@ -63,10 +64,10 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                 } catch (parseError) {
                     console.error('Error parsing error response:', parseError);
                 }
-                
+
                 throw new Error(errorMessage);
             }
-            
+
             // Check content type before parsing
             const contentType = response.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
@@ -74,27 +75,20 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                 console.error('Expected JSON but got:', contentType, textResponse.substring(0, 200));
                 throw new Error('Server returned invalid data format. Expected JSON but got: ' + contentType);
             }
-            
+
             const data = await response.json();
-            console.log('Fetched users data:', data);
-            
+
             // Validate data structure
             if (!data || typeof data !== 'object') {
                 throw new Error('Server returned invalid data structure');
             }
-            
-            if (data.data && data.data.length > 0) {
-                console.log('First user sample:', data.data[0]);
-            }
-            
+
             setUsers(data.data || []);
             setTotalPages(data.last_page || 1);
             setCurrentPage(data.current_page || 1);
             setTotalUsers(data.total || 0);
-            
+
         } catch (error) {
-            console.error('Error fetching users:', error);
-            
             // Retry logic for temporary server issues
             if (retryCount < 2 && (
                 error.message.includes('Server error: 500') ||
@@ -103,13 +97,12 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                 error.message.includes('Server error: 504') ||
                 error.message.includes('HTML instead of data')
             )) {
-                console.log(`Retrying fetchUsers (attempt ${retryCount + 1})...`);
                 setTimeout(() => {
                     fetchUsers(page, retryCount + 1);
                 }, 2000 * (retryCount + 1)); // Exponential backoff: 2s, 4s
                 return;
             }
-            
+
             // Show user-friendly error message
             let errorMessage = 'Failed to load users. ';
             if (error.message.includes('Server error:')) {
@@ -123,7 +116,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             } else {
                 errorMessage += error.message;
             }
-            
+
             showToast(errorMessage, 'error');
             setUsers([]);
             setTotalPages(1);
@@ -133,33 +126,30 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
     };
 
     useEffect(() => {
-        
+
         if (currentPage !== 1) {
             setCurrentPage(1);
         } else {
             fetchUsers(1);
         }
-        
+
     }, [searchQuery, stateFilter]);
 
     useEffect(() => {
         fetchUsers(currentPage);
-        
+
     }, [currentPage]);
 
     useEffect(() => {
         if (showModal && selectedUser) {
-            console.log('Selected user:', selectedUser);
-            console.log('User name:', selectedUser.name);
-            console.log('User surname:', selectedUser.surname);
-            console.log('User email:', selectedUser.email);
+            // Modal opened with selected user
         }
     }, [showModal, selectedUser]);
 
     //Prevent modal close
     useEffect(() => {
         if (showAttachmentModal) {
-        
+
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = 'unset';
@@ -188,17 +178,6 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
     };
 
     const openModal = (user) => {
-        // Log user data for debugging
-        console.log('Opening modal for user:', {
-            id: user.id,
-            name: user.name,
-            surname: user.surname,
-            email: user.email,
-            state: user.state,
-            hasProofOfEnrollment: !!user.proofOfEnrollment,
-            dataKeys: Object.keys(user)
-        });
-        
         setSelectedUser(user);
         setShowModal(true);
     };
@@ -209,26 +188,15 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
 
     const handleViewAttachment = async (proofOfEnrollment) => {
         if (proofOfEnrollment) {
-            const fullUrl = `/storage/${proofOfEnrollment}`;
-            
-            // Check if file exists on server
-            try {
-                const response = await fetch(fullUrl, { method: 'HEAD' });
-                if (response.ok) {
-                    setFileExists(true);
-                    setAttachmentUrl(fullUrl);
-                    setShowAttachmentModal(true);
-                } else {
-                    setFileExists(false);
-                    setAttachmentUrl(fullUrl);
-                    setShowAttachmentModal(true);
-                }
-            } catch (error) {
-                console.error('Error checking file:', error);
-                setFileExists(false);
-                setAttachmentUrl(fullUrl);
-                setShowAttachmentModal(true);
-            }
+            // Use secure route
+            const fullUrl = `/user/attachment/${selectedUser.id}`;
+
+            // We can't easily check HEAD on the secure route without auth headers in fetch, 
+            // but the iframe/img tag will handle the request with cookies.
+            // For now, assume it exists if the user has proofOfEnrollment path in DB.
+            setFileExists(true);
+            setAttachmentUrl(fullUrl);
+            setShowAttachmentModal(true);
         }
     };
 
@@ -293,12 +261,12 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
     const handleAction = async (action, userId, reason = null) => {
         setActionLoading(true);
         setError('');
-        
+
         try {
             let url;
             let method;
             let body = {};
-            
+
             switch (action) {
                 case 'verify':
                     // Additional check for proof of enrollment before making the API call
@@ -326,14 +294,22 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                     url = `/api/sladmin/users/${userId}/promote`;
                     method = 'PATCH';
                     break;
+                case 'promote-regional-admin':
+                    url = `/api/sladmin/users/${userId}/promote-regional-admin`;
+                    method = 'PATCH';
+                    break;
                 case 'demote':
                     url = `/api/sladmin/users/${userId}/demote`;
+                    method = 'PATCH';
+                    break;
+                case 'demote-regional-admin':
+                    url = `/api/sladmin/users/${userId}/demote-regional-admin`;
                     method = 'PATCH';
                     break;
                 default:
                     throw new Error('Invalid action');
             }
-            
+
             const response = await fetch(url, {
                 method,
                 headers: {
@@ -342,7 +318,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                 },
                 body: Object.keys(body).length > 0 ? JSON.stringify(body) : undefined,
             });
-            
+
             console.log(`Action ${action} response:`, {
                 status: response.status,
                 statusText: response.statusText,
@@ -350,12 +326,12 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                 url: url,
                 userId: userId
             });
-            
+
             // Check response status first
             if (!response.ok) {
                 let errorMessage = `Server error: ${response.status} ${response.statusText}`;
                 let data = null;
-                
+
                 // Try to get more specific error information
                 try {
                     const contentType = response.headers.get('content-type');
@@ -365,7 +341,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                     } else {
                         const textResponse = await response.text();
                         console.error('Non-JSON error response:', textResponse);
-                        
+
                         if (textResponse.includes('html') || textResponse.includes('<!DOCTYPE')) {
                             errorMessage = 'Server returned HTML instead of data. This usually means a server error occurred.';
                         } else if (textResponse.includes('error') || textResponse.includes('Error')) {
@@ -377,39 +353,39 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                 } catch (parseError) {
                     console.error('Error parsing error response:', parseError);
                 }
-                
+
                 // Special handling for verification without attachment
                 if (action === 'verify' && response.status === 400 && data?.error && data.error.includes('proof of enrollment')) {
                     throw new Error('Verification failed: User must upload proof of enrollment before verification.');
                 }
-                
+
                 throw new Error(errorMessage);
             }
-            
+
             // Check content type before parsing success response
             const contentType = response.headers.get('content-type');
             let data;
-            
+
             if (!contentType || !contentType.includes('application/json')) {
                 const textResponse = await response.text();
                 console.error('Expected JSON but got:', contentType, textResponse.substring(0, 200));
                 throw new Error('Server returned invalid data format. Expected JSON but got: ' + contentType);
             }
-            
+
             data = await response.json();
-            
+
             // Validate data structure
             if (!data || typeof data !== 'object') {
                 throw new Error('Server returned invalid data structure');
             }
-            
+
             //Close modal and refresh user list
             setShowModal(false);
             setShowBlockModal(false);
             setSelectedUser(null);
             setBlockReason('');
             fetchUsers(currentPage);
-            
+
             //success toast
             const actionMessages = {
                 'verify': 'User verified successfully',
@@ -417,10 +393,12 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                 'renew': data.message || 'User renewed successfully',
                 'delete': 'User deleted successfully',
                 'promote': data.message || 'User promoted to Student Leader successfully',
-                'demote': data.message || 'Student Leader demoted successfully'
+                'promote-regional-admin': data.message || 'User promoted to Regional Admin successfully',
+                'demote': data.message || 'Student Leader demoted successfully',
+                'demote-regional-admin': data.message || 'Regional Admin demoted to Student successfully'
             };
             showToast(actionMessages[action] || 'Action completed successfully', 'success');
-            
+
         } catch (err) {
             console.error('Action error:', err);
             console.error('Error details:', {
@@ -430,9 +408,9 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                 action: action,
                 userId: userId
             });
-            
+
             let errorMessage = 'An unexpected error occurred. Please try again.';
-            
+
             if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
                 errorMessage = 'Network error. Please check your connection and try again.';
             } else if (err.message.includes('Server error:')) {
@@ -444,7 +422,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             } else if (err.message) {
                 errorMessage = err.message;
             }
-            
+
             setError(errorMessage);
             showToast(errorMessage, 'error');
         } finally {
@@ -473,7 +451,11 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
                             <div className="text-white">
-                                <span className="font-semibold">{stateFilter === 'StudentLeaders' ? 'Student Leaders:' : 'Students:'}</span> {totalUsers}
+                                <span className="font-semibold">
+                                    {stateFilter === 'StudentLeaders' ? 'Student Leaders:' :
+                                        stateFilter === 'RegionalAdmins' ? 'Regional Admins:' :
+                                            'Students:'}
+                                </span> {totalUsers}
                             </div>
                             {(() => {
                                 const usersWithoutAttachment = users.filter(user => !user.proofOfEnrollment && (user.state === 'New' || user.state === 'Renew'));
@@ -490,84 +472,87 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                     </div>
                 </div>
             )}
-            
+
             <div className="overflow-x-auto rounded-lg border border-neutral-800 bg-[#1a1a1a] text-white shadow custom-scrollbar">
                 <table className="min-w-full table-auto text-sm">
                     <thead className="bg-[#2a2a2a] text-xs uppercase text-gray-400">
-                    <tr>
-                        <th className="px-4 py-3 text-left">MSL Account</th>
-                        <th className="px-4 py-3 text-left hidden md:table-cell">School / Institution</th>
-                        <th className="px-4 py-3 text-left hidden md:table-cell">Year Level</th>
-                        <th className="px-4 py-3 text-left hidden md:table-cell">Status</th>
-                        <th className="px-4 py-3 text-center">Details</th>
-                    </tr>
+                        <tr>
+                            <th className="px-4 py-3 text-left">MSL Account</th>
+                            <th className="px-4 py-3 text-left hidden md:table-cell">School / Institution</th>
+                            <th className="px-4 py-3 text-left hidden md:table-cell">Year Level</th>
+                            <th className="px-4 py-3 text-left hidden md:table-cell">Status</th>
+                            <th className="px-4 py-3 text-center">Details</th>
+                        </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-700">
-                    {loading ? (
-                        <tr><td colSpan={6} className="text-center py-8">Loading...</td></tr>
-                    ) : users.length === 0 ? (
-                        <tr><td colSpan={6} className="text-center py-8">No users found.</td></tr>
-                    ) : users.map((item, index) => (
-                        <tr key={item.id} className="hover:bg-[#2f2f2f] transition-colors">
-                            <td className="flex items-center gap-3 px-4 py-3">
-                                <div className="bg-gradient-to-tr from-[#D4AF37] to-[#FFFACD] p-[2px] rounded-full">
-                                    <div className="bg-neutral-900 rounded-full">
-                                        <img
-                                            src={avatar}
-                                            alt={item.name}
-                                            className="h-[32px] w-[32px] rounded-full object-cover"
-                                        />
+                        {loading ? (
+                            <tr><td colSpan={6} className="text-center py-8">Loading...</td></tr>
+                        ) : users.length === 0 ? (
+                            <tr><td colSpan={6} className="text-center py-8">No users found.</td></tr>
+                        ) : users.map((item, index) => (
+                            <tr key={item.id} className="hover:bg-[#2f2f2f] transition-colors">
+                                <td className="flex items-center gap-3 px-4 py-3">
+                                    <div className="bg-gradient-to-tr from-[#D4AF37] to-[#FFFACD] p-[2px] rounded-full">
+                                        <div className="bg-neutral-900 rounded-full">
+                                            <img
+                                                src={avatar}
+                                                alt={item.name}
+                                                className="h-[32px] w-[32px] rounded-full object-cover"
+                                            />
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div>
-                                    <div className="text-xs text-gray-200 font-bold">{item.name} {item.surname}</div>
-                                    <div className="text-xs text-gray-400">IGN: {item.ml_ign}</div>
-                                    <div className="flex-col items-center gap-2 md:flex-row">
-                                        <div className="text-xs text-gray-400">{item.ml_id} ({item.ml_server})</div>
-                                        <span className="text-xs text-blue-400 cursor-pointer">Facebook</span>
+                                    <div>
+                                        <div className="text-xs text-gray-200 font-bold">{item.name} {item.surname}</div>
+                                        <div className="text-xs text-gray-400">IGN: {item.ml_ign}</div>
+                                        <div className="flex-col items-center gap-2 md:flex-row">
+                                            <div className="text-xs text-gray-400">{item.ml_id} ({item.ml_server})</div>
+                                            <span className="text-xs text-blue-400 cursor-pointer">Facebook</span>
+                                        </div>
                                     </div>
-                                </div>
-                            </td>
-                            <td className="px-4 py-3 hidden md:table-cell">{item.university}</td>
-                            <td className="px-4 py-3 hidden md:table-cell">{item.year_level}</td>
-                            <td className="px-4 py-3 hidden md:table-cell">
-                                <div className="flex flex-col gap-1">
-                                    {stateFilter === 'StudentLeaders' ? (
-                                        <span className="rounded px-2 py-1 text-xs font-medium bg-purple-600/10 text-purple-400">
-                                            Student Leader
-                                        </span>
-                                    ) : (
-                                        <>
-                                            <span
-                                                className={`rounded px-2 py-1 text-xs font-medium ${
-                                                    item.state === 'Verified'
+                                </td>
+                                <td className="px-4 py-3 hidden md:table-cell">{item.university}</td>
+                                <td className="px-4 py-3 hidden md:table-cell">{item.year_level}</td>
+                                <td className="px-4 py-3 hidden md:table-cell">
+                                    <div className="flex flex-col gap-1">
+                                        {stateFilter === 'StudentLeaders' ? (
+                                            <span className="rounded px-2 py-1 text-xs font-medium bg-purple-600/10 text-purple-400">
+                                                Student Leader
+                                            </span>
+                                        ) : stateFilter === 'RegionalAdmins' ? (
+                                            <span className="rounded px-2 py-1 text-xs font-medium bg-blue-600/10 text-blue-400">
+                                                Regional Admin
+                                            </span>
+                                        ) : (
+                                            <>
+                                                <span
+                                                    className={`rounded px-2 py-1 text-xs font-medium ${item.state === 'Verified'
                                                         ? 'bg-green-600/10 text-green-400'
                                                         : item.state === 'Blocked'
                                                             ? 'bg-red-600/10 text-red-400'
                                                             : 'bg-yellow-600/10 text-yellow-400'
-                                                }`}
-                                            >
-                                                {item.state}
-                                            </span>
-                                            {!item.proofOfEnrollment && (item.state === 'New' || item.state === 'Renew') && (
-                                                <span className="rounded px-2 py-1 text-xs font-medium bg-red-600/10 text-red-400 border border-red-500/30">
-                                                    ⚠️ No Attachment
+                                                        }`}
+                                                >
+                                                    {item.state}
                                                 </span>
-                                            )}
-                                        </>
-                                    )}
-                                </div>
-                            </td>
-                            <td className="px-4 py-3 text-center">
-                                <div className="flex flex-col sm:flex-row items-center gap-2">
-                                    <button className="rounded bg-white px-4 py-1.5 text-sm font-semibold text-black hover:bg-gray-200 whitespace-nowrap" onClick={() => openModal(item)}>
-                                        View Profile
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
+                                                {!item.proofOfEnrollment && (item.state === 'New' || item.state === 'Renew') && (
+                                                    <span className="rounded px-2 py-1 text-xs font-medium bg-red-600/10 text-red-400 border border-red-500/30">
+                                                        ⚠️ No Attachment
+                                                    </span>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                    <div className="flex flex-col sm:flex-row items-center gap-2">
+                                        <button className="rounded bg-white px-4 py-1.5 text-sm font-semibold text-black hover:bg-gray-200 whitespace-nowrap" onClick={() => openModal(item)}>
+                                            View Profile
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
             </div>
@@ -589,9 +574,8 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                             <button
                                 key={page}
                                 onClick={() => goToPage(page)}
-                                className={`px-3 py-1 rounded ${
-                                    currentPage === page ? 'bg-white text-black font-bold' : 'bg-neutral-800'
-                                }`}
+                                className={`px-3 py-1 rounded ${currentPage === page ? 'bg-white text-black font-bold' : 'bg-neutral-800'
+                                    }`}
                             >
                                 {page}
                             </button>
@@ -612,12 +596,12 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                 {selectedUser && (
                     <div className="bg-gradient-to-br from-[#000] via-gray-800 to-black text-white p-2 sm:p-8 min-h-[600px] max-h-[90vh] overflow-y-auto relative rounded-md">
                         {/* Close Button */}
-                        <button 
+                        <button
                             onClick={closeModal}
                             className="absolute top-4 right-4 z-10 p-2 rounded-full bg-gray-800/50 hover:bg-gray-700/70 transition-all duration-200 text-gray-300 hover:text-white"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="bi bi-x" viewBox="0 0 16 16">
-                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.646 2.647a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.646 2.647a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
                             </svg>
                         </button>
 
@@ -630,15 +614,15 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                         <div className="relative inline-block">
                                             <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-400 rounded-full blur-lg opacity-30 animate-pulse"></div>
                                             <div className="relative rounded-full border-4 border-yellow-400 p-2 bg-gradient-to-tr from-yellow-400 to-yellow-300">
-                                                <img 
-                                                    src={avatar} 
-                                                    alt="avatar" 
-                                                    className="w-32 h-32 rounded-full object-cover shadow-2xl" 
+                                                <img
+                                                    src={avatar}
+                                                    alt="avatar"
+                                                    className="w-32 h-32 rounded-full object-cover shadow-2xl"
                                                 />
                                             </div>
                                         </div>
-                                        
-                                        
+
+
                                     </div>
 
                                     {/* Basic Info */}
@@ -657,6 +641,13 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                                                 Student Leader
                                                             </span>
                                                         </>
+                                                    ) : stateFilter === 'RegionalAdmins' ? (
+                                                        <>
+                                                            <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
+                                                            <span className="font-semibold text-xs uppercase tracking-wider text-blue-400">
+                                                                Regional Admin
+                                                            </span>
+                                                        </>
                                                     ) : (
                                                         <>
                                                             <div className={`w-2 h-2 rounded-full ${selectedUser.state === 'Verified' ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'}`}></div>
@@ -668,24 +659,47 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                                 </div>
                                             </div>
                                         </div>
-                                        
+
                                         <div className="space-y-3">
                                             <div className="bg-gray-700/30 rounded-lg p-3">
                                                 <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">School</div>
                                                 <div className="font-medium text-white">{selectedUser.university || '-'}</div>
                                             </div>
-                                            
+
                                             <div className="bg-gray-700/30 rounded-lg p-3">
                                                 <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Year Level</div>
                                                 <div className="font-medium text-white">{selectedUser.year_level || '-'}</div>
                                             </div>
-                                            
+
                                             <div className="bg-gray-700/30 rounded-lg p-3">
                                                 <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Course</div>
                                                 <div className="font-medium text-white">{selectedUser.course || '-'}</div>
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* Promote Buttons for Super Admin */}
+                                    {user?.role === 'Super Admin' && stateFilter === 'Verified' && (
+                                        <div className="mt-6 pt-6 border-t border-gray-700/50">
+                                            <div className="text-xs text-gray-400 uppercase tracking-wider mb-3 text-center">Promote User</div>
+                                            <div className="space-y-2">
+                                                <button
+                                                    className="w-full px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-all duration-200 disabled:opacity-50"
+                                                    onClick={() => handleAction('promote', selectedUser.id)}
+                                                    disabled={actionLoading}
+                                                >
+                                                    {actionLoading ? 'Promoting...' : 'Student Leader'}
+                                                </button>
+                                                <button
+                                                    className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all duration-200 disabled:opacity-50"
+                                                    onClick={() => handleAction('promote-regional-admin', selectedUser.id)}
+                                                    disabled={actionLoading}
+                                                >
+                                                    {actionLoading ? 'Promoting...' : 'Regional Admin'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -693,7 +707,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                             <div className="lg:col-span-2">
                                 <div className="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
                                     <h4 className="text-lg font-semibold text-white mb-6 border-b border-gray-700/50 pb-3">Student Information</h4>
-                                    
+
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         {/* MLBB Information */}
                                         <div className="space-y-4">
@@ -805,6 +819,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                                 </div>
                                             </div>
                                         )}
+
                                     </div>
 
                                     {/* Action Buttons */}
@@ -812,12 +827,11 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                         <div className="flex flex-col sm:flex-row gap-3 justify-between items-stretch sm:items-center">
                                             {/* Left Side Actions */}
                                             <div className="flex flex-col sm:flex-row gap-3">
-                                                <button 
-                                                    className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none ${
-                                                        selectedUser.proofOfEnrollment 
-                                                            ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                                                            : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                                    }`}
+                                                <button
+                                                    className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none ${selectedUser.proofOfEnrollment
+                                                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                                        }`}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleViewAttachment(selectedUser.proofOfEnrollment);
@@ -832,13 +846,12 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                                     </div>
                                                 </button>
 
-                                                {(stateFilter === 'New' || stateFilter === 'Renew') && stateFilter !== 'StudentLeaders' && (
-                                                    <button 
-                                                        className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none ${
-                                                            !selectedUser.proofOfEnrollment 
-                                                                ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
-                                                                : 'bg-green-600 hover:bg-green-700 text-white'
-                                                        }`}
+                                                {(stateFilter === 'New' || stateFilter === 'Renew') && stateFilter !== 'StudentLeaders' && stateFilter !== 'RegionalAdmins' && (
+                                                    <button
+                                                        className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none ${!selectedUser.proofOfEnrollment
+                                                            ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                                            : 'bg-green-600 hover:bg-green-700 text-white'
+                                                            }`}
                                                         onClick={() => {
                                                             if (handleVerifyAttempt(selectedUser)) {
                                                                 handleAction('verify', selectedUser.id);
@@ -850,15 +863,16 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                                         {actionLoading ? 'Processing...' : 'Verify'}
                                                     </button>
                                                 )}
-                                                
+
+
                                             </div>
 
                                             {/* Right Side Actions */}
                                             <div className="flex flex-col sm:flex-row gap-3">
-                                                
 
-                                                {(stateFilter === 'Verified' || stateFilter === 'Renew' || stateFilter === 'New') && stateFilter !== 'StudentLeaders' && (
-                                                    <button 
+
+                                                {(stateFilter === 'Verified' || stateFilter === 'Renew' || stateFilter === 'New') && stateFilter !== 'StudentLeaders' && stateFilter !== 'RegionalAdmins' && (
+                                                    <button
                                                         className="px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
                                                         onClick={() => handleAction('renew', selectedUser.id)}
                                                         disabled={actionLoading}
@@ -866,9 +880,9 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                                         {actionLoading ? 'Processing...' : 'Renew'}
                                                     </button>
                                                 )}
-                                                
-                                                {stateFilter !== 'StudentLeaders' && (
-                                                    <button 
+
+                                                {stateFilter !== 'StudentLeaders' && stateFilter !== 'RegionalAdmins' && (
+                                                    <button
                                                         className="px-6 py-3 bg-red-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
                                                         onClick={() => {
                                                             setShowBlockModal(true);
@@ -880,9 +894,9 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                                         Block User
                                                     </button>
                                                 )}
-                                                
+
                                                 {user?.role === 'Regional Admin' && stateFilter === 'Verified' && (
-                                                    <button 
+                                                    <button
                                                         className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
                                                         onClick={() => handleAction('promote', selectedUser.id)}
                                                         disabled={actionLoading}
@@ -890,9 +904,11 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                                         {actionLoading ? 'Promoting...' : 'Promote to SL'}
                                                     </button>
                                                 )}
-                                                
+
+
+
                                                 {user?.role === 'Regional Admin' && stateFilter === 'StudentLeaders' && (
-                                                    <button 
+                                                    <button
                                                         className="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
                                                         onClick={() => handleAction('demote', selectedUser.id)}
                                                         disabled={actionLoading}
@@ -900,9 +916,19 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                                         {actionLoading ? 'Demoting...' : 'Demote to Student'}
                                                     </button>
                                                 )}
-                                                
-                                                {user?.role === 'Super Admin' && (
-                                                    <button 
+
+                                                {user?.role === 'Super Admin' && stateFilter === 'RegionalAdmins' && (
+                                                    <button
+                                                        className="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
+                                                        onClick={() => handleAction('demote-regional-admin', selectedUser.id)}
+                                                        disabled={actionLoading}
+                                                    >
+                                                        {actionLoading ? 'Demoting...' : 'Demote to Student'}
+                                                    </button>
+                                                )}
+
+                                                {(user?.role === 'Super Admin' || (user?.role === 'Regional Admin' && stateFilter === 'Blocked' && selectedUser.state === 'Blocked')) && (
+                                                    <button
                                                         className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
                                                         onClick={() => handleAction('delete', selectedUser.id)}
                                                         disabled={actionLoading}
@@ -926,25 +952,25 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                     </div>
                 )}
             </Modal>
-            
+
             {/* Block User Modal */}
             {showBlockModal && createPortal(
                 <div className="fixed inset-0 z-[9999] bg-[#fff]/50 flex items-center justify-center p-4" style={{ pointerEvents: 'auto' }}>
-                    <div 
-                        className="absolute inset-0 bg-black/50" 
+                    <div
+                        className="absolute inset-0 bg-black/50"
                         onClick={(e) => {
                             e.stopPropagation();
                             setShowBlockModal(false);
                         }}
                     ></div>
-                    <div 
-                        className="relative bg-black text-white p-6 rounded-lg max-w-md w-full mx-4" 
+                    <div
+                        className="relative bg-black text-white p-6 rounded-lg max-w-md w-full mx-4"
                         onClick={(e) => e.stopPropagation()}
                         style={{ pointerEvents: 'auto' }}
                     >
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold">Block User</h3>
-                            <button 
+                            <button
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setShowBlockModal(false);
@@ -954,7 +980,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                 ×
                             </button>
                         </div>
-                        
+
                         {selectedUser && (
                             <div className="mb-6">
                                 <p className="text-gray-300 mb-2">
@@ -965,7 +991,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                 </p>
                             </div>
                         )}
-                        
+
                         <div className="mb-6">
                             <label htmlFor="blockReason" className="block text-sm font-medium text-gray-300 mb-2">
                                 Reason for Blocking *
@@ -983,13 +1009,13 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                 {blockReason.length}/1000 characters
                             </div>
                         </div>
-                        
+
                         {error && (
                             <div className="mb-4 p-3 bg-red-600 text-white rounded text-center">
                                 {error}
                             </div>
                         )}
-                        
+
                         <div className="flex justify-end gap-3">
                             <button
                                 onClick={(e) => {
@@ -1016,7 +1042,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                 </div>,
                 document.body
             )}
-            
+
             {/* Attachment Modal  */}
             {showAttachmentModal && createPortal(
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
@@ -1027,7 +1053,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                             <div className="flex items-center gap-2">
                                 {/* Zoom Controls */}
                                 <div className="flex items-center gap-2 bg-neutral-800/50 rounded-lg px-3 py-1 border border-neutral-700">
-                                    <button 
+                                    <button
                                         onClick={() => setZoomLevel(prev => Math.max(0.5, prev - 0.25))}
                                         className="text-white hover:text-blue-400 transition-colors p-1 rounded hover:bg-neutral-700"
                                         title="Zoom Out"
@@ -1039,7 +1065,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                     <span className="text-sm text-gray-300 min-w-[3rem] text-center">
                                         {Math.round(zoomLevel * 100)}%
                                     </span>
-                                    <button 
+                                    <button
                                         onClick={() => setZoomLevel(prev => Math.min(3, prev + 0.25))}
                                         className="text-white hover:text-blue-400 transition-colors p-1 rounded hover:text-blue-400 transition-colors p-1 rounded hover:bg-neutral-700"
                                         title="Zoom In"
@@ -1048,7 +1074,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
                                         </svg>
                                     </button>
-                                    <button 
+                                    <button
                                         onClick={() => setZoomLevel(1)}
                                         className="text-white hover:text-green-400 transition-colors p-1 rounded hover:bg-neutral-700 text-xs"
                                         title="Reset Zoom"
@@ -1056,7 +1082,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                         Reset
                                     </button>
                                 </div>
-                                <button 
+                                <button
                                     onClick={closeAttachmentModal}
                                     className="text-white hover:text-gray-300 text-2xl font-bold ml-4"
                                 >
@@ -1076,30 +1102,16 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                         <p className="text-sm text-red-300">The proof of enrollment file could not be located on the server.</p>
                                     </div>
                                 </div>
-                            ) : attachmentUrl.toLowerCase().endsWith('.pdf') ? (
+                            ) : selectedUser?.proofOfEnrollment?.toLowerCase().endsWith('.pdf') ? (
                                 // PDF Viewer with Zoom
-                                <div className="relative w-full h-[75vh] overflow-auto">
-                                    <iframe
-                                        src={`${attachmentUrl}#toolbar=0&navpanes=0&scrollbar=0&zoom=${Math.round(zoomLevel * 100)}`}
-                                        className="w-full h-full rounded-lg border border-neutral-700"
-                                        title="Proof of Enrollment PDF"
-                                        style={{
-                                            transform: `scale(${zoomLevel})`,
-                                            transformOrigin: 'top left',
-                                            width: `${100 / zoomLevel}%`,
-                                            height: `${100 / zoomLevel}%`
-                                        }}
-                                        onError={(e) => {
-                                            e.target.style.display = 'none';
-                                            e.target.nextSibling.style.display = 'block';
-                                        }}
-                                    />
+                                <div className="relative w-full h-[75vh] overflow-hidden bg-neutral-900 rounded-lg border border-neutral-700">
+                                    <SecurePdfViewer url={attachmentUrl} />
                                 </div>
                             ) : (
                                 // Image Viewer with Zoom and Pan
-                                <div 
+                                <div
                                     className="relative overflow-hidden rounded-lg border border-neutral-700 w-full"
-                                    style={{ 
+                                    style={{
                                         height: '75vh',
                                         cursor: isDragging ? 'grabbing' : 'grab'
                                     }}
@@ -1109,27 +1121,41 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                     onMouseLeave={handleMouseUp}
                                     onWheel={handleWheel}
                                 >
-                                    <img 
-                                        src={attachmentUrl} 
-                                        alt="Proof of Enrollment" 
-                                        className="transition-transform duration-200 ease-out"
+                                    <img
+                                        src={attachmentUrl}
+                                        alt="Proof of Enrollment"
+                                        className="transition-transform duration-200 ease-out select-none"
                                         style={{
                                             transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoomLevel})`,
                                             transformOrigin: 'center',
                                             width: '100%',
                                             height: '100%',
-                                            objectFit: 'contain'
+                                            objectFit: 'contain',
+                                            userSelect: 'none',
+                                            WebkitUserSelect: 'none',
+                                            pointerEvents: 'none' // Disable direct interaction
                                         }}
+                                        onContextMenu={(e) => e.preventDefault()}
                                         onError={(e) => {
                                             e.target.style.display = 'none';
                                             e.target.nextSibling.style.display = 'block';
                                         }}
                                     />
+                                    {/* Transparent overlay to capture drag events and prevent context menu */}
+                                    <div
+                                        className="absolute inset-0 z-10"
+                                        onContextMenu={(e) => e.preventDefault()}
+                                        onMouseDown={handleMouseDown}
+                                        onMouseMove={handleMouseMove}
+                                        onMouseUp={handleMouseUp}
+                                        onMouseLeave={handleMouseUp}
+                                        onWheel={handleWheel}
+                                    ></div>
                                 </div>
                             )}
-                            
+
                             {/* File not found message */}
-                            <div 
+                            <div
                                 className="hidden text-center p-8 text-red-400 bg-red-500/10 rounded-lg border border-red-500/30"
                                 style={{ display: 'none' }}
                             >
@@ -1145,29 +1171,29 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                 </div>,
                 document.body
             )}
-            
+
             {/* No Attachment Alert Modal */}
             {showNoAttachmentAlert && createPortal(
                 <div className="fixed inset-0 z-[80] bg-[#fff]/50 flex items-center justify-center p-4" style={{ pointerEvents: 'auto' }}>
-                    <div 
-                        className="absolute inset-0 bg-black/50" 
+                    <div
+                        className="absolute inset-0 bg-black/50"
                         onClick={() => setShowNoAttachmentAlert(false)}
                     ></div>
-                    <div 
-                        className="relative bg-black text-white p-6 rounded-lg max-w-md w-full mx-4 border border-neutral-700" 
+                    <div
+                        className="relative bg-black text-white p-6 rounded-lg max-w-md w-full mx-4 border border-neutral-700"
                         onClick={(e) => e.stopPropagation()}
                         style={{ pointerEvents: 'auto' }}
                     >
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-red-400">⚠️ Verification Blocked</h3>
-                            <button 
+                            <button
                                 onClick={() => setShowNoAttachmentAlert(false)}
                                 className="text-white hover:text-gray-300 text-2xl font-bold"
                             >
                                 ×
                             </button>
                         </div>
-                        
+
                         <div className="mb-6">
                             <div className="text-center mb-4">
                                 <svg className="w-16 h-16 mx-auto mb-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1184,9 +1210,9 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                 The student must upload their proof of enrollment before they can be verified.
                             </p>
                         </div>
-                        
+
                         <div className="flex justify-end">
-                            <button 
+                            <button
                                 onClick={() => setShowNoAttachmentAlert(false)}
                                 className="bg-neutral-700 hover:bg-neutral-600 text-white px-4 py-2 rounded font-semibold transition-colors"
                             >
@@ -1197,7 +1223,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                 </div>,
                 document.body
             )}
-            
+
             <Toast
                 message={toast.message}
                 type={toast.type}

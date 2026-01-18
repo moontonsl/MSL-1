@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -36,13 +37,26 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-            'username' => 'required|string|max:15|min:4|unique:'.User::class,
+            'username' => 'required|string|alpha_num|max:15|min:4|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'password_confirmation' => ['required', 'same:password'],
             'proofOfEnrollment' => 'required|file|mimes:jpeg,png,jpg,pdf,doc,docx|max:5120',
             'userId' => 'required|string|unique:users,ml_id',
         ]);
         // dd($request);
+        
+        // Convert region name to region ID
+        $regionId = null;
+        if ($request->region) {
+            $region = DB::table('regions')
+                ->where('name', $request->region)
+                ->first();
+            
+            if ($region) {
+                $regionId = $region->id;
+            }
+        }
+        
         $user = User::create([
             'name' => $request->firstName,
             "surname" => $request->lastName,
@@ -55,7 +69,7 @@ class RegisteredUserController extends Controller
             "contact_number" => $request->contactNo,
             "facebook_link" => $request->facebookLink,
             "year_level" => $request->yearLevel,
-            "region" => $request->region,
+            "region" => $regionId,
             "island" => $request->island,
             "studentId" => $request->studentId,
             "course" => $request->course,
@@ -71,12 +85,12 @@ class RegisteredUserController extends Controller
             "birthday" => $request->birthday,
         ]);        
         event(new Registered($user));
-        // Now you have $user->id
+       
         if ($request->hasFile('proofOfEnrollment')) {
             $file = $request->file('proofOfEnrollment');
             $fileName = $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
             $filePath = 'users/proofOfEnrollment/' . $user->id;
-            $stored = $file->storeAs($filePath, $fileName, 'public');
+            $stored = $file->storeAs($filePath, $fileName, 'local');
         
             if ($stored) {
                 $user->proofOfEnrollment = $filePath . '/' . $fileName;
@@ -85,7 +99,7 @@ class RegisteredUserController extends Controller
         }
         Auth::login($user);
         
-        // return redirect(route('SLStudent', absolute: false));
+       
         return redirect()->intended(route('SLStudent', absolute: false));
         
     }

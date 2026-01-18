@@ -10,7 +10,7 @@ const Home = () => {
     return (
         <MainLayout>
             <Head>
-                <title>MSL Philippines - Mobile Legends Student Leaders</title>
+                <title>MSL Philippines</title>
                 <meta name="description" content="Greetings, mighty Warrior of the Land Of Dawn! Welcome to the realm of MLBB PH Student Leaders. From different Universities and our love for the game, we lead, promote, and dedicate our time and effort to the betterment of the MLBB Community!" />
                 <meta name="keywords" content="MSL Philippines, Mobile Legends, Student Leaders, Gaming, MLBB Community, eSports, Philippines Gaming" />
                 <meta name="author" content="MSL Philippines" />

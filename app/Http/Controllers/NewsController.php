@@ -252,6 +252,11 @@ class NewsController extends Controller
             $article->image3 = $article->news_img3 ? $this->resolveImageUrl($article->news_img3) : null;
             unset($article->news_img1, $article->news_img2, $article->news_img3);
 
+            // Add absolute URLs for Open Graph meta tags
+            $appUrl = config('app.url');
+            $article->absoluteUrl = $appUrl . '/news/' . $article->canonical;
+            $article->absoluteImageUrl = $article->image ? $appUrl . $article->image : null;
+
             return Inertia::render('News/Article', [
                 'article' => $article,
             ]);

@@ -30,7 +30,7 @@ const MSLNetwork = () => {
     setSelectedRegionEmail(email);
     setEmailForm(prev => ({
       ...prev,
-      to: email,
+      to: "msl.partnerships.ph@gmail.com",
       ccEmails: [
         "msl.network.ph@gmail.com",
         email
@@ -54,69 +54,34 @@ const MSLNetwork = () => {
   };
 
 
-  const handleSendEmail = async () => {
-
-    try {
-      // Show loading state
-      const sendButton = document.querySelector('[data-send-email]');
-      if (sendButton) {
-        sendButton.disabled = true;
-        sendButton.textContent = 'Sending...';
-      }
-
-      const response = await fetch('/msl-network/send-inquiry', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({
-          to_email: emailForm.to,
-          cc_emails: emailForm.ccEmails.filter(email => email.trim() !== ''),
-          subject: emailForm.subject,
-          message: emailForm.message,
-          region: regionEmails[selectedRegionEmail] || 'Unknown'
-        })
-      });
-
-      // Check if response is JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Server returned non-JSON response. Please check server configuration.');
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        showToast(result.message, 'success');
-        // Reset form and close modal
-        setEmailForm({ to: "", ccEmails: [], subject: "Intent to Partner with MSL Philippines", message: "" });
-        setSelectedRegionEmail("");
-        setIsEmailModalOpen(false);
-      } else {
-        showToast(result.message || 'Failed to send email. Please try again.', 'error');
-      }
-      
-    } catch (error) {
-      console.error('Error sending email:', error);
-      
-      let errorMessage = 'Failed to send email. Please try again later.';
-      
-      if (error.message.includes('non-JSON response')) {
-        errorMessage = 'Server configuration error. Please contact support.';
-      } else if (error.message.includes('NetworkError') || error.message.includes('fetch')) {
-        errorMessage = 'Network error. Please check your connection and try again.';
-      }
-      
-      showToast(errorMessage, 'error');
-    } finally {
-      // Reset button state
-      const sendButton = document.querySelector('[data-send-email]');
-      if (sendButton) {
-        sendButton.disabled = false;
-        sendButton.innerHTML = '<Send className="w-4 h-4" />Send Email';
-      }
+  const handleSendEmail = () => {
+    // Validate required fields
+    if (!emailForm.to || !emailForm.subject || !emailForm.message.trim()) {
+      showToast('Please fill in all required fields (To, Subject, and Message).', 'error');
+      return;
     }
+
+    // Build Gmail compose URL
+    const to = emailForm.to;
+    const cc = emailForm.ccEmails.filter(email => email.trim() !== '').join(',');
+    const subject = emailForm.subject;
+    const body = emailForm.message;
+
+    // Construct Gmail compose URL
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}${cc ? `&cc=${encodeURIComponent(cc)}` : ''}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    // Open Gmail compose in new window
+    window.open(gmailUrl, '_blank');
+
+    // Show success message
+    showToast('Opening Gmail compose window. Please send the email from there.', 'success');
+    
+    // Reset form and close modal after a short delay
+    setTimeout(() => {
+      setEmailForm({ to: "", ccEmails: [], subject: "Intent to Partner with MSL Philippines", message: "" });
+      setSelectedRegionEmail("");
+      setIsEmailModalOpen(false);
+    }, 1000);
   };
 
   const handleCopyEmailDetails = () => {
@@ -702,7 +667,7 @@ Message: ${emailForm.message}`;
                 </label>
                 <input
                   type="email"
-                  value="msl.partnerships.ph@gmail.com"
+                  value={emailForm.to || "msl.partnerships.ph@gmail.com"}
                   onChange={(e) => handleEmailFormChange('to', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F2C21A] focus:border-transparent text-white bg-gray-800 placeholder-gray-400"
                   placeholder="Enter email address"
@@ -781,7 +746,7 @@ Message: ${emailForm.message}`;
                   className="flex items-center gap-2 px-4 py-2 bg-[#F2C21A] text-black font-bold rounded-md hover:bg-[#CA8B04] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send className="w-4 h-4" />
-                  Send Email
+                  Open Gmail
                 </button>
               </div>
             </div>

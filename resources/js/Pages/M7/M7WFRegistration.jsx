@@ -7,6 +7,7 @@ import M7WFlogo from "./M7WFlogo.png";
 import { User, Mail, MapPin, Calendar, Globe, Hash, ChevronDown } from "lucide-react";
 import { Link } from "@inertiajs/react";
 import { Info } from "lucide-react";
+import axios from "axios";
 
 const regionsData = {
   "Luzon": ["Region 1 - Venue 1", "Region 1 - Venue 2", "Region 1 - Venue 3"],
@@ -54,29 +55,29 @@ export default function M7WFRegistration() {
 
 
   // Update handleChange to reset venue when region changes
-const handleChange = (e) => {
-  const { name, value } = e.target;
-  let newValue = value;
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    let newValue = value;
 
-  // MLBB USER ID → numbers only, max 12 digits
-  if (name === "mlbbId") {
-    newValue = value.replace(/\D/g, "").slice(0, 12);
-  }
-
-  // MLBB SERVER → numbers only, max 6 digits
-  if (name === "mlbbServer") {
-    newValue = value.replace(/\D/g, "").slice(0, 6);
-  }
-
-  setForm((prev) => {
-    if (name === "region") {
-      return { ...prev, region: newValue, venue: "" };
+    // MLBB USER ID → numbers only, max 12 digits
+    if (name === "mlbbId") {
+      newValue = value.replace(/\D/g, "").slice(0, 12);
     }
-    return { ...prev, [name]: newValue };
-  });
 
-  setErrors((prev) => ({ ...prev, [name]: "" }));
-};
+    // MLBB SERVER → numbers only, max 6 digits
+    if (name === "mlbbServer") {
+      newValue = value.replace(/\D/g, "").slice(0, 6);
+    }
+
+    setForm((prev) => {
+      if (name === "region") {
+        return { ...prev, region: newValue, venue: "" };
+      }
+      return { ...prev, [name]: newValue };
+    });
+
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
 
   // Validation helpers
   const isValidEmail = (email) => {
@@ -100,10 +101,10 @@ const handleChange = (e) => {
     if (!form.eventDate) newErrors.eventDate = "Event date is required.";
 
     if (!form.email.trim()) {
-        newErrors.email = "Email address is required.";
-        } else if (!isValidEmail(form.email.trim())) {
-        newErrors.email = "Please input a valid email address.";
-        }
+      newErrors.email = "Email address is required.";
+    } else if (!isValidEmail(form.email.trim())) {
+      newErrors.email = "Please input a valid email address.";
+    }
 
     if (!form.mlbbId.trim()) newErrors.mlbbId = "MLBB User ID is required.";
     else if (!isValidMlbbId(form.mlbbId.trim())) newErrors.mlbbId = "MLBB User ID must be 8 to 12 digits.";
@@ -123,6 +124,7 @@ const handleChange = (e) => {
     }
 
     const payload = {
+      event_name: "M7 WP", // Hardcoded lang muna
       fullName: form.fullName.trim(),
       region: form.region,
       venue: form.venue.trim(),
@@ -134,23 +136,28 @@ const handleChange = (e) => {
 
     try {
       setSubmitting(true);
-      console.log("Ready to send to backend:", payload);
 
-      // Simulate a successful server reply (remove simulation when real BE exists)
-      await new Promise((res) => setTimeout(res, 700));
-      setShowModal(true);
-      setForm({
-        fullName: "",
-        region: "",
-        venue: "",
-        eventDate: "",
-        email: "",
-        mlbbId: "",
-        mlbbServer: "",
-      });
+      const response = await axios.post(route('event.registration.store'), payload);
+
+      if (response.data.success) {
+        setShowModal(true);
+        setForm({
+          fullName: "",
+          region: "",
+          venue: "",
+          eventDate: "",
+          email: "",
+          mlbbId: "",
+          mlbbServer: "",
+        });
+      }
     } catch (err) {
       console.error(err);
-      setSubmissionMessage("Submission failed (sample). Check console.");
+      if (err.response && err.response.status === 422) {
+        setSubmissionMessage(err.response.data.message || "You have already registered for this event.");
+      } else {
+        setSubmissionMessage("Submission failed. Please try again later.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -176,17 +183,17 @@ const handleChange = (e) => {
           />
         </Link>
 
-          <div
-            className="p-5 sm:p-8 w-full max-w-sm sm:max-w-3xl shadow-lg mx-auto border-2 backdrop-blur-md bg-black/75"
-            style={{
-              borderColor: "#fff4d0",
-              borderWidth: "2px",
-            }}
-          >
+        <div
+          className="p-5 sm:p-8 w-full max-w-sm sm:max-w-3xl shadow-lg mx-auto border-2 backdrop-blur-md bg-black/75"
+          style={{
+            borderColor: "#fff4d0",
+            borderWidth: "2px",
+          }}
+        >
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
             <div className="text-center">
               <h2 className="font-bold mb-1 text-[20px] sm:text-[26px] lg:text-[32px] text-[#fff4d0]">
-                M7 WATCH FEST REGISTRATION
+                M7 Watch Party Registration
               </h2>
             </div>
 
@@ -276,7 +283,7 @@ const handleChange = (e) => {
                   name="eventDate"
                   value={form.eventDate}
                   onChange={handleChange}
-                  min="2026-02-01"
+                  min="2026-01-01"
                   max="2026-03-31"
                   className="
                     bg-transparent w-full outline-none text-white
@@ -351,6 +358,12 @@ const handleChange = (e) => {
               {errors.mlbbServer && <p className="text-red-400 text-sm mt-1">{errors.mlbbServer}</p>}
             </div>
 
+            {submissionMessage && (
+              <p className="text-red-400 text-center text-sm font-medium animate-pulse">
+                {submissionMessage}
+              </p>
+            )}
+
             <button
               type="submit"
               disabled={submitting}
@@ -371,24 +384,24 @@ const handleChange = (e) => {
             </button>
 
             {showModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                 <div className="bg-black text-white p-8 rounded-2xl shadow-xl text-center min-w-64 border border-white">
-                <h2 className="text-xl font-semibold mb-4">
+                  <h2 className="text-xl font-semibold mb-4">
                     Registration Submitted Successfully!
-                </h2>
+                  </h2>
 
-                <p className="text-sm opacity-80">
+                  <p className="text-sm opacity-80">
                     Your registration has been recorded.
-                </p>
+                  </p>
 
-                <button
+                  <button
                     onClick={() => setShowModal(false)}
                     className="mt-6 px-6 py-2 rounded-lg bg-yellow-300 text-gray-800 font-bold cursor-pointer text-base hover:bg-yellow-400 transition"
-                >
+                  >
                     Close
-                </button>
+                  </button>
                 </div>
-            </div>
+              </div>
             )}
           </form>
         </div>

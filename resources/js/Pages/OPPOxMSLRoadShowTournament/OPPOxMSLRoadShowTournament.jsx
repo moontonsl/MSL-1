@@ -9,6 +9,7 @@ import oppologo from "./oppo-white-logo.png";
 
 export default function OPPOxMSLRoadShowTournament() {
   const [form, setForm] = useState({
+    university: "",
     teamName: "",
     captain: "",
     player2: "",
@@ -17,6 +18,12 @@ export default function OPPOxMSLRoadShowTournament() {
     player5: "",
     agree: false,
   });
+
+  const universities = [
+    "University of Saint La Salle",
+    "Davao del Norte State College",
+    "Pamantasan ng Lungsod ng Muntinlupa"
+  ];
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showMechanics, setShowMechanics] = useState(false);
@@ -83,8 +90,18 @@ export default function OPPOxMSLRoadShowTournament() {
 
     setValidatingUsernames(prev => ({ ...prev, [fieldName]: true }));
     
+    // Get university from currentForm or form state
+    const universityToCheck = (currentForm || form).university;
+    if (!universityToCheck) {
+      setValidationErrors(prev => ({ 
+        ...prev, 
+        [fieldName]: "Please select a university first" 
+      }));
+      return;
+    }
+
     try {
-      const response = await fetch(`/check-username-tournament?username=${encodeURIComponent(username)}&university=${encodeURIComponent("Mindanao State University - Iligan Institute of Technology")}`);
+      const response = await fetch(`/check-username-tournament?username=${encodeURIComponent(username)}&university=${encodeURIComponent(universityToCheck)}`);
       const data = await response.json();
       
       if (data.exists && data.verified) {
@@ -113,7 +130,7 @@ export default function OPPOxMSLRoadShowTournament() {
         // User does not exist
         setValidationErrors(prev => ({ 
           ...prev, 
-          [fieldName]: "Username not found in Mindanao State University - Iligan Institute of Technology"
+          [fieldName]: `Username not found in ${universityToCheck}`
         }));
       }
     } catch (error) {
@@ -136,8 +153,35 @@ export default function OPPOxMSLRoadShowTournament() {
     
     setForm(newForm);
 
+    // If university changes, clear all validation errors and re-validate usernames
+    if (name === "university") {
+      setValidationErrors({});
+      // Re-validate all username fields with the new university
+      const usernameFields = ["captain", "player2", "player3", "player4", "player5"];
+      usernameFields.forEach(field => {
+        if (newForm[field] && newForm[field].trim()) {
+          if (timeoutRefs.current[field]) {
+            clearTimeout(timeoutRefs.current[field]);
+          }
+          timeoutRefs.current[field] = setTimeout(() => {
+            validateUsername(newForm[field], field, newForm);
+          }, 500);
+        }
+      });
+      return;
+    }
+
     // Validate username fields
     if (name === "captain" || name.startsWith("player")) {
+      // Check if university is selected before validating
+      if (!newForm.university) {
+        setValidationErrors(prev => ({ 
+          ...prev, 
+          [name]: "Please select a university first" 
+        }));
+        return;
+      }
+
       // Check for duplicates immediately
       const duplicateFields = checkDuplicateUsernames(name, value, newForm);
       if (duplicateFields && value.trim()) {
@@ -246,8 +290,14 @@ export default function OPPOxMSLRoadShowTournament() {
     const googleFormURL =
       "https://docs.google.com/forms/d/e/1FAIpQLSdbHbI2DnJB3d0DcdoSR1nmTt_T5Af0MaN4w2MivO5k8ieEtg/formResponse";
 
+    // Validate university is selected
+    if (!form.university) {
+      alert("Please select a university before submitting.");
+      return;
+    }
+
     const formBody = new FormData();
-    formBody.append("entry.2008089998", "Mindanao State University - Iligan Institute of Technology");
+    formBody.append("entry.2008089998", form.university);
     formBody.append("entry.1615860502", form.teamName);
     formBody.append("entry.2087994405", form.captain);
     formBody.append("entry.1748019360", form.player2);
@@ -265,6 +315,7 @@ export default function OPPOxMSLRoadShowTournament() {
 
       setShowConfirmModal(true);
       setForm({
+        university: "",
         teamName: "",
         captain: "",
         player2: "",
@@ -298,6 +349,22 @@ export default function OPPOxMSLRoadShowTournament() {
             background-color: transparent !important;
             transition: background-color 5000s ease-in-out 0s;
           }
+          select {
+            background-color: transparent !important;
+            color: white !important;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23F2C21A' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 12px;
+            padding-right: 2rem;
+          }
+          select option {
+            background-color: #1f2937;
+            color: white;
+          }
         `}</style>
       </Helmet>
 
@@ -308,7 +375,7 @@ export default function OPPOxMSLRoadShowTournament() {
             Oppo x MSL Roadshow
           </h2>
           <h3 className="text-white text-[16px] sm:text-[22px] lg:text-[26px] font-extrabold leading-relaxed break-words">
-            Mindanao State University - Iligan Institute of Technology
+            {form.university || "Select Your University"}
           </h3>
         </div>
 
@@ -321,6 +388,36 @@ export default function OPPOxMSLRoadShowTournament() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* University Selection */}
+            <div>
+              <label className="block font-medium mb-1 text-sm sm:text-base">
+                University <span className="text-red-400">*</span>
+              </label>
+              <div className="flex items-center bg-white/5 rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3">
+                <Users className="text-[#F2C21A] w-4 h-4 sm:w-5 sm:h-5" />
+                <select
+                  name="university"
+                  value={form.university}
+                  onChange={handleChange}
+                  required
+                  className="bg-transparent flex-1 outline-none text-white text-sm sm:text-base appearance-none cursor-pointer"
+                  style={{
+                    WebkitTextFillColor: 'white',
+                    transition: 'background-color 5000s ease-in-out 0s'
+                  }}
+                >
+                  <option value="" className="bg-gray-800 text-white">
+                    Select University
+                  </option>
+                  {universities.map((university) => (
+                    <option key={university} value={university} className="bg-gray-800 text-white">
+                      {university}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             {/* Team Name */}
             <div>
               <label className="block font-medium mb-1 text-sm sm:text-base">

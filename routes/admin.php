@@ -10,6 +10,21 @@ Route::middleware('guest')->group(function () {
     Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
 });
 
+// Custom User List Routes (Simple Password Protection)
+Route::group(['prefix' => 'admin/custom-user-list'], function () {
+    // Login Routes
+    Route::get('/login', [\App\Http\Controllers\CustomUserListController::class, 'showLogin'])->name('admin.custom-user-list.login');
+    Route::post('/login', [\App\Http\Controllers\CustomUserListController::class, 'login'])->name('admin.custom-user-list.login.submit');
+    Route::post('/logout', [\App\Http\Controllers\CustomUserListController::class, 'logout'])->name('admin.custom-user-list.logout');
+
+    // Protected Routes
+    Route::middleware(['web', \App\Http\Middleware\CheckCustomUserListPassword::class])->group(function () {
+        Route::get('/', [\App\Http\Controllers\CustomUserListController::class, 'index'])->name('admin.custom-user-list');
+        Route::post('/email', [\App\Http\Controllers\CustomUserListController::class, 'sendSelectedEmails']);
+        Route::post('/delete', [\App\Http\Controllers\CustomUserListController::class, 'deleteSelected']);
+    });
+});
+
 // Protected Admin Routes
 Route::middleware(['auth:admin', 'admin'])->group(function () {
     // Logout Route
@@ -37,6 +52,12 @@ Route::middleware(['auth:admin', 'admin'])->group(function () {
     Route::delete('/admin/carousel/{carousel}', [AdminController::class, 'deleteCarousel'])->name('admin.carousel.delete');
     Route::post('/admin/carousel/reorder', [AdminController::class, 'reorderCarousel'])->name('admin.carousel.reorder');
 
+    // Event Photos Management
+    Route::get('/admin/event-photos', [AdminController::class, 'manageEventPhotos'])->name('admin.event-photos');
+    Route::post('/admin/event-photos', [AdminController::class, 'storeEventPhoto'])->name('admin.event-photos.store');
+    Route::put('/admin/event-photos/{eventPhoto}', [AdminController::class, 'updateEventPhoto'])->name('admin.event-photos.update');
+    Route::delete('/admin/event-photos/{eventPhoto}', [AdminController::class, 'deleteEventPhoto'])->name('admin.event-photos.delete');
+
     // Event Management
     Route::get('/admin/events', [AdminController::class, 'manageEvents'])->name('admin.events');
     Route::get('/admin/events/create', [AdminController::class, 'createEvent'])->name('admin.events.create');
@@ -58,6 +79,27 @@ Route::middleware(['auth:admin', 'admin'])->group(function () {
     Route::get('/admin/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('admin.settings');
     Route::post('/admin/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update']);
 
+    // Footer Management
+    Route::get('/admin/footer', [\App\Http\Controllers\Admin\FooterController::class, 'index'])->name('admin.footer');
+    Route::post('/admin/footer', [\App\Http\Controllers\Admin\FooterController::class, 'update'])->name('admin.footer.update');
+
     // Duplicate Username Check
     Route::get('/admin/duplicate-usernames/check', [\App\Http\Controllers\Admin\DuplicateUsernameController::class, 'checkDuplicates'])->name('admin.duplicate-usernames.check');
+
+    // Faulty Username Management
+    Route::get('/admin/faulty-username', [\App\Http\Controllers\FaultyUsernameController::class, 'index'])->name('admin.faulty-username');
+    Route::post('/faulty-username/send-email/{user}', [\App\Http\Controllers\FaultyUsernameController::class, 'sendEmailToUser']);
+    Route::post('/faulty-username/send-selected', [\App\Http\Controllers\FaultyUsernameController::class, 'sendEmailToSelected']);
+    Route::post('/faulty-username/send-all', [\App\Http\Controllers\FaultyUsernameController::class, 'sendEmailToAll']);
+    Route::get('/faulty-username/stats', [\App\Http\Controllers\FaultyUsernameController::class, 'getStats']);
+
+    // SL Management
+    Route::get('/admin/sl-management', [AdminController::class, 'slManagement'])->name('admin.sl-management');
+    Route::post('/admin/users/{user}/promote-sl', [AdminController::class, 'promoteToSL'])->name('admin.users.promote-sl');
+    Route::post('/admin/users/{user}/demote-sl', [AdminController::class, 'demoteFromSL'])->name('admin.users.demote-sl');
+
+    // Regional Admin Management
+    Route::get('/admin/regional-admin-management', [AdminController::class, 'regionalAdminManagement'])->name('admin.regional-admin-management');
+    Route::post('/admin/users/{user}/promote-regional-admin', [AdminController::class, 'promoteToRegionalAdmin'])->name('admin.users.promote-regional-admin');
+    Route::post('/admin/users/{user}/demote-regional-admin', [AdminController::class, 'demoteFromRegionalAdmin'])->name('admin.users.demote-regional-admin');
 });

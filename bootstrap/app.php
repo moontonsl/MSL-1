@@ -25,6 +25,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
         ]);
+        
+        // Exclude Codashop route from CSRF protection
+        $middleware->validateCsrfTokens(except: [
+            'codashop/init-payment',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
