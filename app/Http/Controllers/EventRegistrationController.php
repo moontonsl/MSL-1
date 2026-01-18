@@ -24,6 +24,7 @@ class EventRegistrationController extends Controller
             'email' => 'required|email|max:255',
             'mlbbId' => 'required|string|max:255',
             'mlbbServer' => 'required|string|max:255',
+            'attendanceMode' => 'required|string|max:255',
         ]);
 
         // Map frontend keys to database columns
@@ -36,6 +37,7 @@ class EventRegistrationController extends Controller
             'email' => $data['email'],
             'mlbb_id' => $data['mlbbId'],
             'mlbb_server' => $data['mlbbServer'],
+            'attendance_mode' => $data['attendanceMode'],
         ];
 
 
@@ -100,6 +102,7 @@ class EventRegistrationController extends Controller
                     $registration->mlbb_id,
                     $registration->mlbb_server,
                     $registration->created_at->toDateTimeString(),
+                    $registration->attendance_mode,
                 ]
             ];
 

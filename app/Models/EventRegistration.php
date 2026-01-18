@@ -20,5 +20,6 @@ class EventRegistration extends Model
         'email',
         'mlbb_id',
         'mlbb_server',
+        'attendance_mode',
     ];
 }
