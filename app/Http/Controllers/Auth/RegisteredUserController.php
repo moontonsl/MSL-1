@@ -85,12 +85,12 @@ class RegisteredUserController extends Controller
             "birthday" => $request->birthday,
         ]);        
         event(new Registered($user));
-        // Now you have $user->id
+       
         if ($request->hasFile('proofOfEnrollment')) {
             $file = $request->file('proofOfEnrollment');
             $fileName = $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
             $filePath = 'users/proofOfEnrollment/' . $user->id;
-            $stored = $file->storeAs($filePath, $fileName, 'public');
+            $stored = $file->storeAs($filePath, $fileName, 'local');
         
             if ($stored) {
                 $user->proofOfEnrollment = $filePath . '/' . $fileName;
@@ -99,7 +99,7 @@ class RegisteredUserController extends Controller
         }
         Auth::login($user);
         
-        // return redirect(route('SLStudent', absolute: false));
+       
         return redirect()->intended(route('SLStudent', absolute: false));
         
     }
