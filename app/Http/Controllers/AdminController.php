@@ -101,27 +101,30 @@ class AdminController extends Controller
             'news_author' => 'required|string|max:255',
             'news_state' => 'required|string',
             'news_img1' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'news_img2' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'news_img3' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $validated['news_writer'] = $validated['news_author'];
         $validated['news_published'] = now();
 
         // Set default values for image fields
-        $validated['news_img2'] = '';
-        $validated['news_img3'] = '';
         $validated['news_content'] = $validated['news_canonical']; // Map content to canonical field
         
         // Generate proper canonical URL slug from title
         $validated['news_canonical'] = $this->generateSlug($validated['news_title']);
 
-        // Handle image upload
-        if ($request->hasFile('news_img1')) {
-            $image = $request->file('news_img1');
-            $imageName = time() . '_' . $image->getClientOriginalName();
-            $image->move(public_path('images/MCC/IndivNews'), $imageName);
-            $validated['news_img1'] = $imageName;
-        } else {
-            $validated['news_img1'] = '';
+        // Handle image uploads
+        $imageFields = ['news_img1', 'news_img2', 'news_img3'];
+        foreach ($imageFields as $field) {
+            if ($request->hasFile($field)) {
+                $image = $request->file($field);
+                $imageName = time() . '_' . $field . '_' . $image->getClientOriginalName();
+                $image->move(public_path('images/MCC/IndivNews'), $imageName);
+                $validated[$field] = $imageName;
+            } else {
+                $validated[$field] = '';
+            }
         }
 
         News::create($validated);
@@ -145,17 +148,13 @@ class AdminController extends Controller
             'news_author' => 'required|string|max:255',
             'news_state' => 'required|string',
             'news_img1' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'news_img2' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'news_img3' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $validated['news_writer'] = $validated['news_author'];
 
-        // Set default values for image fields if not provided
-        if (!isset($validated['news_img2'])) {
-            $validated['news_img2'] = $news->news_img2 ?: '';
-        }
-        if (!isset($validated['news_img3'])) {
-            $validated['news_img3'] = $news->news_img3 ?: '';
-        }
+        // Set default values for content if not provided
         if (!isset($validated['news_content'])) {
             $validated['news_content'] = $validated['news_canonical'];
         }
@@ -165,19 +164,24 @@ class AdminController extends Controller
             $validated['news_canonical'] = $this->generateSlug($validated['news_title']);
         }
 
-        // Handle image upload
-        if ($request->hasFile('news_img1')) {
-            // Delete old image if it exists
-            if ($news->news_img1 && file_exists(public_path('images/MCC/IndivNews/' . $news->news_img1))) {
-                unlink(public_path('images/MCC/IndivNews/' . $news->news_img1));
+        // Handle image uploads
+        $imageFields = ['news_img1', 'news_img2', 'news_img3'];
+        foreach ($imageFields as $field) {
+            if ($request->hasFile($field)) {
+                // Delete old image if it exists
+                if ($news->$field && file_exists(public_path('images/MCC/IndivNews/' . $news->$field))) {
+                    unlink(public_path('images/MCC/IndivNews/' . $news->$field));
+                }
+                
+                $image = $request->file($field);
+                $imageName = time() . '_' . $field . '_' . $image->getClientOriginalName();
+                $image->move(public_path('images/MCC/IndivNews'), $imageName);
+                $validated[$field] = $imageName;
+            } else {
+                // Keep existing image if no new one uploaded
+                // Note: If you want to allow deleting images without replacing, you'd need a separate flag
+                $validated[$field] = $news->$field ?: '';
             }
-            
-            $image = $request->file('news_img1');
-            $imageName = time() . '_' . $image->getClientOriginalName();
-            $image->move(public_path('images/MCC/IndivNews'), $imageName);
-            $validated['news_img1'] = $imageName;
-        } else {
-            $validated['news_img1'] = $news->news_img1 ?: '';
         }
 
         $news->update($validated);
