@@ -116,11 +116,20 @@ class AdminController extends Controller
 
         // Handle image uploads
         $imageFields = ['news_img1', 'news_img2', 'news_img3'];
+        
+        // Ensure news directory exists in storage
+        $newsPath = storage_path('app/public/news');
+        if (!file_exists($newsPath)) {
+            mkdir($newsPath, 0755, true);
+        }
+
         foreach ($imageFields as $field) {
             if ($request->hasFile($field)) {
                 $image = $request->file($field);
                 $imageName = time() . '_' . $field . '_' . $image->getClientOriginalName();
-                $image->move(public_path('images/MCC/IndivNews'), $imageName);
+                
+                // Move to storage/app/public/news
+                $image->move($newsPath, $imageName);
                 $validated[$field] = $imageName;
             } else {
                 $validated[$field] = '';
@@ -166,20 +175,36 @@ class AdminController extends Controller
 
         // Handle image uploads
         $imageFields = ['news_img1', 'news_img2', 'news_img3'];
+        
+        // Ensure news directory exists in storage
+        $newsPath = storage_path('app/public/news');
+        if (!file_exists($newsPath)) {
+            mkdir($newsPath, 0755, true);
+        }
+
         foreach ($imageFields as $field) {
             if ($request->hasFile($field)) {
                 // Delete old image if it exists
-                if ($news->$field && file_exists(public_path('images/MCC/IndivNews/' . $news->$field))) {
-                    unlink(public_path('images/MCC/IndivNews/' . $news->$field));
+                // Check both storage and legacy public path
+                if ($news->$field) {
+                    $oldStoragePath = storage_path('app/public/news/' . $news->$field);
+                    $oldPublicPath = public_path('images/MCC/IndivNews/' . $news->$field);
+                    
+                    if (file_exists($oldStoragePath)) {
+                        unlink($oldStoragePath);
+                    } elseif (file_exists($oldPublicPath)) {
+                        unlink($oldPublicPath);
+                    }
                 }
                 
                 $image = $request->file($field);
                 $imageName = time() . '_' . $field . '_' . $image->getClientOriginalName();
-                $image->move(public_path('images/MCC/IndivNews'), $imageName);
+                
+                // Move to storage/app/public/news
+                $image->move($newsPath, $imageName);
                 $validated[$field] = $imageName;
             } else {
                 // Keep existing image if no new one uploaded
-                // Note: If you want to allow deleting images without replacing, you'd need a separate flag
                 $validated[$field] = $news->$field ?: '';
             }
         }

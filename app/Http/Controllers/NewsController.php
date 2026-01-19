@@ -19,6 +19,7 @@ class NewsController extends Controller
         
         // Check multiple possible locations - prioritize IndivNews for individual articles
         $candidates = [
+            '/storage/news/' . $filename,          // New storage path
             '/images/MCC/IndivNews/' . $filename,  // Individual news images
             '/images/MCC/News/' . $filename,       // General news images
             '/images/MCC/News/Carousel/' . $filename, // Carousel images
