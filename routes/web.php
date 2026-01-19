@@ -163,6 +163,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Route::post('/team-submit/{id}', [\App\Http\Controllers\CampusTournamentController::class, 'submitTeam'])->name('team.submit');
 });
 
+// Oppo Roadshow Settings (Super Admin)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/Oppo-settings', [\App\Http\Controllers\Admin\OppoSettingsController::class, 'index'])->name('admin.oppo-settings.index');
+    Route::post('/Oppo-settings', [\App\Http\Controllers\Admin\OppoSettingsController::class, 'store'])->name('admin.oppo-settings.store');
+    Route::delete('/Oppo-settings/{id}', [\App\Http\Controllers\Admin\OppoSettingsController::class, 'destroy'])->name('admin.oppo-settings.destroy');
+    
+    // Date Management
+    Route::post('/Oppo-settings/dates', [\App\Http\Controllers\Admin\OppoSettingsController::class, 'storeDate'])->name('admin.oppo-settings.dates.store');
+    Route::delete('/Oppo-settings/dates/{id}', [\App\Http\Controllers\Admin\OppoSettingsController::class, 'destroyDate'])->name('admin.oppo-settings.dates.destroy');
+});
+
+// Public Oppo Roadshow API
+Route::get('/api/oppo/schools', [\App\Http\Controllers\Admin\OppoSettingsController::class, 'getRoadshowSchools'])->name('api.oppo.schools');
+Route::get('/api/oppo/roadshow-data', [\App\Http\Controllers\Admin\OppoSettingsController::class, 'getRoadshowData'])->name('api.oppo.data');
+
 // API endpoints for Campus Tournament registration
 Route::get('/user-info', function () {
     $user = Auth::user();
