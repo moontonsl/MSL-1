@@ -141,8 +141,44 @@ class AdminController extends Controller
         return redirect()->route('admin.news')->with('success', 'News created successfully');
     }
 
+    private function resolveImageUrl(?string $filename): string
+    {
+        if (empty($filename)) {
+            return '';
+        }
+        
+        // Check multiple possible locations
+        // We check the physical paths but return the public URLs
+        
+        // 1. Storage path (new)
+        if (file_exists(storage_path('app/public/news/' . $filename))) {
+            return '/storage/news/' . $filename;
+        }
+        
+        // 2. Public path (legacy)
+        $candidates = [
+            '/images/MCC/IndivNews/' . $filename,
+            '/images/MCC/News/' . $filename,
+            '/images/MCC/News/Carousel/' . $filename,
+            '/images/MCC/' . $filename,
+        ];
+        
+        foreach ($candidates as $candidate) {
+            if (file_exists(public_path($candidate))) {
+                return $candidate;
+            }
+        }
+        
+        return '';
+    }
+
     public function editNews(News $news)
     {
+        // Resolve image URLs for the frontend
+        $news->image1_url = $this->resolveImageUrl($news->news_img1);
+        $news->image2_url = $this->resolveImageUrl($news->news_img2);
+        $news->image3_url = $this->resolveImageUrl($news->news_img3);
+
         return Inertia::render('Admin/News/Edit', [
             'news' => $news
         ]);
