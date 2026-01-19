@@ -60,7 +60,12 @@ const regionsData = {
 };
 
 
-const eventDatesData = ["2026-02-20", "2026-03-05", "2026-03-20"];
+const eventDatesData = [
+  { value: "2026-01-23", label: "January 23, 2026" },
+  { value: "2026-01-24", label: "January 24, 2026" },
+  { value: "2026-01-25", label: "January 25, 2026" },
+];
+
 const attendanceModes = ["Online", "Onsite"];
 
 const Tooltip = ({ text }) => (
@@ -359,21 +364,30 @@ export default function M7WFRegistration() {
               <label className="block font-medium mb-1 text-sm sm:text-base text-[#fff4d0]">
                 Event Date
               </label>
+
               <div className="relative bg-black/75 rounded-xl p-3 flex items-center gap-3 border border-[#fff4d0]">
                 <Calendar className="text-[#fff4d0] w-5 h-5" />
-                <input
-                  type="date"
+
+                <select
                   name="eventDate"
                   value={form.eventDate}
                   onChange={handleChange}
-                  min="2026-01-01"
-                  max="2026-03-31"
-                  className="
-                    bg-transparent w-full outline-none text-white
-                    [color-scheme:dark]
-                  "
-                />
+                  className="bg-transparent w-full outline-none text-white appearance-none"
+                >
+                  <option value="" disabled className="text-black">
+                    Select event date
+                  </option>
+
+                  {eventDatesData.map((date) => (
+                    <option key={date.value} value={date.value} className="text-black">
+                      {date.label}
+                    </option>
+                  ))}
+                </select>
+
+                <ChevronDown className="absolute right-5 text-[#fff4d0] pointer-events-none" />
               </div>
+
               {errors.eventDate && (
                 <p className="text-red-400 text-sm mt-1">{errors.eventDate}</p>
               )}
