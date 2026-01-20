@@ -11,9 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('event_registrations', function (Blueprint $table) {
-            $table->dropUnique('unique_registration_per_event');
-            $table->unique(['mlbb_id', 'mlbb_server', 'event_name', 'event_date'], 'unique_registration_per_day');
+        $indexes = collect(\DB::select("SHOW INDEXES FROM event_registrations"))->pluck('Key_name');
+
+        Schema::table('event_registrations', function (Blueprint $table) use ($indexes) {
+            if ($indexes->contains('unique_registration_per_event')) {
+                $table->dropUnique('unique_registration_per_event');
+            }
+            
+            if (!$indexes->contains('unique_registration_per_day')) {
+                $table->unique(['mlbb_id', 'mlbb_server', 'event_name', 'event_date'], 'unique_registration_per_day');
+            }
         });
     }
 
