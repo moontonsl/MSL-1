@@ -16,7 +16,7 @@ const regionsData = {
       "Urdaneta City University",
     ],
     Onsite: [
-      "University of Makati",
+      "Colegio de Muntinlupa",
       "Lyceum of Subic Bay",
       "Laguna State Polytechnic University - Los Baños Campus",
     ],
