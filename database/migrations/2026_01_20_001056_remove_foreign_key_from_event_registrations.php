@@ -11,10 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('event_registrations', function (Blueprint $table) {
-            // Drop the foreign key constraint
-            $table->dropForeign('event_registrations_mlbb_id_mlbb_server_foreign');
-        });
+        $exists = \DB::table('information_schema.TABLE_CONSTRAINTS')
+            ->where('TABLE_SCHEMA', \DB::connection()->getDatabaseName())
+            ->where('TABLE_NAME', 'event_registrations')
+            ->where('CONSTRAINT_NAME', 'event_registrations_mlbb_id_mlbb_server_foreign')
+            ->where('CONSTRAINT_TYPE', 'FOREIGN KEY')
+            ->exists();
+
+        if ($exists) {
+            Schema::table('event_registrations', function (Blueprint $table) {
+                $table->dropForeign('event_registrations_mlbb_id_mlbb_server_foreign');
+            });
+        }
     }
 
     /**
