@@ -133,6 +133,16 @@ class CampusTournamentController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
+
+        // Check if a tournament already exists for this school on the same start date
+        $existingTournament = CampusTournament::where('school_name', $user->university)
+            ->where('start_date', $request->start_date)
+            ->where('status', '!=', 'rejected')
+            ->exists();
+            
+        if ($existingTournament) {
+            return response()->json(['error' => 'A tournament is already scheduled for this date.'], 422);
+        }
         
         $tournament = CampusTournament::create([
             'school_name' => $user->university,
