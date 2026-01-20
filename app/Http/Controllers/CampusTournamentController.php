@@ -170,10 +170,16 @@ class CampusTournamentController extends Controller
             $hasAccess = true;
         } elseif ($user->role === 'Regional Admin') {
             $assignedRegionIds = $user->getAssignedRegionIds();
+            
+            // Fix: Explicitly include user's own region to handle potential lookup failures
+            if ($user->region && !in_array($user->region, $assignedRegionIds)) {
+                $assignedRegionIds[] = $user->region;
+            }
+
             if (!empty($assignedRegionIds)) {
                 $hasAccess = in_array($tournament->studentLeader->region, $assignedRegionIds);
             } else {
-                $hasAccess = $tournament->studentLeader->region === $user->region;
+                $hasAccess = $tournament->studentLeader->region == $user->region;
             }
         }
         
@@ -221,10 +227,16 @@ class CampusTournamentController extends Controller
             $hasAccess = true;
         } elseif ($user->role === 'Regional Admin') {
             $assignedRegionIds = $user->getAssignedRegionIds();
+            
+            // Fix: Explicitly include user's own region to handle potential lookup failures
+            if ($user->region && !in_array($user->region, $assignedRegionIds)) {
+                $assignedRegionIds[] = $user->region;
+            }
+
             if (!empty($assignedRegionIds)) {
                 $hasAccess = in_array($tournament->studentLeader->region, $assignedRegionIds);
             } else {
-                $hasAccess = $tournament->studentLeader->region === $user->region;
+                $hasAccess = $tournament->studentLeader->region == $user->region;
             }
         }
         
@@ -273,10 +285,16 @@ class CampusTournamentController extends Controller
             $hasAccess = true;
         } elseif ($user->role === 'Regional Admin') {
             $assignedRegionIds = $user->getAssignedRegionIds();
+            
+            // Fix: Explicitly include user's own region to handle potential lookup failures
+            if ($user->region && !in_array($user->region, $assignedRegionIds)) {
+                $assignedRegionIds[] = $user->region;
+            }
+
             if (!empty($assignedRegionIds)) {
                 $hasAccess = in_array($tournament->studentLeader->region, $assignedRegionIds);
             } else {
-                $hasAccess = $tournament->studentLeader->region === $user->region;
+                $hasAccess = $tournament->studentLeader->region == $user->region;
             }
         }
         
