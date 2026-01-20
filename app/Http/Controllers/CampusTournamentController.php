@@ -134,14 +134,17 @@ class CampusTournamentController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Check if a tournament already exists for this school on the same start date
+        // Check if a tournament already exists for this school with overlapping dates
         $existingTournament = CampusTournament::where('school_name', $user->university)
-            ->where('start_date', $request->start_date)
             ->where('status', '!=', 'rejected')
+            ->where(function ($query) use ($request) {
+                $query->where('start_date', '<=', $request->end_date)
+                      ->where('end_date', '>=', $request->start_date);
+            })
             ->exists();
             
         if ($existingTournament) {
-            return response()->json(['error' => 'A tournament is already scheduled for this date.'], 422);
+            return response()->json(['error' => 'A tournament is already scheduled completely or partially on these dates.'], 422);
         }
         
         $tournament = CampusTournament::create([
@@ -333,8 +336,10 @@ class CampusTournamentController extends Controller
         
         $tournament = CampusTournament::findOrFail($id);
         
-        // Only SL who created it can delete, and only if pending or rejected
-        if ($tournament->sl_id !== $user->id || !in_array($tournament->status, ['pending', 'rejected'])) {
+        // Allow Regional Admin and Super Admin to delete
+        if ($user->role === 'Regional Admin' || $user->role === 'Super Admin') {
+            // Authorized
+        } elseif ($tournament->sl_id !== $user->id || !in_array($tournament->status, ['pending', 'rejected'])) {
             return response()->json(['error' => 'You can only delete your own pending or rejected tournaments'], 403);
         }
         
