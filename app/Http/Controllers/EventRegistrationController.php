@@ -42,15 +42,16 @@ class EventRegistrationController extends Controller
 
 
 
-        // Check for duplicate registration for the same event
+        // Check for duplicate registration for the same event on the same date
         $existing = EventRegistration::where('mlbb_id', $dbData['mlbb_id'])
             ->where('mlbb_server', $dbData['mlbb_server'])
             ->where('event_name', $dbData['event_name'])
+            ->where('event_date', $dbData['event_date'])
             ->first();
 
         if ($existing) {
             return response()->json([
-                'message' => 'You have already registered for this event.'
+                'message' => 'You have already registered for this event on this date.'
             ], 422);
         }
 

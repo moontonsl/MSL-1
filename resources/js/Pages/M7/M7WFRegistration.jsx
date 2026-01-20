@@ -208,7 +208,7 @@ export default function M7WFRegistration() {
     } catch (err) {
       console.error(err);
       if (err.response && err.response.status === 422) {
-        setSubmissionMessage(err.response.data.message || "You have already registered for this event.");
+        setSubmissionMessage(err.response.data.message || "You have already registered for this event on this date.");
       } else {
         setSubmissionMessage("Submission failed. Please try again later.");
       }
@@ -337,21 +337,36 @@ export default function M7WFRegistration() {
                 <select
                   name="venue"
                   value={form.venue}
-                  onChange={handleChange}
-                  disabled={!form.region || !form.attendanceMode}
+                  onChange={(e) => {
+                    handleChange(e);
+                    // Auto-set attendance mode based on venue
+                    const selectedVenue = e.target.value;
+                    const regionData = regionsData[form.region];
+                    if (regionData) {
+                      if (regionData.Online.includes(selectedVenue)) {
+                        setForm(prev => ({ ...prev, attendanceMode: "Online" }));
+                      } else if (regionData.Onsite.includes(selectedVenue)) {
+                        setForm(prev => ({ ...prev, attendanceMode: "Onsite" }));
+                      }
+                    }
+                  }}
+                  disabled={!form.region}
                   className="bg-transparent w-full outline-none text-white appearance-none disabled:opacity-50"
                 >
                   <option value="" disabled className="text-black">
-                    {form.region && form.attendanceMode
+                    {form.region
                       ? "Select your school / venue"
-                      : "Select region & attendance mode first"}
+                      : "Select region first"}
                   </option>
-                  {(regionsData[form.region]?.[form.attendanceMode] || []).map(
-                    (venue, idx) => (
-                      <option key={idx} value={venue} className="text-black">
-                        {venue}
-                      </option>
-                    )
+                  {form.region && (
+                    form.attendanceMode
+                      ? (regionsData[form.region]?.[form.attendanceMode] || [])
+                      : [...(regionsData[form.region]?.Online || []), ...(regionsData[form.region]?.Onsite || [])]
+                  ).map((venue, idx) => (
+                    <option key={idx} value={venue} className="text-black">
+                      {venue}
+                    </option>
+                  )
                   )}
                 </select>
                 <ChevronDown className="absolute right-5 text-[#fff4d0] pointer-events-none" />
