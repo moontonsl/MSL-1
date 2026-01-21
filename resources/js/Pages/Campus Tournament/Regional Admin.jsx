@@ -241,6 +241,34 @@ const RegionalAdmin = () => {
     }
   };
 
+  const handleDeleteTournament = async (tournament) => {
+    if (!confirm(`Are you sure you want to delete the tournament for ${tournament.schoolName}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/campus-tournaments/${tournament.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Tournament deleted successfully');
+        window.location.reload();
+      } else {
+        alert('Error deleting tournament: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error deleting tournament:', error);
+      alert('Error deleting tournament. Please try again.');
+    }
+  };
+
   const toggleExpand = (id) => {
     setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
   };
@@ -565,6 +593,13 @@ const RegionalAdmin = () => {
                             className="px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 text-white/90 text-xs font-montserrat transition-colors"
                           >
                             Extend
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleDeleteTournament(item); }}
+                            className="px-3 py-1.5 rounded-lg border border-red-500/50 bg-red-500/20 hover:bg-red-500/30 text-white/90 text-xs font-montserrat transition-colors"
+                          >
+                            Delete
                           </button>
                           <button
                             type="button"
