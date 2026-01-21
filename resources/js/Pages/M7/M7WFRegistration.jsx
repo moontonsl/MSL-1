@@ -59,7 +59,6 @@ const regionsData = {
   },
 };
 
-
 const eventDatesData = [
   { value: "2026-01-23", label: "January 23, 2026" },
   { value: "2026-01-24", label: "January 24, 2026" },
@@ -106,6 +105,8 @@ export default function M7WFRegistration() {
 
   const [showModal, setShowModal] = useState(false);
 
+  const [agreed, setAgreed] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   // Update handleChange to reset venue when region changes
   const handleChange = (e) => {
@@ -186,6 +187,7 @@ export default function M7WFRegistration() {
       mlbbId: form.mlbbId.trim(),
       mlbbServer: form.mlbbServer.trim(),
       attendanceMode: form.attendanceMode,
+      consent: agreed,
     };
 
     try {
@@ -204,6 +206,7 @@ export default function M7WFRegistration() {
           mlbbId: "",
           mlbbServer: "",
         });
+        setAgreed(false); 
       }
     } catch (err) {
       console.error(err);
@@ -476,9 +479,34 @@ export default function M7WFRegistration() {
               </p>
             )}
 
+            {/* TERMS & CONDITIONS */}
+            <div className="flex items-start gap-3 mt-4 text-sm text-[#fff4d0]">
+              <input
+                type="checkbox"
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+                className="
+                  mt-1 w-4 h-4
+                  accent-[#fff4d0]
+                  cursor-pointer
+                "
+              />
+
+              <p className="leading-snug">
+                I accept and agree with the{" "}
+                <button
+                  type="button"
+                  onClick={() => setShowTermsModal(true)}
+                  className="underline hover:text-yellow-300 transition"
+                >
+                  Terms and Conditions
+                </button>.
+              </p>
+            </div>
+
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || !agreed}
               className="
                 w-full mt-6 py-3 rounded-xl
                 font-bold text-[#FFF4D0] text-base sm:text-lg
@@ -489,7 +517,7 @@ export default function M7WFRegistration() {
                 shadow-lg shadow-black/40
                 transition-all duration-200
                 active:scale-[0.97]
-                disabled:opacity-60 disabled:cursor-not-allowed
+                disabled:opacity-40 disabled:cursor-not-allowed
               "
             >
               {submitting ? "Submitting..." : "REGISTER"}
@@ -509,6 +537,38 @@ export default function M7WFRegistration() {
                   <button
                     onClick={() => setShowModal(false)}
                     className="mt-6 px-6 py-2 rounded-lg bg-yellow-300 text-gray-800 font-bold cursor-pointer text-base hover:bg-yellow-400 transition"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {showTermsModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+                <div className="bg-black text-white p-6 sm:p-8 rounded-2xl shadow-xl max-w-lg w-full border border-[#fff4d0]">
+                  <h2 className="text-lg sm:text-xl font-semibold mb-4 text-[#fff4d0]">
+                    Data Privacy Consent
+                  </h2>
+
+                  <p className="text-sm leading-relaxed opacity-90">
+                    By checking this box, I authorize Moonton Student Leaders (MSL) Philippines to collect 
+                    and process the personal details provided above, specifically my identity, contact information, 
+                    and MLBB game credentials, solely for the purposes of verifying my registration, managing 
+                    event logistics, and distributing in-game rewards for the M7 Watch Party.
+                    <br /><br />
+                    I acknowledge that my data will be protected in accordance with the Data Privacy Act of 2012, 
+                    will not be shared with unauthorized third parties, and that I retain the right to access, correct, 
+                    or request the deletion of my information at any time.
+                  </p>
+
+                  <button
+                    onClick={() => setShowTermsModal(false)}
+                    className="
+                      mt-6 px-6 py-2 rounded-lg
+                      bg-[#FFF4D0] text-black font-bold
+                      hover:bg-yellow-300 transition
+                    "
                   >
                     Close
                   </button>
