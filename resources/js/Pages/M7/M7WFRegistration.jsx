@@ -17,6 +17,7 @@ const regionsData = {
     ],
     Onsite: [
       "Colegio de Muntinlupa",
+      "PHINMA Saint Jude College - Manila",
       "Lyceum of Subic Bay",
       "Laguna State Polytechnic University - Los Baños Campus",
     ],
@@ -91,7 +92,7 @@ export default function M7WFRegistration() {
   const [form, setForm] = useState({
     fullName: "",
     region: "",
-    attendanceMode: "",
+    attendanceMode: "", // Will be auto-filled
     venue: "",
     eventDate: "",
     email: "",
@@ -123,14 +124,39 @@ export default function M7WFRegistration() {
       newValue = value.replace(/\D/g, "").slice(0, 6);
     }
 
-    setForm((prev) => {
-      if (name === "region" || name === "attendanceMode") {
-    return { ...prev, [name]: newValue, venue: "" };
+    if (name === "region") {
+      setForm((prev) => ({ 
+        ...prev, 
+        region: value, 
+        venue: "", 
+        attendanceMode: "" 
+      }));
+      return;
     }
-      return { ...prev, [name]: newValue };
-    });
 
+    if (name === "venue") {
+      // Find if the venue is Online or Onsite
+      const isOnline = regionsData[form.region].Online.includes(value);
+      const detectedMode = isOnline ? "Online" : "Onsite";
+
+      setForm((prev) => ({ 
+        ...prev, 
+        venue: value, 
+        attendanceMode: detectedMode 
+      }));
+      return;
+    }
+
+    setForm((prev) => ({ ...prev, [name]: newValue }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  // Helper to get alphabetical list of all venues for the selected region
+  const getVenuesForRegion = (region) => {
+    if (!region) return [];
+    const online = regionsData[region].Online || [];
+    const onsite = regionsData[region].Onsite || [];
+    return [...online, ...onsite].sort((a, b) => a.localeCompare(b));
   };
 
   // Validation helpers
@@ -274,9 +300,7 @@ export default function M7WFRegistration() {
 
             {/* REGION */}
             <div>
-              <label className="block font-medium mb-1 text-sm sm:text-base text-[#fff4d0]">
-                Region
-              </label>
+              <label className="block font-medium mb-1 text-sm text-[#fff4d0]">Region</label>
               <div className="relative bg-black/75 rounded-xl p-3 flex items-center gap-3 border border-[#fff4d0]">
                 <MapPin className="text-[#fff4d0] w-5 h-5" />
                 <select
@@ -285,80 +309,59 @@ export default function M7WFRegistration() {
                   onChange={handleChange}
                   className="bg-transparent w-full outline-none text-white appearance-none"
                 >
-                  <option value="" disabled className="text-black">
-                    Select your region
-                  </option>
-                  {Object.keys(regionsData).map((region, idx) => (
-                    <option key={idx} value={region} className="text-black">
-                      {region}
-                    </option>
+                  <option value="" disabled className="text-black">Select region</option>
+                  {Object.keys(regionsData).map((r) => (
+                    <option key={r} value={r} className="text-black">{r}</option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-5 text-[#fff4d0] pointer-events-none" />
-              </div>
-              {errors.region && <p className="text-red-400 text-sm mt-1">{errors.region}</p>}
-            </div>
-
-            {/* ATTENDANCE MODE */}
-            <div>
-              <label className="block font-medium mb-1 text-[#fff4d0]">
-                Attendance Mode
-              </label>
-
-              <div className="relative bg-black/75 rounded-xl p-3 flex items-center gap-3 border border-[#fff4d0]">
-                <Globe className="text-[#fff4d0] w-5 h-5" />
-
-                <select
-                  name="attendanceMode"
-                  value={form.attendanceMode}
-                  onChange={handleChange}
-                  className="bg-transparent w-full outline-none text-white appearance-none"
-                >
-                  <option value="" disabled className="text-black">
-                    Select Online or Onsite
-                  </option>
-
-                  {attendanceModes.map((mode) => (
-                    <option key={mode} value={mode} className="text-black">
-                      {mode}
-                    </option>
-                  ))}
-                </select>
-
                 <ChevronDown className="absolute right-5 text-[#fff4d0] pointer-events-none" />
               </div>
             </div>
 
             {/* VENUE */}
             <div>
-              <label className="block font-medium mb-1 text-sm sm:text-base text-[#fff4d0]">
-                Venue
-              </label>
+              <label className="block font-medium mb-1 text-sm text-[#fff4d0]">Venue / School</label>
               <div className="relative bg-black/75 rounded-xl p-3 flex items-center gap-3 border border-[#fff4d0]">
                 <MapPin className="text-[#fff4d0] w-5 h-5" />
                 <select
                   name="venue"
                   value={form.venue}
                   onChange={handleChange}
-                  disabled={!form.region || !form.attendanceMode}
-                  className="bg-transparent w-full outline-none text-white appearance-none disabled:opacity-50"
+                  disabled={!form.region}
+                  className="bg-transparent w-full outline-none text-white appearance-none disabled:opacity-40"
                 >
                   <option value="" disabled className="text-black">
-                    {form.region && form.attendanceMode
-                      ? "Select your school / venue"
-                      : "Select region & attendance mode first"}
+                    {form.region ? "Select your venue" : "Please select a region first"}
                   </option>
-                  {(regionsData[form.region]?.[form.attendanceMode] || []).map(
-                    (venue, idx) => (
-                      <option key={idx} value={venue} className="text-black">
-                        {venue}
-                      </option>
-                    )
-                  )}
+                  {getVenuesForRegion(form.region).map((v) => (
+                    <option key={v} value={v} className="text-black">{v}</option>
+                  ))}
                 </select>
                 <ChevronDown className="absolute right-5 text-[#fff4d0] pointer-events-none" />
               </div>
               {errors.venue && <p className="text-red-400 text-sm mt-1">{errors.venue}</p>}
+            </div>
+
+            {/* ATTENDANCE MODE (Display Only) */}
+            <div>
+              <label className="block font-medium mb-1 text-sm sm:text-base text-[#fff4d0]">
+                Attendance Mode
+              </label>
+              <div className="relative bg-black/40 rounded-xl p-3 flex items-center gap-3 border border-[#fff4d0]/50 opacity-80">
+                <Globe className="text-[#fff4d0] w-5 h-5" />
+                <input
+                  type="text"
+                  name="attendanceMode"
+                  value={form.attendanceMode}
+                  placeholder="Auto-selected based on venue"
+                  readOnly // Prevents typing
+                  disabled // Grays it out slightly for UX
+                  className="bg-transparent w-full outline-none text-white placeholder:text-white/40 cursor-not-allowed"
+                />
+              </div>
+              <p className="text-[10px] text-[#fff4d0] mt-1 opacity-60 italic">
+                *This field is automatically determined by your chosen venue.
+              </p>
             </div>
 
             {/* EVENT DATE */}
@@ -515,7 +518,7 @@ export default function M7WFRegistration() {
                   </h2>
 
                   <p className="text-sm opacity-80">
-                    Your registration has been recorded.
+                    Your registration has been recorded. Please check your email for confirmation.
                   </p>
 
                   <button
