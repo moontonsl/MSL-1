@@ -8,6 +8,7 @@ use App\Models\User;
 use Google_Client;
 use Google_Service_Sheets;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
 class SpreadSheetAutomationController extends Controller
 {
@@ -23,10 +24,13 @@ class SpreadSheetAutomationController extends Controller
         ini_set('memory_limit', '512M');
         set_time_limit(300); // 5 minutes
         
+        Log::info('Starting spreadsheet export process');
+        
         try {
            
             $spreadsheetId = "1216kHWU6fpbb_zDz6d2SKh9SZJjUqt0ObvxsdIDGQg0";
             $range = "MainDB!A1";
+            $clearRange = "MainDB!A:AH"; // Clear all columns from A to AH
 
             // 2. Prepare data for spreadsheet
             $data = [];
@@ -70,6 +74,13 @@ class SpreadSheetAutomationController extends Controller
             ];
             
             // 1. Get users data in chunks to avoid memory issues
+            $userCount = User::count();
+            Log::info("Found {$userCount} users to export");
+
+            if ($userCount === 0) {
+                Log::warning('No users found in database to export');
+            }
+
             User::chunk(100, function($userChunk) use (&$data) {
                 // Process each chunk
                 foreach ($userChunk as $user) {
@@ -125,7 +136,8 @@ class SpreadSheetAutomationController extends Controller
             $service = new Google_Service_Sheets($client);
 
             // 4. Clear existing data
-            $service->spreadsheets_values->clear($spreadsheetId, $range, new \Google_Service_Sheets_ClearValuesRequest());
+            Log::info("Clearing spreadsheet range: {$clearRange}");
+            $service->spreadsheets_values->clear($spreadsheetId, $clearRange, new \Google_Service_Sheets_ClearValuesRequest());
 
             // 5. Write data
             $body = new \Google_Service_Sheets_ValueRange([
@@ -140,21 +152,27 @@ class SpreadSheetAutomationController extends Controller
                 $body,
                 $params
             );
+            
+            Log::info("Spreadsheet updated successfully. Updated cells: " . $result->getUpdatedCells());
                                                 
 
             return response()->json([
                 'success' => true,
                 'message' => 'Users data exported successfully',
-                'total_users' => count($data) - 1, // Subtract 1 for header row
+                'total_users_in_db' => $userCount,
+                'total_rows_written' => count($data),
                 'total_columns' => count($data[0]),
-                'updated_cells' => $result->getUpdatedCells()
+                'updated_cells' => $result->getUpdatedCells(),
+                'spreadsheet_id' => $spreadsheetId
             ]);
 
         } catch (\Exception $e) {
+            Log::error('Error exporting users data: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error exporting users data',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ], 500);
         }
     }
