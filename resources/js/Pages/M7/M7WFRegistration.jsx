@@ -125,11 +125,11 @@ export default function M7WFRegistration() {
     }
 
     if (name === "region") {
-      setForm((prev) => ({ 
-        ...prev, 
-        region: value, 
-        venue: "", 
-        attendanceMode: "" 
+      setForm((prev) => ({
+        ...prev,
+        region: value,
+        venue: "",
+        attendanceMode: ""
       }));
       return;
     }
@@ -139,10 +139,10 @@ export default function M7WFRegistration() {
       const isOnline = regionsData[form.region].Online.includes(value);
       const detectedMode = isOnline ? "Online" : "Onsite";
 
-      setForm((prev) => ({ 
-        ...prev, 
-        venue: value, 
-        attendanceMode: detectedMode 
+      setForm((prev) => ({
+        ...prev,
+        venue: value,
+        attendanceMode: detectedMode
       }));
       return;
     }
@@ -165,7 +165,7 @@ export default function M7WFRegistration() {
   };
 
   const isValidMlbbId = (id) => {
-    return /^\d{8,12}$/.test(id); // 8 to 12 digits
+    return /^\d{7,12}$/.test(id); // 7 to 12 digits
   };
 
   const isValidMlbbServer = (s) => {
@@ -187,7 +187,7 @@ export default function M7WFRegistration() {
     }
 
     if (!form.mlbbId.trim()) newErrors.mlbbId = "MLBB User ID is required.";
-    else if (!isValidMlbbId(form.mlbbId.trim())) newErrors.mlbbId = "MLBB User ID must be 8 to 12 digits.";
+    else if (!isValidMlbbId(form.mlbbId.trim())) newErrors.mlbbId = "MLBB User ID must be 7 to 12 digits.";
 
     if (!form.mlbbServer.trim()) newErrors.mlbbServer = "MLBB Server ID is required.";
     else if (!isValidMlbbServer(form.mlbbServer.trim())) newErrors.mlbbServer = "MLBB Server ID must be 4 to 6 digits.";
@@ -232,7 +232,7 @@ export default function M7WFRegistration() {
           mlbbId: "",
           mlbbServer: "",
         });
-        setAgreed(false); 
+        setAgreed(false);
       }
     } catch (err) {
       console.error(err);
@@ -432,7 +432,7 @@ export default function M7WFRegistration() {
                   name="mlbbId"
                   value={form.mlbbId}
                   onChange={handleChange}
-                  placeholder="8–12 digits"
+                  placeholder="7–12 digits"
                   className="bg-transparent w-full outline-none text-white placeholder:text-white/60"
                 />
                 <Tooltip text="Found in your MLBB profile. Example: 123456789" />
@@ -540,13 +540,13 @@ export default function M7WFRegistration() {
                   </h2>
 
                   <p className="text-sm leading-relaxed opacity-90">
-                    By checking this box, I authorize Moonton Student Leaders (MSL) Philippines to collect 
-                    and process the personal details provided above, specifically my identity, contact information, 
-                    and MLBB game credentials, solely for the purposes of verifying my registration, managing 
+                    By checking this box, I authorize Moonton Student Leaders (MSL) Philippines to collect
+                    and process the personal details provided above, specifically my identity, contact information,
+                    and MLBB game credentials, solely for the purposes of verifying my registration, managing
                     event logistics, and distributing in-game rewards for the M7 Watch Party.
                     <br /><br />
-                    I acknowledge that my data will be protected in accordance with the Data Privacy Act of 2012, 
-                    will not be shared with unauthorized third parties, and that I retain the right to access, correct, 
+                    I acknowledge that my data will be protected in accordance with the Data Privacy Act of 2012,
+                    will not be shared with unauthorized third parties, and that I retain the right to access, correct,
                     or request the deletion of my information at any time.
                   </p>
 
