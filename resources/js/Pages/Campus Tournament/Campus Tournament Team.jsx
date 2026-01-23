@@ -181,6 +181,7 @@ const CampusTournamentTeam = () => {
 
   // Confirmation Modal State
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
   const handleSubmitClick = () => {
@@ -273,7 +274,7 @@ const CampusTournamentTeam = () => {
                     Decline
                   </button>
                   <button
-                    onClick={handleAcceptInvite}
+                    onClick={() => setShowAcceptModal(true)}
                     disabled={isProcessingInvite}
                     className="flex-1 sm:flex-none px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-semibold shadow-lg shadow-green-500/20 transition-all transform hover:scale-105 disabled:opacity-50 disabled:transform-none"
                   >
@@ -516,6 +517,54 @@ const CampusTournamentTeam = () => {
             </div>
           )
           }
+
+          {/* Player Details Modal */}
+          {showAcceptModal && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+              <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-10" onClick={isProcessingInvite ? null : () => setShowAcceptModal(false)} />
+              <div className="relative z-20 w-full max-w-md bg-neutral-900 border border-green-500/30 rounded-2xl p-6 shadow-[0_0_30px_-5px_rgba(74,222,128,0.15)] flex flex-col items-center text-center">
+
+                <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mb-4 border border-green-500/50">
+                  <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+
+                <h3 className="text-2xl font-bold text-white font-montserrat mb-2">
+                  Accept Invite?
+                </h3>
+
+                <p className="text-white/70 font-montserrat text-sm mb-6 max-w-[80%]">
+                  Are you sure you want to join this team? Your status will be updated to Accepted.
+                </p>
+
+                <div className="flex w-full gap-3">
+                  <button
+                    onClick={() => setShowAcceptModal(false)}
+                    disabled={isProcessingInvite}
+                    className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white font-montserrat font-semibold rounded-xl transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAcceptInvite}
+                    disabled={isProcessingInvite}
+                    className="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white font-montserrat font-bold rounded-xl shadow-lg transition-transform transform active:scale-95 disabled:opacity-50 disabled:transform-none"
+                  >
+                    {isProcessingInvite ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Processing...
+                      </span>
+                    ) : 'Yes, Accept'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Player Details Modal */}
           {
