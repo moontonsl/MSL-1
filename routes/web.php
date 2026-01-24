@@ -55,6 +55,12 @@ Route::get('/about', function () {
     return Inertia::render('About Page/index');
 })->name('about');
 
+// Report Violation Page
+Route::get('/report-violation', function () {
+    return Inertia::render('ReportViolation/ReportViolation');
+})->name('report.violation');
+Route::post('/report-violation', [\App\Http\Controllers\ViolationReportController::class, 'store'])->name('report.violation.store');
+
 // Campus Tournament main route - redirects based on user role
 Route::get('/campus-tournament', function () {
     $user = Auth::user();
