@@ -590,25 +590,39 @@ class CampusTournamentController extends Controller
     /**
      * Show team view for registered team members
      */
+    /**
+     * Show team view for registered team members
+     */
     public function teamView(\Illuminate\Http\Request $request)
     {
-        // Get user ID from query parameter or authenticated user
-        $userId = $request->query('user_id');
-        $user = null;
-        
-        if ($userId) {
-            // Get user data by ID
-            $user = \App\Models\User::find($userId);
-        } else {
-            // Fallback to authenticated user
+        // 1. Priority: Check for Signed URL (Invite Link)
+        // The user wants the Invite Link to ALWAYS show the Login Page first,
+        // even if the user is already logged in.
+        if ($request->has('signature')) {
+            if (!$request->hasValidSignature()) {
+                abort(403, 'Invalid or expired invite link.');
+            }
+
+            // Valid Signature (Team Invite): Render Login Page with Team Invite Context.
+            $inviteTeamId = $request->query('invite_team_id');
+            return Inertia::render('Campus Tournament/Registration', [
+                'inviteTeamId' => $inviteTeamId
+            ]);
+        }
+
+        // 2. Standard Access: Must be Authenticated
+        if (Auth::check()) {
             $user = Auth::user();
+        } else {
+            // Unauthenticated and NO signature -> Block.
+            abort(403, 'Unauthorized access.');
         }
         
         if (!$user) {
             return Inertia::render('Campus Tournament/Campus Tournament Team', [
                 'team' => null,
                 'user' => null,
-                'message' => 'User not found.'
+                'message' => 'User not found or access denied.'
             ]);
         }
         
@@ -647,6 +661,8 @@ class CampusTournamentController extends Controller
         ]);
     }
 
+
+
     /**
      * Finalize and submit a team
      */
@@ -660,7 +676,7 @@ class CampusTournamentController extends Controller
         $user = $userId ? \App\Models\User::find($userId) : Auth::user();
 
         if (!$user) {
-             return response()->json(['message' => 'Unauthorized: User not found'], 401);
+             return redirect()->back()->withErrors(['message' => 'Unauthorized: User not found']);
         }
 
         $team = \App\Models\CampusTournamentTeam::with('members')->findOrFail($id);
@@ -668,32 +684,29 @@ class CampusTournamentController extends Controller
         // 1. Check if user is the captain
         $captainMember = $team->members()->where('role', 'captain')->where('player_id', $user->id)->first();
         if (!$captainMember) {
-            return response()->json(['message' => 'Only the team captain can submit the team.'], 403);
+            return redirect()->back()->withErrors(['message' => 'Only the team captain can submit the team.']);
         }
         
         // 2. Check if team is already registered
         if ($team->status === 'registered') {
-             return response()->json(['message' => 'Team is already registered.'], 400);
+             return redirect()->back()->withErrors(['message' => 'Team is already registered.']);
         }
 
         // 3. Check if we have 5 members
         if ($team->members()->count() !== 5) {
-             return response()->json(['message' => 'Team must have exactly 5 members.'], 400);
+             return redirect()->back()->withErrors(['message' => 'Team must have exactly 5 members.']);
         }
         
         // 4. Check if all members have accepted
         $pendingCount = $team->members()->where('status', '!=', 'accepted')->count();
         if ($pendingCount > 0) {
-             return response()->json(['message' => 'All team members must accept their invites before submitting.'], 400);
+             return redirect()->back()->withErrors(['message' => 'All team members must accept their invites before submitting.']);
         }
         
         // 5. Update status
         $team->update(['status' => 'registered']);
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Team submitted successfully! Your roster is now final.'
-        ]);
+        return redirect()->back()->with('message', 'Team submitted successfully! Your roster is now final.');
     }
 
     /**
@@ -723,23 +736,23 @@ class CampusTournamentController extends Controller
         $user = $userId ? \App\Models\User::find($userId) : Auth::user();
 
         if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+            return redirect()->back()->withErrors(['message' => 'Unauthorized']);
         }
         
         // 2. Find the existing team
         $team = \App\Models\CampusTournamentTeam::find($teamId);
         if (!$team) {
-            return response()->json(['message' => 'Team not found'], 404);
+            return redirect()->back()->withErrors(['message' => 'Team not found']);
         }
         
         // 3. Check if current user is the captain
         if ($team->captain_id !== $user->id) {
-            return response()->json(['message' => 'Only the team captain can edit the team'], 403);
+            return redirect()->back()->withErrors(['message' => 'Only the team captain can edit the team']);
         }
         
         // 4. IMPORTANT: Check if team is already submitted/registered
         if ($team->status === 'registered') {
-             return response()->json(['message' => 'Team cannot be updated after submission. Contact support/admin if changes are needed.'], 403);
+             return redirect()->back()->withErrors(['message' => 'Team cannot be updated after submission. Contact support/admin if changes are needed.']);
         }
 
         // 5. COLLECT ALL PLAYER IDs TO CHECK (Captain + Members)
@@ -752,7 +765,7 @@ class CampusTournamentController extends Controller
         ];
         $playerIdsToCheck = array_filter($playerIdsToCheck);
         if (count($playerIdsToCheck) !== count(array_unique($playerIdsToCheck))) {
-            return response()->json(['message' => "Duplicate players found in the roster."], 400);
+            return redirect()->back()->withErrors(['message' => "Duplicate players found in the roster."]);
         }
         
         // 6. Check if team name already exists
@@ -762,7 +775,7 @@ class CampusTournamentController extends Controller
             ->first();
         
         if ($existingTeamName) {
-            return response()->json(['message' => 'Team name already exists'], 400);
+            return redirect()->back()->withErrors(['message' => 'Team name already exists']);
         }
         
         \DB::beginTransaction();
@@ -812,12 +825,19 @@ class CampusTournamentController extends Controller
             
             \DB::commit();
             
-            return response()->json(['message' => 'Team updated successfully', 'team_id' => $team->id]);
+            // Redirect to Team View (campus.team) instead of back()
+            // Pass user_id if we have it (for guest/unauth context flow)
+            $params = [];
+            if ($user) {
+                $params['user_id'] = $user->id;
+            }
+            
+            return redirect()->route('campus.team', $params)->with('message', 'Team updated successfully');
             
         } catch (\Exception $e) {
             \DB::rollBack();
             \Log::error('Team update error: ' . $e->getMessage());
-            return response()->json(['message' => 'Update failed. ' . $e->getMessage()], 500);
+            return redirect()->back()->withErrors(['message' => 'Update failed. ' . $e->getMessage()]);
         }
     }
 
@@ -939,5 +959,35 @@ class CampusTournamentController extends Controller
         
         $writer->save('php://output');
         exit;
+    }
+    /**
+     * Generate a signed invite link for a specific player
+     */
+    /**
+     * Generate a signed invite link for the TEAM
+     */
+    public function generateInviteLink($teamId)
+    {
+        $user = Auth::user();
+        
+        // Find member record for auth user in this team
+        $authMember = \App\Models\CampusTournamentTeamMember::where('player_id', $user->id)
+            ->where('team_id', $teamId)
+            ->where('role', 'captain')
+            ->first();
+            
+        if (!$authMember) {
+            return response()->json(['error' => 'Unauthorized. Only the team captain can generate links.'], 403);
+        }
+
+        // Generate Signed URL for the TEAM (valid for 7 days)
+        // We use 'invite_team_id' to distinguish it from the old 'user_id' logic
+        $url = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+            'campus.team',
+            now()->addDays(7),
+            ['invite_team_id' => $teamId]
+        );
+        
+        return response()->json(['url' => $url]);
     }
 }

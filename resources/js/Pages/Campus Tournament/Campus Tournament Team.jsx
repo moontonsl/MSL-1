@@ -86,10 +86,9 @@ const CampusTournamentTeam = () => {
     }
 
     return (
-      <button
+      <div
         onClick={() => player && setSelectedPlayer(player)}
-        className="w-full md:w-auto flex flex-col items-center gap-1 text-white/80 text-xs md:text-sm font-montserrat hover:opacity-80 transition-opacity"
-        disabled={!player}
+        className={`w-full md:w-auto flex flex-col items-center gap-1 text-white/80 text-xs md:text-sm font-montserrat hover:opacity-80 transition-opacity ${player ? 'cursor-pointer' : ''} relative group`}
       >
         <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border border-white/20 bg-white/10">
           <svg className="absolute inset-0 m-auto w-5 h-5 text-white/50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -109,7 +108,9 @@ const CampusTournamentTeam = () => {
             {statusText}
           </span>
         )}
-      </button>
+
+
+      </div>
     );
   };
 
@@ -124,52 +125,68 @@ const CampusTournamentTeam = () => {
   const hasPendingInvite = currentUserMember?.status === 'pending';
   const [isProcessingInvite, setIsProcessingInvite] = useState(false);
 
-  const handleAcceptInvite = async () => {
+  const handleAcceptInvite = () => {
     setIsProcessingInvite(true);
+
+    // Get user_id from URL if present (for unauthenticated access context)
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('user_id');
+
+    router.post(`/team-invite/${teamFromProps.id}/accept`, {
+      user_id: userId
+    }, {
+      preserveScroll: true,
+      onSuccess: () => {
+        setShowAcceptModal(false);
+        // Data automatically refreshes via Inertia
+      },
+      onError: (errors) => {
+        console.error('Accept invite failed:', errors);
+        alert(errors.message || 'Failed to accept invite. Please try again.');
+      },
+      onFinish: () => setIsProcessingInvite(false)
+    });
+  };
+
+  const handleCopyTeamLink = async (e) => {
+    e.stopPropagation();
     try {
-      const response = await fetch(`/team-invite/${teamFromProps.id}/accept`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-        },
-      });
+      // Use team ID for the single link
+      const response = await fetch(`/api/team-invite-link/${teamFromProps.id}`);
       if (response.ok) {
-        window.location.reload(); // Reload to reflect changes
+        const data = await response.json();
+        navigator.clipboard.writeText(data.url);
+        alert('Team Invite Link copied! Send this single link to ALL your team members.');
       } else {
-        alert('Failed to accept invite.');
+        alert('Failed to generate invite link.');
       }
     } catch (error) {
-      console.error('Error accepting invite:', error);
-      alert('Error accepting invite.');
-    } finally {
-      setIsProcessingInvite(false);
+      console.error('Error copying link:', error);
+      alert('Error generating invite link.');
     }
   };
 
-  const handleRejectInvite = async () => {
+  const handleRejectInvite = () => {
     if (!confirm('Are you sure you want to decline this team invite? You will be removed from the team.')) return;
 
     setIsProcessingInvite(true);
-    try {
-      const response = await fetch(`/team-invite/${teamFromProps.id}/reject`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-        },
-      });
-      if (response.ok) {
+
+    // Get user_id from URL if present
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('user_id');
+
+    router.post(`/team-invite/${teamFromProps.id}/reject`, {
+      user_id: userId
+    }, {
+      onSuccess: () => {
         window.location.href = '/campus-tournament'; // Redirect to main page
-      } else {
-        alert('Failed to reject invite.');
-      }
-    } catch (error) {
-      console.error('Error rejecting invite:', error);
-      alert('Error rejecting invite.');
-    } finally {
-      setIsProcessingInvite(false);
-    }
+      },
+      onError: (errors) => {
+        console.error('Error rejecting invite:', errors);
+        alert(errors.message || 'Failed to reject invite.');
+      },
+      onFinish: () => setIsProcessingInvite(false)
+    });
   };
 
   // Check if team is submittable (all 5 members accepted)
@@ -181,58 +198,38 @@ const CampusTournamentTeam = () => {
 
   // Confirmation Modal State
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
   const handleSubmitClick = () => {
     setShowConfirmModal(true);
   };
 
-  const handleConfirmSubmit = async () => {
+  const handleConfirmSubmit = () => {
     setIsProcessingInvite(true);
     setErrorMessage(null);
-    try {
-      // Get user_id from URL if present (for unauthenticated access)
-      const urlParams = new URLSearchParams(window.location.search);
-      const userId = urlParams.get('user_id');
 
-      const response = await fetch(`/team-submit/${teamFromProps.id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-        },
-        body: JSON.stringify({
-          user_id: userId // Send user_id if present
-        })
-      });
+    // Get user_id from URL if present (for unauthenticated access)
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('user_id');
 
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.indexOf("application/json") !== -1) {
-        const data = await response.json();
-        if (response.ok) {
-          alert(data.message);
-          window.location.reload();
-        } else {
-          console.error('Server returned error:', data);
-          setErrorMessage(data.message || 'Failed to submit team. Please check console for details.');
-          setIsProcessingInvite(false); // Stop processing but keep modal open to show error
-        }
-      } else {
-        // If not JSON, it's likely a 500 html page
-        const text = await response.text();
-        console.error('Non-JSON response:', text);
-        setErrorMessage('Server error: The server returned an invalid response. See console for details.');
-        setIsProcessingInvite(false);
-      }
-
-    } catch (error) {
-      console.error('Error submitting team:', error);
-      setErrorMessage('Network error: ' + error.message);
-      setIsProcessingInvite(false);
-    }
+    router.post(`/team-submit/${teamFromProps.id}`, {
+      user_id: userId
+    }, {
+      onSuccess: () => {
+        alert('Team submitted successfully!');
+        setShowConfirmModal(false);
+        // Page automatically refreshes with new status
+      },
+      onError: (errors) => {
+        console.error('Submit error:', errors);
+        setErrorMessage(errors.message || Object.values(errors).flat().join(', ') || 'Failed to submit team.');
+      },
+      onFinish: () => setIsProcessingInvite(false)
+    });
   };
+
+
 
   return (
     <MainLayout>
@@ -273,7 +270,7 @@ const CampusTournamentTeam = () => {
                     Decline
                   </button>
                   <button
-                    onClick={handleAcceptInvite}
+                    onClick={() => setShowAcceptModal(true)}
                     disabled={isProcessingInvite}
                     className="flex-1 sm:flex-none px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-semibold shadow-lg shadow-green-500/20 transition-all transform hover:scale-105 disabled:opacity-50 disabled:transform-none"
                   >
@@ -321,6 +318,17 @@ const CampusTournamentTeam = () => {
                         </div>
                       ))}
                       <div className="flex flex-col items-center gap-2">
+                        {/* Single Copy Link Button */}
+                        {isCaptainFromProps && (
+                          <button
+                            type="button"
+                            className="bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 font-montserrat text-xs md:text-sm font-semibold rounded-lg px-6 md:px-7 py-1.5 border border-blue-500/30 min-w-[88px] justify-center transition-colors mb-1"
+                            onClick={handleCopyTeamLink}
+                            title="Copy single invite link for the whole team"
+                          >
+                            Copy Link
+                          </button>
+                        )}
                         <button
                           type="button"
                           disabled={!isCaptainFromProps}
@@ -399,172 +407,233 @@ const CampusTournamentTeam = () => {
                       })}
                     </div>
 
-                    <button
-                      type="button"
-                      disabled={!isCaptainFromProps || teamFromProps.status === 'registered' || isSubmittable}
-                      className={`w-full bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-5 py-2 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] ${(!isCaptainFromProps || teamFromProps.status === 'registered' || isSubmittable) ? 'opacity-60 cursor-not-allowed' : ''}`}
-                      onClick={() => {
-                        if (isCaptainFromProps && teamFromProps.status !== 'registered' && !isSubmittable) {
-                          // Find the captain from team members
-                          const captainMember = teamFromProps.members?.find(member => member.role === 'captain');
-                          const captainData = captainMember?.player;
+                    <div className="space-y-3 mt-3">
+                      {/* Mobile Copy Link Button */}
+                      {isCaptainFromProps && (
+                        <button
+                          type="button"
+                          className="w-full bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 font-montserrat text-sm font-semibold rounded-lg px-5 py-2 border border-blue-500/30 transition-colors"
+                          onClick={handleCopyTeamLink}
+                        >
+                          Copy Invite Link
+                        </button>
+                      )}
 
-                          // Store team data for editing
-                          sessionStorage.setItem('campusTournamentEditTeam', JSON.stringify(teamFromProps));
-
-                          // Store captain data separately
-                          if (captainData) {
-                            sessionStorage.setItem('campusTournamentCaptain', JSON.stringify(captainData));
-                          }
-
-                          // Get user_id if present
-                          const urlParams = new URLSearchParams(window.location.search);
-                          const userId = urlParams.get('user_id');
-
-                          const targetUrl = userId
-                            ? `/Tournament/CampusTournamentReg?user_id=${userId}`
-                            : '/Tournament/CampusTournamentReg';
-
-                          router.visit(targetUrl);
-                        }
-                      }}
-                      title="Edit team details"
-                    >
-                      Edit team
-                    </button>
-
-                    {/* Submit Team Button Mobile */}
-                    {isCaptainFromProps && teamFromProps.status === 'assembling' && (
                       <button
                         type="button"
-                        disabled={!isSubmittable || isProcessingInvite}
-                        className={`w-full mt-2 bg-green-600 text-white font-montserrat text-sm font-semibold rounded-lg px-5 py-2 shadow-lg transition-all ${(!isSubmittable || isProcessingInvite) ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-green-500'}`}
-                        onClick={handleSubmitClick}
+                        disabled={!isCaptainFromProps || teamFromProps.status === 'registered' || isSubmittable}
+                        className={`w-full bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-5 py-2 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] ${(!isCaptainFromProps || teamFromProps.status === 'registered' || isSubmittable) ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        onClick={() => {
+                          if (isCaptainFromProps && teamFromProps.status !== 'registered' && !isSubmittable) {
+                            // Find the captain from team members
+                            const captainMember = teamFromProps.members?.find(member => member.role === 'captain');
+                            const captainData = captainMember?.player;
+
+                            // Store team data for editing
+                            sessionStorage.setItem('campusTournamentEditTeam', JSON.stringify(teamFromProps));
+
+                            // Store captain data separately
+                            if (captainData) {
+                              sessionStorage.setItem('campusTournamentCaptain', JSON.stringify(captainData));
+                            }
+
+                            // Get user_id if present
+                            const urlParams = new URLSearchParams(window.location.search);
+                            const userId = urlParams.get('user_id');
+
+                            const targetUrl = userId
+                              ? `/Tournament/CampusTournamentReg?user_id=${userId}`
+                              : '/Tournament/CampusTournamentReg';
+
+                            router.visit(targetUrl);
+                          }
+                        }}
+                        title="Edit team details"
                       >
-                        {isProcessingInvite ? 'Submitting...' : 'Submit Team'}
+                        Edit team
                       </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            {!isCaptainFromProps && (
-              <div className="mt-3 text-xs text-white/60 font-montserrat">
-                You can view your team roster here. Only a Captain can edit details so ask your captain to update details if needed.
-              </div>
-            )}
-          </div>
-          <div className="flex justify-center mt-10">
-            {/* Placeholder for center content if needed */}
-          </div>
-
-          {/* Confirmation/Submit Modal */}
-          {showConfirmModal && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-              <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-10" onClick={isProcessingInvite ? null : () => setShowConfirmModal(false)} />
-              <div className="relative z-20 w-full max-w-md bg-neutral-900 border border-[#F2C21A]/30 rounded-2xl p-6 shadow-[0_0_30px_-5px_rgba(242,194,26,0.15)] flex flex-col items-center text-center">
-
-                <div className="w-16 h-16 rounded-full bg-[#F2C21A]/20 flex items-center justify-center mb-4 border border-[#F2C21A]/50">
-                  <svg className="w-8 h-8 text-[#F2C21A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                </div>
-
-                <h3 className="text-2xl font-bold text-white font-montserrat mb-2">
-                  Submit Team?
-                </h3>
-
-                <p className="text-white/70 font-montserrat text-sm mb-6 max-w-[80%]">
-                  Are you sure you want to finalize your roster? This action cannot be undone. Your team will be officially registered.
-                </p>
-
-                {errorMessage && (
-                  <div className="w-full mb-4 px-4 py-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-xs text-left">
-                    <strong>Error:</strong> {errorMessage}
-                  </div>
-                )}
-
-                <div className="flex w-full gap-3">
-                  <button
-                    onClick={() => {
-                      setShowConfirmModal(false);
-                      setErrorMessage(null);
-                    }}
-                    disabled={isProcessingInvite}
-                    className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white font-montserrat font-semibold rounded-xl transition-colors disabled:opacity-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleConfirmSubmit}
-                    disabled={isProcessingInvite}
-                    className="flex-1 py-3 bg-[#F2C21A] hover:bg-[#d9ae18] text-black font-montserrat font-bold rounded-xl shadow-lg transition-transform transform active:scale-95 disabled:opacity-50 disabled:transform-none"
-                  >
-                    {isProcessingInvite ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <svg className="animate-spin h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Processing...
-                      </span>
-                    ) : 'Confirm Submit'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )
-          }
-
-          {/* Player Details Modal */}
-          {
-            selectedPlayer && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-                <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10" onClick={() => setSelectedPlayer(null)} />
-                <div className="relative z-20 w-full max-w-sm bg-neutral-900 border border-white/20 rounded-2xl p-6 shadow-2xl">
-                  <div className="flex flex-col items-center mb-4">
-                    <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-yellow-400 mb-3 bg-neutral-800 relative">
-                      <svg className="absolute inset-0 m-auto w-10 h-10 text-white/30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
-                        <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                      </svg>
-                      {selectedPlayer.avatarUrl && (
-                        <img src={selectedPlayer.avatarUrl} alt={formatPlayer(selectedPlayer)} className="w-full h-full object-cover" />
+                      {/* Submit Team Button Mobile */}
+                      {isCaptainFromProps && teamFromProps.status === 'assembling' && (
+                        <button
+                          type="button"
+                          disabled={!isSubmittable || isProcessingInvite}
+                          className={`w-full mt-2 bg-green-600 text-white font-montserrat text-sm font-semibold rounded-lg px-5 py-2 shadow-lg transition-all ${(!isSubmittable || isProcessingInvite) ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-green-500'}`}
+                          onClick={handleSubmitClick}
+                        >
+                          {isProcessingInvite ? 'Submitting...' : 'Submit Team'}
+                        </button>
                       )}
                     </div>
-                    <h3 className="text-white text-xl font-bold font-montserrat">{formatPlayer(selectedPlayer)}</h3>
-                    <p className="text-white/60 text-sm font-montserrat">{selectedPlayer.email}</p>
+                  </div>
+                </div>
+              </div>
+
+              {!isCaptainFromProps && (
+                <div className="mt-3 text-xs text-white/60 font-montserrat">
+                  You can view your team roster here. Only a Captain can edit details so ask your captain to update details if needed.
+                </div>
+              )}
+            </div>
+            <div className="flex justify-center mt-10">
+              {/* Placeholder for center content if needed */}
+            </div>
+
+            {/* Confirmation/Submit Modal */}
+            {showConfirmModal && (
+              <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-10" onClick={isProcessingInvite ? null : () => setShowConfirmModal(false)} />
+                <div className="relative z-20 w-full max-w-md bg-neutral-900 border border-[#F2C21A]/30 rounded-2xl p-6 shadow-[0_0_30px_-5px_rgba(242,194,26,0.15)] flex flex-col items-center text-center">
+
+                  <div className="w-16 h-16 rounded-full bg-[#F2C21A]/20 flex items-center justify-center mb-4 border border-[#F2C21A]/50">
+                    <svg className="w-8 h-8 text-[#F2C21A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
                   </div>
 
-                  <div className="space-y-3 bg-white/5 p-4 rounded-xl border border-white/10">
-                    <div className="flex justify-between items-center border-b border-white/10 pb-2">
-                      <span className="text-white/50 text-xs uppercase font-semibold">MLBB Data</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-white/70 text-sm">IGN</span>
-                      <span className="text-white font-mono text-sm">{selectedPlayer.ml_ign || 'N/A'}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-white/70 text-sm">Server ID</span>
-                      <span className="text-white font-mono text-sm">{selectedPlayer.ml_server || 'N/A'}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-white/70 text-sm">User ID</span>
-                      <span className="text-white font-mono text-sm">{selectedPlayer.ml_id || 'N/A'}</span>
-                    </div>
-                  </div>
+                  <h3 className="text-2xl font-bold text-white font-montserrat mb-2">
+                    Submit Team?
+                  </h3>
 
-                  <button
-                    onClick={() => setSelectedPlayer(null)}
-                    className="w-full mt-6 bg-white/10 hover:bg-white/20 text-white font-montserrat text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors"
-                  >
-                    Close
-                  </button>
+                  <p className="text-white/70 font-montserrat text-sm mb-6 max-w-[80%]">
+                    Are you sure you want to finalize your roster? This action cannot be undone. Your team will be officially registered.
+                  </p>
+
+                  {errorMessage && (
+                    <div className="w-full mb-4 px-4 py-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-xs text-left">
+                      <strong>Error:</strong> {errorMessage}
+                    </div>
+                  )}
+
+                  <div className="flex w-full gap-3">
+                    <button
+                      onClick={() => {
+                        setShowConfirmModal(false);
+                        setErrorMessage(null);
+                      }}
+                      disabled={isProcessingInvite}
+                      className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white font-montserrat font-semibold rounded-xl transition-colors disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleConfirmSubmit}
+                      disabled={isProcessingInvite}
+                      className="flex-1 py-3 bg-[#F2C21A] hover:bg-[#d9ae18] text-black font-montserrat font-bold rounded-xl shadow-lg transition-transform transform active:scale-95 disabled:opacity-50 disabled:transform-none"
+                    >
+                      {isProcessingInvite ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="animate-spin h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Processing...
+                        </span>
+                      ) : 'Confirm Submit'}
+                    </button>
+                  </div>
                 </div>
               </div>
             )
-          }
+            }
+
+            {/* Player Details Modal */}
+            {showAcceptModal && (
+              <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-10" onClick={isProcessingInvite ? null : () => setShowAcceptModal(false)} />
+                <div className="relative z-20 w-full max-w-md bg-neutral-900 border border-green-500/30 rounded-2xl p-6 shadow-[0_0_30px_-5px_rgba(74,222,128,0.15)] flex flex-col items-center text-center">
+
+                  <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mb-4 border border-green-500/50">
+                    <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+
+                  <h3 className="text-2xl font-bold text-white font-montserrat mb-2">
+                    Accept Invite?
+                  </h3>
+
+                  <p className="text-white/70 font-montserrat text-sm mb-6 max-w-[80%]">
+                    Are you sure you want to join this team? Your status will be updated to Accepted.
+                  </p>
+
+                  <div className="flex w-full gap-3">
+                    <button
+                      onClick={() => setShowAcceptModal(false)}
+                      disabled={isProcessingInvite}
+                      className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white font-montserrat font-semibold rounded-xl transition-colors disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleAcceptInvite}
+                      disabled={isProcessingInvite}
+                      className="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white font-montserrat font-bold rounded-xl shadow-lg transition-transform transform active:scale-95 disabled:opacity-50 disabled:transform-none"
+                    >
+                      {isProcessingInvite ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Processing...
+                        </span>
+                      ) : 'Yes, Accept'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Player Details Modal */}
+            {
+              selectedPlayer && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+                  <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10" onClick={() => setSelectedPlayer(null)} />
+                  <div className="relative z-20 w-full max-w-sm bg-neutral-900 border border-white/20 rounded-2xl p-6 shadow-2xl">
+                    <div className="flex flex-col items-center mb-4">
+                      <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-yellow-400 mb-3 bg-neutral-800 relative">
+                        <svg className="absolute inset-0 m-auto w-10 h-10 text-white/30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
+                          <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                        </svg>
+                        {selectedPlayer.avatarUrl && (
+                          <img src={selectedPlayer.avatarUrl} alt={formatPlayer(selectedPlayer)} className="w-full h-full object-cover" />
+                        )}
+                      </div>
+                      <h3 className="text-white text-xl font-bold font-montserrat">{formatPlayer(selectedPlayer)}</h3>
+                      <p className="text-white/60 text-sm font-montserrat">{selectedPlayer.email}</p>
+                    </div>
+
+                    <div className="space-y-3 bg-white/5 p-4 rounded-xl border border-white/10">
+                      <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                        <span className="text-white/50 text-xs uppercase font-semibold">MLBB Data</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/70 text-sm">IGN</span>
+                        <span className="text-white font-mono text-sm">{selectedPlayer.ml_ign || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/70 text-sm">Server ID</span>
+                        <span className="text-white font-mono text-sm">{selectedPlayer.ml_server || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/70 text-sm">User ID</span>
+                        <span className="text-white font-mono text-sm">{selectedPlayer.ml_id || 'N/A'}</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setSelectedPlayer(null)}
+                      className="w-full mt-6 bg-white/10 hover:bg-white/20 text-white font-montserrat text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              )
+            }
+          </div>
         </div>
       </div>
     </MainLayout>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Head, usePage } from "@inertiajs/react";
+import { Head, usePage, router } from "@inertiajs/react";
 import MainLayout from "@/Layouts/MainLayout.jsx";
 
 function PlayerSearchInput({ label, placeholder, subtext, value, onChange, onSelect, excludeIds, university }) {
@@ -236,7 +236,7 @@ export default function TeamRegistration() {
             .map(player => player.id);
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
         setIsSubmitting(true);
 
@@ -252,50 +252,42 @@ export default function TeamRegistration() {
             return;
         }
 
-        try {
-            const url = isEditMode ? `/team-update/${existingTeam.id}` : '/team-registration';
-            const method = isEditMode ? 'PUT' : 'POST';
+        const url = isEditMode ? `/team-update/${existingTeam.id}` : '/team-registration';
+        const method = isEditMode ? 'put' : 'post';
 
-            // Get user_id from URL if present (for unauthenticated access)
-            const urlParams = new URLSearchParams(window.location.search);
-            const userId = urlParams.get('user_id');
+        // Get user_id from URL if present (for unauthenticated access)
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('user_id');
 
-            const response = await fetch(url, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                },
-                body: JSON.stringify({
-                    teamName: formData.teamName,
-                    discordId: formData.discordId,
-                    captain: captain,
-                    players: selectedPlayers,
-                    user_id: userId // Send user_id if present
-                }),
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                setModalMessage(isEditMode
+        router.visit(url, {
+            method: method,
+            data: {
+                teamName: formData.teamName,
+                discordId: formData.discordId,
+                captain: captain,
+                players: selectedPlayers,
+                user_id: userId // Send user_id if present
+            },
+            preserveScroll: true,
+            onSuccess: (page) => {
+                // Check for flash messages or use default success message
+                const flashMessage = page.props.flash?.message;
+                const message = flashMessage || (isEditMode
                     ? 'Team updated successfully! New members have been invited.'
                     : 'Team registered successfully! Invites have been sent to your teammates.'
                 );
+                setModalMessage(message);
                 setShowSuccessModal(true);
-            } else {
-                const errorData = await response.json();
-                setModalMessage((isEditMode ? 'Update' : 'Registration') + ' failed: ' + (errorData.message || 'Unknown error'));
+            },
+            onError: (errors) => {
+                const errorMessage = errors.message ||
+                    Object.values(errors).flat().join(', ') ||
+                    ((isEditMode ? 'Update' : 'Registration') + ' failed. Please try again.');
+                setModalMessage(errorMessage);
                 setShowErrorModal(true);
-            }
-        } catch (error) {
-            console.error('Registration error:', error);
-            setModalMessage((isEditMode ? 'Update' : 'Registration') + ' failed. Please try again.');
-            setShowErrorModal(true);
-        } finally {
-            setIsSubmitting(false);
-        }
+            },
+            onFinish: () => setIsSubmitting(false)
+        });
     };
 
     // Show loading state

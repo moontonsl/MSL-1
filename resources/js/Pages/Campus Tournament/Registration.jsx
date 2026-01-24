@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Head, router } from "@inertiajs/react";
 import MainLayout from "@/Layouts/MainLayout.jsx";
 
-export default function Registration() {
+export default function Registration({ inviteTeamId }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -24,6 +24,7 @@ export default function Registration() {
         body: JSON.stringify({
           username: username,
           password: password,
+          invite_team_id: inviteTeamId, // Pass the TEAM ID from the signed link
         }),
       });
 
@@ -42,8 +43,10 @@ export default function Registration() {
           if (teamCheckResponse.ok) {
             const teamData = await teamCheckResponse.json();
             if (teamData.isInTeam) {
-              // User is already in a team, redirect to team view
-              router.visit(`/Tournament/CampusTournamentTeam?user_id=${userData.user.id}`);
+              // User is updated to check for CAPTAIN role
+              // Since backend 'validate-credentials' already blocks uninvited members,
+              // we can safely redirect anyone who is 'isInTeam' here.
+              router.visit('/Tournament/CampusTournamentTeam');
               return;
             }
           }
@@ -68,8 +71,17 @@ export default function Registration() {
           setError('Login failed. Please check your credentials.');
         }
       } else {
-        // Login failed - wrong credentials
-        setError('Login failed. Please check your credentials.');
+        if (response.status === 419) {
+          setError('Session expired. Please refresh the page and try again.');
+        } else {
+          // Try to get specific error message from server (e.g., "Get the link from you captain...")
+          try {
+            const errorData = await response.json();
+            setError(errorData.message || 'Login failed. Please check your credentials.');
+          } catch (e) {
+            setError('Login failed. Please check your credentials.');
+          }
+        }
       }
     } catch (error) {
       setError('Login failed. Please check your credentials.');
