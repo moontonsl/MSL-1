@@ -61,8 +61,8 @@ const regionsData = {
 };
 
 const eventDatesData = [
-  { value: "2026-01-23", label: "January 23, 2026" },
-  { value: "2026-01-24", label: "January 24, 2026" },
+  { value: "2026-01-23", label: "January 23, 2026 (Registration Closed)", disabled: true },
+  { value: "2026-01-24", label: "January 24, 2026 (Registration Closed)", disabled: true },
   { value: "2026-01-25", label: "January 25, 2026" },
 ];
 
@@ -385,7 +385,7 @@ export default function M7WFRegistration() {
                   </option>
 
                   {eventDatesData.map((date) => (
-                    <option key={date.value} value={date.value} className="text-black">
+                    <option key={date.value} value={date.value} className="text-black" disabled={date.disabled}>
                       {date.label}
                     </option>
                   ))}
