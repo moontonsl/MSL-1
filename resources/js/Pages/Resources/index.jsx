@@ -17,7 +17,7 @@ export default function ResourcesPage() {
     };
 
     const resourceItems = [
-        { image: communityFrame, alt: "Community", path: "/soon", isExternal: false },
+        { image: communityFrame, alt: "Community", path: "/campus", isExternal: false },
         { image: aboutUsFrame, alt: "About Us", path: "/about", isExternal: false },
         { image: msldirectoryFrame, alt: "MSL Directory", path: "/soon", isExternal: false },
         { image: assetsFrame, alt: "Assets", path: "https://tinyurl.com/Promotional-Material-Assets", isExternal: true }
