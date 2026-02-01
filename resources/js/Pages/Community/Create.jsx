@@ -26,13 +26,23 @@ export default function Create({ islands, regions, mapLocations = [] }) {
     const [loadingSchools, setLoadingSchools] = useState(false);
     const [showNewSchoolForm, setShowNewSchoolForm] = useState(false);
     const [query, setQuery] = useState('');
+    const [schoolQuery, setSchoolQuery] = useState('');
+
+    const filteredSchools =
+        schoolQuery === ''
+            ? availableSchools.slice(0, 15)
+            : availableSchools
+                .filter((school) => school.name.toLowerCase().includes(schoolQuery.toLowerCase()))
+                .slice(0, 15)
 
     const filteredLocations =
         query === ''
-            ? mapLocations
-            : mapLocations.filter((loc) => {
-                return (loc.name.toLowerCase().includes(query.toLowerCase()) || loc.code.toLowerCase().includes(query.toLowerCase()))
-            })
+            ? mapLocations.slice(0, 15)
+            : mapLocations
+                .filter((loc) => {
+                    return (loc.name.toLowerCase().includes(query.toLowerCase()) || loc.code.toLowerCase().includes(query.toLowerCase()))
+                })
+                .slice(0, 15)
 
     // Fetch schools when island changes
     useEffect(() => {
@@ -53,8 +63,7 @@ export default function Create({ islands, regions, mapLocations = [] }) {
     }, [data.island_id]);
 
     // Handle school selection
-    const handleSchoolChange = (e) => {
-        const value = e.target.value;
+    const handleSchoolChange = (value) => {
         if (value === "new") {
             setShowNewSchoolForm(true);
             setData(d => ({
@@ -146,22 +155,79 @@ export default function Create({ islands, regions, mapLocations = [] }) {
                         <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-300">2. Select School</label>
                             <div className="relative">
-                                <SchoolIcon className="absolute left-3 top-3 w-5 h-5 text-gray-500" />
-                                <select
+                                <Combobox
                                     value={showNewSchoolForm ? "new" : data.school_id}
                                     onChange={handleSchoolChange}
-                                    className="w-full pl-10 bg-gray-800 border-gray-700 rounded-lg focus:border-blue-500 focus:ring-blue-500 text-white"
                                     disabled={!data.island_id && !showNewSchoolForm}
-                                    required
+                                    onClose={() => setSchoolQuery('')}
                                 >
-                                    <option value="">
-                                        {data.island_id ? (loadingSchools ? "Loading schools..." : "Select a School...") : "Please select an island first"}
-                                    </option>
-                                    {availableSchools.map(school => (
-                                        <option key={school.id} value={school.id}>{school.name}</option>
-                                    ))}
-                                    <option value="new" className="font-bold text-blue-300">+ Add New School</option>
-                                </select>
+                                    <div className="relative">
+                                        <SchoolIcon className="absolute left-3 top-3 w-5 h-5 text-gray-500 z-10" />
+                                        <ComboboxInput
+                                            className="w-full pl-10 bg-gray-800 border-gray-700 rounded-lg focus:border-blue-500 focus:ring-blue-500 text-white py-2 pr-10"
+                                            placeholder={data.island_id ? (loadingSchools ? "Loading schools..." : "Select a School...") : "Please select an island first"}
+                                            displayValue={(val) => {
+                                                if (val === "new") return "+ Add New School";
+                                                const school = availableSchools.find(s => s.id == val);
+                                                return school ? school.name : "";
+                                            }}
+                                            onChange={(event) => setSchoolQuery(event.target.value)}
+                                            required={!showNewSchoolForm}
+                                        />
+                                        <ComboboxButton className="absolute inset-y-0 right-0 flex items-center pr-2">
+                                            <ChevronsUpDown className="w-5 h-5 text-gray-400" aria-hidden="true" />
+                                        </ComboboxButton>
+                                    </div>
+                                    <ComboboxOptions anchor="bottom" className="w-[var(--input-width)] bg-gray-800 border border-gray-700 rounded-lg mt-1 max-h-60 overflow-auto z-50 shadow-xl empty:invisible">
+                                        {filteredSchools.length === 0 && schoolQuery !== '' ? (
+                                            <div className="relative cursor-default select-none py-2 px-4 text-gray-400">
+                                                Nothing found.
+                                            </div>
+                                        ) : (
+                                            <>
+                                                {filteredSchools.map((school) => (
+                                                    <ComboboxOption
+                                                        key={school.id}
+                                                        value={school.id}
+                                                        className={({ focus }) =>
+                                                            `relative cursor-default select-none py-2 pl-10 pr-4 ${focus ? 'bg-blue-600 text-white' : 'text-gray-300'}`
+                                                        }
+                                                    >
+                                                        {({ selected, focus }) => (
+                                                            <>
+                                                                <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>
+                                                                    {school.name}
+                                                                </span>
+                                                                {selected ? (
+                                                                    <span className={`absolute inset-y-0 left-0 flex items-center pl-3 ${focus ? 'text-white' : 'text-blue-400'}`}>
+                                                                        <Check className="h-5 w-5" aria-hidden="true" />
+                                                                    </span>
+                                                                ) : null}
+                                                            </>
+                                                        )}
+                                                    </ComboboxOption>
+                                                ))}
+                                                <ComboboxOption
+                                                    value="new"
+                                                    className={({ focus }) =>
+                                                        `relative cursor-default select-none py-2 pl-10 pr-4 border-t border-gray-700 ${focus ? 'bg-blue-600 text-white' : 'font-bold text-blue-300'}`
+                                                    }
+                                                >
+                                                    {({ selected, focus }) => (
+                                                        <>
+                                                            <span className="block truncate">+ Add New School</span>
+                                                            {selected ? (
+                                                                <span className={`absolute inset-y-0 left-0 flex items-center pl-3 ${focus ? 'text-white' : 'text-blue-400'}`}>
+                                                                    <Check className="h-5 w-5" aria-hidden="true" />
+                                                                </span>
+                                                            ) : null}
+                                                        </>
+                                                    )}
+                                                </ComboboxOption>
+                                            </>
+                                        )}
+                                    </ComboboxOptions>
+                                </Combobox>
                             </div>
                             {errors.school_id && <p className="text-red-400 text-sm mt-1">{errors.school_id}</p>}
                         </div>
@@ -263,8 +329,9 @@ export default function Create({ islands, regions, mapLocations = [] }) {
                                 onClose={() => setQuery('')}
                             >
                                 <div className="relative">
+                                    <MapPin className="absolute left-3 top-3 w-5 h-5 text-gray-500 z-10" />
                                     <ComboboxInput
-                                        className="w-full bg-gray-800 border-gray-700 rounded-lg focus:border-blue-500 focus:ring-blue-500 text-white py-2 pl-3 pr-10"
+                                        className="w-full bg-gray-800 border-gray-700 rounded-lg focus:border-blue-500 focus:ring-blue-500 text-white py-2 pl-10 pr-10"
                                         placeholder="Search location..."
                                         displayValue={(code) => {
                                             const loc = mapLocations.find(l => l.code === code);

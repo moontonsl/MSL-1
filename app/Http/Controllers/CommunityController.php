@@ -8,6 +8,10 @@ class CommunityController extends Controller
 {
     public function create()
     {
+        if (!auth()->check() || !in_array(auth()->user()->role, ['Regional Admin', 'Super Admin'])) {
+            return redirect('/');
+        }
+
         $islands = \App\Models\Island::orderBy('name')->get(['id', 'name']);
         // Also fetch regions for the add school modal
         $regions = \App\Models\Region::orderBy('name')->get(['id', 'name']);
@@ -67,6 +71,10 @@ class CommunityController extends Controller
 
     public function store(Request $request)
     {
+        if (!auth()->check() || !in_array(auth()->user()->role, ['Regional Admin', 'Super Admin'])) {
+            return redirect('/');
+        }
+
         $request->validate([
             // School data
             'school_id' => 'required_without:new_school_name', // or handled by logic
