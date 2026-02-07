@@ -19,6 +19,7 @@ export default function AdminLayout({ children }) {
         { name: 'Event Calendar', href: route('admin.events'), routeName: 'admin.events', icon: FaCalendar },
         { name: 'Footer Management', href: route('admin.footer'), routeName: 'admin.footer', icon: FaCog },
         { name: 'Oppo Settings', href: route('admin.oppo-settings.index'), routeName: 'admin.oppo-settings.index', icon: FaCog },
+        { name: 'Violation Reports', href: route('admin.violation-reports.index'), routeName: 'admin.violation-reports.index', icon: FaUserShield },
         { name: 'Settings', href: route('admin.settings'), routeName: 'admin.settings', icon: FaCog },
     ];
 

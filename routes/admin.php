@@ -102,4 +102,8 @@ Route::middleware(['auth:admin', 'admin'])->group(function () {
     Route::get('/admin/regional-admin-management', [AdminController::class, 'regionalAdminManagement'])->name('admin.regional-admin-management');
     Route::post('/admin/users/{user}/promote-regional-admin', [AdminController::class, 'promoteToRegionalAdmin'])->name('admin.users.promote-regional-admin');
     Route::post('/admin/users/{user}/demote-regional-admin', [AdminController::class, 'demoteFromRegionalAdmin'])->name('admin.users.demote-regional-admin');
+
+    // Violation Reports
+    Route::get('/admin/violation-reports', [\App\Http\Controllers\ViolationReportController::class, 'index'])->name('admin.violation-reports.index');
+    Route::put('/admin/violation-reports/{report}', [\App\Http\Controllers\ViolationReportController::class, 'update'])->name('admin.violation-reports.update');
 });

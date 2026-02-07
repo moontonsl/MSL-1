@@ -8,6 +8,8 @@ import { User, Mail, MapPin, Calendar, Globe, Hash, ChevronDown } from "lucide-r
 import { Link } from "@inertiajs/react";
 import { Info } from "lucide-react";
 import axios from "axios";
+import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headlessui/react'
+import { Check, ChevronsUpDown } from "lucide-react";
 
 const regionsData = {
   Luzon: {
@@ -61,8 +63,8 @@ const regionsData = {
 };
 
 const eventDatesData = [
-  { value: "2026-01-23", label: "January 23, 2026" },
-  { value: "2026-01-24", label: "January 24, 2026" },
+  { value: "2026-01-23", label: "January 23, 2026 (Registration Closed)", disabled: true },
+  { value: "2026-01-24", label: "January 24, 2026 (Registration Closed)", disabled: true },
   { value: "2026-01-25", label: "January 25, 2026" },
 ];
 
@@ -103,6 +105,7 @@ export default function M7WFRegistration() {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [submissionMessage, setSubmissionMessage] = useState("");
+  const [venueQuery, setVenueQuery] = useState("");
 
   const [showModal, setShowModal] = useState(false);
 
@@ -149,6 +152,19 @@ export default function M7WFRegistration() {
 
     setForm((prev) => ({ ...prev, [name]: newValue }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const handleVenueChange = (value) => {
+    // Find if the venue is Online or Onsite
+    const isOnline = regionsData[form.region]?.Online.includes(value);
+    const detectedMode = isOnline ? "Online" : "Onsite";
+
+    setForm((prev) => ({
+      ...prev,
+      venue: value,
+      attendanceMode: detectedMode
+    }));
+    setErrors((prev) => ({ ...prev, venue: "" }));
   };
 
   // Helper to get alphabetical list of all venues for the selected region
@@ -322,23 +338,59 @@ export default function M7WFRegistration() {
             {/* VENUE */}
             <div>
               <label className="block font-medium mb-1 text-sm text-[#fff4d0]">Venue / School</label>
-              <div className="relative bg-black/75 rounded-xl p-3 flex items-center gap-3 border border-[#fff4d0]">
-                <MapPin className="text-[#fff4d0] w-5 h-5" />
-                <select
-                  name="venue"
+              <div className="relative">
+                <Combobox
                   value={form.venue}
-                  onChange={handleChange}
+                  onChange={handleVenueChange}
                   disabled={!form.region}
-                  className="bg-transparent w-full outline-none text-white appearance-none disabled:opacity-40"
+                  onClose={() => setVenueQuery("")}
                 >
-                  <option value="" disabled className="text-black">
-                    {form.region ? "Select your venue" : "Please select a region first"}
-                  </option>
-                  {getVenuesForRegion(form.region).map((v) => (
-                    <option key={v} value={v} className="text-black">{v}</option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-5 text-[#fff4d0] pointer-events-none" />
+                  <div className="relative bg-black/75 rounded-xl p-3 flex items-center gap-3 border border-[#fff4d0]">
+                    <MapPin className="text-[#fff4d0] w-5 h-5 z-10" />
+                    <ComboboxInput
+                      className="bg-transparent w-full outline-none text-white placeholder:text-white/60 pr-10"
+                      placeholder={form.region ? "Search your venue" : "Please select a region first"}
+                      displayValue={(val) => val}
+                      onChange={(event) => setVenueQuery(event.target.value)}
+                    />
+                    <ComboboxButton className="absolute inset-y-0 right-0 flex items-center pr-2">
+                      <ChevronsUpDown className="w-5 h-5 text-[#fff4d0]" aria-hidden="true" />
+                    </ComboboxButton>
+                  </div>
+                  <ComboboxOptions anchor="bottom" className="w-[var(--input-width)] bg-black border border-[#fff4d0] rounded-xl mt-1 max-h-60 overflow-auto z-[100] shadow-xl empty:invisible">
+                    {getVenuesForRegion(form.region).filter(v => v.toLowerCase().includes(venueQuery.toLowerCase())).length === 0 && venueQuery !== "" ? (
+                      <div className="relative cursor-default select-none py-2 px-4 text-[#fff4d0]/60">
+                        Nothing found.
+                      </div>
+                    ) : (
+                      getVenuesForRegion(form.region)
+                        .filter(v => v.toLowerCase().includes(venueQuery.toLowerCase()))
+                        .slice(0, 15)
+                        .map((v) => (
+                          <ComboboxOption
+                            key={v}
+                            value={v}
+                            className={({ focus }) =>
+                              `relative cursor-default select-none py-2 pl-10 pr-4 ${focus ? 'bg-[#fff4d0] text-black' : 'text-[#fff4d0]'}`
+                            }
+                          >
+                            {({ selected, focus }) => (
+                              <>
+                                <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>
+                                  {v}
+                                </span>
+                                {selected ? (
+                                  <span className={`absolute inset-y-0 left-0 flex items-center pl-3 ${focus ? 'text-black' : 'text-[#fff4d0]'}`}>
+                                    <Check className="h-5 w-5" aria-hidden="true" />
+                                  </span>
+                                ) : null}
+                              </>
+                            )}
+                          </ComboboxOption>
+                        ))
+                    )}
+                  </ComboboxOptions>
+                </Combobox>
               </div>
               {errors.venue && <p className="text-red-400 text-sm mt-1">{errors.venue}</p>}
             </div>
@@ -385,7 +437,7 @@ export default function M7WFRegistration() {
                   </option>
 
                   {eventDatesData.map((date) => (
-                    <option key={date.value} value={date.value} className="text-black">
+                    <option key={date.value} value={date.value} className="text-black" disabled={date.disabled}>
                       {date.label}
                     </option>
                   ))}
