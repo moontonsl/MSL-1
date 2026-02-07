@@ -55,6 +55,12 @@ Route::get('/about', function () {
     return Inertia::render('About Page/index');
 })->name('about');
 
+// Report Violation Page
+Route::get('/report-violation', function () {
+    return Inertia::render('ReportViolation/ReportViolation');
+})->name('report.violation');
+Route::post('/report-violation', [\App\Http\Controllers\ViolationReportController::class, 'store'])->name('report.violation.store');
+
 // Campus Tournament main route - redirects based on user role
 Route::get('/campus-tournament', function () {
     $user = Auth::user();
@@ -112,35 +118,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/campus-tournaments/{id}/extend', [\App\Http\Controllers\CampusTournamentController::class, 'extendRegistration'])->name('campus.tournaments.extend');
     Route::get('/campus-tournaments/{id}/export', [\App\Http\Controllers\CampusTournamentController::class, 'exportToExcel'])->name('campus.tournaments.export');
     Route::delete('/campus-tournaments/{id}', [\App\Http\Controllers\CampusTournamentController::class, 'destroy'])->name('campus.tournaments.destroy');
+    Route::get('/api/team-invite-link/{teamId}', [\App\Http\Controllers\CampusTournamentController::class, 'generateInviteLink'])->name('team.invite.link');
     
     // Team Invite Routes
-    Route::post('/team-invite/{teamId}/accept', function ($teamId) {
-        $user = Auth::user();
-        $member = \App\Models\CampusTournamentTeamMember::where('team_id', $teamId)
-            ->where('player_id', $user->id)
-            ->first();
-            
-        if (!$member) {
-            return response()->json(['message' => 'Invite not found'], 404);
-        }
-        
-        $member->update(['status' => 'accepted']);
-        return response()->json(['message' => 'Invite accepted']);
-    })->name('team.invite.accept');
-
-    Route::post('/team-invite/{teamId}/reject', function ($teamId) {
-        $user = Auth::user();
-        $member = \App\Models\CampusTournamentTeamMember::where('team_id', $teamId)
-            ->where('player_id', $user->id)
-            ->first();
-            
-        if (!$member) {
-            return response()->json(['message' => 'Invite not found'], 404);
-        }
-        
-        $member->update(['status' => 'rejected']);
-        return response()->json(['message' => 'Invite rejected']);
-    })->name('team.invite.reject');
+    // Team Invite Routes - MOVED OUTSIDE AUTH
+    // See lines below outside middleware group
 
     Route::get('/api/my-team-invites', function () {
         $user = Auth::user();
@@ -405,9 +387,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/api/modification-requests', function (\Illuminate\Http\Request $request) {
         $user = Auth::user();
         
-        // Only SL can create modification requests
-        if ($user->role !== 'SL') {
-            return response()->json(['error' => 'Only Student Leaders can create modification requests'], 403);
+        // Allow SL, Regional Admin, and Super Admin
+        if ($user->role !== 'SL' && $user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Access denied'], 403);
         }
         
         $request->validate([
@@ -416,6 +398,98 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'wrong_value' => 'required|string',
             'correct_value' => 'required|string',
         ]);
+        
+        // If user is Admin, perform direct update
+        if ($user->role === 'Regional Admin' || $user->role === 'Super Admin') {
+            $targetUser = \App\Models\User::find($request->user_id);
+            
+            if (!$targetUser) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+            
+            // Allow Regional Admin to only modify users in their region
+            if ($user->role === 'Regional Admin') {
+                $assignedRegionIds = $user->getAssignedRegionIds();
+                if (!empty($assignedRegionIds)) {
+                    if (!in_array($targetUser->region, $assignedRegionIds)) {
+                        return response()->json(['error' => 'Access denied: User not in your region'], 403);
+                    }
+                } else {
+                    if ($targetUser->region !== $user->region) {
+                        return response()->json(['error' => 'Access denied: User not in your region'], 403);
+                    }
+                }
+            }
+
+            // Use database transaction
+            \DB::beginTransaction();
+            try {
+                // 1. Update User Data
+                switch ($request->modification_type) {
+                    case 'Full Name':
+                        $nameParts = explode(' ', $request->correct_value, 2);
+                        $targetUser->update([
+                            'name' => $nameParts[0],
+                            'surname' => $nameParts[1] ?? '',
+                        ]);
+                        break;
+                    case 'School':
+                        $newSchoolName = $request->correct_value;
+                        $school = \App\Models\School::with('region.island')
+                            ->where('name', $newSchoolName)
+                            ->first();
+                        
+                        if ($school && $school->region) {
+                            $regionId = $school->region->id ?? null;
+                            $regionName = $school->region->name ?? null;
+                            if ($regionName) {
+                                $regionName = preg_replace('/^\d+\s*-\s*/', '', $regionName);
+                                $regionName = trim($regionName);
+                            }
+                            
+                            $islandName = null;
+                            if ($school->region->island) {
+                                $islandName = $school->region->island->name ?? null;
+                                if ($islandName) {
+                                    $islandName = preg_replace('/^\d+\s*-\s*/', '', $islandName);
+                                    $islandName = trim($islandName);
+                                }
+                            }
+                            
+                            $updateData = ['university' => $newSchoolName];
+                            if ($regionId !== null) $updateData['region'] = $regionId;
+                            if ($islandName) $updateData['island'] = $islandName;
+                            
+                            $targetUser->update($updateData);
+                        } else {
+                            $targetUser->update(['university' => $newSchoolName]);
+                        }
+                        break;
+                    case 'Course':
+                        $targetUser->update(['course' => $request->correct_value]);
+                        break;
+                }
+
+                // 2. Create "Approved" History Record
+                $modificationRequest = \App\Models\ModificationRequest::create([
+                    'user_id' => $request->user_id,
+                    'modification_type' => $request->modification_type,
+                    'wrong_value' => $request->wrong_value,
+                    'correct_value' => $request->correct_value,
+                    'submitted_by' => $user->id,
+                    'status' => 'Approved', // Auto-approved
+                    'approved_by' => $user->id, // Approved by themselves
+                    'approved_at' => now(),
+                ]);
+
+                \DB::commit();
+                return response()->json(['success' => true, 'message' => 'User updated successfully', 'request' => $modificationRequest]);
+
+            } catch (\Exception $e) {
+                \DB::rollBack();
+                return response()->json(['error' => 'Failed to update user: ' . $e->getMessage()], 500);
+            }
+        }
         
         $modificationRequest = \App\Models\ModificationRequest::create([
             'user_id' => $request->user_id,
@@ -679,15 +753,38 @@ Route::post('/validate-credentials', function (\Illuminate\Http\Request $request
         'password' => 'required|string',
     ]);
     
-    // Validate credentials without logging in
-    if (Auth::attempt($request->only('username', 'password'))) {
-        $user = Auth::user();
-        Auth::logout(); // Don't keep them logged in, just validate
-        
-        return response()->json(['user' => $user]);
+    // Check credentials FIRST without logging in
+    if (!Auth::validate($request->only('username', 'password'))) {
+        return response()->json(['message' => 'Login failed. Please check your credentials.'], 401);
     }
     
-    return response()->json(['message' => 'Invalid credentials'], 401);
+    $user = \App\Models\User::where('username', $request->username)->first();
+    
+    // Check Team Status (Block Members UNLESS they have a valid invite)
+    // Check Team Status (Block Members UNLESS they have a valid invite)
+    $teamMember = \App\Models\CampusTournamentTeamMember::whereHas('team.tournament', function($query) {
+        $query->where('status', 'approved')
+              ->where('results_submitted', false);
+    })->where('player_id', $user->id)
+      ->latest()
+      ->first();
+      
+    $inviteTeamId = $request->input('invite_team_id');
+    
+    // Check if the user is invited to THIS specific team (via the signed link ID)
+    $isInvitedToTeam = $inviteTeamId && $teamMember && ((int)$inviteTeamId === $teamMember->team_id);
+
+    // Block if: Member AND Not Captain AND Not Accepted AND Not Invited (Active Invite Link Context)
+    if ($teamMember && $teamMember->role !== 'captain' && $teamMember->status !== 'accepted' && !$isInvitedToTeam) {
+        // User is a member AND didn't come from a valid invite link -> BLOCK.
+        return response()->json(['message' => 'Get the link from you captain to be able to log in'], 403);
+    }
+    
+    // Valid Captain or Invited Member or New User -> Log in
+    Auth::login($user);
+    $request->session()->regenerate();
+    
+    return response()->json(['user' => $user]);
 });
 
 // Faulty Username Update Route (Signed)
@@ -727,7 +824,7 @@ Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
     // Remove nulls and check for duplicates within the submitted list
     $playerIdsToCheck = array_filter($playerIdsToCheck);
     if (count($playerIdsToCheck) !== count(array_unique($playerIdsToCheck))) {
-        return response()->json(['message' => "Duplicate players found in the roster. Each player can only be added once."], 400);
+        return redirect()->back()->withErrors(['message' => "Duplicate players found in the roster. Each player can only be added once."]);
     }
 
     // CHECK FOR EXISTING ACTIVE MEMBERSHIPS
@@ -743,7 +840,7 @@ Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
         $duplicatePlayerId = $existingMembership->player_id;
         $player = \App\Models\User::find($duplicatePlayerId);
         $name = $player ? $player->username : 'A player';
-        return response()->json(['message' => "$name is already registered in an ongoing tournament."], 400);
+        return redirect()->back()->withErrors(['message' => "$name is already registered in an ongoing tournament."]);
     }
     
     // Check if captain's school has an active approved tournament
@@ -755,7 +852,7 @@ Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
         ->first();
     
     if (!$tournament) {
-        return response()->json(['message' => 'No active tournament found for your school.'], 400);
+        return redirect()->back()->withErrors(['message' => 'No active tournament found for your school.']);
     }
     
     // Check if team name already exists
@@ -764,7 +861,7 @@ Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
         ->first();
     
     if ($existingTeam) {
-        return response()->json(['message' => 'Team name already exists'], 400);
+        return redirect()->back()->withErrors(['message' => 'Team name already exists']);
     }
     
     \DB::beginTransaction();
@@ -792,16 +889,19 @@ Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
                 'team_id' => $team->id,
                 'player_id' => $player['id'],
                 'role' => $player['id'] === $captain['id'] ? 'captain' : 'member',
+
                 'status' => $player['id'] === $captain['id'] ? 'accepted' : 'pending',
             ]);
         }
         
         \DB::commit();
-        return response()->json(['message' => 'Team registered successfully', 'team_id' => $team->id]);
+        
+        // Use captain's ID for the redirect context
+        return redirect()->route('campus.team', ['user_id' => $captain['id']])->with('message', 'Team registered successfully');
     } catch (\Exception $e) {
         \DB::rollBack();
         \Log::error('Team registration error: ' . $e->getMessage());
-        return response()->json(['message' => 'Registration failed. Please try again.'], 500);
+        return redirect()->back()->withErrors(['message' => 'Registration failed. Please try again.']);
     }
 });
 
@@ -809,6 +909,58 @@ Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
 
 
 // PUBLIC ROUTES for Team Submission and Update (Explicitly requested for unauth flow via user_id)
+// Team Invite Routes (Unauthenticated with user_id)
+Route::post('/team-invite/{teamId}/accept', function (\Illuminate\Http\Request $request, $teamId) {
+    // Get user from request or auth
+    $userId = $request->input('user_id');
+    $user = $userId ? \App\Models\User::find($userId) : \Illuminate\Support\Facades\Auth::user();
+
+    if (!$user) {
+        return redirect()->back()->withErrors(['message' => 'Unauthorized']);
+    }
+    
+    \Illuminate\Support\Facades\Log::info("Accept Invite Request: User {$user->id} for Team {$teamId}");
+
+    $member = \App\Models\CampusTournamentTeamMember::where('team_id', $teamId)
+        ->where('player_id', $user->id)
+        ->latest()
+        ->first();
+        
+    if (!$member) {
+        \Log::warning("Invite not found for User {$user->id} Team {$teamId}");
+        return redirect()->back()->withErrors(['message' => 'Invite not found']);
+    }
+    
+    \Log::info("Current Status: {$member->status}");
+    $updated = $member->update(['status' => 'accepted']);
+    \Log::info("Updated: " . ($updated ? 'Yes' : 'No') . ". New Status: " . $member->refresh()->status);
+
+    return redirect()->back()->with('message', 'Invite accepted');
+})->name('team.invite.accept');
+
+Route::post('/team-invite/{teamId}/reject', function (\Illuminate\Http\Request $request, $teamId) {
+    // Get user from request or auth
+    $userId = $request->input('user_id');
+    $user = $userId ? \App\Models\User::find($userId) : \Illuminate\Support\Facades\Auth::user();
+
+    if (!$user) {
+        return response()->json(['message' => 'Unauthorized'], 401);
+    }
+    
+    \Illuminate\Support\Facades\Log::info("Reject Invite Request: User {$user->id} for Team {$teamId}");
+
+    $member = \App\Models\CampusTournamentTeamMember::where('team_id', $teamId)
+        ->where('player_id', $user->id)
+        ->first();
+        
+    if (!$member) {
+        return response()->json(['message' => 'Invite not found'], 404);
+    }
+    
+    $member->update(['status' => 'rejected']);
+    return response()->json(['message' => 'Invite rejected']);
+})->name('team.invite.reject');
+
 Route::post('/team-submit/{id}', [\App\Http\Controllers\CampusTournamentController::class, 'submitTeam'])->name('team.submit');
 Route::put('/team-update/{id}', [\App\Http\Controllers\CampusTournamentController::class, 'updateTeam'])->name('team.update');
 
@@ -1906,11 +2058,13 @@ Route::get('/codashop/init-payment', function () {
 Route::post('/codashop/init-payment', [\App\Http\Controllers\CodashopController::class, 'initPayment'])->name('codashop.init-payment');
 
 // Community Routes
-Route::get('/community/create', [\App\Http\Controllers\CommunityController::class, 'create'])->name('community.create');
-Route::post('/community', [\App\Http\Controllers\CommunityController::class, 'store'])->name('community.store');
-Route::get('/api/community/schools', [\App\Http\Controllers\CommunityController::class, 'getSchoolsByIsland'])->name('community.getSchools');
-Route::get('/api/community/provinces', [\App\Http\Controllers\CommunityController::class, 'getProvincesByRegion'])->name('community.getProvinces');
-Route::get('/api/community/municipalities', [\App\Http\Controllers\CommunityController::class, 'getMunicipalitiesByProvince'])->name('community.getMunicipalities');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/community/create', [\App\Http\Controllers\CommunityController::class, 'create'])->name('community.create');
+    Route::post('/community', [\App\Http\Controllers\CommunityController::class, 'store'])->name('community.store');
+    Route::get('/api/community/schools', [\App\Http\Controllers\CommunityController::class, 'getSchoolsByIsland'])->name('community.getSchools');
+    Route::get('/api/community/provinces', [\App\Http\Controllers\CommunityController::class, 'getProvincesByRegion'])->name('community.getProvinces');
+    Route::get('/api/community/municipalities', [\App\Http\Controllers\CommunityController::class, 'getMunicipalitiesByProvince'])->name('community.getMunicipalities');
+});
 
 // Custom Event Canonical Routes - Handle dynamic event links like /NewEvent
 // This catch-all route should be placed at the very end to avoid conflicts with other routes

@@ -55,6 +55,7 @@ const CampusTournament = () => {
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [submitModalData, setSubmitModalData] = useState(null);
   const [isEditingResults, setIsEditingResults] = useState(false); // New state for edit mode
+  const [filterStatus, setFilterStatus] = useState('ongoing'); // 'ongoing' or 'completed'
 
   // Transform real tournament data to match the expected format
   const transformedTournaments = useMemo(() => {
@@ -75,6 +76,16 @@ const CampusTournament = () => {
       })) : []
     }));
   }, [localTournaments]);
+
+  // Filter approved tournaments based on selected tab
+  const filteredActiveTournaments = useMemo(() => {
+    return transformedTournaments.filter(t => {
+      if (t.status !== 'approved') return false;
+      if (filterStatus === 'ongoing') return !t.results_submitted;
+      if (filterStatus === 'completed') return t.results_submitted;
+      return true;
+    });
+  }, [transformedTournaments, filterStatus]);
 
   const formatDate = (value) => {
     try {
@@ -243,16 +254,18 @@ const CampusTournament = () => {
     }
   };
 
-  // Set the first active approved tournament as selected by default
+  // Set the first active approved tournament as selected by default or when filter changes
   React.useEffect(() => {
-    const activeTournaments = transformedTournaments.filter(t =>
-      t.status === 'approved' &&
-      !t.results_submitted
-    );
-    if (activeTournaments.length > 0 && !selectedTournamentId) {
-      setSelectedTournamentId(activeTournaments[0].id);
+    if (filteredActiveTournaments.length > 0) {
+      // If currently selected tournament is not in the filtered list, select the first one
+      const isSelectedInList = filteredActiveTournaments.some(t => t.id === selectedTournamentId);
+      if (!selectedTournamentId || !isSelectedInList) {
+        setSelectedTournamentId(filteredActiveTournaments[0].id);
+      }
+    } else {
+      setSelectedTournamentId(null);
     }
-  }, [transformedTournaments, selectedTournamentId]);
+  }, [filteredActiveTournaments, selectedTournamentId]);
 
   const handleTournamentChange = (tournamentId) => {
     setSelectedTournamentId(tournamentId);
@@ -605,8 +618,30 @@ const CampusTournament = () => {
               </div>
 
               <div className="flex flex-col gap-4">
+                {/* Filter Tabs */}
+                <div className="flex items-center gap-4 border-b border-white/10 pb-2 mb-2">
+                  <button
+                    onClick={() => setFilterStatus('ongoing')}
+                    className={`font-montserrat font-semibold text-sm md:text-base px-4 py-2 rounded-lg transition-all duration-300 ${filterStatus === 'ongoing'
+                        ? 'bg-[#F2C21A] text-black shadow-[0_0_8px_-3px_rgba(242,194,26,1)]'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                      }`}
+                  >
+                    Ongoing ({transformedTournaments.filter(t => t.status === 'approved' && !t.results_submitted).length})
+                  </button>
+                  <button
+                    onClick={() => setFilterStatus('completed')}
+                    className={`font-montserrat font-semibold text-sm md:text-base px-4 py-2 rounded-lg transition-all duration-300 ${filterStatus === 'completed'
+                        ? 'bg-[#F2C21A] text-black shadow-[0_0_8px_-3px_rgba(242,194,26,1)]'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                      }`}
+                  >
+                    Completed ({transformedTournaments.filter(t => t.status === 'approved' && t.results_submitted).length})
+                  </button>
+                </div>
+
                 {/* Tournament Selector Dropdown */}
-                {transformedTournaments.filter(t => t.status === 'approved').length > 1 && (
+                {filteredActiveTournaments.length > 1 && (
                   <div className="relative w-full max-w-7xl mx-auto">
                     <div className="bg-neutral-800/80 rounded-2xl border border-neutral-700/50 p-4">
                       <label className="block text-white/80 font-montserrat text-sm mb-2">Select Tournament:</label>
@@ -615,8 +650,7 @@ const CampusTournament = () => {
                         onChange={(e) => handleTournamentChange(parseInt(e.target.value))}
                         className="w-full bg-neutral-700/50 border border-white/20 rounded-lg px-4 py-2 text-white font-montserrat focus:outline-none focus:ring-2 focus:ring-[#F2C21A]"
                       >
-                        {transformedTournaments
-                          .filter(t => t.status === 'approved')
+                        {filteredActiveTournaments
                           .map((tournament) => (
                             <option key={tournament.id} value={tournament.id}>
                               {tournament.school_name.toUpperCase()} TOURNAMENT - {formatDate(tournament.start_date)} to {formatDate(tournament.end_date)}
