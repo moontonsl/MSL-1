@@ -270,7 +270,8 @@ Route::middleware(['auth', 'verified'])->get('/api/users/lookup', function (\Ill
         return response()->json(['error' => 'User not found'], 404);
     }
 
-    // Role-based access check (Regional Admin specific)
+    // Role-based access check (Regional Admin specific) - REMOVED for modifications as requested
+    /*
     if ($user->role === 'Regional Admin') {
         $assignedRegionIds = $user->getAssignedRegionIds();
          if (!empty($assignedRegionIds)) {
@@ -283,6 +284,7 @@ Route::middleware(['auth', 'verified'])->get('/api/users/lookup', function (\Ill
             }
         }
     }
+    */
     
     return response()->json([
         'id' => $targetUser->id,
@@ -349,18 +351,8 @@ Route::middleware(['auth', 'verified'])->get('/api/users/{id}', function ($id) {
         if ($targetUser->university !== $user->university) {
             return response()->json(['error' => 'Access denied'], 403);
         }
-    } elseif ($user->role === 'Regional Admin') {
-        $assignedRegionIds = $user->getAssignedRegionIds();
-        if (!empty($assignedRegionIds)) {
-            if (!in_array($targetUser->region, $assignedRegionIds)) {
-                return response()->json(['error' => 'Access denied'], 403);
-            }
-        } else {
-            if ($targetUser->region !== $user->region) {
-                return response()->json(['error' => 'Access denied'], 403);
-            }
-        }
     }
+    // Regional Admin and Super Admin bypass region check as requested
     
     return response()->json($targetUser);
 });
@@ -382,17 +374,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Student Leaders can only see their own requests
             $query->where('submitted_by', $user->id);
         } elseif ($user->role === 'Regional Admin') {
-            // Regional Admins can see requests from their assigned regions
-            $assignedRegionIds = $user->getAssignedRegionIds();
-            if (!empty($assignedRegionIds)) {
-                $query->whereHas('user', function($q) use ($assignedRegionIds) {
-                    $q->whereIn('region', $assignedRegionIds);
-                });
-            } else {
-                $query->whereHas('user', function($q) use ($user) {
-                    $q->where('region', $user->region);
-                });
-            }
+            // Regional Admins can see all modification requests (restriction removed as requested)
+            // No additional filtering applied
         }
         // Super Admin can see all requests from all regions (no filtering applied)
         
@@ -451,7 +434,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 return response()->json(['error' => 'User not found'], 404);
             }
             
-            // Allow Regional Admin to only modify users in their region
+            // Allow Regional Admin to modify users outside their region (restriction removed as requested)
+            /*
             if ($user->role === 'Regional Admin') {
                 $assignedRegionIds = $user->getAssignedRegionIds();
                 if (!empty($assignedRegionIds)) {
@@ -464,6 +448,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     }
                 }
             }
+            */
 
             // Use database transaction
             \DB::beginTransaction();
@@ -857,7 +842,7 @@ Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
     
     $captain = $request->captain;
     
-    // COLLECT ALL PLAYER IDs TO CHECK (Captain + Members)
+    // COLLECT ALL PLAYER IDS TO CHECK (Captain + Members)
     $playerIdsToCheck = [
         $captain['id'],
         $request->players['player2']['id'] ?? null,

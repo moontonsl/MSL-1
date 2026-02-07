@@ -41,6 +41,7 @@ const RegionalAdmin = () => {
       schoolName: tournament.school_name,
       startDate: tournament.start_date,
       endDate: tournament.end_date,
+      tournament_type: tournament.tournament_type,
       results_submitted: tournament.results_submitted,
       results_submitted_at: tournament.results_submitted_at,
       teams: tournament.teams ? tournament.teams.map(team => ({
@@ -58,11 +59,30 @@ const RegionalAdmin = () => {
   }, [staticTournaments]);
 
   // Split tournaments into Active (Ongoing) and Completed
-  const activeTournaments = useMemo(() => transformedTournaments.filter(t => !t.results_submitted), [transformedTournaments]);
-  const completedTournaments = useMemo(() => transformedTournaments.filter(t => t.results_submitted), [transformedTournaments]);
+  const activeTournaments = useMemo(() => {
+    return transformedTournaments.filter(t => {
+      if (t.results_submitted) return false;
+      const type = (t.tournament_type || 'Online').toLowerCase();
+      if (type === 'online' && !showOnline) return false;
+      if (type === 'onsite' && !showOnsite) return false;
+      return true;
+    });
+  }, [transformedTournaments, showOnline, showOnsite]);
+
+  const completedTournaments = useMemo(() => {
+    return transformedTournaments.filter(t => {
+      if (!t.results_submitted) return false;
+      const type = (t.tournament_type || 'Online').toLowerCase();
+      if (type === 'online' && !showOnline) return false;
+      if (type === 'onsite' && !showOnsite) return false;
+      return true;
+    });
+  }, [transformedTournaments, showOnline, showOnsite]);
 
   // Filter State
   const [filterStatus, setFilterStatus] = useState('ongoing'); // 'ongoing' | 'completed'
+  const [showOnline, setShowOnline] = useState(true);
+  const [showOnsite, setShowOnsite] = useState(true);
 
 
 
@@ -426,27 +446,63 @@ const RegionalAdmin = () => {
               </div>
             </div>
             {/* Filter Tabs */}
-            <div className="mt-6 mb-8 flex space-x-4 border-b border-white/10">
-              <button
-                onClick={() => setFilterStatus('ongoing')}
-                className={`pb-2 px-4 font-montserrat font-bold text-lg md:text-xl transition-colors relative ${filterStatus === 'ongoing' ? 'text-[#F2C21A]' : 'text-white/50 hover:text-white/80'
-                  }`}
-              >
-                Ongoing ({activeTournaments.length})
-                {filterStatus === 'ongoing' && (
-                  <div className="absolute bottom-0 left-0 w-full h-1 bg-[#F2C21A] rounded-t-full" />
-                )}
-              </button>
-              <button
-                onClick={() => setFilterStatus('completed')}
-                className={`pb-2 px-4 font-montserrat font-bold text-lg md:text-xl transition-colors relative ${filterStatus === 'completed' ? 'text-[#F2C21A]' : 'text-white/50 hover:text-white/80'
-                  }`}
-              >
-                Completed ({completedTournaments.length})
-                {filterStatus === 'completed' && (
-                  <div className="absolute bottom-0 left-0 w-full h-1 bg-[#F2C21A] rounded-t-full" />
-                )}
-              </button>
+            <div className="mt-6 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10">
+              <div className="flex space-x-4">
+                <button
+                  onClick={() => setFilterStatus('ongoing')}
+                  className={`pb-2 px-4 font-montserrat font-bold text-lg md:text-xl transition-colors relative ${filterStatus === 'ongoing' ? 'text-[#F2C21A]' : 'text-white/50 hover:text-white/80'
+                    }`}
+                >
+                  Ongoing ({activeTournaments.length})
+                  {filterStatus === 'ongoing' && (
+                    <div className="absolute bottom-0 left-0 w-full h-1 bg-[#F2C21A] rounded-t-full" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setFilterStatus('completed')}
+                  className={`pb-2 px-4 font-montserrat font-bold text-lg md:text-xl transition-colors relative ${filterStatus === 'completed' ? 'text-[#F2C21A]' : 'text-white/50 hover:text-white/80'
+                    }`}
+                >
+                  Completed ({completedTournaments.length})
+                  {filterStatus === 'completed' && (
+                    <div className="absolute bottom-0 left-0 w-full h-1 bg-[#F2C21A] rounded-t-full" />
+                  )}
+                </button>
+              </div>
+
+              <div className="flex items-center gap-6 px-4 pb-2 md:pb-0">
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <div className="relative flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={showOnline}
+                      onChange={(e) => setShowOnline(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-5 h-5 border-2 border-white/30 rounded-md peer-checked:bg-[#F2C21A] peer-checked:border-[#F2C21A] transition-all duration-200 group-hover:border-[#F2C21A]/50"></div>
+                    <svg className="absolute w-3 h-3 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="font-montserrat text-sm text-white/80 group-hover:text-white transition-colors">Online</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <div className="relative flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={showOnsite}
+                      onChange={(e) => setShowOnsite(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-5 h-5 border-2 border-white/30 rounded-md peer-checked:bg-[#F2C21A] peer-checked:border-[#F2C21A] transition-all duration-200 group-hover:border-[#F2C21A]/50"></div>
+                    <svg className="absolute w-3 h-3 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="font-montserrat text-sm text-white/80 group-hover:text-white transition-colors">Onsite</span>
+                </label>
+              </div>
             </div>
 
             {/* TOURNAMENT REQUESTS (Always Visible) */}
@@ -461,6 +517,7 @@ const RegionalAdmin = () => {
                   {/* Header Row (hidden on mobile) */}
                   <div className="hidden md:grid [grid-template-columns:minmax(220px,2.2fr)_repeat(3,minmax(140px,1fr))_minmax(200px,1.3fr)] items-center gap-3 px-5 md:px-8 py-3 bg-neutral-900/70 text-white/80 text-xs md:text-sm font-montserrat">
                     <div className="font-semibold">School name</div>
+                    <div className="text-center font-semibold">Type</div>
                     <div className="text-center font-semibold">Start date</div>
                     <div className="text-center font-semibold">End date</div>
                     <div className="text-center font-semibold">SL name</div>
@@ -478,8 +535,9 @@ const RegionalAdmin = () => {
                       return (
                         <div key={req.id}>
                           {/* Desktop row */}
-                          <div className="hidden md:grid [grid-template-columns:minmax(220px,2.2fr)_repeat(3,minmax(140px,1fr))_minmax(200px,1.3fr)] items-center gap-3 px-5 md:px-8 py-3 hover:bg-white/5 transition-colors">
+                          <div className="hidden md:grid [grid-template-columns:minmax(220px,2.2fr)_repeat(4,minmax(140px,1fr))_minmax(200px,1.3fr)] items-center gap-3 px-5 md:px-8 py-3 hover:bg-white/5 transition-colors">
                             <div className="font-montserrat text-white/90 md:truncate">{req.school_name}</div>
+                            <div className="text-center font-montserrat text-white/80">{req.tournament_type || 'Online'}</div>
                             <div className="text-center font-montserrat text-white/80">{formatDate(req.start_date)}</div>
                             <div className="text-center font-montserrat text-white/80">{formatDate(req.end_date)}</div>
                             <div className="text-center font-montserrat text-white/80">{req.sl_name}</div>
@@ -505,7 +563,10 @@ const RegionalAdmin = () => {
 
                           {/* Mobile row: show School, Action buttons, and View */}
                           <div className="md:hidden grid [grid-template-columns:minmax(180px,1fr)_minmax(140px,auto)_auto] items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
-                            <div className="font-montserrat text-white/90">{req.school_name}</div>
+                            <div className="font-montserrat text-white/90">
+                              {req.school_name}
+                              <span className="block text-[10px] text-white/60">{req.tournament_type || 'Online'}</span>
+                            </div>
                             <div className="flex items-center gap-2">
                               <button
                                 type="button"
@@ -718,7 +779,7 @@ const RegionalAdmin = () => {
                         >
                           {completedTournaments.map((tournament) => (
                             <option key={tournament.id} value={tournament.id}>
-                              {tournament.schoolName.toUpperCase()} TOURNAMENT - {formatDate(tournament.startDate)} to {formatDate(tournament.endDate)} (Completed)
+                              {tournament.schoolName.toUpperCase()} TOURNAMENT ({tournament.tournament_type || 'Online'}) - {formatDate(tournament.startDate)} to {formatDate(tournament.endDate)}
                             </option>
                           ))}
                         </select>
