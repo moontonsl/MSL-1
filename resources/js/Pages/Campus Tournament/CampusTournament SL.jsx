@@ -703,7 +703,7 @@ const CampusTournament = () => {
                         {filteredActiveTournaments
                           .map((tournament) => (
                             <option key={tournament.id} value={tournament.id}>
-                              {tournament.school_name.toUpperCase()} TOURNAMENT ({tournament.tournament_type || 'Online'}) - {formatDate(tournament.start_date)} to {formatDate(tournament.end_date)}
+                              {(tournament.school_name || '').toUpperCase()} TOURNAMENT ({tournament.tournament_type || 'Online'}) - {formatDate(tournament.start_date)} to {formatDate(tournament.end_date)}
                               {tournament.results_submitted ? ' (Completed)' : ''}
                             </option>
                           ))}
@@ -722,7 +722,7 @@ const CampusTournament = () => {
                       {/* Header */}
                       <div className="relative z-10 w-full h-16 md:h-20 flex items-center justify-between bg-neutral-900/70 px-4 md:px-6">
                         <div className="flex-1 text-center">
-                          <div className="font-montserrat text-lg md:text-2xl tracking-wide">{selectedTournament.school_name.toUpperCase()} TOURNAMENT ({selectedTournament.tournament_type || 'Online'})</div>
+                          <div className="font-montserrat text-lg md:text-2xl tracking-wide">{(selectedTournament.school_name || '').toUpperCase()} TOURNAMENT ({selectedTournament.tournament_type || 'Online'})</div>
                           <div className="font-montserrat text-xs md:text-sm text-white/70">
                             {formatDate(selectedTournament.start_date)} - {formatDate(selectedTournament.end_date)}
                           </div>

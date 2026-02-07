@@ -32,6 +32,10 @@ const RegionalAdmin = () => {
   // Use real approved tournaments data instead of mock data
   const [staticTournaments, setStaticTournaments] = useState(approvedTournaments || []);
 
+  const [filterStatus, setFilterStatus] = useState('ongoing'); // 'ongoing' | 'completed'
+  const [showOnline, setShowOnline] = useState(true);
+  const [showOnsite, setShowOnsite] = useState(true);
+
   // Transform real tournament data to match the expected format
   const transformedTournaments = useMemo(() => {
     if (!staticTournaments || staticTournaments.length === 0) return [];
@@ -79,10 +83,6 @@ const RegionalAdmin = () => {
     });
   }, [transformedTournaments, showOnline, showOnsite]);
 
-  // Filter State
-  const [filterStatus, setFilterStatus] = useState('ongoing'); // 'ongoing' | 'completed'
-  const [showOnline, setShowOnline] = useState(true);
-  const [showOnsite, setShowOnsite] = useState(true);
 
 
 
@@ -515,7 +515,7 @@ const RegionalAdmin = () => {
               <div className="mt-2 md:mt-4">
                 <div className="relative w-full max-w-7xl mx-auto text-white rounded-2xl overflow-hidden transition-all duration-300 shadow-2xl bg-gradient-to-br from-neutral-800/80 to-neutral-900/80 backdrop-blur-sm border border-neutral-700/50">
                   {/* Header Row (hidden on mobile) */}
-                  <div className="hidden md:grid [grid-template-columns:minmax(220px,2.2fr)_repeat(3,minmax(140px,1fr))_minmax(200px,1.3fr)] items-center gap-3 px-5 md:px-8 py-3 bg-neutral-900/70 text-white/80 text-xs md:text-sm font-montserrat">
+                  <div className="hidden md:grid [grid-template-columns:minmax(220px,2.2fr)_repeat(4,minmax(140px,1fr))_minmax(200px,1.3fr)] items-center gap-3 px-5 md:px-8 py-3 bg-neutral-900/70 text-white/80 text-xs md:text-sm font-montserrat">
                     <div className="font-semibold">School name</div>
                     <div className="text-center font-semibold">Type</div>
                     <div className="text-center font-semibold">Start date</div>
@@ -779,7 +779,7 @@ const RegionalAdmin = () => {
                         >
                           {completedTournaments.map((tournament) => (
                             <option key={tournament.id} value={tournament.id}>
-                              {tournament.schoolName.toUpperCase()} TOURNAMENT ({tournament.tournament_type || 'Online'}) - {formatDate(tournament.startDate)} to {formatDate(tournament.endDate)}
+                              {(tournament.schoolName || '').toUpperCase()} TOURNAMENT ({tournament.tournament_type || 'Online'}) - {formatDate(tournament.startDate)} to {formatDate(tournament.endDate)}
                             </option>
                           ))}
                         </select>
