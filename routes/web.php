@@ -250,6 +250,50 @@ Route::middleware(['auth', 'verified'])->get('/api/users/search', function (\Ill
     return response()->json($users);
 });
 
+// Lookup user by username (for admin modifications)
+Route::middleware(['auth', 'verified'])->get('/api/users/lookup', function (\Illuminate\Http\Request $request) {
+    $user = Auth::user();
+    
+    // Only Regional Admin and Super Admin can lookup users for modification
+    if ($user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+        return response()->json(['error' => 'Access denied'], 403);
+    }
+    
+    $username = $request->query('username');
+    if (!$username) {
+        return response()->json(['error' => 'Username is required'], 400);
+    }
+
+    $targetUser = \App\Models\User::where('username', $username)->first();
+
+    if (!$targetUser) {
+        return response()->json(['error' => 'User not found'], 404);
+    }
+
+    // Role-based access check (Regional Admin specific)
+    if ($user->role === 'Regional Admin') {
+        $assignedRegionIds = $user->getAssignedRegionIds();
+         if (!empty($assignedRegionIds)) {
+            if (!in_array($targetUser->region, $assignedRegionIds)) {
+                return response()->json(['error' => 'Access denied: User not in your region'], 403);
+            }
+        } else {
+             if ($targetUser->region !== $user->region) {
+                return response()->json(['error' => 'Access denied: User not in your region'], 403);
+            }
+        }
+    }
+    
+    return response()->json([
+        'id' => $targetUser->id,
+        'username' => $targetUser->username,
+        'name' => $targetUser->name,
+        'surname' => $targetUser->surname,
+        'school' => $targetUser->university, 
+        'course' => $targetUser->course,
+    ]);
+});
+
 // Get specific user by ID for modification requests
 Route::middleware(['auth', 'verified'])->get('/api/users/{id}', function ($id) {
     $user = Auth::user();

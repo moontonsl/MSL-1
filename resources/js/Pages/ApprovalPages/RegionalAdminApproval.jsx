@@ -4,6 +4,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutPrograms.jsx";
 import { Eye, Check, XCircle } from "lucide-react";
 import UserProfileModal from "./UserProfileModal.jsx";
 import MSLModal from "@/Components/MSLModal.jsx";
+import AdminModificationModal from "./AdminModificationModal.jsx";
 
 export default function RegionalAdminApproval() {
   const { user } = usePage().props;
@@ -16,6 +17,7 @@ export default function RegionalAdminApproval() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showMSLModal, setShowMSLModal] = useState(false);
   const [modalData, setModalData] = useState({});
+  const [showAdminModModal, setShowAdminModModal] = useState(false);
   const itemsPerPage = 10;
   const mobileWindowSize = 4;
 
@@ -25,7 +27,7 @@ export default function RegionalAdminApproval() {
       setLoading(true);
       const response = await fetch(`/api/modification-requests?page=${page}`);
       const data = await response.json();
-      
+
       if (response.ok) {
         setRequests(data.data || []);
         setTotalPages(data.last_page || 1);
@@ -45,7 +47,7 @@ export default function RegionalAdminApproval() {
     // Force hard refresh on first visit to ensure fresh CSRF token after login
     // Check if we've already reloaded in this session
     const hasReloaded = sessionStorage.getItem('regionalAdminApprovalReloaded') === 'true';
-    
+
     if (!hasReloaded) {
       // Mark that we're about to reload
       sessionStorage.setItem('regionalAdminApprovalReloaded', 'true');
@@ -53,10 +55,10 @@ export default function RegionalAdminApproval() {
       window.location.reload();
       return;
     }
-    
+
     // Clear the reload flag so next navigation will refresh again
     sessionStorage.removeItem('regionalAdminApprovalReloaded');
-    
+
     fetchRequests();
   }, []);
 
@@ -103,9 +105,9 @@ export default function RegionalAdminApproval() {
               'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
             },
           });
-          
+
           const data = await response.json();
-          
+
           if (response.ok && data.success) {
             setModalData({
               title: 'Success',
@@ -169,9 +171,9 @@ export default function RegionalAdminApproval() {
               'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
             },
           });
-          
+
           const data = await response.json();
-          
+
           if (data.success) {
             setModalData({
               title: 'Success',
@@ -240,10 +242,18 @@ export default function RegionalAdminApproval() {
           <div className="w-full max-w-xs sm:max-w-7xl lg:max-w-full xl:max-w-full mx-auto">
             <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-8 border border-white/20 shadow-2xl">
 
-              {/* Title */}
-              <h1 className="font-bold text-white text-center mb-6 text-[20px] sm:text-[28px] lg:text-[40px]">
-                Regional Admin Approval
-              </h1>
+              {/* Header & Actions */}
+              <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
+                <h1 className="font-bold text-white text-[20px] sm:text-[28px] lg:text-[40px]">
+                  Regional Admin Approval
+                </h1>
+                <button
+                  onClick={() => setShowAdminModModal(true)}
+                  className="bg-[#F2C21A] text-black font-montserrat font-bold text-sm rounded-lg px-6 py-3 shadow-[0_0_15px_-3px_rgba(242,194,26,0.4)] hover:shadow-[0_0_20px_-3px_rgba(242,194,26,0.6)] hover:bg-[#d4a817] transition-all transform hover:-translate-y-0.5"
+                >
+                  + Create Modification
+                </button>
+              </div>
 
               {/* Desktop Table */}
               <div className="hidden sm:block">
@@ -265,9 +275,8 @@ export default function RegionalAdminApproval() {
                     {requests.map((req, index) => (
                       <tr
                         key={req.id}
-                        className={`font-medium text-gray-200 text-[14px] sm:text-[16px] ${
-                          index % 2 === 0 ? "bg-white/5" : "bg-transparent"
-                        } hover:bg-white/10 transition`}
+                        className={`font-medium text-gray-200 text-[14px] sm:text-[16px] ${index % 2 === 0 ? "bg-white/5" : "bg-transparent"
+                          } hover:bg-white/10 transition`}
                       >
                         <td className="px-2 py-3">{req.user?.username || 'N/A'}</td>
                         <td className="px-2 py-3">{req.modification_type}</td>
@@ -277,7 +286,7 @@ export default function RegionalAdminApproval() {
                           {req.submitted_by ? `${req.submitted_by.name || ''} ${req.submitted_by.surname || ''}`.trim() : 'N/A'}
                         </td>
                         <td className="px-2 py-3 text-center">
-                          <button 
+                          <button
                             onClick={() => handleViewProfile(req.user)}
                             className="flex items-center mx-auto px-3 py-1 bg-blue-500/80 text-white rounded-lg hover:bg-blue-600 transition"
                           >
@@ -286,20 +295,19 @@ export default function RegionalAdminApproval() {
                         </td>
                         <td className="px-2 py-3 text-center">
                           <span
-                            className={`px-3 py-1 rounded-lg text-white font-semibold ${
-                              req.status === "Pending"
+                            className={`px-3 py-1 rounded-lg text-white font-semibold ${req.status === "Pending"
                                 ? "bg-yellow-500/80"
                                 : req.status === "Approved"
-                                ? "bg-green-500/80"
-                                : "bg-red-500/80"
-                            }`}
+                                  ? "bg-green-500/80"
+                                  : "bg-red-500/80"
+                              }`}
                           >
                             {req.status}
                           </span>
                         </td>
                         <td className="px-2 py-3 text-center">
                           {req.status === 'Pending' ? (
-                            <button 
+                            <button
                               onClick={() => handleApprove(req.id)}
                               className="flex items-center mx-auto px-3 py-1 bg-green-500/80 text-white rounded-lg hover:bg-green-600 transition"
                             >
@@ -311,7 +319,7 @@ export default function RegionalAdminApproval() {
                         </td>
                         <td className="px-2 py-3 text-center">
                           {req.status === 'Pending' ? (
-                            <button 
+                            <button
                               onClick={() => handleReject(req.id)}
                               className="flex items-center mx-auto px-3 py-1 bg-red-500/80 text-white rounded-lg hover:bg-red-600 transition"
                             >
@@ -338,13 +346,12 @@ export default function RegionalAdminApproval() {
                       <div className="flex justify-between items-center">
                         <p className="font-semibold">{req.user?.username || 'N/A'}</p>
                         <span
-                          className={`px-2 py-1 rounded text-xs font-semibold ${
-                            req.status === "Pending"
+                          className={`px-2 py-1 rounded text-xs font-semibold ${req.status === "Pending"
                               ? "bg-yellow-500/80 text-black"
                               : req.status === "Approved"
-                              ? "bg-green-500/80 text-white"
-                              : "bg-red-500/80 text-white"
-                          }`}
+                                ? "bg-green-500/80 text-white"
+                                : "bg-red-500/80 text-white"
+                            }`}
                         >
                           {req.status}
                         </span>
@@ -397,11 +404,10 @@ export default function RegionalAdminApproval() {
                     <button
                       key={i}
                       onClick={() => handlePageChange(i + 1)}
-                      className={`px-3 py-1 rounded-lg ${
-                        currentPage === i + 1
+                      className={`px-3 py-1 rounded-lg ${currentPage === i + 1
                           ? "bg-blue-500 text-white"
                           : "bg-gray-700/70 text-gray-200"
-                      }`}
+                        }`}
                     >
                       {i + 1}
                     </button>
@@ -413,11 +419,10 @@ export default function RegionalAdminApproval() {
                     <button
                       key={page}
                       onClick={() => handlePageChange(page)}
-                      className={`px-3 py-1 rounded-lg ${
-                        currentPage === page
+                      className={`px-3 py-1 rounded-lg ${currentPage === page
                           ? "bg-blue-500 text-white"
                           : "bg-gray-700/70 text-gray-200"
-                      }`}
+                        }`}
                     >
                       {page}
                     </button>
@@ -442,11 +447,17 @@ export default function RegionalAdminApproval() {
         onClose={() => setShowProfileModal(false)}
         user={selectedUser}
       />
-      
+
       <MSLModal
         isOpen={showMSLModal}
         onClose={() => setShowMSLModal(false)}
         {...modalData}
+      />
+
+      <AdminModificationModal
+        isOpen={showAdminModModal}
+        onClose={() => setShowAdminModModal(false)}
+        onSuccess={() => fetchRequests(currentPage)}
       />
     </>
   );
