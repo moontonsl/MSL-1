@@ -2093,6 +2093,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/api/community/schools', [\App\Http\Controllers\CommunityController::class, 'getSchoolsByIsland'])->name('community.getSchools');
     Route::get('/api/community/provinces', [\App\Http\Controllers\CommunityController::class, 'getProvincesByRegion'])->name('community.getProvinces');
     Route::get('/api/community/municipalities', [\App\Http\Controllers\CommunityController::class, 'getMunicipalitiesByProvince'])->name('community.getMunicipalities');
+    Route::patch('/community/{id}', [\App\Http\Controllers\CommunityController::class, 'update'])->name('community.update');
+    Route::delete('/community/{id}', [\App\Http\Controllers\CommunityController::class, 'destroy'])->name('community.destroy');
 });
 
 // Custom Event Canonical Routes - Handle dynamic event links like /NewEvent

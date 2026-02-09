@@ -187,7 +187,7 @@ const Header = () => {
                                         className={styles.dropdownItem}
                                         onClick={() => setIsDropdownOpen(false)}
                                     >
-                                        communities
+                                        Communities
                                     </Link>
                                 )}
                                 {/* <button

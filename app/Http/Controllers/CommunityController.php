@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 class CommunityController extends Controller
 {
-    public function create()
+    public function create(Request $request)
     {
         if (!auth()->check() || !in_array(auth()->user()->role, ['Regional Admin', 'Super Admin'])) {
             return redirect('/');
@@ -16,10 +16,30 @@ class CommunityController extends Controller
         // Also fetch regions for the add school modal
         $regions = \App\Models\Region::orderBy('name')->get(['id', 'name']);
         
+        $query = \App\Models\Community::with(['school.region.island']);
+
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('school', function ($sq) use ($search) {
+                    $sq->where('name', 'like', '%' . $search . '%');
+                })
+                ->orWhere('island', 'like', '%' . $search . '%')
+                ->orWhere('location', 'like', '%' . $search . '%')
+                ->orWhere('map_code', 'like', '%' . $search . '%');
+            });
+        }
+
+        $communities = $query->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
         return \Inertia\Inertia::render('Community/Create', [
             'islands' => $islands,
             'regions' => $regions,
             'mapLocations' => \App\Models\MapLocation::orderBy('name')->get(['code', 'name']),
+            'communities' => $communities,
+            'filters' => $request->only(['search']),
         ]);
     }
 
@@ -113,5 +133,44 @@ class CommunityController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Community added successfully!');
+    }
+
+    public function update(Request $request, $id)
+    {
+        if (!auth()->check() || !in_array(auth()->user()->role, ['Regional Admin', 'Super Admin'])) {
+            return redirect('/');
+        }
+
+        $request->validate([
+            'school_id' => 'required|exists:schools,id',
+            'map_code' => 'required',
+            'school_link' => 'required|url',
+        ]);
+
+        $community = \App\Models\Community::findOrFail($id);
+        
+        $school = \App\Models\School::with('municipality', 'region.island')->findOrFail($request->school_id);
+        
+        $community->update([
+            'school_id' => $request->school_id,
+            'location' => $school->municipality->name ?? 'Unknown',
+            'island' => $school->region->island->name ?? 'Unknown',
+            'map_code' => $request->map_code,
+            'school_link' => $request->school_link,
+        ]);
+
+        return redirect()->back()->with('success', 'Community updated successfully!');
+    }
+
+    public function destroy($id)
+    {
+        if (!auth()->check() || !in_array(auth()->user()->role, ['Regional Admin', 'Super Admin'])) {
+            return redirect('/');
+        }
+
+        $community = \App\Models\Community::findOrFail($id);
+        $community->delete();
+
+        return redirect()->back()->with('success', 'Community deleted successfully!');
     }
 }
