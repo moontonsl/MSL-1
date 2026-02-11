@@ -128,6 +128,7 @@ class CampusTournamentController extends Controller
         $validator = Validator::make($request->all(), [
             'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'required|date|after:start_date',
+            'tournament_type' => 'required|in:Online,Onsite',
         ]);
         
         if ($validator->fails()) {
@@ -153,6 +154,7 @@ class CampusTournamentController extends Controller
             'sl_id' => $user->id,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
+            'tournament_type' => $request->tournament_type,
             'status' => 'pending',
         ]);
         

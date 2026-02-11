@@ -20,6 +20,7 @@ class CampusTournament extends Model
         'approved_at',
         'results_submitted',
         'results_submitted_at',
+        'tournament_type',
     ];
 
     protected $casts = [

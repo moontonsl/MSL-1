@@ -250,6 +250,52 @@ Route::middleware(['auth', 'verified'])->get('/api/users/search', function (\Ill
     return response()->json($users);
 });
 
+// Lookup user by username (for admin modifications)
+Route::middleware(['auth', 'verified'])->get('/api/users/lookup', function (\Illuminate\Http\Request $request) {
+    $user = Auth::user();
+    
+    // Only Regional Admin and Super Admin can lookup users for modification
+    if ($user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+        return response()->json(['error' => 'Access denied'], 403);
+    }
+    
+    $username = $request->query('username');
+    if (!$username) {
+        return response()->json(['error' => 'Username is required'], 400);
+    }
+
+    $targetUser = \App\Models\User::where('username', $username)->first();
+
+    if (!$targetUser) {
+        return response()->json(['error' => 'User not found'], 404);
+    }
+
+    // Role-based access check (Regional Admin specific) - REMOVED for modifications as requested
+    /*
+    if ($user->role === 'Regional Admin') {
+        $assignedRegionIds = $user->getAssignedRegionIds();
+         if (!empty($assignedRegionIds)) {
+            if (!in_array($targetUser->region, $assignedRegionIds)) {
+                return response()->json(['error' => 'Access denied: User not in your region'], 403);
+            }
+        } else {
+             if ($targetUser->region !== $user->region) {
+                return response()->json(['error' => 'Access denied: User not in your region'], 403);
+            }
+        }
+    }
+    */
+    
+    return response()->json([
+        'id' => $targetUser->id,
+        'username' => $targetUser->username,
+        'name' => $targetUser->name,
+        'surname' => $targetUser->surname,
+        'school' => $targetUser->university, 
+        'course' => $targetUser->course,
+    ]);
+});
+
 // Get specific user by ID for modification requests
 Route::middleware(['auth', 'verified'])->get('/api/users/{id}', function ($id) {
     $user = Auth::user();
@@ -305,18 +351,8 @@ Route::middleware(['auth', 'verified'])->get('/api/users/{id}', function ($id) {
         if ($targetUser->university !== $user->university) {
             return response()->json(['error' => 'Access denied'], 403);
         }
-    } elseif ($user->role === 'Regional Admin') {
-        $assignedRegionIds = $user->getAssignedRegionIds();
-        if (!empty($assignedRegionIds)) {
-            if (!in_array($targetUser->region, $assignedRegionIds)) {
-                return response()->json(['error' => 'Access denied'], 403);
-            }
-        } else {
-            if ($targetUser->region !== $user->region) {
-                return response()->json(['error' => 'Access denied'], 403);
-            }
-        }
     }
+    // Regional Admin and Super Admin bypass region check as requested
     
     return response()->json($targetUser);
 });
@@ -338,17 +374,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Student Leaders can only see their own requests
             $query->where('submitted_by', $user->id);
         } elseif ($user->role === 'Regional Admin') {
-            // Regional Admins can see requests from their assigned regions
-            $assignedRegionIds = $user->getAssignedRegionIds();
-            if (!empty($assignedRegionIds)) {
-                $query->whereHas('user', function($q) use ($assignedRegionIds) {
-                    $q->whereIn('region', $assignedRegionIds);
-                });
-            } else {
-                $query->whereHas('user', function($q) use ($user) {
-                    $q->where('region', $user->region);
-                });
-            }
+            // Regional Admins can see all modification requests (restriction removed as requested)
+            // No additional filtering applied
         }
         // Super Admin can see all requests from all regions (no filtering applied)
         
@@ -387,9 +414,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/api/modification-requests', function (\Illuminate\Http\Request $request) {
         $user = Auth::user();
         
-        // Only SL can create modification requests
-        if ($user->role !== 'SL') {
-            return response()->json(['error' => 'Only Student Leaders can create modification requests'], 403);
+        // Allow SL, Regional Admin, and Super Admin
+        if ($user->role !== 'SL' && $user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Access denied'], 403);
         }
         
         $request->validate([
@@ -398,6 +425,100 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'wrong_value' => 'required|string',
             'correct_value' => 'required|string',
         ]);
+        
+        // If user is Admin, perform direct update
+        if ($user->role === 'Regional Admin' || $user->role === 'Super Admin') {
+            $targetUser = \App\Models\User::find($request->user_id);
+            
+            if (!$targetUser) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+            
+            // Allow Regional Admin to modify users outside their region (restriction removed as requested)
+            /*
+            if ($user->role === 'Regional Admin') {
+                $assignedRegionIds = $user->getAssignedRegionIds();
+                if (!empty($assignedRegionIds)) {
+                    if (!in_array($targetUser->region, $assignedRegionIds)) {
+                        return response()->json(['error' => 'Access denied: User not in your region'], 403);
+                    }
+                } else {
+                    if ($targetUser->region !== $user->region) {
+                        return response()->json(['error' => 'Access denied: User not in your region'], 403);
+                    }
+                }
+            }
+            */
+
+            // Use database transaction
+            \DB::beginTransaction();
+            try {
+                // 1. Update User Data
+                switch ($request->modification_type) {
+                    case 'Full Name':
+                        $nameParts = explode(' ', $request->correct_value, 2);
+                        $targetUser->update([
+                            'name' => $nameParts[0],
+                            'surname' => $nameParts[1] ?? '',
+                        ]);
+                        break;
+                    case 'School':
+                        $newSchoolName = $request->correct_value;
+                        $school = \App\Models\School::with('region.island')
+                            ->where('name', $newSchoolName)
+                            ->first();
+                        
+                        if ($school && $school->region) {
+                            $regionId = $school->region->id ?? null;
+                            $regionName = $school->region->name ?? null;
+                            if ($regionName) {
+                                $regionName = preg_replace('/^\d+\s*-\s*/', '', $regionName);
+                                $regionName = trim($regionName);
+                            }
+                            
+                            $islandName = null;
+                            if ($school->region->island) {
+                                $islandName = $school->region->island->name ?? null;
+                                if ($islandName) {
+                                    $islandName = preg_replace('/^\d+\s*-\s*/', '', $islandName);
+                                    $islandName = trim($islandName);
+                                }
+                            }
+                            
+                            $updateData = ['university' => $newSchoolName];
+                            if ($regionId !== null) $updateData['region'] = $regionId;
+                            if ($islandName) $updateData['island'] = $islandName;
+                            
+                            $targetUser->update($updateData);
+                        } else {
+                            $targetUser->update(['university' => $newSchoolName]);
+                        }
+                        break;
+                    case 'Course':
+                        $targetUser->update(['course' => $request->correct_value]);
+                        break;
+                }
+
+                // 2. Create "Approved" History Record
+                $modificationRequest = \App\Models\ModificationRequest::create([
+                    'user_id' => $request->user_id,
+                    'modification_type' => $request->modification_type,
+                    'wrong_value' => $request->wrong_value,
+                    'correct_value' => $request->correct_value,
+                    'submitted_by' => $user->id,
+                    'status' => 'Approved', // Auto-approved
+                    'approved_by' => $user->id, // Approved by themselves
+                    'approved_at' => now(),
+                ]);
+
+                \DB::commit();
+                return response()->json(['success' => true, 'message' => 'User updated successfully', 'request' => $modificationRequest]);
+
+            } catch (\Exception $e) {
+                \DB::rollBack();
+                return response()->json(['error' => 'Failed to update user: ' . $e->getMessage()], 500);
+            }
+        }
         
         $modificationRequest = \App\Models\ModificationRequest::create([
             'user_id' => $request->user_id,
@@ -721,7 +842,7 @@ Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
     
     $captain = $request->captain;
     
-    // COLLECT ALL PLAYER IDs TO CHECK (Captain + Members)
+    // COLLECT ALL PLAYER IDS TO CHECK (Captain + Members)
     $playerIdsToCheck = [
         $captain['id'],
         $request->players['player2']['id'] ?? null,
@@ -1966,11 +2087,15 @@ Route::get('/codashop/init-payment', function () {
 Route::post('/codashop/init-payment', [\App\Http\Controllers\CodashopController::class, 'initPayment'])->name('codashop.init-payment');
 
 // Community Routes
-Route::get('/community/create', [\App\Http\Controllers\CommunityController::class, 'create'])->name('community.create');
-Route::post('/community', [\App\Http\Controllers\CommunityController::class, 'store'])->name('community.store');
-Route::get('/api/community/schools', [\App\Http\Controllers\CommunityController::class, 'getSchoolsByIsland'])->name('community.getSchools');
-Route::get('/api/community/provinces', [\App\Http\Controllers\CommunityController::class, 'getProvincesByRegion'])->name('community.getProvinces');
-Route::get('/api/community/municipalities', [\App\Http\Controllers\CommunityController::class, 'getMunicipalitiesByProvince'])->name('community.getMunicipalities');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/community/create', [\App\Http\Controllers\CommunityController::class, 'create'])->name('community.create');
+    Route::post('/community', [\App\Http\Controllers\CommunityController::class, 'store'])->name('community.store');
+    Route::get('/api/community/schools', [\App\Http\Controllers\CommunityController::class, 'getSchoolsByIsland'])->name('community.getSchools');
+    Route::get('/api/community/provinces', [\App\Http\Controllers\CommunityController::class, 'getProvincesByRegion'])->name('community.getProvinces');
+    Route::get('/api/community/municipalities', [\App\Http\Controllers\CommunityController::class, 'getMunicipalitiesByProvince'])->name('community.getMunicipalities');
+    Route::patch('/community/{id}', [\App\Http\Controllers\CommunityController::class, 'update'])->name('community.update');
+    Route::delete('/community/{id}', [\App\Http\Controllers\CommunityController::class, 'destroy'])->name('community.destroy');
+});
 
 // Custom Event Canonical Routes - Handle dynamic event links like /NewEvent
 // This catch-all route should be placed at the very end to avoid conflicts with other routes

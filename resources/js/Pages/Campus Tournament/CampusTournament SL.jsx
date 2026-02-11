@@ -45,6 +45,7 @@ const CampusTournament = () => {
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [tournamentType, setTournamentType] = useState('Online');
   const [localTournaments, setLocalTournaments] = useState(tournaments || []);
   const [selectedTournamentId, setSelectedTournamentId] = useState(null); // Currently selected tournament
   const [mobileViewTeam, setMobileViewTeam] = useState(null); // mobile-only player popup
@@ -55,6 +56,9 @@ const CampusTournament = () => {
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [submitModalData, setSubmitModalData] = useState(null);
   const [isEditingResults, setIsEditingResults] = useState(false); // New state for edit mode
+  const [filterStatus, setFilterStatus] = useState('ongoing'); // 'ongoing' or 'completed'
+  const [showOnline, setShowOnline] = useState(true);
+  const [showOnsite, setShowOnsite] = useState(true);
 
   // Transform real tournament data to match the expected format
   const transformedTournaments = useMemo(() => {
@@ -75,6 +79,24 @@ const CampusTournament = () => {
       })) : []
     }));
   }, [localTournaments]);
+
+  // Filter approved tournaments based on selected tab
+  const filteredActiveTournaments = useMemo(() => {
+    return transformedTournaments.filter(t => {
+      if (t.status !== 'approved') return false;
+
+      // Status filter
+      const matchesStatus = filterStatus === 'ongoing' ? !t.results_submitted : t.results_submitted;
+      if (!matchesStatus) return false;
+
+      // Type filter
+      const type = (t.tournament_type || 'Online').toLowerCase();
+      if (type === 'online' && !showOnline) return false;
+      if (type === 'onsite' && !showOnsite) return false;
+
+      return true;
+    });
+  }, [transformedTournaments, filterStatus, showOnline, showOnsite]);
 
   const formatDate = (value) => {
     try {
@@ -116,6 +138,7 @@ const CampusTournament = () => {
     setIsCreateOpen(false);
     setStartDate('');
     setEndDate('');
+    setTournamentType('Online');
   };
 
   const handleSuccessClose = () => {
@@ -170,6 +193,7 @@ const CampusTournament = () => {
         body: JSON.stringify({
           start_date: startDate,
           end_date: endDate,
+          tournament_type: tournamentType,
         }),
       });
 
@@ -183,6 +207,7 @@ const CampusTournament = () => {
             id: data.tournament.id,
             start_date: data.tournament.start_date,
             end_date: data.tournament.end_date,
+            tournament_type: data.tournament.tournament_type,
             status: data.tournament.status,
             school_name: data.tournament.school_name,
             sl_name: data.tournament.sl_name,
@@ -243,16 +268,18 @@ const CampusTournament = () => {
     }
   };
 
-  // Set the first active approved tournament as selected by default
+  // Set the first active approved tournament as selected by default or when filter changes
   React.useEffect(() => {
-    const activeTournaments = transformedTournaments.filter(t =>
-      t.status === 'approved' &&
-      !t.results_submitted
-    );
-    if (activeTournaments.length > 0 && !selectedTournamentId) {
-      setSelectedTournamentId(activeTournaments[0].id);
+    if (filteredActiveTournaments.length > 0) {
+      // If currently selected tournament is not in the filtered list, select the first one
+      const isSelectedInList = filteredActiveTournaments.some(t => t.id === selectedTournamentId);
+      if (!selectedTournamentId || !isSelectedInList) {
+        setSelectedTournamentId(filteredActiveTournaments[0].id);
+      }
+    } else {
+      setSelectedTournamentId(null);
     }
-  }, [transformedTournaments, selectedTournamentId]);
+  }, [filteredActiveTournaments, selectedTournamentId]);
 
   const handleTournamentChange = (tournamentId) => {
     setSelectedTournamentId(tournamentId);
@@ -543,7 +570,7 @@ const CampusTournament = () => {
                         <div key={t.id} className="flex items-center justify-between bg-neutral-900/40 border border-white/10 rounded-xl px-4 py-3">
                           <div className="flex flex-col">
                             <div className="text-white font-montserrat text-sm md:text-base">{(t.school_name || '').toUpperCase()} TOURNAMENT</div>
-                            <div className="text-white/60 text-xs md:text-sm">{formatDate(t.start_date)} - {formatDate(t.end_date)}</div>
+                            <div className="text-white/60 text-xs md:text-sm">{formatDate(t.start_date)} - {formatDate(t.end_date)} • {t.tournament_type || 'Online'}</div>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="px-2 py-1 rounded-md text-xs font-montserrat bg-yellow-500/20 text-yellow-300 border border-yellow-400/30">Pending</span>
@@ -581,7 +608,7 @@ const CampusTournament = () => {
                         <div key={t.id} className="flex flex-col md:flex-row md:items-center justify-between bg-neutral-900/40 border border-red-500/20 rounded-xl px-4 py-3 gap-3">
                           <div className="flex flex-col">
                             <div className="text-white font-montserrat text-sm md:text-base">{(t.school_name || '').toUpperCase()} TOURNAMENT</div>
-                            <div className="text-white/60 text-xs md:text-sm">{formatDate(t.start_date)} - {formatDate(t.end_date)}</div>
+                            <div className="text-white/60 text-xs md:text-sm">{formatDate(t.start_date)} - {formatDate(t.end_date)} • {t.tournament_type || 'Online'}</div>
                             {t.rejection_reason && (
                               <div className="text-red-300/80 text-xs mt-1 italic">Reason: {t.rejection_reason}</div>
                             )}
@@ -605,8 +632,66 @@ const CampusTournament = () => {
               </div>
 
               <div className="flex flex-col gap-4">
+                {/* Filter Tabs */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-2 mb-2">
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => setFilterStatus('ongoing')}
+                      className={`font-montserrat font-semibold text-sm md:text-base px-4 py-2 rounded-lg transition-all duration-300 ${filterStatus === 'ongoing'
+                        ? 'bg-[#F2C21A] text-black shadow-[0_0_8px_-3px_rgba(242,194,26,1)]'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                        }`}
+                    >
+                      Ongoing ({transformedTournaments.filter(t => t.status === 'approved' && !t.results_submitted).length})
+                    </button>
+                    <button
+                      onClick={() => setFilterStatus('completed')}
+                      className={`font-montserrat font-semibold text-sm md:text-base px-4 py-2 rounded-lg transition-all duration-300 ${filterStatus === 'completed'
+                        ? 'bg-[#F2C21A] text-black shadow-[0_0_8px_-3px_rgba(242,194,26,1)]'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                        }`}
+                    >
+                      Completed ({transformedTournaments.filter(t => t.status === 'approved' && t.results_submitted).length})
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-6 px-2">
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <div className="relative flex items-center justify-center">
+                        <input
+                          type="checkbox"
+                          checked={showOnline}
+                          onChange={(e) => setShowOnline(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-5 h-5 border-2 border-white/30 rounded-md peer-checked:bg-[#F2C21A] peer-checked:border-[#F2C21A] transition-all duration-200 group-hover:border-[#F2C21A]/50"></div>
+                        <svg className="absolute w-3 h-3 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <span className="font-montserrat text-sm text-white/80 group-hover:text-white transition-colors">Online</span>
+                    </label>
+
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <div className="relative flex items-center justify-center">
+                        <input
+                          type="checkbox"
+                          checked={showOnsite}
+                          onChange={(e) => setShowOnsite(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-5 h-5 border-2 border-white/30 rounded-md peer-checked:bg-[#F2C21A] peer-checked:border-[#F2C21A] transition-all duration-200 group-hover:border-[#F2C21A]/50"></div>
+                        <svg className="absolute w-3 h-3 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <span className="font-montserrat text-sm text-white/80 group-hover:text-white transition-colors">Onsite</span>
+                    </label>
+                  </div>
+                </div>
+
                 {/* Tournament Selector Dropdown */}
-                {transformedTournaments.filter(t => t.status === 'approved').length > 1 && (
+                {filteredActiveTournaments.length > 1 && (
                   <div className="relative w-full max-w-7xl mx-auto">
                     <div className="bg-neutral-800/80 rounded-2xl border border-neutral-700/50 p-4">
                       <label className="block text-white/80 font-montserrat text-sm mb-2">Select Tournament:</label>
@@ -615,11 +700,10 @@ const CampusTournament = () => {
                         onChange={(e) => handleTournamentChange(parseInt(e.target.value))}
                         className="w-full bg-neutral-700/50 border border-white/20 rounded-lg px-4 py-2 text-white font-montserrat focus:outline-none focus:ring-2 focus:ring-[#F2C21A]"
                       >
-                        {transformedTournaments
-                          .filter(t => t.status === 'approved')
+                        {filteredActiveTournaments
                           .map((tournament) => (
                             <option key={tournament.id} value={tournament.id}>
-                              {tournament.school_name.toUpperCase()} TOURNAMENT - {formatDate(tournament.start_date)} to {formatDate(tournament.end_date)}
+                              {(tournament.school_name || '').toUpperCase()} TOURNAMENT ({tournament.tournament_type || 'Online'}) - {formatDate(tournament.start_date)} to {formatDate(tournament.end_date)}
                               {tournament.results_submitted ? ' (Completed)' : ''}
                             </option>
                           ))}
@@ -638,7 +722,7 @@ const CampusTournament = () => {
                       {/* Header */}
                       <div className="relative z-10 w-full h-16 md:h-20 flex items-center justify-between bg-neutral-900/70 px-4 md:px-6">
                         <div className="flex-1 text-center">
-                          <div className="font-montserrat text-lg md:text-2xl tracking-wide">{selectedTournament.school_name.toUpperCase()} TOURNAMENT</div>
+                          <div className="font-montserrat text-lg md:text-2xl tracking-wide">{(selectedTournament.school_name || '').toUpperCase()} TOURNAMENT ({selectedTournament.tournament_type || 'Online'})</div>
                           <div className="font-montserrat text-xs md:text-sm text-white/70">
                             {formatDate(selectedTournament.start_date)} - {formatDate(selectedTournament.end_date)}
                           </div>
@@ -855,6 +939,31 @@ const CampusTournament = () => {
                     })()}
                     className="bg-transparent border border-white/50 rounded-xl px-4 py-3 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[#F2C21A]"
                   />
+                </label>
+                <label className="flex flex-col gap-2">
+                  <span className="font-montserrat text-lg md:text-xl">Tournament Type</span>
+                  <div className="flex gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setTournamentType('Online')}
+                      className={`flex-1 px-4 py-3 rounded-xl border font-montserrat transition-all ${tournamentType === 'Online'
+                        ? 'bg-[#F2C21A] text-black border-[#F2C21A]'
+                        : 'bg-transparent text-white border-white/50 hover:border-[#F2C21A]/50'
+                        }`}
+                    >
+                      Online
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTournamentType('Onsite')}
+                      className={`flex-1 px-4 py-3 rounded-xl border font-montserrat transition-all ${tournamentType === 'Onsite'
+                        ? 'bg-[#F2C21A] text-black border-[#F2C21A]'
+                        : 'bg-transparent text-white border-white/50 hover:border-[#F2C21A]/50'
+                        }`}
+                    >
+                      Onsite
+                    </button>
+                  </div>
                 </label>
 
                 <div className="pt-2">
