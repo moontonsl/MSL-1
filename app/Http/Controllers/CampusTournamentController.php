@@ -420,31 +420,35 @@ class CampusTournamentController extends Controller
         
         $results = $request->results;
         
-        // Validate that exactly one team has '1st' result
+        // Dynamic Winner Set Calculation: 1 set for every 8 teams
+        $registeredTeamsCount = $tournament->teams()->where('status', 'registered')->count();
+        $allowedSets = max(1, ceil($registeredTeamsCount / 8));
+        
+        // Validate that exactly $allowedSets teams have '1st' result
         $firstPlaceTeams = array_filter($results, function($result) {
             return $result['result'] === '1st';
         });
         
-        if (count($firstPlaceTeams) !== 1) {
-            return response()->json(['error' => 'Exactly one team must be marked as 1st place'], 422);
+        if (count($firstPlaceTeams) !== $allowedSets) {
+            return response()->json(['error' => "Exactly {$allowedSets} team(s) must be marked as 1st place based on {$registeredTeamsCount} registered teams"], 422);
         }
         
-        // Validate that exactly one team has '2nd' result
+        // Validate that exactly $allowedSets teams have '2nd' result
         $secondPlaceTeams = array_filter($results, function($result) {
             return $result['result'] === '2nd';
         });
         
-        if (count($secondPlaceTeams) !== 1) {
-            return response()->json(['error' => 'Exactly one team must be marked as 2nd place'], 422);
+        if (count($secondPlaceTeams) !== $allowedSets) {
+            return response()->json(['error' => "Exactly {$allowedSets} team(s) must be marked as 2nd place based on {$registeredTeamsCount} registered teams"], 422);
         }
         
-        // Validate that exactly one team has '3rd' result
+        // Validate that exactly $allowedSets teams have '3rd' result
         $thirdPlaceTeams = array_filter($results, function($result) {
             return $result['result'] === '3rd';
         });
         
-        if (count($thirdPlaceTeams) !== 1) {
-            return response()->json(['error' => 'Exactly one team must be marked as 3rd place'], 422);
+        if (count($thirdPlaceTeams) !== $allowedSets) {
+            return response()->json(['error' => "Exactly {$allowedSets} team(s) must be marked as 3rd place based on {$registeredTeamsCount} registered teams"], 422);
         }
         
         // Validate that all teams in the tournament have results
@@ -528,31 +532,35 @@ class CampusTournamentController extends Controller
         
         $results = $request->results;
         
-        // Validate that exactly one team has '1st' result
+        // Dynamic Winner Set Calculation: 1 set for every 8 teams
+        $registeredTeamsCount = $tournament->teams()->where('status', 'registered')->count();
+        $allowedSets = max(1, ceil($registeredTeamsCount / 8));
+        
+        // Validate that exactly $allowedSets teams have '1st' result
         $firstPlaceTeams = array_filter($results, function($result) {
             return $result['result'] === '1st';
         });
         
-        if (count($firstPlaceTeams) !== 1) {
-            return response()->json(['error' => 'Exactly one team must be marked as 1st place'], 422);
+        if (count($firstPlaceTeams) !== $allowedSets) {
+            return response()->json(['error' => "Exactly {$allowedSets} team(s) must be marked as 1st place based on {$registeredTeamsCount} registered teams"], 422);
         }
         
-        // Validate that exactly one team has '2nd' result
+        // Validate that exactly $allowedSets teams have '2nd' result
         $secondPlaceTeams = array_filter($results, function($result) {
             return $result['result'] === '2nd';
         });
         
-        if (count($secondPlaceTeams) !== 1) {
-            return response()->json(['error' => 'Exactly one team must be marked as 2nd place'], 422);
+        if (count($secondPlaceTeams) !== $allowedSets) {
+            return response()->json(['error' => "Exactly {$allowedSets} team(s) must be marked as 2nd place based on {$registeredTeamsCount} registered teams"], 422);
         }
         
-        // Validate that exactly one team has '3rd' result
+        // Validate that exactly $allowedSets teams have '3rd' result
         $thirdPlaceTeams = array_filter($results, function($result) {
             return $result['result'] === '3rd';
         });
         
-        if (count($thirdPlaceTeams) !== 1) {
-            return response()->json(['error' => 'Exactly one team must be marked as 3rd place'], 422);
+        if (count($thirdPlaceTeams) !== $allowedSets) {
+            return response()->json(['error' => "Exactly {$allowedSets} team(s) must be marked as 3rd place based on {$registeredTeamsCount} registered teams"], 422);
         }
         
         // Validate that all teams in the tournament have results
@@ -884,21 +892,27 @@ class CampusTournamentController extends Controller
         $sheet->setCellValue('A4', 'Results Submitted:');
         $sheet->setCellValue('B4', $tournament->results_submitted_at ? $tournament->results_submitted_at->format('F d, Y h:i A') : '-');
 
+        $sheet->setCellValue('A5', 'Submitted By:');
+        $sheet->setCellValue('B5', $tournament->sl_name ?? '-');
+
+        $sheet->setCellValue('A6', 'Tournament Type:');
+        $sheet->setCellValue('B6', $tournament->tournament_type ? ucwords($tournament->tournament_type) : '-');
+
         // Style the labels
-        $sheet->getStyle('A2:A4')->getFont()->setBold(true);
+        $sheet->getStyle('A2:A6')->getFont()->setBold(true);
 
         // School Name at top right (Column F)
         $sheet->setCellValue('F1', strtoupper($tournament->school_name));
         $sheet->getStyle('F1')->getFont()->setBold(true);
         $sheet->getStyle('F1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
-        // Headers (starting at Row 6)
+        // Headers (starting at Row 8)
         $headers = ['Rank', 'Team Name', 'Player Name', 'IGN', 'Server', 'UID'];
         $col = 'A';
         foreach ($headers as $header) {
-            $sheet->setCellValue($col . '6', $header);
-            $sheet->getStyle($col . '6')->getFont()->setBold(true);
-            $sheet->getStyle($col . '6')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->setCellValue($col . '8', $header);
+            $sheet->getStyle($col . '8')->getFont()->setBold(true);
+            $sheet->getStyle($col . '8')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             $col++;
         }
         
@@ -908,8 +922,8 @@ class CampusTournamentController extends Controller
             return $order[$team->result] ?? 5;
         });
         
-        // Data rows starting at Row 7
-        $row = 7;
+        // Data rows starting at Row 9
+        $row = 9;
         foreach ($teams as $team) {
             // Determine rank display text and color
             $result = $team->result ?? 'participant';
@@ -957,14 +971,14 @@ class CampusTournamentController extends Controller
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
         
-        // Add borders to the table (starting from row 6)
+        // Add borders to the table (starting from row 8)
         $lastRow = $row - 1;
-        $sheet->getStyle('A6:F' . $lastRow)->getBorders()->getAllBorders()
+        $sheet->getStyle('A8:F' . $lastRow)->getBorders()->getAllBorders()
             ->setBorderStyle(Border::BORDER_THIN);
         
         // Center alignment for certain columns
-        $sheet->getStyle('A6:A' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('E6:F' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+        $sheet->getStyle('A8:A' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('E8:F' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
         
         // Create filename
         $filename = 'Tournament_Results_' . str_replace(' ', '_', $tournament->school_name) . '_' . date('Y-m-d') . '.xlsx';
