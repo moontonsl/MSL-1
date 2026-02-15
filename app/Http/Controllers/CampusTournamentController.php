@@ -874,13 +874,31 @@ class CampusTournamentController extends Controller
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         
-        // Headers
+        // Add Tournament Info at the top
+        $sheet->setCellValue('A2', 'Registration Start Date:');
+        $sheet->setCellValue('B2', $tournament->start_date ? $tournament->start_date->format('F d, Y') : '-');
+
+        $sheet->setCellValue('A3', 'Registration End Date:');
+        $sheet->setCellValue('B3', $tournament->end_date ? $tournament->end_date->format('F d, Y') : '-');
+
+        $sheet->setCellValue('A4', 'Results Submitted:');
+        $sheet->setCellValue('B4', $tournament->results_submitted_at ? $tournament->results_submitted_at->format('F d, Y h:i A') : '-');
+
+        // Style the labels
+        $sheet->getStyle('A2:A4')->getFont()->setBold(true);
+
+        // School Name at top right (Column F)
+        $sheet->setCellValue('F1', strtoupper($tournament->school_name));
+        $sheet->getStyle('F1')->getFont()->setBold(true);
+        $sheet->getStyle('F1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+
+        // Headers (starting at Row 6)
         $headers = ['Rank', 'Team Name', 'Player Name', 'IGN', 'Server', 'UID'];
         $col = 'A';
         foreach ($headers as $header) {
-            $sheet->setCellValue($col . '1', $header);
-            $sheet->getStyle($col . '1')->getFont()->setBold(true);
-            $sheet->getStyle($col . '1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->setCellValue($col . '6', $header);
+            $sheet->getStyle($col . '6')->getFont()->setBold(true);
+            $sheet->getStyle($col . '6')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             $col++;
         }
         
@@ -890,8 +908,8 @@ class CampusTournamentController extends Controller
             return $order[$team->result] ?? 5;
         });
         
-        // Data rows
-        $row = 2;
+        // Data rows starting at Row 7
+        $row = 7;
         foreach ($teams as $team) {
             // Determine rank display text and color
             $result = $team->result ?? 'participant';
@@ -939,14 +957,14 @@ class CampusTournamentController extends Controller
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
         
-        // Add borders to the table
+        // Add borders to the table (starting from row 6)
         $lastRow = $row - 1;
-        $sheet->getStyle('A1:F' . $lastRow)->getBorders()->getAllBorders()
+        $sheet->getStyle('A6:F' . $lastRow)->getBorders()->getAllBorders()
             ->setBorderStyle(Border::BORDER_THIN);
         
         // Center alignment for certain columns
-        $sheet->getStyle('A1:A' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('E1:F' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+        $sheet->getStyle('A6:A' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('E6:F' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
         
         // Create filename
         $filename = 'Tournament_Results_' . str_replace(' ', '_', $tournament->school_name) . '_' . date('Y-m-d') . '.xlsx';
