@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Head, Link } from "@inertiajs/react";
 import { Helmet } from "react-helmet";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutEventsFF25.jsx";
+
 import BG from "../Assets/Images/BG.png";
 import GMLogo from "../Assets/Images/FF2xMSL_logo.png";
 import { User, Mail, School, Hash, Globe, Image } from "lucide-react";
@@ -30,7 +31,7 @@ export default function GM26Comm() {
         fullName: "",
         facebookLink: "",
         email: "",
-        community: "MSL Page",
+        community: "Community - MSL Page",
         school: "",
         mlbbId: "",
         mlbbServer: "",
@@ -298,12 +299,14 @@ export default function GM26Comm() {
                     Golden Month Event – Data Privacy Consent
                 </h2>
                 <p className="text-sm opacity-90 leading-relaxed">
-                    By checking this box, I authorize Moonton Student Leaders (MSL) Philippines
-                    to collect and process the personal information provided above for the
-                    purpose of verifying my participation and managing the Golden Month Event.
+                    By checking this box, I authorize Moonton Student Leaders (MSL) Philippines to collect
+                    and process the personal details provided above, specifically my identity, contact information,
+                    and MLBB game credentials, solely for the purposes of verifying my registration, managing
+                    event logistics, and distributing in-game rewards for the Golden Month Event.
                     <br /><br />
-                    I understand that my data will be handled in accordance with the Data Privacy
-                    Act of 2012 and will not be shared with unauthorized third parties.
+                    I acknowledge that my data will be protected in accordance with the Data Privacy Act of 2012,
+                    will not be shared with unauthorized third parties, and that I retain the right to access, correct,
+                    or request the deletion of my information at any time.
                 </p>
                 <button onClick={() => setShowTermsModal(false)}
                     className="mt-4 px-6 py-2 bg-[#FFF4D0] text-black rounded-lg font-bold">
