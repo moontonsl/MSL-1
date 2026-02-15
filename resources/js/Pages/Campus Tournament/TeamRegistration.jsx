@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Head, usePage } from "@inertiajs/react";
+import { Head, usePage, router } from "@inertiajs/react";
 import MainLayout from "@/Layouts/MainLayout.jsx";
 
 function PlayerSearchInput({ label, placeholder, subtext, value, onChange, onSelect, excludeIds, university }) {
@@ -208,7 +208,6 @@ export default function TeamRegistration() {
             // Pre-fill selected players
             setSelectedPlayers(prev => ({
                 ...prev,
-                // Captain is handled by the dependency on `captain` state above
                 captain: captain,
                 player2: memberPlayers[0] || null,
                 player3: memberPlayers[1] || null,
@@ -237,44 +236,58 @@ export default function TeamRegistration() {
             .map(player => player.id);
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
         setIsSubmitting(true);
 
-        try {
-            const url = isEditMode ? `/team-update/${existingTeam.id}` : '/team-registration';
-            const method = isEditMode ? 'PUT' : 'POST';
+        const playerIds = Object.values(selectedPlayers)
+            .filter(p => p !== null)
+            .map(p => p.id);
 
-            const response = await fetch(url, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                },
-                body: JSON.stringify({
-                    teamName: formData.teamName,
-                    discordId: formData.discordId,
-                    captain: captain,
-                    players: selectedPlayers
-                }),
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                setModalMessage(isEditMode ? 'Team updated successfully!' : 'Team registered successfully!');
-                setShowSuccessModal(true);
-            } else {
-                const errorData = await response.json();
-                setModalMessage((isEditMode ? 'Update' : 'Registration') + ' failed: ' + (errorData.message || 'Unknown error'));
-                setShowErrorModal(true);
-            }
-        } catch (error) {
-            console.error('Registration error:', error);
-            setModalMessage((isEditMode ? 'Update' : 'Registration') + ' failed. Please try again.');
+        const hasDuplicates = new Set(playerIds).size !== playerIds.length;
+        if (hasDuplicates) {
+            setModalMessage('Duplicate players found in the roster. Please ensure each player is unique.');
             setShowErrorModal(true);
-        } finally {
             setIsSubmitting(false);
+            return;
         }
+
+        const url = isEditMode ? `/team-update/${existingTeam.id}` : '/team-registration';
+        const method = isEditMode ? 'put' : 'post';
+
+        // Get user_id from URL if present (for unauthenticated access)
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('user_id');
+
+        router.visit(url, {
+            method: method,
+            data: {
+                teamName: formData.teamName,
+                discordId: formData.discordId,
+                captain: captain,
+                players: selectedPlayers,
+                user_id: userId // Send user_id if present
+            },
+            preserveScroll: true,
+            onSuccess: (page) => {
+                // Check for flash messages or use default success message
+                const flashMessage = page.props.flash?.message;
+                const message = flashMessage || (isEditMode
+                    ? 'Team updated successfully! New members have been invited.'
+                    : 'Team registered successfully! Invites have been sent to your teammates.'
+                );
+                setModalMessage(message);
+                setShowSuccessModal(true);
+            },
+            onError: (errors) => {
+                const errorMessage = errors.message ||
+                    Object.values(errors).flat().join(', ') ||
+                    ((isEditMode ? 'Update' : 'Registration') + ' failed. Please try again.');
+                setModalMessage(errorMessage);
+                setShowErrorModal(true);
+            },
+            onFinish: () => setIsSubmitting(false)
+        });
     };
 
     // Show loading state

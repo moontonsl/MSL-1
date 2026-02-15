@@ -181,6 +181,15 @@ const Header = () => {
                                         User Regions
                                     </Link>
                                 )}
+                                {(user.role === 'Regional Admin' || user.role === 'Super Admin') && (
+                                    <Link
+                                        href="/community/create"
+                                        className={styles.dropdownItem}
+                                        onClick={() => setIsDropdownOpen(false)}
+                                    >
+                                        Communities
+                                    </Link>
+                                )}
                                 {/* <button
                                     onClick={() => {
                                         setShowModificationModal(true);

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class CampusTournamentTeamMember extends Model
 {
     protected $fillable = [
-        'team_id', 'player_id', 'role'
+        'team_id', 'player_id', 'role', 'status'
     ];
 
     public function team(): BelongsTo

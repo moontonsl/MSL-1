@@ -101,27 +101,39 @@ class AdminController extends Controller
             'news_author' => 'required|string|max:255',
             'news_state' => 'required|string',
             'news_img1' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'news_img2' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'news_img3' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $validated['news_writer'] = $validated['news_author'];
         $validated['news_published'] = now();
 
         // Set default values for image fields
-        $validated['news_img2'] = '';
-        $validated['news_img3'] = '';
         $validated['news_content'] = $validated['news_canonical']; // Map content to canonical field
         
         // Generate proper canonical URL slug from title
         $validated['news_canonical'] = $this->generateSlug($validated['news_title']);
 
-        // Handle image upload
-        if ($request->hasFile('news_img1')) {
-            $image = $request->file('news_img1');
-            $imageName = time() . '_' . $image->getClientOriginalName();
-            $image->move(public_path('images/MCC/IndivNews'), $imageName);
-            $validated['news_img1'] = $imageName;
-        } else {
-            $validated['news_img1'] = '';
+        // Handle image uploads
+        $imageFields = ['news_img1', 'news_img2', 'news_img3'];
+        
+        // Ensure news directory exists in storage
+        $newsPath = storage_path('app/public/news');
+        if (!file_exists($newsPath)) {
+            mkdir($newsPath, 0755, true);
+        }
+
+        foreach ($imageFields as $field) {
+            if ($request->hasFile($field)) {
+                $image = $request->file($field);
+                $imageName = time() . '_' . $field . '_' . $image->getClientOriginalName();
+                
+                // Move to storage/app/public/news
+                $image->move($newsPath, $imageName);
+                $validated[$field] = $imageName;
+            } else {
+                $validated[$field] = '';
+            }
         }
 
         News::create($validated);
@@ -129,8 +141,44 @@ class AdminController extends Controller
         return redirect()->route('admin.news')->with('success', 'News created successfully');
     }
 
+    private function resolveImageUrl(?string $filename): string
+    {
+        if (empty($filename)) {
+            return '';
+        }
+        
+        // Check multiple possible locations
+        // We check the physical paths but return the public URLs
+        
+        // 1. Storage path (new)
+        if (file_exists(storage_path('app/public/news/' . $filename))) {
+            return '/storage/news/' . $filename;
+        }
+        
+        // 2. Public path (legacy)
+        $candidates = [
+            '/images/MCC/IndivNews/' . $filename,
+            '/images/MCC/News/' . $filename,
+            '/images/MCC/News/Carousel/' . $filename,
+            '/images/MCC/' . $filename,
+        ];
+        
+        foreach ($candidates as $candidate) {
+            if (file_exists(public_path($candidate))) {
+                return $candidate;
+            }
+        }
+        
+        return '';
+    }
+
     public function editNews(News $news)
     {
+        // Resolve image URLs for the frontend
+        $news->image1_url = $this->resolveImageUrl($news->news_img1);
+        $news->image2_url = $this->resolveImageUrl($news->news_img2);
+        $news->image3_url = $this->resolveImageUrl($news->news_img3);
+
         return Inertia::render('Admin/News/Edit', [
             'news' => $news
         ]);
@@ -145,17 +193,13 @@ class AdminController extends Controller
             'news_author' => 'required|string|max:255',
             'news_state' => 'required|string',
             'news_img1' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'news_img2' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'news_img3' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $validated['news_writer'] = $validated['news_author'];
 
-        // Set default values for image fields if not provided
-        if (!isset($validated['news_img2'])) {
-            $validated['news_img2'] = $news->news_img2 ?: '';
-        }
-        if (!isset($validated['news_img3'])) {
-            $validated['news_img3'] = $news->news_img3 ?: '';
-        }
+        // Set default values for content if not provided
         if (!isset($validated['news_content'])) {
             $validated['news_content'] = $validated['news_canonical'];
         }
@@ -165,19 +209,40 @@ class AdminController extends Controller
             $validated['news_canonical'] = $this->generateSlug($validated['news_title']);
         }
 
-        // Handle image upload
-        if ($request->hasFile('news_img1')) {
-            // Delete old image if it exists
-            if ($news->news_img1 && file_exists(public_path('images/MCC/IndivNews/' . $news->news_img1))) {
-                unlink(public_path('images/MCC/IndivNews/' . $news->news_img1));
+        // Handle image uploads
+        $imageFields = ['news_img1', 'news_img2', 'news_img3'];
+        
+        // Ensure news directory exists in storage
+        $newsPath = storage_path('app/public/news');
+        if (!file_exists($newsPath)) {
+            mkdir($newsPath, 0755, true);
+        }
+
+        foreach ($imageFields as $field) {
+            if ($request->hasFile($field)) {
+                // Delete old image if it exists
+                // Check both storage and legacy public path
+                if ($news->$field) {
+                    $oldStoragePath = storage_path('app/public/news/' . $news->$field);
+                    $oldPublicPath = public_path('images/MCC/IndivNews/' . $news->$field);
+                    
+                    if (file_exists($oldStoragePath)) {
+                        unlink($oldStoragePath);
+                    } elseif (file_exists($oldPublicPath)) {
+                        unlink($oldPublicPath);
+                    }
+                }
+                
+                $image = $request->file($field);
+                $imageName = time() . '_' . $field . '_' . $image->getClientOriginalName();
+                
+                // Move to storage/app/public/news
+                $image->move($newsPath, $imageName);
+                $validated[$field] = $imageName;
+            } else {
+                // Keep existing image if no new one uploaded
+                $validated[$field] = $news->$field ?: '';
             }
-            
-            $image = $request->file('news_img1');
-            $imageName = time() . '_' . $image->getClientOriginalName();
-            $image->move(public_path('images/MCC/IndivNews'), $imageName);
-            $validated['news_img1'] = $imageName;
-        } else {
-            $validated['news_img1'] = $news->news_img1 ?: '';
         }
 
         $news->update($validated);
