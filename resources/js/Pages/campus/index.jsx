@@ -76,11 +76,14 @@ export default function Campus({ communities, selectedIsland }) {
                         {/* School List */}
                         <div className="flex-grow overflow-y-auto pr-4 custom-scrollbar space-y-2">
                             {communities.data.map((community) => (
-                                <div
+                                <a
                                     key={community.id}
+                                    href={community.school_link || "#"}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     onMouseEnter={() => setHoveredMapCode(community.map_code)}
                                     onMouseLeave={() => setHoveredMapCode(null)}
-                                    className="group p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-yellow-500/50 transition-all duration-300 cursor-pointer backdrop-blur-md"
+                                    className="block group p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-yellow-500/50 transition-all duration-300 cursor-pointer backdrop-blur-md"
                                 >
                                     <div className="flex justify-between items-center">
                                         <div>
@@ -96,7 +99,7 @@ export default function Campus({ communities, selectedIsland }) {
                                             <ChevronRight className="w-5 h-5 text-yellow-400" />
                                         </div>
                                     </div>
-                                </div>
+                                </a>
                             ))}
                             {communities.data.length === 0 && (
                                 <div className="text-gray-500 italic p-4 text-center">No schools found for this selection.</div>
