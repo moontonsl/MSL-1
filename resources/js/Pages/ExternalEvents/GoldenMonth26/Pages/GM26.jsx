@@ -35,7 +35,7 @@ export default function GM26() {
 
                 {/* 2 Image Navigation */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 place-items-center w-full max-w-3xl">
-                    <Link href="/GM26Comm">
+                    <Link href="/GM26/Comm">
                         <img
                             src={GMComm}
                             alt="Battle Emote"
@@ -43,7 +43,7 @@ export default function GM26() {
                         />
                     </Link>
 
-                    <Link href="/GM26Network">
+                    <Link href="/GM26/Network">
                         <img
                             src={GMNet}
                             alt="Freedom Wall"

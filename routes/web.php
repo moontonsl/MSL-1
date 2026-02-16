@@ -1206,12 +1206,12 @@ Route::get('/GM26', function () {
 })->name('GM26');
 
 //GM26Comm PAGE ROUTES
-Route::get('/GM26Comm', function () {
+Route::get('/GM26/Comm', function () {
     return Inertia::render('ExternalEvents/GoldenMonth26/Pages/GM26Comm');
 })->name('GM26Comm');
 
 //GM26Network PAGE ROUTES
-Route::get('/GM26Network', function () {
+Route::get('/GM26/Network', function () {
     return Inertia::render('ExternalEvents/GoldenMonth26/Pages/GM26Network');
 })->name('GM26Network');
 
