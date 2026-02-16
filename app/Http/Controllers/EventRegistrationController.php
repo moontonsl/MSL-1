@@ -126,8 +126,7 @@ class EventRegistrationController extends Controller
                     (string)($registration->facebook_link ?? ''),
                     (string)($registration->community ?? ''),
                     (string)($registration->school ?? ''),
-                    (string)($registration->post_link ?? ''),
-                    (string)($registration->proof_link ?? ''),
+                    (string)($registration->post_link ?? $registration->proof_link ?? ''),
                 ];
             } else {
                 // Standard layout for other events

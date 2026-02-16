@@ -44,7 +44,6 @@ export default function GM26Comm() {
         proofLink: "",
     });
 
-    const [photo, setPhoto] = useState(null);
     const [errors, setErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
     const [submissionMessage, setSubmissionMessage] = useState("");
@@ -96,8 +95,6 @@ export default function GM26Comm() {
         else if (!isValidDriveLink(form.proofLink))
             newErrors.proofLink = "Enter a valid Google Drive link.";
 
-        if (!photo)
-            newErrors.photo = "Proof photo is required.";
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -128,15 +125,13 @@ export default function GM26Comm() {
         try {
             setSubmitting(true);
 
-            const formData = new FormData();
-            formData.append("event_name", "GM26Comm");
-            Object.keys(form).forEach(key =>
-                formData.append(key, form[key])
-            );
-            formData.append("photo", photo);
-            formData.append("consent", agreed);
+            const payload = {
+                event_name: "GM26Comm",
+                ...form,
+                consent: agreed,
+            };
 
-            const response = await axios.post(route("event.registration.store"), formData);
+            const response = await axios.post(route("event.registration.store"), payload);
 
             if (response.data.success) {
                 setShowModal(true);
