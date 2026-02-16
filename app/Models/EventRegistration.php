@@ -21,5 +21,10 @@ class EventRegistration extends Model
         'mlbb_id',
         'mlbb_server',
         'attendance_mode',
+        'facebook_link',
+        'community',
+        'school',
+        'post_link',
+        'proof_link',
     ];
 }

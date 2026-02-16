@@ -1200,6 +1200,20 @@ Route::get('/M7WPRegistration', function () {
     return Inertia::render('M7/M7WFRegistration');
 })->name('M7WFRegistration');
 
+//GM26 PAGE ROUTES
+Route::get('/GM26', function () {
+    return Inertia::render('ExternalEvents/GoldenMonth26/Pages/GM26');
+})->name('GM26');
+
+//GM26Comm PAGE ROUTES
+Route::get('/GM26/Comm', function () {
+    return Inertia::render('ExternalEvents/GoldenMonth26/Pages/GM26Comm');
+})->name('GM26Comm');
+
+//GM26Network PAGE ROUTES
+Route::get('/GM26/Network', function () {
+    return Inertia::render('ExternalEvents/GoldenMonth26/Pages/GM26Network');
+})->name('GM26Network');
 
 
 
