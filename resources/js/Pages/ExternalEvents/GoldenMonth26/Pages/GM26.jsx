@@ -3,10 +3,8 @@ import { Head, Link } from "@inertiajs/react";
 import { Helmet } from "react-helmet";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutEventsFF25.jsx";
 
-// Background (optional — remove if not needed)
 import BG from "../Assets/Images/BGGM26.png";
 
-// Placeholder Images
 import GMComm from "../Assets/Images/COMM.png";
 import GMNet from "../Assets/Images/NET.png";
 import GMLogo from "../Assets/Images/GM26.png";

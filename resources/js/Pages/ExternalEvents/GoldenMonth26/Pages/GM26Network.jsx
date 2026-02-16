@@ -113,7 +113,6 @@ export default function GM26Network() {
         try {
         setSubmitting(true);
 
-        // ✅ JSON payload (no multipart needed since no file upload)
         const payload = {
             event_name: "GM26Network",
             ...form,
@@ -307,7 +306,7 @@ export default function GM26Network() {
             </form>
         </div>
 
-        {/* ✅ SUCCESS MODAL (match theme) */}
+        {/* ✅ SUCCESS MODAL*/}
         {showModal && (
             <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
             <div
@@ -336,7 +335,7 @@ export default function GM26Network() {
             </div>
         )}
 
-        {/* ✅ DPA MODAL (match theme) */}
+        {/* ✅ DPA MODAL*/}
         {showTermsModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
         <div
