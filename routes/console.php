@@ -22,3 +22,9 @@ Schedule::command('ml-users:update-ign')
     ->onSuccess(function () {
         \Log::info('ML Users IGN update scheduled task completed successfully');
     });
+
+Schedule::command('promotions:revert-expired')
+    ->daily()
+    ->at('00:00')
+    ->withoutOverlapping()
+    ->runInBackground();

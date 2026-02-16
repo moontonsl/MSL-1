@@ -1551,6 +1551,7 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
         'users.region',
         'users.island',
         'users.role',
+        'users.promotion_expires_at',
         'users.ml_id', 
         'users.ml_server', 
         'users.university', 
@@ -1816,7 +1817,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
     
     //Pang promote sa student to SL
-    Route::patch('/api/sladmin/users/{userId}/promote', function ($userId) {
+    Route::patch('/api/sladmin/users/{userId}/promote', function ($userId, \Illuminate\Http\Request $request) {
         $user = Auth::user();
         if ($user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
             return response()->json(['error' => 'Access denied. Only Regional Admins and Super Admins can promote users to Student Leader.'], 403);
@@ -1846,15 +1847,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return response()->json(['error' => 'User not found, not verified, or access denied.'], 404);
         }
         
-        $targetUser->update([
-            'role' => 'SL'
-        ]);
+        $updateData = ['role' => 'SL'];
         
-        return response()->json(['success' => true, 'message' => 'User promoted to Student Leader successfully']);
+        if ($request->has('duration') && $request->duration > 0) {
+            $updateData['promotion_expires_at'] = now()->addDays((int)$request->duration);
+        } else {
+            $updateData['promotion_expires_at'] = null; // Permanent
+        }
+        
+        $targetUser->update($updateData);
+        
+        $message = 'User promoted to Student Leader successfully';
+        if (isset($updateData['promotion_expires_at'])) {
+            $message .= ' for ' . $request->duration . ' days';
+        }
+        
+        return response()->json(['success' => true, 'message' => $message]);
     });
     
     //Pang promote sa student to Regional Admin (Super Admin only)
-    Route::patch('/api/sladmin/users/{userId}/promote-regional-admin', function ($userId) {
+    Route::patch('/api/sladmin/users/{userId}/promote-regional-admin', function ($userId, \Illuminate\Http\Request $request) {
         $user = Auth::user();
         if ($user->role !== 'Super Admin') {
             return response()->json(['error' => 'Access denied. Only Super Admins can promote users to Regional Admin.'], 403);
@@ -1872,23 +1884,37 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return response()->json(['error' => 'User not found, not verified, or already has an admin role.'], 404);
         }
         
-        $targetUser->update([
-            'role' => 'Regional Admin'
-        ]);
+        $updateData = ['role' => 'Regional Admin'];
         
-        return response()->json(['success' => true, 'message' => 'User promoted to Regional Admin successfully']);
+        if ($request->has('duration') && $request->duration > 0) {
+            $updateData['promotion_expires_at'] = now()->addDays((int)$request->duration);
+        } else {
+            $updateData['promotion_expires_at'] = null; // Permanent
+        }
+        
+        $targetUser->update($updateData);
+        
+        $message = 'User promoted to Regional Admin successfully';
+        if (isset($updateData['promotion_expires_at'])) {
+            $message .= ' for ' . $request->duration . ' days';
+        }
+        
+        return response()->json(['success' => true, 'message' => $message]);
     });
     
     //pang demote ng student leader
     Route::patch('/api/sladmin/users/{userId}/demote', function ($userId) {
         $user = Auth::user();
-        if ($user->role !== 'Regional Admin') {
-            return response()->json(['error' => 'Access denied. Only Regional Admins can demote Student Leaders.'], 403);
+        if ($user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Access denied. Only Regional Admins and Super Admins can demote Student Leaders.'], 403);
         }
         
         $query = \App\Models\User::where('id', $userId)
-            ->where('role', 'SL')
-            ->where('region', $user->region);
+            ->where('role', 'SL');
+        
+        if ($user->role === 'Regional Admin') {
+            $query->where('region', $user->region);
+        }
         
         $targetUser = $query->first();
             

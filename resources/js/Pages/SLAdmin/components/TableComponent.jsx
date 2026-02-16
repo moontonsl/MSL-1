@@ -27,7 +27,20 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
     const [fileExists, setFileExists] = useState(true);
     const [showNoAttachmentAlert, setShowNoAttachmentAlert] = useState(false);
+    const [showPromoteModal, setShowPromoteModal] = useState(false);
+    const [promoteRole, setPromoteRole] = useState('');
+    const [promoteDurationType, setPromoteDurationType] = useState('permanent');
+    const [promoteDays, setPromoteDays] = useState(1);
     const ITEMS_PER_PAGE = 20;
+
+    const getRemainingDays = (expiryDate) => {
+        if (!expiryDate) return null;
+        const now = new Date();
+        const expiry = new Date(expiryDate);
+        const diffTime = expiry - now;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays > 0 ? diffDays : null;
+    };
 
     const fetchUsers = async (page = 1, retryCount = 0) => {
         setLoading(true);
@@ -258,7 +271,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
         return true;
     };
 
-    const handleAction = async (action, userId, reason = null) => {
+    const handleAction = async (action, userId, payload = null) => {
         setActionLoading(true);
         setError('');
 
@@ -280,7 +293,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                 case 'block':
                     url = `/api/sladmin/users/${userId}/block`;
                     method = 'PATCH';
-                    body = { reason: reason };
+                    body = { reason: payload };
                     break;
                 case 'renew':
                     url = `/api/sladmin/users/${userId}/renew`;
@@ -293,10 +306,12 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                 case 'promote':
                     url = `/api/sladmin/users/${userId}/promote`;
                     method = 'PATCH';
+                    body = payload ? { duration: payload.duration } : {};
                     break;
                 case 'promote-regional-admin':
                     url = `/api/sladmin/users/${userId}/promote-regional-admin`;
                     method = 'PATCH';
+                    body = payload ? { duration: payload.duration } : {};
                     break;
                 case 'demote':
                     url = `/api/sladmin/users/${userId}/demote`;
@@ -382,6 +397,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             //Close modal and refresh user list
             setShowModal(false);
             setShowBlockModal(false);
+            setShowPromoteModal(false);
             setSelectedUser(null);
             setBlockReason('');
             fetchUsers(currentPage);
@@ -658,6 +674,20 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                                     )}
                                                 </div>
                                             </div>
+                                            {selectedUser.promotion_expires_at && (
+                                                <div className="mt-2 text-center">
+                                                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-600/10 border border-purple-500/20 rounded-full">
+                                                        <svg className="w-3 h-3 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                        <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest whitespace-nowrap">
+                                                            {getRemainingDays(selectedUser.promotion_expires_at) !== null
+                                                                ? `${getRemainingDays(selectedUser.promotion_expires_at)} days remaining`
+                                                                : 'Expiring soon'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="space-y-3">
@@ -685,14 +715,24 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                             <div className="space-y-2">
                                                 <button
                                                     className="w-full px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-all duration-200 disabled:opacity-50"
-                                                    onClick={() => handleAction('promote', selectedUser.id)}
+                                                    onClick={() => {
+                                                        setPromoteRole('Student Leader');
+                                                        setShowPromoteModal(true);
+                                                        setPromoteDurationType('permanent');
+                                                        setPromoteDays(1);
+                                                    }}
                                                     disabled={actionLoading}
                                                 >
                                                     {actionLoading ? 'Promoting...' : 'Student Leader'}
                                                 </button>
                                                 <button
                                                     className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all duration-200 disabled:opacity-50"
-                                                    onClick={() => handleAction('promote-regional-admin', selectedUser.id)}
+                                                    onClick={() => {
+                                                        setPromoteRole('Regional Admin');
+                                                        setShowPromoteModal(true);
+                                                        setPromoteDurationType('permanent');
+                                                        setPromoteDays(1);
+                                                    }}
                                                     disabled={actionLoading}
                                                 >
                                                     {actionLoading ? 'Promoting...' : 'Regional Admin'}
@@ -895,10 +935,15 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                                     </button>
                                                 )}
 
-                                                {user?.role === 'Regional Admin' && stateFilter === 'Verified' && (
+                                                {user?.role === 'Regional Admin' && (stateFilter === 'Verified' || stateFilter === 'MasterList') && (
                                                     <button
                                                         className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
-                                                        onClick={() => handleAction('promote', selectedUser.id)}
+                                                        onClick={() => {
+                                                            setPromoteRole('Student Leader');
+                                                            setShowPromoteModal(true);
+                                                            setPromoteDurationType('permanent');
+                                                            setPromoteDays(1);
+                                                        }}
                                                         disabled={actionLoading}
                                                     >
                                                         {actionLoading ? 'Promoting...' : 'Promote to SL'}
@@ -907,7 +952,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
 
 
 
-                                                {user?.role === 'Regional Admin' && stateFilter === 'StudentLeaders' && (
+                                                {(user?.role === 'Regional Admin' || user?.role === 'Super Admin') && stateFilter === 'StudentLeaders' && (
                                                     <button
                                                         className="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
                                                         onClick={() => handleAction('demote', selectedUser.id)}
@@ -1036,6 +1081,112 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                 disabled={actionLoading || !blockReason.trim()}
                             >
                                 {actionLoading ? 'Processing...' : 'Block User'}
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+
+            {/* Promote User Modal */}
+            {showPromoteModal && createPortal(
+                <div className="fixed inset-0 z-[9999] bg-[#fff]/50 flex items-center justify-center p-4" style={{ pointerEvents: 'auto' }}>
+                    <div
+                        className="absolute inset-0 bg-black/50"
+                        onClick={() => setShowPromoteModal(false)}
+                    ></div>
+                    <div
+                        className="relative bg-black text-white p-6 rounded-lg max-w-md w-full mx-4 border border-neutral-700"
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ pointerEvents: 'auto' }}
+                    >
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold">Promote User</h3>
+                            <button
+                                onClick={() => setShowPromoteModal(false)}
+                                className="text-white hover:text-gray-300 text-2xl font-bold"
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <div className="mb-6 text-center">
+                            <div className="w-16 h-16 bg-purple-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 11l3-3m0 0l3 3m-3-3v8m0-13a9 9 0 110 18 9 9 0 010-18z" />
+                                </svg>
+                            </div>
+                            <p className="text-gray-300 mb-2 text-lg">
+                                Are you sure you want to promote <span className="font-semibold text-white">{selectedUser?.name} {selectedUser?.surname}</span> to <span className="text-purple-400 font-bold">{promoteRole}</span>?
+                            </p>
+                        </div>
+
+                        <div className="mb-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Promotion Duration</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={() => setPromoteDurationType('permanent')}
+                                        className={`px-4 py-3 rounded-lg font-semibold transition-all duration-200 border ${promoteDurationType === 'permanent'
+                                            ? 'bg-purple-600 text-white border-purple-400 shadow-[0_0_15px_rgba(147,51,234,0.3)]'
+                                            : 'bg-neutral-800 text-gray-400 border-neutral-700 hover:bg-neutral-700'}`}
+                                    >
+                                        Permanent
+                                    </button>
+                                    <button
+                                        onClick={() => setPromoteDurationType('days')}
+                                        className={`px-4 py-3 rounded-lg font-semibold transition-all duration-200 border ${promoteDurationType === 'days'
+                                            ? 'bg-purple-600 text-white border-purple-400 shadow-[0_0_15px_rgba(147,51,234,0.3)]'
+                                            : 'bg-neutral-800 text-gray-400 border-neutral-700 hover:bg-neutral-700'}`}
+                                    >
+                                        For days
+                                    </button>
+                                </div>
+                            </div>
+
+                            {promoteDurationType === 'days' && (
+                                <div className="p-4 bg-neutral-900 rounded-lg border border-neutral-800 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <label htmlFor="promoteDays" className="block text-sm font-medium text-gray-300 mb-2">Number of Days</label>
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            id="promoteDays"
+                                            type="number"
+                                            min="1"
+                                            max="365"
+                                            value={promoteDays}
+                                            onChange={(e) => setPromoteDays(parseInt(e.target.value) || 1)}
+                                            className="flex-1 px-3 py-2 bg-[#1a1a1a] border border-neutral-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all"
+                                        />
+                                        <span className="text-gray-400 font-medium">days</span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-3 italic flex items-center gap-1">
+                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        Automatically reverts after {promoteDays} {promoteDays === 1 ? 'day' : 'days'}.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex justify-end gap-3 mt-8">
+                            <button
+                                onClick={() => setShowPromoteModal(false)}
+                                className="px-6 py-2.5 bg-neutral-700 text-white rounded-lg font-semibold hover:bg-neutral-600 transition-colors"
+                                disabled={actionLoading}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    const action = promoteRole === 'Regional Admin' ? 'promote-regional-admin' : 'promote';
+                                    const duration = promoteDurationType === 'days' ? promoteDays : 0;
+                                    handleAction(action, selectedUser.id, { duration });
+                                }}
+                                className="px-6 py-2.5 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition-all disabled:opacity-50 shadow-lg shadow-purple-600/20 active:scale-95"
+                                disabled={actionLoading}
+                            >
+                                {actionLoading ? 'Processing...' : 'Confirm Promotion'}
                             </button>
                         </div>
                     </div>
