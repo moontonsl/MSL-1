@@ -4,12 +4,12 @@ import { Helmet } from "react-helmet";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutEventsFF25.jsx";
 
 // Background (optional — remove if not needed)
-import BG from "../Assets/Images/BG.png";
+import BG from "../Assets/Images/BGGM26.png";
 
 // Placeholder Images
-import GMImage1 from "../Assets/Images/FFBattleEmote.png";
-import GMImage2 from "../Assets/Images/FFFreedomWall.png";
-import GMLogo from "../Assets/Images/FF2xMSL_logo.png";
+import GMComm from "../Assets/Images/COMM.png";
+import GMNet from "../Assets/Images/NET.png";
+import GMLogo from "../Assets/Images/GM26.png";
 
 export default function GM26() {
     return (
@@ -30,26 +30,26 @@ export default function GM26() {
                         <img
                             src={GMLogo}
                             alt="GM26 Logo"
-                            className="w-56 sm:w-64 lg:w-72 mx-auto drop-shadow-lg cursor-pointer"
+                            className="w-72 sm:w-96 lg:w-[28rem] mx-auto drop-shadow-xl cursor-pointer"
                         />
                     </Link>
                 </div>
 
                 {/* 2 Image Navigation */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-12 place-items-center w-full max-w-4xl">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 place-items-center w-full max-w-3xl">
                     <Link href="/GM26Comm">
                         <img
-                            src={GMImage1}
+                            src={GMComm}
                             alt="Battle Emote"
-                            className="w-56 sm:w-64 lg:w-72 hover:scale-105 transition-transform duration-200 cursor-pointer"
+                            className="w-52 sm:w-60 lg:w-64 hover:scale-105 transition-transform duration-200 cursor-pointer"
                         />
                     </Link>
 
                     <Link href="/GM26Network">
                         <img
-                            src={GMImage2}
+                            src={GMNet}
                             alt="Freedom Wall"
-                            className="w-56 sm:w-64 lg:w-72 hover:scale-105 transition-transform duration-200 cursor-pointer"
+                            className="w-52 sm:w-60 lg:w-64 hover:scale-105 transition-transform duration-200 cursor-pointer"
                         />
                     </Link>
                 </div>

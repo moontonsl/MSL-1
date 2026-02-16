@@ -3,27 +3,33 @@ import { Head, Link } from "@inertiajs/react";
 import { Helmet } from "react-helmet";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutEventsFF25.jsx";
 
-import BG from "../Assets/Images/BG.png";
-import GMLogo from "../Assets/Images/FF2xMSL_logo.png";
+import BG from "../Assets/Images/BGGM26COMM.png";
+import GMLogo from "../Assets/Images/GM26COMM.png";
 import { User, Mail, School, Hash, Globe, Image } from "lucide-react";
 import axios from "axios";
 
 /* ================= TOOLTIP ================= */
 const Tooltip = ({ text }) => (
     <div className="relative group ml-auto">
-        <span className="text-[#fff4d0] cursor-pointer font-bold text-sm">?</span>
-        <div className="
-        absolute right-0 top-1/2 -translate-y-1/2
-        hidden group-hover:block
-        bg-black text-[#FFF4D0]
-        text-xs px-3 py-2 rounded-lg
-        border border-[#FFF4D0]
-        shadow-lg w-56 z-50
-        ">
-        {text}
+        <span className="text-[#e59639] cursor-pointer font-bold text-sm">
+            ?
+        </span>
+
+        <div
+            className="
+            absolute right-0 top-1/2 -translate-y-1/2
+            hidden group-hover:block
+            bg-white text-black
+            text-xs px-3 py-2 rounded-lg
+            shadow-lg w-56 z-50
+        "
+            style={{ border: "1px solid #e59639" }}
+        >
+            {text}
         </div>
     </div>
-    );
+);
+
 
 export default function GM26Comm() {
 
@@ -35,6 +41,7 @@ export default function GM26Comm() {
         school: "",
         mlbbId: "",
         mlbbServer: "",
+        proofLink: "",
     });
 
     const [photo, setPhoto] = useState(null);
@@ -52,6 +59,9 @@ export default function GM26Comm() {
         /^(https?:\/\/)?(www\.)?facebook\.com\/.+$/i.test(url);
     const isValidMlbbId = (id) => /^\d{7,12}$/.test(id);
     const isValidMlbbServer = (s) => /^\d{4,6}$/.test(s);
+
+    const isValidDriveLink = (url) =>
+    /^(https?:\/\/)?(drive\.google\.com|docs\.google\.com)\/.+$/i.test(url);
 
     const validate = () => {
         const newErrors = {};
@@ -81,6 +91,11 @@ export default function GM26Comm() {
         else if (!isValidMlbbServer(form.mlbbServer))
         newErrors.mlbbServer = "Server must be 4–6 digits.";
 
+         if (!form.proofLink.trim())
+            newErrors.proofLink = "Google Drive proof link is required.";
+        else if (!isValidDriveLink(form.proofLink))
+            newErrors.proofLink = "Enter a valid Google Drive link.";
+
         if (!photo)
         newErrors.photo = "Proof photo is required.";
 
@@ -104,19 +119,6 @@ export default function GM26Comm() {
         setErrors((prev) => ({ ...prev, [name]: "" }));
     };
 
-    const handlePhotoChange = (e) => {
-        const file = e.target.files[0];
-        if (file && file.type.startsWith("image/")) {
-        setPhoto(file);
-        setErrors((prev) => ({ ...prev, photo: "" }));
-        } else {
-        setErrors((prev) => ({
-            ...prev,
-            photo: "Only image files are allowed.",
-        }));
-        }
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmissionMessage("");
@@ -134,11 +136,7 @@ export default function GM26Comm() {
         formData.append("photo", photo);
         formData.append("consent", agreed);
 
-        const response = await axios.post(
-            route("event.registration.store"),
-            formData,
-            { headers: { "Content-Type": "multipart/form-data" } }
-        );
+        const response = await axios.post(route("event.registration.store"), payload);
 
         if (response.data.success) {
             setShowModal(true);
@@ -146,12 +144,12 @@ export default function GM26Comm() {
             fullName: "",
             facebookLink: "",
             email: "",
-            community: "MSL Page",
+            community: "Community - MSL Page",
             school: "",
             mlbbId: "",
             mlbbServer: "",
+            proofLink: "",
             });
-            setPhoto(null);
             setAgreed(false);
         }
         } catch (err) {
@@ -163,9 +161,9 @@ export default function GM26Comm() {
 
     return (
         <AuthenticatedLayout>
-        <Head title="Golden Month Community Registration" />
+        <Head title="Golden Month Community Submission" />
         <Helmet>
-            <title>GM26 Community Registration</title>
+            <title>GM26 Community Submission</title>
         </Helmet>
 
         <div
@@ -183,14 +181,27 @@ export default function GM26Comm() {
             </Link>
 
             {/* FORM CARD */}
-            <div className="p-6 w-full max-w-3xl shadow-lg border-2 backdrop-blur-md bg-black/75"
-            style={{ borderColor: "#fff4d0" }}
-            >
+            <div className="
+                p-8
+                w-full
+                max-w-3xl
+                border-4
+                shadow-2xl
+                backdrop-blur-md
+                bg-gradient-to-br
+                from-[#17c6e7]/70
+                to-[#0fa3c2]/70
+                border-[#e59639]
+                "
+                style={{
+                boxShadow: "0 0 30px rgba(229, 150, 57, 0.4)"
+                }}
+                >
             <form onSubmit={handleSubmit} className="space-y-4">
 
                 <div className="text-center">
-                <h2 className="font-bold mb-1 text-[20px] sm:text-[26px] lg:text-[32px] text-[#fff4d0]">
-                    GM26 Community Registration
+                <h2 className="font-bold mb-1 text-[20px] sm:text-[26px] lg:text-[32px] text-white">
+                    GM26 Community Submission
                 </h2>
                 </div>
 
@@ -213,6 +224,17 @@ export default function GM26Comm() {
                 tooltip="Use an active email address where we can contact you."
                 />
 
+                <FormInput
+                icon={<Globe />}
+                label="Community"
+                name="community"
+                value={form.community}
+                placeholder=""
+                onChange={() => {}}
+                error={errors.community}
+                readOnly={true} 
+                />
+
                 <FormInput icon={<School />} label="School"
                 name="school" value={form.school}
                 placeholder="Enter your school name"
@@ -233,20 +255,19 @@ export default function GM26Comm() {
                 tooltip="The number in parentheses next to your UID. Example: (3024)"
                 />
 
-                {/* PHOTO */}
-                <div>
-                <label className="block mb-1 text-[#fff4d0]">Upload Proof Photo</label>
-                <div className="relative bg-black/75 rounded-xl p-3 flex items-center gap-3 border border-[#fff4d0]">
-                    <Image className="text-[#fff4d0] w-5 h-5" />
-                    <input type="file" accept="image/*" onChange={handlePhotoChange}
-                    className="bg-transparent w-full text-white"
-                    />
-                </div>
-                {errors.photo && <p className="text-red-400 text-sm mt-1">{errors.photo}</p>}
-                </div>
+                <FormInput
+                icon={<Globe />}
+                label="Google Drive Proof Link"
+                name="proofLink"
+                value={form.proofLink}
+                placeholder="Paste your Google Drive link here"
+                onChange={handleChange}
+                error={errors.proofLink}
+                tooltip="Make sure sharing is set to: Anyone with the link (Viewer) so we can access it."
+                />
 
                 {/* DPA */}
-                <div className="flex items-start gap-3 mt-4 text-sm text-[#fff4d0]">
+                <div className="flex items-start gap-3 mt-4 font-semibold  text-white">
                 <input type="checkbox" checked={agreed}
                     onChange={(e) => setAgreed(e.target.checked)}
                     className="mt-1 w-4 h-4 accent-[#fff4d0]"
@@ -265,26 +286,38 @@ export default function GM26Comm() {
                 <p className="text-red-400 text-center text-sm">{submissionMessage}</p>
                 }
 
-                <button type="submit"
-                disabled={!agreed || submitting}
-                className="w-full mt-4 py-3 rounded-xl font-bold text-[#FFF4D0]
-                bg-black border-2 border-[#FFF4D0]
-                hover:bg-[#FFF4D0] hover:text-black
-                disabled:opacity-40"
+                <button
+                    type="submit"
+                    disabled={!agreed || submitting}
+                    className="w-full mt-4 py-3 rounded-xl font-bold text-white transition-all duration-300 disabled:opacity-40"
+                    style={{
+                        backgroundColor: "#e59639",
+                        border: "2px solid #e59639"
+                    }}
                 >
-                {submitting ? "Submitting..." : "REGISTER"}
+                    {submitting ? "Submitting..." : "REGISTER"}
                 </button>
-
             </form>
             </div>
 
             {/* SUCCESS MODAL */}
             {showModal && (
-            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-                <div className="bg-black p-8 border border-[#fff4d0] rounded-xl text-center">
-                <h2 className="text-xl mb-4">Registration Submitted Successfully!</h2>
-                <button onClick={() => setShowModal(false)}
-                    className="px-6 py-2 bg-[#FFF4D0] text-black font-bold rounded-lg">
+            <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                <div
+                className="p-8 rounded-2xl text-center w-full max-w-md border-4 backdrop-blur-md bg-gradient-to-br from-[#17c6e7]/70 to-[#0fa3c2]/70"
+                style={{ borderColor: "#e59639", boxShadow: "0 0 30px rgba(229, 150, 57, 0.4)" }}
+                >
+                <h2 className="text-xl sm:text-2xl font-bold mb-3 text-white">
+                    Submission Submitted Successfully! 🎉
+                </h2>
+                <p className="text-sm text-white/90 mb-6">
+                    Thank you! We’ll verify your details soon. ✅
+                </p>
+                <button
+                    onClick={() => setShowModal(false)}
+                    className="px-6 py-3 rounded-xl font-bold text-white transition-all duration-300"
+                    style={{ backgroundColor: "#e59639", border: "2px solid #e59639" }}
+                >
                     Close
                 </button>
                 </div>
@@ -293,12 +326,16 @@ export default function GM26Comm() {
 
             {/* DPA MODAL */}
             {showTermsModal && (
-            <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-                <div className="bg-black p-6 border border-[#fff4d0] rounded-xl max-w-lg">
-                <h2 className="text-lg mb-4 text-[#fff4d0]">
-                    Golden Month Event – Data Privacy Consent
+            <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                <div
+                className="p-6 sm:p-8 rounded-2xl w-full max-w-lg border-4 backdrop-blur-md bg-gradient-to-br from-[#17c6e7]/70 to-[#0fa3c2]/70"
+                style={{ borderColor: "#e59639", boxShadow: "0 0 30px rgba(229, 150, 57, 0.4)" }}
+                >
+                <h2 className="text-lg sm:text-xl font-bold mb-4 text-white">
+                    Golden Month Event – Data Privacy Consent 🔒
                 </h2>
-                <p className="text-sm opacity-90 leading-relaxed">
+
+                <div className="text-sm text-white/90 leading-relaxed">
                     By checking this box, I authorize Moonton Student Leaders (MSL) Philippines to collect
                     and process the personal details provided above, specifically my identity, contact information,
                     and MLBB game credentials, solely for the purposes of verifying my registration, managing
@@ -307,9 +344,13 @@ export default function GM26Comm() {
                     I acknowledge that my data will be protected in accordance with the Data Privacy Act of 2012,
                     will not be shared with unauthorized third parties, and that I retain the right to access, correct,
                     or request the deletion of my information at any time.
-                </p>
-                <button onClick={() => setShowTermsModal(false)}
-                    className="mt-4 px-6 py-2 bg-[#FFF4D0] text-black rounded-lg font-bold">
+                </div>
+
+                <button
+                    onClick={() => setShowTermsModal(false)}
+                    className="mt-6 px-6 py-3 rounded-xl font-bold text-white transition-all duration-300 w-full sm:w-auto"
+                    style={{ backgroundColor: "#e59639", border: "2px solid #e59639" }}
+                >
                     Close
                 </button>
                 </div>
@@ -322,23 +363,34 @@ export default function GM26Comm() {
     }
 
 /* ================= REUSABLE INPUT ================= */
-function FormInput({ icon, label, name, value, placeholder, onChange, error, tooltip }) {
+function FormInput({ icon, label, name, value, placeholder, onChange, error, tooltip, readOnly = false }) {
     return (
         <div>
-        <label className="block font-medium mb-1 text-[#fff4d0]">{label}</label>
-        <div className="relative bg-black/75 rounded-xl p-3 flex items-center gap-3 border border-[#fff4d0]">
-            {icon}
+        <label className="block font-semibold mb-1 text-white">{label}</label>
+
+        <div className="relative flex items-center gap-3 border-2 border-[#e59639] px-4 py-3 shadow-sm bg-white">
+            <div className="text-[#e59639]">{icon}</div>
+
             <input
             type="text"
             name={name}
             value={value}
             onChange={onChange}
             placeholder={placeholder}
-            className="bg-transparent w-full outline-none text-white placeholder:text-white/60"
+            readOnly={readOnly}
+            className={
+                "w-full outline-none text-black placeholder:text-gray-400 bg-transparent border-2 " +
+                (readOnly ? "cursor-not-allowed opacity-80" : "")
+            }
+            style={{ borderColor: "#17c6e7" }}
             />
+
             {tooltip && <Tooltip text={tooltip} />}
         </div>
-        {error && <p className="text-red-400 text-sm mt-1">{error}</p>}
+
+        {error && <p className="text-red-600 text-sm mt-1 font-medium">{error}</p>}
         </div>
     );
 }
+
+
