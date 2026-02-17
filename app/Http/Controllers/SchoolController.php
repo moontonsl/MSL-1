@@ -17,7 +17,7 @@ class SchoolController extends Controller
         }
 
         $schoolsQuery = School::with('region.island')
-                ->where('name', 'like', '%' . $query . '%');
+                ->where('name', 'like', $query . '%');
 
         // Filter by region if provided
         if ($regionId) {
