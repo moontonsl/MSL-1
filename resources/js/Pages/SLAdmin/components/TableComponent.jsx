@@ -898,7 +898,12 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                                 {user?.role === 'Regional Admin' && stateFilter === 'Verified' && (
                                                     <button
                                                         className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
-                                                        onClick={() => handleAction('promote', selectedUser.id)}
+                                                        onClick={() => {
+                                                            setPromoteRole('Student Leader');
+                                                            setShowPromoteModal(true);
+                                                            setPromoteDurationType('permanent');
+                                                            setPromoteDays(1);
+                                                        }}
                                                         disabled={actionLoading}
                                                     >
                                                         {actionLoading ? 'Promoting...' : 'Promote to SL'}
