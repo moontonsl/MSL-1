@@ -144,8 +144,15 @@ const Register = () => {
       }
       case 4: {
         const { username, password, confirmPassword, email, captcha } = formData;
+
         if (!requireFields(['username', 'password', 'confirmPassword', 'email', 'captcha'])) {
           setErrorMessage("⚠️ Please fill in all the required fields.");
+          return false;
+        }
+        // Username validation (5-15 chars, alphanumeric, no spaces/special chars, first char not 0)
+        const usernameRegex = /^[a-zA-Z1-9][a-zA-Z0-9]{4,14}$/;
+        if (!usernameRegex.test(username)) {
+          setErrorMessage("⚠️ Username must be 5–15 characters, alphanumeric only, no spaces/special characters, and cannot start with 0.");
           return false;
         }
         if (password.length < 8) {
@@ -192,7 +199,7 @@ const Register = () => {
     <>
       <Head title="Register Account" />
       <AuthenticatedLayout>
-        <div className={`w-full max-w-[400px] mx-auto py-10 px-6 my-10 bg-[rgba(10,10,10,0.5)] rounded-[15px_15px_15px_15px] md:rounded-[15px_15px_15px_15px] border border-[#242424] shadow-[0_4px_8px_rgba(0,0,0,0.1)] backdrop-blur-[10px] flex flex-col justify-center items-start transition-all duration-300 ease-in-out overflow-hidden ${errorMessage || successMessage ? 'rounded-2xl' : ''} md:max-w-[758px] md:min-h-[850px] md:py-12 md:px-12`}>
+        <div className={`relative z-10 w-full max-w-[400px] mx-auto py-10 px-6 my-10 bg-[rgba(10,10,10,0.5)] rounded-[15px_15px_15px_15px] md:rounded-[15px_15px_15px_15px] border border-[#242424] shadow-[0_4px_8px_rgba(0,0,0,0.1)] backdrop-blur-[10px] flex flex-col justify-center items-start transition-all duration-300 ease-in-out overflow-hidden ${errorMessage || successMessage ? 'rounded-2xl' : ''} md:max-w-[758px] md:min-h-[850px] md:py-12 md:px-12`}>
           <form onSubmit={handleSubmit} className="form-register w-full">
             {stepComponents[currentStep]}
 

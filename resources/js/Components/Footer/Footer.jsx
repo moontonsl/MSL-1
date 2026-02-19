@@ -35,7 +35,7 @@ const Footer = () => {
     const moontonLogo = footer?.moonton_logo || '/moonton-logo.png';
 
     return (
-        <footer className={styles.footer + ' text-white'}>
+        <footer className={`${styles.footer} text-white relative z-[9999] pointer-events-auto`}>
             <div className={styles.footerTop}>
                 <div className={styles.footerInfo}>
                     <div className={styles.logo}>
