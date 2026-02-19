@@ -525,7 +525,7 @@ const RegionalAdmin = () => {
                   </div>
 
                   {/* Body */}
-                  <div className="divide-y divide-white/10">
+                  <div className="divide-y divide-white/10 max-h-[400px] overflow-y-auto custom-scrollbar">
                     {localTournaments.length === 0 && (
                       <div className="px-6 py-8 text-center text-white/60 font-montserrat">No requests.</div>
                     )}
@@ -623,7 +623,7 @@ const RegionalAdmin = () => {
                     </div>
                   </div>
 
-                  <div className="mt-4 flex flex-col gap-4">
+                  <div className="mt-4 flex flex-col gap-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
                     {activeTournaments.length > 0 ? (
                       activeTournaments.map((item) => (
                         <div

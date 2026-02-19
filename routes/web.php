@@ -221,14 +221,7 @@ Route::middleware(['auth', 'verified'])->get('/api/users/search', function (\Ill
     );
     
     // Apply role-based filtering
-    // For SL users: if modification type is "School", allow searching everyone regardless of region/university
-    // Otherwise, filter by university (current behavior)
-    if ($user->role === 'SL') {
-        if ($modificationType !== 'School') {
-            $query->where('university', $user->university);
-        }
-        // If modificationType is 'School', no region/university filter is applied
-    } elseif ($user->role === 'Regional Admin') {
+    if ($user->role === 'Regional Admin') {
         $assignedRegionIds = $user->getAssignedRegionIds();
         if (!empty($assignedRegionIds)) {
             $query->whereIn('region', $assignedRegionIds);
@@ -347,11 +340,14 @@ Route::middleware(['auth', 'verified'])->get('/api/users/{id}', function ($id) {
     }
     
     // Apply role-based filtering
+    // Role-based filtering removed for SL as requested
+    /*
     if ($user->role === 'SL') {
         if ($targetUser->university !== $user->university) {
             return response()->json(['error' => 'Access denied'], 403);
         }
     }
+    */
     // Regional Admin and Super Admin bypass region check as requested
     
     return response()->json($targetUser);
@@ -371,8 +367,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         // Apply role-based filtering
         if ($user->role === 'SL') {
-            // Student Leaders can only see their own requests
-            $query->where('submitted_by', $user->id);
+            // Student Leaders can see all modification requests just like Regional/Super Admin
+            // $query->where('submitted_by', $user->id); 
         } elseif ($user->role === 'Regional Admin') {
             // Regional Admins can see all modification requests (restriction removed as requested)
             // No additional filtering applied
@@ -426,8 +422,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'correct_value' => 'required|string',
         ]);
         
-        // If user is Admin, perform direct update
-        if ($user->role === 'Regional Admin' || $user->role === 'Super Admin') {
+        // If user is Admin or SL, perform direct update or create request
+        if ($user->role === 'Regional Admin' || $user->role === 'Super Admin' || $user->role === 'SL') {
             $targetUser = \App\Models\User::find($request->user_id);
             
             if (!$targetUser) {

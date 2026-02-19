@@ -561,7 +561,7 @@ const CampusTournament = () => {
                   <h2 className="text-white font-montserrat font-semibold text-lg md:text-xl">Pending Requests</h2>
                   <span className="text-white/70 text-sm">{localTournaments.filter(t => t.status === 'pending').length} pending</span>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                   {localTournaments.filter(t => t.status === 'pending').length > 0 ? (
                     localTournaments
                       .filter(t => t.status === 'pending')
@@ -599,7 +599,7 @@ const CampusTournament = () => {
                   </div>
                   <span className="text-white/70 text-sm">{localTournaments.filter(t => t.status === 'rejected').length} rejected</span>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                   {localTournaments.filter(t => t.status === 'rejected').length > 0 ? (
                     localTournaments
                       .filter(t => t.status === 'rejected')
@@ -762,68 +762,70 @@ const CampusTournament = () => {
                           </div>
 
                           {/* Team Rows */}
-                          {Array.isArray(selectedTournament.teams) && selectedTournament.teams.length > 0 ? (
-                            selectedTournament.teams.map((team) => (
-                              <>
-                                {/* Desktop Row */}
-                                <div
-                                  key={`d-${team.id}`}
-                                  className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3 border-t border-white/10 hover:bg-white/5 transition"
-                                >
-                                  <div className="text-white/90 font-montserrat md:truncate">{team.name}</div>
-                                  {team.players.slice(0, 5).map((player, idx) => (
-                                    <div className="flex justify-center" key={idx}>
-                                      <PlayerCell player={player} />
+                          <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
+                            {Array.isArray(selectedTournament.teams) && selectedTournament.teams.length > 0 ? (
+                              selectedTournament.teams.map((team) => (
+                                <>
+                                  {/* Desktop Row */}
+                                  <div
+                                    key={`d-${team.id}`}
+                                    className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3 border-t border-white/10 hover:bg-white/5 transition"
+                                  >
+                                    <div className="text-white/90 font-montserrat md:truncate">{team.name}</div>
+                                    {team.players.slice(0, 5).map((player, idx) => (
+                                      <div className="flex justify-center" key={idx}>
+                                        <PlayerCell player={player} />
+                                      </div>
+                                    ))}
+                                    <div className="flex justify-center">
+                                      <select
+                                        value={team.result || 'participant'}
+                                        onChange={(e) => handleSetResult(selectedTournament.id, team.id, e.target.value)}
+                                        disabled={selectedTournament.results_submitted && !isEditingResults}
+                                        className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[128px] ${selectedTournament.results_submitted && !isEditingResults ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                      >
+                                        <option className="text-black" value="participant">Participant</option>
+                                        <option className="text-black" value="1st">1st</option>
+                                        <option className="text-black" value="2nd">2nd</option>
+                                        <option className="text-black" value="3rd">3rd</option>
+                                      </select>
                                     </div>
-                                  ))}
-                                  <div className="flex justify-center">
-                                    <select
-                                      value={team.result || 'participant'}
-                                      onChange={(e) => handleSetResult(selectedTournament.id, team.id, e.target.value)}
-                                      disabled={selectedTournament.results_submitted && !isEditingResults}
-                                      className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[128px] ${selectedTournament.results_submitted && !isEditingResults ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    >
-                                      <option className="text-black" value="participant">Participant</option>
-                                      <option className="text-black" value="1st">1st</option>
-                                      <option className="text-black" value="2nd">2nd</option>
-                                      <option className="text-black" value="3rd">3rd</option>
-                                    </select>
                                   </div>
-                                </div>
-                                {/* Mobile Row */}
-                                <div
-                                  key={`m-${team.id}`}
-                                  className="grid md:hidden [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-2 items-center px-4 py-3 border-t border-white/10 hover:bg-white/5 transition"
-                                >
-                                  <div className="text-white/90 font-montserrat truncate">{team.name}</div>
-                                  <div className="flex justify-start">
-                                    <select
-                                      value={team.result || 'participant'}
-                                      onChange={(e) => handleSetResult(selectedTournament.id, team.id, e.target.value)}
-                                      disabled={selectedTournament.results_submitted && !isEditingResults}
-                                      className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[112px] ${selectedTournament.results_submitted && !isEditingResults ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    >
-                                      <option className="text-black" value="participant">Participant</option>
-                                      <option className="text-black" value="1st">1st</option>
-                                      <option className="text-black" value="2nd">2nd</option>
-                                      <option className="text-black" value="3rd">3rd</option>
-                                    </select>
+                                  {/* Mobile Row */}
+                                  <div
+                                    key={`m-${team.id}`}
+                                    className="grid md:hidden [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-2 items-center px-4 py-3 border-t border-white/10 hover:bg-white/5 transition"
+                                  >
+                                    <div className="text-white/90 font-montserrat truncate">{team.name}</div>
+                                    <div className="flex justify-start">
+                                      <select
+                                        value={team.result || 'participant'}
+                                        onChange={(e) => handleSetResult(selectedTournament.id, team.id, e.target.value)}
+                                        disabled={selectedTournament.results_submitted && !isEditingResults}
+                                        className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[112px] ${selectedTournament.results_submitted && !isEditingResults ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                      >
+                                        <option className="text-black" value="participant">Participant</option>
+                                        <option className="text-black" value="1st">1st</option>
+                                        <option className="text-black" value="2nd">2nd</option>
+                                        <option className="text-black" value="3rd">3rd</option>
+                                      </select>
+                                    </div>
+                                    <div className="flex justify-end">
+                                      <button
+                                        type="button"
+                                        onClick={() => setMobileViewTeam(team)}
+                                        className="px-3 py-1 rounded-md border border-white/30 text-white/90 text-xs bg-white/10 hover:bg-white/20"
+                                      >
+                                        View
+                                      </button>
+                                    </div>
                                   </div>
-                                  <div className="flex justify-end">
-                                    <button
-                                      type="button"
-                                      onClick={() => setMobileViewTeam(team)}
-                                      className="px-3 py-1 rounded-md border border-white/30 text-white/90 text-xs bg-white/10 hover:bg-white/20"
-                                    >
-                                      View
-                                    </button>
-                                  </div>
-                                </div>
-                              </>
-                            ))
-                          ) : (
-                            <div className="px-4 py-6 text-center text-white/60 font-montserrat">No teams registered yet.</div>
-                          )}
+                                </>
+                              ))
+                            ) : (
+                              <div className="px-4 py-6 text-center text-white/60 font-montserrat">No teams registered yet.</div>
+                            )}
+                          </div>
                           {/* Submit Results Button */}
                           <div className="px-4 md:px-10 py-2 md:py-3 border-t border-white/10 flex justify-center sticky bottom-0 bg-neutral-900/70">
                             {selectedTournament.results_submitted ? (
