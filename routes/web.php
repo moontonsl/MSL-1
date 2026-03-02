@@ -220,7 +220,8 @@ Route::middleware(['auth', 'verified'])->get('/api/users/search', function (\Ill
         'id', 'username', 'name', 'surname', 'email', 'university', 'course', 'year_level', 'region', 'island'
     );
     
-    // Apply role-based filtering
+    // Apply role-based filtering - Removed for unrestricted modification search
+    /*
     if ($user->role === 'Regional Admin') {
         $assignedRegionIds = $user->getAssignedRegionIds();
         if (!empty($assignedRegionIds)) {
@@ -229,6 +230,7 @@ Route::middleware(['auth', 'verified'])->get('/api/users/search', function (\Ill
             $query->where('region', $user->region);
         }
     }
+    */
     
     // Search in username, name, surname, email
     $query->where(function($q) use ($search) {
@@ -1592,16 +1594,18 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
         ->leftJoin('ml_users', 'users.ml_id', '=', 'ml_users.ml_id')
         ->leftJoin('users as verifiers', 'users.verified_by', '=', 'verifiers.id');
     
-    // Apply role-based filtering
-    if ($user->role === 'SL') {
-        $query->where('users.university', $user->university);
-    } elseif ($user->role === 'Regional Admin') {
-        $assignedRegionIds = $user->getAssignedRegionIds();
-        if (!empty($assignedRegionIds)) {
-            $query->whereIn('users.region', $assignedRegionIds);
-        } else {
-            // Fallback to single region if no assigned regions
-            $query->where('users.region', $user->region);
+    // Apply role-based filtering - Bypassed if searching to allow finding "wrong school" students
+    if (!$request->has('search') || empty($request->query('search'))) {
+        if ($user->role === 'SL') {
+            $query->where('users.university', $user->university);
+        } elseif ($user->role === 'Regional Admin') {
+            $assignedRegionIds = $user->getAssignedRegionIds();
+            if (!empty($assignedRegionIds)) {
+                $query->whereIn('users.region', $assignedRegionIds);
+            } else {
+                // Fallback to single region if no assigned regions
+                $query->where('users.region', $user->region);
+            }
         }
     }
     // Super Admin can view all users (no filtering applied)
@@ -1625,7 +1629,8 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
             ->where('users.role', '!=', 'Super Admin')
             ->where('users.role', '!=', 'Regional Admin');
         
-        if ($request->has('state')) {
+        // Apply state filtering only if not searching
+        if ($request->has('state') && (!$request->has('search') || empty($request->query('search')))) {
             $query->where('users.state', $request->query('state'));
         }
     }
