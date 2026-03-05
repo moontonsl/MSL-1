@@ -221,6 +221,8 @@ export default function AdminModificationModal({ isOpen, onClose, onSuccess }) {
                                                     setWrongLastName(searchedUser.surname || '');
                                                 } else if (e.target.value === 'School') {
                                                     setWrongValue(searchedUser.school || searchedUser.university || '');
+                                                } else if (e.target.value === 'Student ID') {
+                                                    setWrongValue(searchedUser.studentId || '');
                                                 } else {
                                                     setWrongValue(searchedUser.course || '');
                                                 }
@@ -233,6 +235,7 @@ export default function AdminModificationModal({ isOpen, onClose, onSuccess }) {
                                             <option value="School" className="text-black">School</option>
                                             <option value="Full Name" className="text-black">Full Name</option>
                                             <option value="Course" className="text-black">Course</option>
+                                            <option value="Student ID" className="text-black">Student ID</option>
                                         </select>
                                     </div>
 

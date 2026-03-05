@@ -288,6 +288,7 @@ Route::middleware(['auth', 'verified'])->get('/api/users/lookup', function (\Ill
         'surname' => $targetUser->surname,
         'school' => $targetUser->university, 
         'course' => $targetUser->course,
+        'studentId' => $targetUser->studentId,
     ]);
 });
 
@@ -419,7 +420,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         $request->validate([
             'user_id' => 'required|exists:users,id',
-            'modification_type' => 'required|in:Full Name,School,Course',
+            'modification_type' => 'required|in:Full Name,School,Course,Student ID',
             'wrong_value' => 'required|string',
             'correct_value' => 'required|string',
         ]);
@@ -494,6 +495,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
                         break;
                     case 'Course':
                         $targetUser->update(['course' => $request->correct_value]);
+                        break;
+                    case 'Student ID':
+                        $targetUser->update(['studentId' => $request->correct_value]);
                         break;
                 }
 
@@ -611,6 +615,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     break;
                 case 'Course':
                     $targetUser->update(['course' => $modificationRequest->correct_value]);
+                    break;
+                case 'Student ID':
+                    $targetUser->update(['studentId' => $modificationRequest->correct_value]);
                     break;
             }
             

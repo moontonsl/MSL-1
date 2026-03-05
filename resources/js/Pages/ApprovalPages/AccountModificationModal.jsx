@@ -26,7 +26,7 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
     const [wrongValue, setWrongValue] = useState("");
     const [correctValue, setCorrectValue] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
-    
+
     // School and Course dropdown states
     const [filteredSchools, setFilteredSchools] = useState([]);
     const [filteredCourses, setFilteredCourses] = useState([]);
@@ -39,7 +39,7 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
     // Caching and debounced search for schools
     const schoolCache = useRef({});
     const courseCache = useRef({});
-    
+
     const debouncedSchoolSearch = useMemo(() =>
         debounce(async (value) => {
             if (schoolCache.current[value]) {
@@ -151,13 +151,13 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
         const value = e.target.value;
         setWrongValue(value);
         setActiveSchoolField('wrong');
-        
+
         if (value.trim() === "") {
             setFilteredSchools([]);
             setShowSchoolDropdown(false);
             return;
         }
-        
+
         setShowSchoolDropdown(true);
         debouncedSchoolSearch(value);
     };
@@ -166,13 +166,13 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
         const value = e.target.value;
         setCorrectValue(value);
         setActiveSchoolField('correct');
-        
+
         if (value.trim() === "") {
             setFilteredSchools([]);
             setShowSchoolDropdown(false);
             return;
         }
-        
+
         setShowSchoolDropdown(true);
         debouncedSchoolSearch(value);
     };
@@ -191,13 +191,13 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
     const handleCourseChange = (e) => {
         const value = e.target.value;
         setCorrectValue(value);
-        
+
         if (value.trim() === "") {
             setFilteredCourses([]);
             setShowCourseDropdown(false);
             return;
         }
-        
+
         setShowCourseDropdown(true);
         debouncedCourseSearch(value);
     };
@@ -212,7 +212,7 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
         setSelectedUser(user);
         setUsername(`${user.name} ${user.surname} (${user.username})`);
         setShowSearchResults(false);
-        
+
         // Auto-fill wrong values based on modification type
         if (modificationType === "Full Name") {
             setWrongFirstName(user.name);
@@ -221,12 +221,14 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
             setWrongValue(user.university || "");
         } else if (modificationType === "Course") {
             setWrongValue(user.course || "");
+        } else if (modificationType === "Student ID") {
+            setWrongValue(user.studentId || "");
         }
     };
 
     const handleModificationTypeChange = (type) => {
         setModificationType(type);
-        
+
         // Reset all values including username search
         setUsername("");
         setSelectedUser(null);
@@ -242,7 +244,7 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!selectedUser) {
             setModalData({
                 title: 'Validation Error',
@@ -295,7 +297,7 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
                 const correctInput = document.querySelector('input[placeholder*="correct"]');
                 const currentWrongValue = wrongInput ? wrongInput.value : wrongValue;
                 const currentCorrectValue = correctInput ? correctInput.value : correctValue;
-                
+
                 if (!currentCorrectValue || currentCorrectValue.trim() === '') {
                     setModalData({
                         title: 'Validation Error',
@@ -308,7 +310,7 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
                     setShowMSLModal(true);
                     return;
                 }
-                
+
                 // Use the current input values for submission
                 wrongValue = currentWrongValue;
                 correctValue = currentCorrectValue;
@@ -407,14 +409,14 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
                         <X className="w-6 h-6" />
                     </button>
                 </div>
-                
+
                 <p className="text-gray-300 mb-4 text-sm">
                     Make sure that the username is correct for you to receive an email after action is made on the modification request.
                 </p>
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-4 text-sm">
-                    
+
                     {/* Modification Type - Must be selected first */}
                     <div>
                         <label className="block text-gray-300 mb-1">
@@ -430,6 +432,7 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
                             <option value="Full Name">Full Name</option>
                             <option value="School">School</option>
                             <option value="Course">Course</option>
+                            <option value="Student ID">Student ID</option>
                         </select>
                     </div>
 
@@ -444,15 +447,14 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 disabled={!modificationType}
-                                className={`w-full px-3 py-2 bg-[rgba(10,10,10,0.8)] border border-[#242424] rounded-md text-white placeholder-gray-500 focus:outline-none focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15] ${
-                                    !modificationType ? 'opacity-50 cursor-not-allowed' : ''
-                                }`}
+                                className={`w-full px-3 py-2 bg-[rgba(10,10,10,0.8)] border border-[#242424] rounded-md text-white placeholder-gray-500 focus:outline-none focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15] ${!modificationType ? 'opacity-50 cursor-not-allowed' : ''
+                                    }`}
                                 placeholder={modificationType ? "Search by username, name, or email..." : "Please select modification type first..."}
                                 required
                             />
                             <Search className={`absolute right-3 top-2.5 w-4 h-4 ${!modificationType ? 'text-gray-600' : 'text-gray-400'}`} />
                         </div>
-                        
+
                         {/* Search Results Dropdown */}
                         {showSearchResults && !selectedUser && (
                             <div className="absolute z-10 w-full mt-1 bg-[rgba(15,15,15,0.95)] border border-[#FACC15]/30 rounded-lg shadow-2xl max-h-48 overflow-y-auto backdrop-blur-sm msl-scrollbar">
@@ -555,8 +557,8 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
                         </div>
                     )}
 
-                    {/* School/Course Fields */}
-                    {(modificationType === "School" || modificationType === "Course") && (
+                    {/* School/Course/Student ID Fields */}
+                    {(modificationType === "School" || modificationType === "Course" || modificationType === "Student ID") && (
                         <div className="space-y-4">
                             <div className="relative">
                                 <label className="block text-gray-300 mb-1">Wrong {modificationType}</label>
@@ -665,7 +667,7 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
                     </div>
                 </form>
             </div>
-            
+
             <MSLModal
                 isOpen={showMSLModal}
                 onClose={() => setShowMSLModal(false)}

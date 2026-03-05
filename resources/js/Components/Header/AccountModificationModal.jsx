@@ -40,7 +40,7 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
             correctValue,
         });
 
-         // ✅ Open the waiting page in a new tab
+        // ✅ Open the waiting page in a new tab
         window.open("/AccountModificationWaiting", "_blank");
 
         resetForm();
@@ -116,6 +116,7 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
                             <option value="Full Name">Full Name</option>
                             <option value="School">School</option>
                             <option value="Course">Course</option>
+                            <option value="Student ID">Student ID</option>
                         </select>
                     </div>
 
@@ -244,6 +245,38 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
                                     onChange={(e) => setCorrectValue(e.target.value)}
                                     className="w-full px-3 py-2 bg-[rgba(10,10,10,0.8)] border border-[#242424] rounded-md text-white focus:outline-none focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15]"
                                     placeholder="Enter correct course"
+                                    required
+                                />
+                            </div>
+                        </>
+                    )}
+
+                    {/* Student ID Fields */}
+                    {modificationType === "Student ID" && (
+                        <>
+                            <div>
+                                <label className="block text-gray-300 mb-1">
+                                    Wrong Student ID
+                                </label>
+                                <input
+                                    type="text"
+                                    value={wrongValue}
+                                    onChange={(e) => setWrongValue(e.target.value)}
+                                    className="w-full px-3 py-2 bg-[rgba(10,10,10,0.8)] border border-[#242424] rounded-md text-white focus:outline-none focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15]"
+                                    placeholder="Enter wrong student ID"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-gray-300 mb-1">
+                                    Correct Student ID
+                                </label>
+                                <input
+                                    type="text"
+                                    value={correctValue}
+                                    onChange={(e) => setCorrectValue(e.target.value)}
+                                    className="w-full px-3 py-2 bg-[rgba(10,10,10,0.8)] border border-[#242424] rounded-md text-white focus:outline-none focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15]"
+                                    placeholder="Enter correct student ID"
                                     required
                                 />
                             </div>
