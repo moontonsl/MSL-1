@@ -40,7 +40,7 @@ const RegionalAdmin = () => {
   const [requestPage, setRequestPage] = useState(1);
   const [ongoingPage, setOngoingPage] = useState(1);
   const [completedPage, setCompletedPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 5;
 
   // Transform real tournament data to match the expected format
   const transformedTournaments = useMemo(() => {
@@ -495,66 +495,6 @@ const RegionalAdmin = () => {
                 CAMPUS TOURNAMENT
               </div>
             </div>
-            {/* Filter Tabs */}
-            <div className="mt-6 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10">
-              <div className="flex space-x-4">
-                <button
-                  onClick={() => setFilterStatus('ongoing')}
-                  className={`pb-2 px-4 font-montserrat font-bold text-lg md:text-xl transition-colors relative ${filterStatus === 'ongoing' ? 'text-[#F2C21A]' : 'text-white/50 hover:text-white/80'
-                    }`}
-                >
-                  Ongoing ({activeTournaments.length})
-                  {filterStatus === 'ongoing' && (
-                    <div className="absolute bottom-0 left-0 w-full h-1 bg-[#F2C21A] rounded-t-full" />
-                  )}
-                </button>
-                <button
-                  onClick={() => setFilterStatus('completed')}
-                  className={`pb-2 px-4 font-montserrat font-bold text-lg md:text-xl transition-colors relative ${filterStatus === 'completed' ? 'text-[#F2C21A]' : 'text-white/50 hover:text-white/80'
-                    }`}
-                >
-                  Completed ({completedTournaments.length})
-                  {filterStatus === 'completed' && (
-                    <div className="absolute bottom-0 left-0 w-full h-1 bg-[#F2C21A] rounded-t-full" />
-                  )}
-                </button>
-              </div>
-
-              <div className="flex items-center gap-6 px-4 pb-2 md:pb-0">
-                <label className="flex items-center gap-2 cursor-pointer group">
-                  <div className="relative flex items-center justify-center">
-                    <input
-                      type="checkbox"
-                      checked={showOnline}
-                      onChange={(e) => setShowOnline(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-5 h-5 border-2 border-white/30 rounded-md peer-checked:bg-[#F2C21A] peer-checked:border-[#F2C21A] transition-all duration-200 group-hover:border-[#F2C21A]/50"></div>
-                    <svg className="absolute w-3 h-3 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span className="font-montserrat text-sm text-white/80 group-hover:text-white transition-colors">Online</span>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer group">
-                  <div className="relative flex items-center justify-center">
-                    <input
-                      type="checkbox"
-                      checked={showOnsite}
-                      onChange={(e) => setShowOnsite(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-5 h-5 border-2 border-white/30 rounded-md peer-checked:bg-[#F2C21A] peer-checked:border-[#F2C21A] transition-all duration-200 group-hover:border-[#F2C21A]/50"></div>
-                    <svg className="absolute w-3 h-3 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span className="font-montserrat text-sm text-white/80 group-hover:text-white transition-colors">Onsite</span>
-                </label>
-              </div>
-            </div>
-
             {/* TOURNAMENT REQUESTS (Always Visible) */}
             <div className="mb-12">
               <div className="text-white font-montserrat font-extrabold text-[22px] md:text-[28px] leading-tight">
@@ -668,6 +608,66 @@ const RegionalAdmin = () => {
                 <div className="mt-3 text-xs text-white/60 font-montserrat">
                   Approve or reject each request. Approved tournaments will appear on the Campus Tournament page.
                 </div>
+              </div>
+            </div>
+
+            {/* Filter Tabs */}
+            <div className="mt-6 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10">
+              <div className="flex space-x-4">
+                <button
+                  onClick={() => setFilterStatus('ongoing')}
+                  className={`pb-2 px-4 font-montserrat font-bold text-lg md:text-xl transition-colors relative ${filterStatus === 'ongoing' ? 'text-[#F2C21A]' : 'text-white/50 hover:text-white/80'
+                    }`}
+                >
+                  Ongoing ({activeTournaments.length})
+                  {filterStatus === 'ongoing' && (
+                    <div className="absolute bottom-0 left-0 w-full h-1 bg-[#F2C21A] rounded-t-full" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setFilterStatus('completed')}
+                  className={`pb-2 px-4 font-montserrat font-bold text-lg md:text-xl transition-colors relative ${filterStatus === 'completed' ? 'text-[#F2C21A]' : 'text-white/50 hover:text-white/80'
+                    }`}
+                >
+                  Completed ({completedTournaments.length})
+                  {filterStatus === 'completed' && (
+                    <div className="absolute bottom-0 left-0 w-full h-1 bg-[#F2C21A] rounded-t-full" />
+                  )}
+                </button>
+              </div>
+
+              <div className="flex items-center gap-6 px-4 pb-2 md:pb-0">
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <div className="relative flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={showOnline}
+                      onChange={(e) => setShowOnline(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-5 h-5 border-2 border-white/30 rounded-md peer-checked:bg-[#F2C21A] peer-checked:border-[#F2C21A] transition-all duration-200 group-hover:border-[#F2C21A]/50"></div>
+                    <svg className="absolute w-3 h-3 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="font-montserrat text-sm text-white/80 group-hover:text-white transition-colors">Online</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <div className="relative flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={showOnsite}
+                      onChange={(e) => setShowOnsite(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-5 h-5 border-2 border-white/30 rounded-md peer-checked:bg-[#F2C21A] peer-checked:border-[#F2C21A] transition-all duration-200 group-hover:border-[#F2C21A]/50"></div>
+                    <svg className="absolute w-3 h-3 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="font-montserrat text-sm text-white/80 group-hover:text-white transition-colors">Onsite</span>
+                </label>
               </div>
             </div>
 
