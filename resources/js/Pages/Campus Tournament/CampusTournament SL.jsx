@@ -60,6 +60,18 @@ const CampusTournament = () => {
   const [showOnline, setShowOnline] = useState(true);
   const [showOnsite, setShowOnsite] = useState(true);
 
+  // Pagination State
+  const [pendingPage, setPendingPage] = useState(1);
+  const [rejectedPage, setRejectedPage] = useState(1);
+  const [tournamentPage, setTournamentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Expansion state for cards
+  const [expanded, setExpanded] = useState({});
+  const toggleExpand = (id) => {
+    setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
   // Transform real tournament data to match the expected format
   const transformedTournaments = useMemo(() => {
     if (!localTournaments || localTournaments.length === 0) return [];
@@ -286,6 +298,12 @@ const CampusTournament = () => {
     setIsEditingResults(false); // Reset edit mode when changing tournament
   };
 
+  React.useEffect(() => {
+    setPendingPage(1);
+    setRejectedPage(1);
+    setTournamentPage(1);
+  }, [showOnline, showOnsite, filterStatus]);
+
   const handleSetResult = (tournamentId, teamId, result) => {
     setLocalTournaments((prev) =>
       prev.map((tournament) => {
@@ -497,6 +515,44 @@ const CampusTournament = () => {
     setSubmitModalData(null);
   };
 
+  const Pagination = ({ currentPage, totalItems, onPageChange }) => {
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    if (totalPages <= 1) return null;
+
+    return (
+      <div className="flex justify-center items-center mt-6 space-x-2 font-montserrat">
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="px-3 py-1.5 bg-neutral-800/80 text-white rounded-lg border border-white/10 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-neutral-700/80 transition-colors text-xs"
+        >
+          Prev
+        </button>
+        <div className="flex space-x-1">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => onPageChange(page)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${currentPage === page
+                ? "bg-[#F2C21A] text-black shadow-[0_0_10px_-3px_rgba(242,194,26,0.5)]"
+                : "bg-neutral-800/80 text-white/70 hover:text-white border border-white/10"
+                }`}
+            >
+              {page}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="px-3 py-1.5 bg-neutral-800/80 text-white rounded-lg border border-white/10 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-neutral-700/80 transition-colors text-xs"
+        >
+          Next
+        </button>
+      </div>
+    );
+  };
+
   const PlayerCell = ({ player }) => {
     return (
       <div className="w-full md:w-auto flex flex-col items-center gap-1 text-white/80 text-xs md:text-sm font-montserrat">
@@ -566,6 +622,7 @@ const CampusTournament = () => {
                     localTournaments
                       .filter(t => t.status === 'pending')
                       .sort((a, b) => new Date(b.created_at || b.id) - new Date(a.created_at || a.id))
+                      .slice((pendingPage - 1) * itemsPerPage, pendingPage * itemsPerPage)
                       .map((t) => (
                         <div key={t.id} className="flex items-center justify-between bg-neutral-900/40 border border-white/10 rounded-xl px-4 py-3">
                           <div className="flex flex-col">
@@ -588,6 +645,11 @@ const CampusTournament = () => {
                     <div className="text-white/60 text-sm">No pending tournament requests.</div>
                   )}
                 </div>
+                <Pagination
+                  currentPage={pendingPage}
+                  totalItems={localTournaments.filter(t => t.status === 'pending').length}
+                  onPageChange={setPendingPage}
+                />
               </div>
 
               {/* Rejected Requests Section */}
@@ -604,6 +666,7 @@ const CampusTournament = () => {
                     localTournaments
                       .filter(t => t.status === 'rejected')
                       .sort((a, b) => new Date(b.created_at || b.id) - new Date(a.created_at || a.id))
+                      .slice((rejectedPage - 1) * itemsPerPage, rejectedPage * itemsPerPage)
                       .map((t) => (
                         <div key={t.id} className="flex flex-col md:flex-row md:items-center justify-between bg-neutral-900/40 border border-red-500/20 rounded-xl px-4 py-3 gap-3">
                           <div className="flex flex-col">
@@ -629,6 +692,11 @@ const CampusTournament = () => {
                     <div className="text-white/60 text-sm">No rejected tournament requests.</div>
                   )}
                 </div>
+                <Pagination
+                  currentPage={rejectedPage}
+                  totalItems={localTournaments.filter(t => t.status === 'rejected').length}
+                  onPageChange={setRejectedPage}
+                />
               </div>
 
               <div className="flex flex-col gap-4">
@@ -690,208 +758,206 @@ const CampusTournament = () => {
                   </div>
                 </div>
 
-                {/* Tournament Selector Dropdown */}
-                {filteredActiveTournaments.length > 1 && (
-                  <div className="relative w-full max-w-7xl mx-auto">
-                    <div className="bg-neutral-800/80 rounded-2xl border border-neutral-700/50 p-4">
-                      <label className="block text-white/80 font-montserrat text-sm mb-2">Select Tournament:</label>
-                      <select
-                        value={selectedTournamentId || ''}
-                        onChange={(e) => handleTournamentChange(parseInt(e.target.value))}
-                        className="w-full bg-neutral-700/50 border border-white/20 rounded-lg px-4 py-2 text-white font-montserrat focus:outline-none focus:ring-2 focus:ring-[#F2C21A]"
-                      >
-                        {filteredActiveTournaments
-                          .map((tournament) => (
-                            <option key={tournament.id} value={tournament.id}>
-                              {(tournament.school_name || '').toUpperCase()} TOURNAMENT ({tournament.tournament_type || 'Online'}) - {formatDate(tournament.start_date)} to {formatDate(tournament.end_date)}
-                              {tournament.results_submitted ? ' (Completed)' : ''}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-                  </div>
-                )}
-
-                {/* Single Tournament Display */}
-                {selectedTournamentId && (() => {
-                  const selectedTournament = transformedTournaments.find(t => t.id === selectedTournamentId);
-                  if (!selectedTournament) return null;
-
-                  return (
-                    <div className="relative w-full max-w-7xl mx-auto text-white rounded-2xl overflow-hidden transition-all duration-300 shadow-2xl bg-gradient-to-br from-neutral-800/80 to-neutral-900/80 backdrop-blur-sm border border-neutral-700/50">
-                      {/* Header */}
-                      <div className="relative z-10 w-full h-16 md:h-20 flex items-center justify-between bg-neutral-900/70 px-4 md:px-6">
-                        <div className="flex-1 text-center">
-                          <div className="font-montserrat text-lg md:text-2xl tracking-wide">{(selectedTournament.school_name || '').toUpperCase()} TOURNAMENT ({selectedTournament.tournament_type || 'Online'})</div>
-                          <div className="font-montserrat text-xs md:text-sm text-white/70">
-                            {formatDate(selectedTournament.start_date)} - {formatDate(selectedTournament.end_date)}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {/* Show delete button only for pending tournaments */}
-                          {selectedTournament.status === 'pending' && (
-                            <button
-                              type="button"
-                              onClick={() => handleDelete(selectedTournament.id)}
-                              className="bg-red-500 hover:bg-red-600 text-white font-montserrat text-xs font-semibold rounded-lg px-3 py-1.5"
-                            >
-                              Delete
-                            </button>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Tournament Content - Always Expanded */}
-                      <div className="px-0 pb-0">
-                        <div className="mt-0 rounded-b-2xl bg-neutral-800/70 backdrop-blur-sm border-t border-neutral-700/40">
-                          {/* Table Header - Desktop */}
-                          <div className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 px-6 md:px-10 py-2 text-white/70 text-xs md:text-sm border-b border-white/10 font-montserrat">
-                            <div className="self-center">Team name</div>
-                            <div className="text-center">Player 1</div>
-                            <div className="text-center">Player 2</div>
-                            <div className="text-center">Player 3</div>
-                            <div className="text-center">Player 4</div>
-                            <div className="text-center">Player 5</div>
-                            <div className="grid place-items-center">Status</div>
-                          </div>
-                          {/* Table Header - Mobile (Team + Status) */}
-                          <div className="md:hidden grid [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-5 px-4 py-2 text-white/70 text-xs border-b border-white/10 font-montserrat">
-                            <div className="self-center">Team name</div>
-                            <div className="justify-self-start text-left">Status</div>
-                            <div className="text-right"></div>
-                          </div>
-
-                          {/* Team Rows */}
-                          <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
-                            {Array.isArray(selectedTournament.teams) && selectedTournament.teams.length > 0 ? (
-                              selectedTournament.teams.map((team) => (
-                                <>
-                                  {/* Desktop Row */}
-                                  <div
-                                    key={`d-${team.id}`}
-                                    className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3 border-t border-white/10 hover:bg-white/5 transition"
-                                  >
-                                    <div className="text-white/90 font-montserrat md:truncate">{team.name}</div>
-                                    {team.players.slice(0, 5).map((player, idx) => (
-                                      <div className="flex justify-center" key={idx}>
-                                        <PlayerCell player={player} />
-                                      </div>
-                                    ))}
-                                    <div className="flex justify-center">
-                                      <select
-                                        value={team.result || 'participant'}
-                                        onChange={(e) => handleSetResult(selectedTournament.id, team.id, e.target.value)}
-                                        disabled={selectedTournament.results_submitted && !isEditingResults}
-                                        className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[128px] ${selectedTournament.results_submitted && !isEditingResults ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                      >
-                                        <option className="text-black" value="participant">Participant</option>
-                                        <option className="text-black" value="1st">1st</option>
-                                        <option className="text-black" value="2nd">2nd</option>
-                                        <option className="text-black" value="3rd">3rd</option>
-                                      </select>
-                                    </div>
-                                  </div>
-                                  {/* Mobile Row */}
-                                  <div
-                                    key={`m-${team.id}`}
-                                    className="grid md:hidden [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-2 items-center px-4 py-3 border-t border-white/10 hover:bg-white/5 transition"
-                                  >
-                                    <div className="text-white/90 font-montserrat truncate">{team.name}</div>
-                                    <div className="flex justify-start">
-                                      <select
-                                        value={team.result || 'participant'}
-                                        onChange={(e) => handleSetResult(selectedTournament.id, team.id, e.target.value)}
-                                        disabled={selectedTournament.results_submitted && !isEditingResults}
-                                        className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[112px] ${selectedTournament.results_submitted && !isEditingResults ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                      >
-                                        <option className="text-black" value="participant">Participant</option>
-                                        <option className="text-black" value="1st">1st</option>
-                                        <option className="text-black" value="2nd">2nd</option>
-                                        <option className="text-black" value="3rd">3rd</option>
-                                      </select>
-                                    </div>
-                                    <div className="flex justify-end">
-                                      <button
-                                        type="button"
-                                        onClick={() => setMobileViewTeam(team)}
-                                        className="px-3 py-1 rounded-md border border-white/30 text-white/90 text-xs bg-white/10 hover:bg-white/20"
-                                      >
-                                        View
-                                      </button>
-                                    </div>
-                                  </div>
-                                </>
-                              ))
-                            ) : (
-                              <div className="px-4 py-6 text-center text-white/60 font-montserrat">No teams registered yet.</div>
-                            )}
-                          </div>
-                          {/* Submit Results Button */}
-                          <div className="px-4 md:px-10 py-2 md:py-3 border-t border-white/10 flex justify-center sticky bottom-0 bg-neutral-900/70">
-                            {selectedTournament.results_submitted ? (
-                              <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4">
-                                <div className="bg-green-500/20 text-green-400 font-montserrat text-sm px-4 py-2 rounded-lg border border-green-400/30">
-                                  ✓ Results Submitted
-                                </div>
-                                {selectedTournament.results_submitted_at && (
-                                  <div className="text-white/60 font-montserrat text-xs">
-                                    Submitted on {new Date(selectedTournament.results_submitted_at).toLocaleDateString()}
-                                  </div>
-                                )}
-                                <a
-                                  href={`/campus-tournaments/${selectedTournament.id}/export`}
-                                  className="bg-[#F2C21A] text-black font-montserrat font-semibold rounded-lg px-5 py-2 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] hover:bg-[#d4a817] transition-colors flex items-center gap-2"
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                  </svg>
-                                  Export to Excel
-                                </a>
-                                {isEditingResults ? (
-                                  <>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleSubmitResults(selectedTournament.id)}
-                                      disabled={isSubmitting}
-                                      className="bg-[#F2C21A] text-black font-montserrat font-semibold rounded-lg px-5 py-2 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] hover:bg-[#d4a817] transition-colors"
-                                    >
-                                      {isSubmitting ? 'Saving...' : 'Save Changes'}
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => setIsEditingResults(false)}
-                                      disabled={isSubmitting}
-                                      className="bg-gray-600 text-white font-montserrat font-semibold rounded-lg px-5 py-2 hover:bg-gray-700 transition-colors"
-                                    >
-                                      Cancel
-                                    </button>
-                                  </>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() => setIsEditingResults(true)}
-                                    className="bg-blue-600 text-white font-montserrat font-semibold rounded-lg px-5 py-2 shadow-md hover:bg-blue-700 transition-colors"
-                                  >
-                                    Edit Results
-                                  </button>
-                                )}
+                {/* Tournament List - Paginated Cards */}
+                <div className="flex flex-col gap-6">
+                  {filteredActiveTournaments.length > 0 ? (
+                    filteredActiveTournaments
+                      .slice((tournamentPage - 1) * itemsPerPage, tournamentPage * itemsPerPage)
+                      .map((item) => (
+                        <div
+                          key={item.id}
+                          className="relative w-full max-w-7xl mx-auto text-white rounded-2xl overflow-hidden transition-all duration-300 shadow-2xl bg-gradient-to-br from-neutral-800/80 to-neutral-900/80 backdrop-blur-sm border border-neutral-700/50"
+                        >
+                          {/* Tournament Card Header */}
+                          <div className="relative z-10 w-full h-16 md:h-20 flex items-center justify-between bg-neutral-900/70 px-4 md:px-6">
+                            <div className="flex-1 text-center">
+                              <div className="font-montserrat text-lg md:text-2xl tracking-wide uppercase">{(item.school_name || '').toUpperCase()} TOURNAMENT</div>
+                              <div className="font-montserrat text-xs md:text-sm text-white/70">
+                                {formatDate(item.start_date)} - {formatDate(item.end_date)} • {item.tournament_type || 'Online'}
                               </div>
-                            ) : (
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {item.status === 'pending' && (
+                                <button
+                                  type="button"
+                                  onClick={() => openDeleteModal(item)}
+                                  className="bg-red-500 hover:bg-red-600 text-white font-montserrat text-xs font-semibold rounded-lg px-3 py-1.5"
+                                >
+                                  Delete
+                                </button>
+                              )}
                               <button
                                 type="button"
-                                onClick={() => handleSubmitResults(selectedTournament.id)}
-                                disabled={isSubmitting}
-                                className="bg-[#F2C21A] text-black font-montserrat font-semibold rounded-lg px-5 py-2 mt-1 mb-1 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={() => toggleExpand(item.id)}
+                                className="grid place-items-center w-9 h-9 rounded-lg border border-white/20 hover:bg-white/10 transition"
                               >
-                                {isSubmitting ? 'Submitting...' : 'Submit Results'}
+                                <svg
+                                  className={`w-5 h-5 transition-transform duration-300 ${expanded[item.id] ? 'rotate-180' : ''}`}
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
                               </button>
-                            )}
+                            </div>
+                          </div>
+
+                          {/* Dropdown Content */}
+                          <div
+                            className={`transition-all duration-500 ease-in-out ${expanded[item.id] ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}
+                          >
+                            <div className="px-0 pb-0">
+                              <div className="mt-0 rounded-b-2xl bg-neutral-800/70 backdrop-blur-sm border-t border-neutral-700/40">
+                                {/* Table Header - Desktop */}
+                                <div className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 px-6 md:px-10 py-2 text-white/70 text-xs md:text-sm border-b border-white/10 font-montserrat">
+                                  <div className="self-center">Team name</div>
+                                  <div className="text-center">Player 1</div>
+                                  <div className="text-center">Player 2</div>
+                                  <div className="text-center">Player 3</div>
+                                  <div className="text-center">Player 4</div>
+                                  <div className="text-center">Player 5</div>
+                                  <div className="grid place-items-center">Status</div>
+                                </div>
+                                {/* Mobile Row Header */}
+                                <div className="md:hidden grid [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-5 px-4 py-2 text-white/70 text-xs border-b border-white/10 font-montserrat">
+                                  <div className="self-center">Team name</div>
+                                  <div className="justify-self-start text-left">Status</div>
+                                  <div className="text-right"></div>
+                                </div>
+
+                                {/* Team Rows */}
+                                <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
+                                  {Array.isArray(item.teams) && item.teams.length > 0 ? (
+                                    item.teams.map((team) => (
+                                      <React.Fragment key={team.id}>
+                                        {/* Desktop Row */}
+                                        <div className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3 border-t border-white/10 hover:bg-white/5 transition">
+                                          <div className="text-white/90 font-montserrat md:truncate">{team.name}</div>
+                                          {team.players.slice(0, 5).map((player, idx) => (
+                                            <div className="flex justify-center" key={idx}>
+                                              <PlayerCell player={player} />
+                                            </div>
+                                          ))}
+                                          <div className="flex justify-center">
+                                            <select
+                                              value={team.result || 'participant'}
+                                              onChange={(e) => handleSetResult(item.id, team.id, e.target.value)}
+                                              disabled={item.results_submitted && !isEditingResults}
+                                              className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[128px] ${item.results_submitted && !isEditingResults ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            >
+                                              <option className="text-black" value="participant">Participant</option>
+                                              <option className="text-black" value="1st">1st</option>
+                                              <option className="text-black" value="2nd">2nd</option>
+                                              <option className="text-black" value="3rd">3rd</option>
+                                            </select>
+                                          </div>
+                                        </div>
+                                        {/* Mobile Row */}
+                                        <div className="grid md:hidden [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-2 items-center px-4 py-3 border-t border-white/10 hover:bg-white/5 transition">
+                                          <div className="text-white/90 font-montserrat truncate">{team.name}</div>
+                                          <div className="flex justify-start">
+                                            <select
+                                              value={team.result || 'participant'}
+                                              onChange={(e) => handleSetResult(item.id, team.id, e.target.value)}
+                                              disabled={item.results_submitted && !isEditingResults}
+                                              className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[112px] ${item.results_submitted && !isEditingResults ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            >
+                                              <option className="text-black" value="participant">Participant</option>
+                                              <option className="text-black" value="1st">1st</option>
+                                              <option className="text-black" value="2nd">2nd</option>
+                                              <option className="text-black" value="3rd">3rd</option>
+                                            </select>
+                                          </div>
+                                          <div className="flex justify-end">
+                                            <button
+                                              type="button"
+                                              onClick={() => setMobileViewTeam(team)}
+                                              className="px-3 py-1 rounded-md border border-white/30 text-white/90 text-xs bg-white/10 hover:bg-white/20"
+                                            >
+                                              View
+                                            </button>
+                                          </div>
+                                        </div>
+                                      </React.Fragment>
+                                    ))
+                                  ) : (
+                                    <div className="px-4 py-6 text-center text-white/60 font-montserrat">No teams registered yet.</div>
+                                  )}
+                                </div>
+
+                                {/* Submit/Edit Results Section */}
+                                <div className="px-4 md:px-10 py-4 border-t border-white/10 flex flex-wrap justify-center gap-4 bg-neutral-900/70">
+                                  {item.results_submitted ? (
+                                    <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4">
+                                      <div className="bg-green-500/20 text-green-400 font-montserrat text-sm px-4 py-2 rounded-lg border border-green-400/30">
+                                        ✓ Results Submitted
+                                      </div>
+                                      {item.results_submitted_at && (
+                                        <div className="text-white/60 font-montserrat text-xs">
+                                          Submitted on {new Date(item.results_submitted_at).toLocaleDateString()}
+                                        </div>
+                                      )}
+                                      <a
+                                        href={`/campus-tournaments/${item.id}/export`}
+                                        className="bg-[#F2C21A] text-black font-montserrat font-semibold rounded-lg px-5 py-2 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] hover:bg-[#d4a817] transition-colors flex items-center gap-2"
+                                      >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        Excel
+                                      </a>
+                                      {isEditingResults ? (
+                                        <div className="flex gap-2">
+                                          <button
+                                            onClick={() => handleSubmitResults(item.id)}
+                                            className="bg-[#F2C21A] text-black font-montserrat text-xs font-semibold rounded-lg px-4 py-2"
+                                          >
+                                            Save
+                                          </button>
+                                          <button
+                                            onClick={() => setIsEditingResults(false)}
+                                            className="bg-neutral-700 text-white font-montserrat text-xs font-semibold rounded-lg px-4 py-2"
+                                          >
+                                            Cancel
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <button
+                                          onClick={() => setIsEditingResults(true)}
+                                          className="bg-blue-600 text-white font-montserrat text-xs font-semibold rounded-lg px-4 py-2"
+                                        >
+                                          Edit
+                                        </button>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleSubmitResults(item.id)}
+                                      className="bg-[#F2C21A] text-black font-montserrat font-semibold rounded-lg px-6 py-2 shadow-[0_0_8px_-3px_rgba(242,194,26,1)]"
+                                    >
+                                      Submit Results
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      ))
+                  ) : (
+                    <div className="text-white/60 text-center py-8 font-montserrat italic">
+                      {filterStatus === 'ongoing' ? 'No ongoing tournaments.' : 'No completed tournaments.'}
                     </div>
-                  );
-                })()}
+                  )}
+
+                  {/* Pagination */}
+                  <Pagination
+                    currentPage={tournamentPage}
+                    totalItems={filteredActiveTournaments.length}
+                    onPageChange={setTournamentPage}
+                  />
+                </div>
               </div>
             </div>
           </div>
