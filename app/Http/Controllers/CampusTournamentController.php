@@ -424,31 +424,31 @@ class CampusTournamentController extends Controller
         $registeredTeamsCount = $tournament->teams()->where('status', 'registered')->count();
         $allowedSets = max(1, ceil($registeredTeamsCount / 8));
         
-        // Validate that exactly $allowedSets teams have '1st' result
+        // Count the selected 1st, 2nd, and 3rd place teams
         $firstPlaceTeams = array_filter($results, function($result) {
             return $result['result'] === '1st';
         });
         
-        if (count($firstPlaceTeams) !== $allowedSets) {
-            return response()->json(['error' => "Exactly {$allowedSets} team(s) must be marked as 1st place based on {$registeredTeamsCount} registered teams"], 422);
-        }
-        
-        // Validate that exactly $allowedSets teams have '2nd' result
         $secondPlaceTeams = array_filter($results, function($result) {
             return $result['result'] === '2nd';
         });
         
-        if (count($secondPlaceTeams) !== $allowedSets) {
-            return response()->json(['error' => "Exactly {$allowedSets} team(s) must be marked as 2nd place based on {$registeredTeamsCount} registered teams"], 422);
-        }
-        
-        // Validate that exactly $allowedSets teams have '3rd' result
         $thirdPlaceTeams = array_filter($results, function($result) {
             return $result['result'] === '3rd';
         });
         
-        if (count($thirdPlaceTeams) !== $allowedSets) {
-            return response()->json(['error' => "Exactly {$allowedSets} team(s) must be marked as 3rd place based on {$registeredTeamsCount} registered teams"], 422);
+        $firstCount = count($firstPlaceTeams);
+        $secondCount = count($secondPlaceTeams);
+        $thirdCount = count($thirdPlaceTeams);
+        
+        // Validate that between 1 and $allowedSets sets have been selected
+        if ($firstCount < 1 || $firstCount > $allowedSets) {
+            return response()->json(['error' => "You must mark between 1 and {$allowedSets} team(s) as 1st place based on {$registeredTeamsCount} registered teams"], 422);
+        }
+        
+        // Ensure that the number of 1st, 2nd, and 3rd place teams match
+        if ($firstCount !== $secondCount || $firstCount !== $thirdCount) {
+            return response()->json(['error' => "The number of 1st, 2nd, and 3rd place teams must match. You marked {$firstCount} as 1st, {$secondCount} as 2nd, and {$thirdCount} as 3rd."], 422);
         }
         
         // Validate that all teams in the tournament have results
@@ -536,31 +536,31 @@ class CampusTournamentController extends Controller
         $registeredTeamsCount = $tournament->teams()->where('status', 'registered')->count();
         $allowedSets = max(1, ceil($registeredTeamsCount / 8));
         
-        // Validate that exactly $allowedSets teams have '1st' result
+        // Count the selected 1st, 2nd, and 3rd place teams
         $firstPlaceTeams = array_filter($results, function($result) {
             return $result['result'] === '1st';
         });
         
-        if (count($firstPlaceTeams) !== $allowedSets) {
-            return response()->json(['error' => "Exactly {$allowedSets} team(s) must be marked as 1st place based on {$registeredTeamsCount} registered teams"], 422);
-        }
-        
-        // Validate that exactly $allowedSets teams have '2nd' result
         $secondPlaceTeams = array_filter($results, function($result) {
             return $result['result'] === '2nd';
         });
         
-        if (count($secondPlaceTeams) !== $allowedSets) {
-            return response()->json(['error' => "Exactly {$allowedSets} team(s) must be marked as 2nd place based on {$registeredTeamsCount} registered teams"], 422);
-        }
-        
-        // Validate that exactly $allowedSets teams have '3rd' result
         $thirdPlaceTeams = array_filter($results, function($result) {
             return $result['result'] === '3rd';
         });
         
-        if (count($thirdPlaceTeams) !== $allowedSets) {
-            return response()->json(['error' => "Exactly {$allowedSets} team(s) must be marked as 3rd place based on {$registeredTeamsCount} registered teams"], 422);
+        $firstCount = count($firstPlaceTeams);
+        $secondCount = count($secondPlaceTeams);
+        $thirdCount = count($thirdPlaceTeams);
+        
+        // Validate that between 1 and $allowedSets sets have been selected
+        if ($firstCount < 1 || $firstCount > $allowedSets) {
+            return response()->json(['error' => "You must mark between 1 and {$allowedSets} team(s) as 1st place based on {$registeredTeamsCount} registered teams"], 422);
+        }
+        
+        // Ensure that the number of 1st, 2nd, and 3rd place teams match
+        if ($firstCount !== $secondCount || $firstCount !== $thirdCount) {
+            return response()->json(['error' => "The number of 1st, 2nd, and 3rd place teams must match. You marked {$firstCount} as 1st, {$secondCount} as 2nd, and {$thirdCount} as 3rd."], 422);
         }
         
         // Validate that all teams in the tournament have results
