@@ -64,7 +64,7 @@ const CampusTournament = () => {
   const [pendingPage, setPendingPage] = useState(1);
   const [rejectedPage, setRejectedPage] = useState(1);
   const [tournamentPage, setTournamentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 5;
 
   // Expansion state for cards
   const [expanded, setExpanded] = useState({});
