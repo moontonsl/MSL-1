@@ -26,9 +26,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
         ]);
         
-        // Exclude Codashop route from CSRF protection
+        // Exclude Codashop and public team routes from CSRF protection
         $middleware->validateCsrfTokens(except: [
             'codashop/init-payment',
+            'team-registration',
+            'team-update/*',
+            'team-submit/*',
+            'team-invite/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
