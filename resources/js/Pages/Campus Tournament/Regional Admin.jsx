@@ -1040,7 +1040,7 @@ const RegionalAdmin = () => {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="font-montserrat font-semibold text-lg">Request details</div>
-                <div className="mt-0.5 text-white/70 font-montserrat text-sm">{viewing.schoolName}</div>
+                <div className="mt-0.5 text-white/70 font-montserrat text-sm">{viewing.school_name || viewing.schoolName}</div>
               </div>
               <button
                 type="button"
@@ -1054,15 +1054,15 @@ const RegionalAdmin = () => {
             <div className="mt-4 space-y-2 font-montserrat text-sm">
               <div className="flex items-center justify-between">
                 <div className="text-white/70">SL name</div>
-                <div className="text-white/90">{viewing.slName}</div>
+                <div className="text-white/90">{viewing.sl_name || viewing.slName}</div>
               </div>
               <div className="flex items-center justify-between">
                 <div className="text-white/70">Start date</div>
-                <div className="text-white/90">{formatDate(viewing.startDate)}</div>
+                <div className="text-white/90">{formatDate(viewing.start_date || viewing.startDate)}</div>
               </div>
               <div className="flex items-center justify-between">
                 <div className="text-white/70">End date</div>
-                <div className="text-white/90">{formatDate(viewing.endDate)}</div>
+                <div className="text-white/90">{formatDate(viewing.end_date || viewing.endDate)}</div>
               </div>
             </div>
 
