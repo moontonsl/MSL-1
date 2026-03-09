@@ -295,7 +295,7 @@ export default function MPL17Battletrips() {
                                 className="mt-1"
                             />
                             <span>
-                                By ticking this box, I agree to the Data Privacy Consent.
+                                By clicking this box, I agree to the Data Privacy Consent.
                                 <button
                                 type="button"
                                 className="underline ml-1"
@@ -333,7 +333,7 @@ export default function MPL17Battletrips() {
 
                     <div className="text-sm text-gray-700 space-y-3 max-h-[250px] overflow-y-auto pr-2">
                         <p>
-                            By ticking this box, I hereby grant my free, prior, and informed consent
+                            By clicking this box, I hereby grant my free, prior, and informed consent
                             to MSL, CH, and MPL Philippines to collect, store, and process my personal data.
                         </p>
                         <p>
