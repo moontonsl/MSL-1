@@ -7,7 +7,7 @@ export default function AuthenticatedLayoutEventsBTS17({children}) {
         <div className="app">
             <Header/>
             <main>
-                <div className="battleTripsBG"/>
+                <div className="battleTripsS17BG"/>
                 {children}
             </main>
             <Footer/>

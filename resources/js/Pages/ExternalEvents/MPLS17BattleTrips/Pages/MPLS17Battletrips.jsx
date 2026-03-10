@@ -3,7 +3,7 @@ import { Head } from "@inertiajs/react";
 import { Helmet } from "react-helmet";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutEventsBTS17.jsx";
 
-import BG from "../Assets/Images/MPLS16_BG.png";
+import BG from "../Assets/Images/BTMPLS17-BG.png";
 import Logo from "../Assets/Images/BTLogo.png";
 
 import { User, Mail, School, Hash, Globe, Phone, Calendar } from "lucide-react";
