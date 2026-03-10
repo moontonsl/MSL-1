@@ -995,6 +995,135 @@ class CampusTournamentController extends Controller
         exit;
     }
     /**
+     * Export pre-registration data to Excel (Super Admin only)
+     * Fetches ALL approved tournaments for the given island within a date range
+     */
+    public function exportPreReg(\Illuminate\Http\Request $request)
+    {
+        $user = Auth::user();
+
+        // Only Super Admin can generate pre-registration export
+        if ($user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Only Super Admins can generate pre-registration exports'], 403);
+        }
+
+        // Validate inputs
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'island'     => 'required|string',
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after_or_equal:start_date',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $island    = $request->island;
+        $startDate = $request->start_date;
+        $endDate   = $request->end_date;
+
+        // Fetch ALL approved tournaments for the given island within the date range
+        // Island is stored on the student leader (SL) user record
+        $tournaments = CampusTournament::with([
+                'teams' => function ($query) {
+                    $query->where('status', 'registered');
+                },
+                'teams.members' => function ($query) {
+                    $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
+                },
+                'teams.members.player',
+                'studentLeader',
+            ])
+            ->where('status', 'approved')
+            ->whereHas('studentLeader', function ($q) use ($island) {
+                $q->where('island', $island);
+            })
+            ->where(function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('start_date', [$startDate, $endDate])
+                  ->orWhereBetween('end_date', [$startDate, $endDate]);
+            })
+            ->orderBy('start_date', 'asc')
+            ->get();
+
+        if ($tournaments->isEmpty()) {
+            return response()->json(['error' => 'No approved tournaments found for the selected island and date range.'], 404);
+        }
+
+        // Create Spreadsheet
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Header info rows — show the user-selected date range
+        $sheet->setCellValue('A1', 'Registration Start Date:');
+        $sheet->setCellValue('B1', \Carbon\Carbon::parse($startDate)->format('F d, Y'));
+        $sheet->setCellValue('A2', 'Registration End Date:');
+        $sheet->setCellValue('B2', \Carbon\Carbon::parse($endDate)->format('F d, Y'));
+
+        $sheet->getStyle('A1:A2')->getFont()->setBold(true);
+
+        // Blank row 3, headers on row 4
+        $headers = ['Island', 'School', 'Team Name', 'Player Name', 'IGN', 'Server', 'UID'];
+        $col = 'A';
+        foreach ($headers as $header) {
+            $sheet->setCellValue($col . '4', $header);
+            $sheet->getStyle($col . '4')->getFont()->setBold(true);
+            $sheet->getStyle($col . '4')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $col++;
+        }
+
+        // Data rows starting at row 5 — iterate ALL tournaments
+        $row = 5;
+        foreach ($tournaments as $tournament) {
+            foreach ($tournament->teams as $team) {
+                $members = $team->members->sortBy('role', SORT_REGULAR, true); // captain first
+
+                foreach ($members as $member) {
+                    $player = $member->player;
+                    $playerIsland = ($player && $player->island) ? $player->island : $island;
+
+                    $sheet->setCellValue('A' . $row, $playerIsland);
+                    $sheet->setCellValue('B' . $row, $player ? $player->university : ($tournament->school_name ?? '-'));
+                    $sheet->setCellValue('C' . $row, $team->team_name);
+                    $sheet->setCellValue('D' . $row, $player ? trim($player->name . ' ' . $player->surname) : 'Unknown');
+                    $sheet->setCellValue('E' . $row, $player ? $player->ml_ign : '-');
+                    $sheet->setCellValue('F' . $row, $player ? $player->ml_server : '-');
+                    $sheet->setCellValue('G' . $row, $player ? $player->ml_id : '-');
+
+                    $row++;
+                }
+            }
+        }
+
+        // Auto-size columns A-G
+        foreach (range('A', 'G') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Add borders to table (row 4 onwards)
+        $lastRow = $row - 1;
+        if ($lastRow >= 4) {
+            $sheet->getStyle('A4:G' . $lastRow)->getBorders()->getAllBorders()
+                ->setBorderStyle(Border::BORDER_THIN);
+        }
+
+        // Center alignment for Island, IGN, Server, UID columns
+        $sheet->getStyle('A4:A' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('E4:G' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+
+        // Filename includes date range
+        $filename = 'PreReg_' . str_replace(' ', '_', $island) . '_' . $startDate . '_to_' . $endDate . '.xlsx';
+
+        $writer = new Xlsx($spreadsheet);
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer->save('php://output');
+        exit;
+    }
+
+    /**
      * Generate a signed invite link for a specific player
      */
     /**

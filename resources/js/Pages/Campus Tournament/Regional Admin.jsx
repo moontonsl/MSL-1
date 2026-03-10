@@ -29,6 +29,13 @@ const RegionalAdmin = () => {
   const [newEndDate, setNewEndDate] = useState('');
   const [isExtending, setIsExtending] = useState(false);
 
+  // Pre-Reg Export Modal State
+  const [showPreRegModal, setShowPreRegModal] = useState(false);
+  const [preRegIsland, setPreRegIsland] = useState('Luzon');
+  const [preRegStart, setPreRegStart] = useState('');
+  const [preRegEnd, setPreRegEnd] = useState('');
+  const [preRegError, setPreRegError] = useState('');
+
   // Use real approved tournaments data instead of mock data
   const [staticTournaments, setStaticTournaments] = useState(approvedTournaments || []);
 
@@ -485,15 +492,30 @@ const RegionalAdmin = () => {
         <div className="w-full min-h-screen bg-black/60">
           <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 py-10 md:py-16">
             {/* Title + Logo (same as /Tournament/SL) */}
-            <div className="flex items-center gap-3 md:gap-4">
-              <img
-                src="/images/About Page/SL Logo.png"
-                alt="SL Logo"
-                className="w-10 h-10 md:w-14 md:h-14 lg:w-16 lg:h-16 object-contain"
-              />
-              <div className="text-white font-montserrat font-extrabold text-[32px] md:text-[48px] lg:text-[56px] leading-tight">
-                CAMPUS TOURNAMENT
+            <div className="flex items-center justify-between gap-3 md:gap-4">
+              <div className="flex items-center gap-3 md:gap-4">
+                <img
+                  src="/images/About Page/SL Logo.png"
+                  alt="SL Logo"
+                  className="w-10 h-10 md:w-14 md:h-14 lg:w-16 lg:h-16 object-contain"
+                />
+                <div className="text-white font-montserrat font-extrabold text-[32px] md:text-[48px] lg:text-[56px] leading-tight">
+                  CAMPUS TOURNAMENT
+                </div>
               </div>
+              {/* Generate Pre Reg — Super Admin only */}
+              {user?.role === 'Super Admin' && (
+                <button
+                  type="button"
+                  onClick={() => { setPreRegError(''); setShowPreRegModal(true); }}
+                  className="bg-[#F2C21A] text-black font-montserrat font-semibold rounded-lg px-5 py-2.5 shadow-[0_0_12px_-3px_rgba(242,194,26,0.8)] hover:bg-[#d4a817] transition-colors flex items-center gap-2 text-sm md:text-base whitespace-nowrap"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Generate Pre Reg
+                </button>
+              )}
             </div>
             {/* TOURNAMENT REQUESTS (Always Visible) */}
             <div className="mb-12">
@@ -1031,6 +1053,104 @@ const RegionalAdmin = () => {
           </div>
         </div>
       </div>
+
+      {/* Pre-Reg Export Modal */}
+      {showPreRegModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/70" onClick={() => setShowPreRegModal(false)} />
+          <div className="relative z-10 w-[92%] max-w-sm rounded-2xl border border-white/10 bg-gradient-to-br from-neutral-800/95 to-neutral-900/95 backdrop-blur-sm p-6 text-white shadow-2xl">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <div className="font-montserrat font-bold text-lg">Generate Pre Reg</div>
+                <div className="font-montserrat text-xs text-white/60 mt-0.5">Downloads the latest tournament for the selected island &amp; date range</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPreRegModal(false)}
+                className="text-white/60 hover:text-white bg-white/10 hover:bg-white/20 rounded-md px-2 py-1 font-montserrat text-sm transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Island */}
+            <div className="mb-4">
+              <label className="block font-montserrat text-sm text-white/80 mb-1.5">Island</label>
+              <select
+                value={preRegIsland}
+                onChange={(e) => setPreRegIsland(e.target.value)}
+                className="w-full bg-neutral-700/60 border border-white/20 rounded-lg px-4 py-2.5 text-white font-montserrat text-sm focus:outline-none focus:border-[#F2C21A] focus:ring-1 focus:ring-[#F2C21A]"
+              >
+                <option value="Luzon">Luzon</option>
+                <option value="Visayas">Visayas</option>
+                <option value="Mindanao">Mindanao</option>
+              </select>
+            </div>
+
+            {/* Start Date */}
+            <div className="mb-4">
+              <label className="block font-montserrat text-sm text-white/80 mb-1.5">Start Date</label>
+              <input
+                type="date"
+                value={preRegStart}
+                onChange={(e) => setPreRegStart(e.target.value)}
+                className="w-full bg-neutral-700/60 border border-white/20 rounded-lg px-4 py-2.5 text-white font-montserrat text-sm focus:outline-none focus:border-[#F2C21A] focus:ring-1 focus:ring-[#F2C21A] [color-scheme:dark]"
+              />
+            </div>
+
+            {/* End Date */}
+            <div className="mb-5">
+              <label className="block font-montserrat text-sm text-white/80 mb-1.5">End Date</label>
+              <input
+                type="date"
+                value={preRegEnd}
+                onChange={(e) => setPreRegEnd(e.target.value)}
+                className="w-full bg-neutral-700/60 border border-white/20 rounded-lg px-4 py-2.5 text-white font-montserrat text-sm focus:outline-none focus:border-[#F2C21A] focus:ring-1 focus:ring-[#F2C21A] [color-scheme:dark]"
+              />
+            </div>
+
+            {/* Error */}
+            {preRegError && (
+              <div className="mb-4 bg-red-500/20 border border-red-400/30 text-red-300 font-montserrat text-xs rounded-lg px-3 py-2">
+                {preRegError}
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowPreRegModal(false)}
+                className="flex-1 bg-neutral-700 hover:bg-neutral-600 text-white font-montserrat font-semibold rounded-lg px-4 py-2.5 text-sm transition-colors"
+              >
+                Cancel
+              </button>
+              <a
+                href={preRegStart && preRegEnd
+                  ? `/campus-tournaments/export-prereg?island=${encodeURIComponent(preRegIsland)}&start_date=${preRegStart}&end_date=${preRegEnd}`
+                  : '#'}
+                onClick={(e) => {
+                  if (!preRegStart || !preRegEnd) {
+                    e.preventDefault();
+                    setPreRegError('Please fill in both start and end dates.');
+                    return;
+                  }
+                  if (preRegEnd < preRegStart) {
+                    e.preventDefault();
+                    setPreRegError('End date must be on or after start date.');
+                    return;
+                  }
+                  setShowPreRegModal(false);
+                }}
+                className="flex-1 bg-[#F2C21A] hover:bg-[#d4a817] text-black font-montserrat font-semibold rounded-lg px-4 py-2.5 text-sm transition-colors text-center shadow-[0_0_8px_-3px_rgba(242,194,26,0.8)]"
+              >
+                Download
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* View Modal (Requests) */}
       {viewing && (
