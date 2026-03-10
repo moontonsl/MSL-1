@@ -26,7 +26,9 @@ class CampusTournamentController extends Controller
         
         // Get tournaments created by this SL with teams and members
         $tournaments = CampusTournament::where('sl_id', $user->id)
-            ->with(['teams.members' => function($query) {
+            ->with(['teams' => function($query) {
+                $query->where('status', 'registered');
+            }, 'teams.members' => function($query) {
                 // Ensure captain comes first (assuming role 'captain' is alphabetically before 'member'?? No, 'c' comes before 'm'. Perfect.)
                 // Or explicit sort:
                 $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
@@ -391,7 +393,9 @@ class CampusTournamentController extends Controller
             return response()->json(['error' => 'Only Student Leaders can submit results'], 403);
         }
         
-        $tournament = CampusTournament::with('teams')->findOrFail($id);
+        $tournament = CampusTournament::with(['teams' => function($query) {
+            $query->where('status', 'registered');
+        }])->findOrFail($id);
         
         // Check if user owns this tournament
         if ($tournament->sl_id !== $user->id) {
@@ -498,7 +502,9 @@ class CampusTournamentController extends Controller
             return response()->json(['error' => 'Unauthorized to update results'], 403);
         }
         
-        $tournament = CampusTournament::with('teams')->findOrFail($id);
+        $tournament = CampusTournament::with(['teams' => function($query) {
+            $query->where('status', 'registered');
+        }])->findOrFail($id);
         
         // Check permissions
         if ($user->role === 'SL') {
@@ -863,7 +869,9 @@ class CampusTournamentController extends Controller
             return response()->json(['error' => 'Unauthorized to export results'], 403);
         }
         
-        $tournament = CampusTournament::with(['teams.members.player'])->findOrFail($id);
+        $tournament = CampusTournament::with(['teams' => function($query) {
+            $query->where('status', 'registered');
+        }, 'teams.members.player'])->findOrFail($id);
         
         // Check permissions
         if ($user->role === 'SL') {
