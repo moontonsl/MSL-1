@@ -241,17 +241,17 @@ export default function MPL17Battletrips() {
 
                 </div>
 
-                <div className="text-black text-center mb-4 text-sm md:text-3xl lg:text-4xl font-bold tracking-widest [text-shadow:_0_0_6px_#fff,_0_0_12px_rgba(255,255,255,.85)]">
+                <div className="text-black text-center mb-4 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-widest [text-shadow:_0_0_6px_#fff,_0_0_12px_rgba(255,255,255,.85)]">
                     PROVINCE
                 </div>
 
                 {/* FORM CARD */}
-                <div className="p-8 w-full max-w-3xl rounded-xl border border-[#e59639] shadow-xl bg-white text-black">
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="p-4 sm:p-6 md:p-8 w-full max-w-3xl rounded-xl border border-[#e59639] shadow-xl bg-white text-black">
+                    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
 
                     {/* QUESTION */}
                     <div className="text-center mb-4">
-                        <h2 className="text-xl font-bold mb-2">
+                        <h2 className="text-base sm:text-lg md:text-xl font-bold mb-2 whitespace-nowrap">
                         MPL Battle Trips Mini Game
                         </h2>
 
@@ -625,9 +625,9 @@ function FormInput({
 
 function YesNoQuestion({ label, name, value, onChange, error }) {
     return (
-        <div className="border border-[#e59639] p-4 rounded-lg bg-gray-50">
+        <div className="border border-[#e59639] p-3 sm:p-4 rounded-lg bg-gray-50">
 
-        <label className="font-semibold block mb-2 text-center">
+        <label className="font-semibold block mb-2 text-center text-sm sm:text-base">
             {label}
         </label>
 
