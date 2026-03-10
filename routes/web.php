@@ -1222,6 +1222,12 @@ Route::get('/GM26/Network', function () {
 })->name('GM26Network');
 
 
+//MPLS17 BATTLE TRIPS PAGE ROUTES
+Route::get('/MPLS17Battletrips', function () {
+    return Inertia::render('ExternalEvents/MPLS17BattleTrips/Pages/MPLS17Battletrips');
+})->name('MPLS17Battletrips');
+
+
 
 //SL ADMIN APPROVAL ROUTES - Only SL role can access
 Route::middleware(['auth', 'verified'])->get('/SLAdminApproval', function () {
