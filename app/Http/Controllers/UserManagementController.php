@@ -141,4 +141,37 @@ class UserManagementController extends Controller
             'markkenneth0914@gmail.com'
         ];
     }
+
+    public function bulkDeleteUsers(Request $request)
+    {
+        if (!$request->session()->get('user_management_authorized')) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $request->validate([
+            'user_ids' => 'required|array',
+            'user_ids.*' => 'integer|exists:users,id'
+        ]);
+
+        $userIds = $request->input('user_ids');
+
+        try {
+            DB::beginTransaction();
+            $deletedCount = User::whereIn('id', $userIds)->delete();
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully deleted {$deletedCount} users.",
+                'deleted_count' => $deletedCount
+            ]);
+        }
+        catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting users: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
