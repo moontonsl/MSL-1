@@ -118,6 +118,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/campus-tournaments/{id}/update-results', [\App\Http\Controllers\CampusTournamentController::class, 'updateResults'])->name('campus.tournaments.update-results');
     Route::post('/campus-tournaments/{id}/extend', [\App\Http\Controllers\CampusTournamentController::class, 'extendRegistration'])->name('campus.tournaments.extend');
     Route::get('/campus-tournaments/{id}/export', [\App\Http\Controllers\CampusTournamentController::class, 'exportToExcel'])->name('campus.tournaments.export');
+    Route::get('/campus-tournaments/export-prereg', [\App\Http\Controllers\CampusTournamentController::class, 'exportPreReg'])->name('campus.tournaments.export-prereg');
     Route::delete('/campus-tournaments/{id}', [\App\Http\Controllers\CampusTournamentController::class, 'destroy'])->name('campus.tournaments.destroy');
     Route::get('/api/team-invite-link/{teamId}', [\App\Http\Controllers\CampusTournamentController::class, 'generateInviteLink'])->name('team.invite.link');
     
@@ -1220,6 +1221,12 @@ Route::get('/GM26/Comm', function () {
 Route::get('/GM26/Network', function () {
     return Inertia::render('ExternalEvents/GoldenMonth26/Pages/GM26Network');
 })->name('GM26Network');
+
+
+//MPLS17 BATTLE TRIPS PAGE ROUTES
+Route::get('/MPLS17Battletrips', function () {
+    return Inertia::render('ExternalEvents/MPLS17BattleTrips/Pages/MPLS17Battletrips');
+})->name('MPLS17Battletrips');
 
 
 

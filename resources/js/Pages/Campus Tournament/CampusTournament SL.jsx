@@ -78,17 +78,19 @@ const CampusTournament = () => {
 
     return localTournaments.map(tournament => ({
       ...tournament,
-      teams: tournament.teams ? tournament.teams.map(team => ({
-        id: team.id,
-        name: team.team_name,
-        result: team.result || 'participant', // Include result field
-        players: team.members ? team.members.map(member => ({
-          id: member.player_id,
-          name: member.player ? `${member.player.name} ${member.player.surname}`.trim() : 'Unknown Player',
-          verified: true, // Assuming all registered players are verified
-          role: member.role
+      teams: tournament.teams ? tournament.teams
+        .filter(team => team.status === 'registered')
+        .map(team => ({
+          id: team.id,
+          name: team.team_name,
+          result: team.result || 'participant', // Include result field
+          players: team.members ? team.members.map(member => ({
+            id: member.player_id,
+            name: member.player ? `${member.player.name} ${member.player.surname}`.trim() : 'Unknown Player',
+            verified: true, // Assuming all registered players are verified
+            role: member.role
+          })) : []
         })) : []
-      })) : []
     }));
   }, [localTournaments]);
 
