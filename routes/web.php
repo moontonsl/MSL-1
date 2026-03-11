@@ -4,10 +4,11 @@
 require __DIR__.'/admin.php';
 require __DIR__.'/auth.php';
 
-// User Management Panel (No Auth Required)
-// Route::get('/user-management', [\App\Http\Controllers\UserManagementController::class, 'index'])->name('user-management');
-// Route::get('/user-management/api', [\App\Http\Controllers\UserManagementController::class, 'getUsers'])->name('user-management.api');
-// Route::post('/user-management/delete', [\App\Http\Controllers\UserManagementController::class, 'bulkDeleteUsers'])->name('user-management.delete');
+// User Management Panel (No Auth Required) jabu usermanagement
+Route::get('/user-management', [\App\Http\Controllers\UserManagementController::class, 'index'])->name('user-management');
+Route::post('/user-management/verify', [\App\Http\Controllers\UserManagementController::class, 'verifyCode'])->name('user-management.verify');
+Route::get('/user-management/api', [\App\Http\Controllers\UserManagementController::class, 'getUsers'])->name('user-management.api');
+Route::post('/user-management/delete', [\App\Http\Controllers\UserManagementController::class, 'bulkDeleteUsers'])->name('user-management.delete');
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProfileController;

@@ -8,93 +8,66 @@ use Illuminate\Support\Facades\DB;
 
 class UserManagementController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Check which IDs exist in the database
-        $deleteIds = [
-            26180, 26935, 10653, 25889, 10232, 25930, 12496, 25435, 15373, 26151,
-            10160, 25895, 21448, 26087, 11763, 25629, 26918, 13934, 26906, 26992,
-            14892, 27187, 11211, 25520, 16056, 25595, 12479, 26343, 21041, 26283,
-            11320, 25517, 20470, 25656, 18947, 27233, 10651, 25937, 21434, 27273,
-            13311, 25636, 10335, 26855, 20463, 25786, 17308, 27049, 17550, 26568,
-            19916, 27182, 10607, 26178, 27027, 27220, 27352, 12248, 26354, 14026,
-            26798, 25830, 19600, 26863, 12792, 26403, 25482, 26622, 16809, 27281,
-            12340, 26458, 17925, 25912, 26388, 27169, 10447, 27112, 25274, 26982,
-            17150, 26047, 13631, 26545, 12598, 25977, 26893, 27006, 21472, 26297,
-            11693, 25446, 23126, 26949, 15312, 26747, 25449, 26796, 11784, 26340,
-            22579, 25872, 12602, 26177, 17602, 26001, 26600, 26956, 25424, 26338,
-            20341, 26093, 26573, 123, 10829, 10767, 10522, 10666, 26580, 26848,
-            10645, 25867, 13029, 27061, 10214, 10774, 25441, 27190, 15206, 25423,
-            11310, 26167, 11655, 25810, 12291, 27176, 21502, 25929, 23684, 27299,
-            12768, 25857, 26999, 27042, 20501, 25835, 19818, 26588, 21231, 26543,
-            26446, 27240, 10547, 27086, 11235, 25419, 11238, 26742, 18828, 26941,
-            11851, 25840, 25978, 25801, 26705, 15383, 27280, 13545, 26441, 14220,
-            25896, 27117, 13792, 26275, 12013, 27331, 29141, 10926, 27150, 24795,
-            26488, 12557, 27069, 28328, 10204, 11061, 26169, 26475, 14486, 25436,
-            20777, 26498, 23516, 26710, 10662, 10816, 23330, 26370, 10600, 26139,
-            29512, 19134, 26115, 14410, 26209, 17448, 27132, 24939, 27330, 18523,
-            25917, 25140, 20650, 26815, 11260, 27146, 27192, 12459, 25974, 27790,
-            26401, 26667, 16317, 26146, 14682, 26725, 26971, 27263, 20003, 26267
-        ];
-        
-        $existingIds = User::whereIn('id', $deleteIds)->pluck('id')->toArray();
-        $missingIds = array_diff($deleteIds, $existingIds);
-        
+        if (!$request->session()->get('user_management_authorized')) {
+            return view('user-management-landing');
+        }
+
+        $targetEmails = $this->getTargetEmails();
+
+        $existingEmails = User::whereIn('email', $targetEmails)->pluck('email')->toArray();
+        $missingEmails = array_diff($targetEmails, $existingEmails);
+
         return view('user-management', [
-            'totalTargetIds' => count($deleteIds),
-            'existingIds' => count($existingIds),
-            'missingIds' => count($missingIds),
-            'missingIdsList' => $missingIds
+            'targetEmails' => $targetEmails,
+            'totalTargetEmails' => count($targetEmails),
+            'existingEmailsCount' => count($existingEmails),
+            'missingEmailsCount' => count($missingEmails),
+            'missingEmailsList' => $missingEmails
         ]);
+    }
+
+    public function verifyCode(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|string'
+        ]);
+
+        if ($request->input('code') === 'jlxgiwylr') {
+            $request->session()->put('user_management_authorized', true);
+            return redirect()->route('user-management');
+        }
+
+        return back()->withErrors(['code' => 'Invalid landing code.']);
     }
 
     public function getUsers(Request $request)
     {
+        if (!$request->session()->get('user_management_authorized')) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
         $perPage = $request->query('per_page', 20);
         $search = $request->query('search', '');
         $state = $request->query('state', '');
-        
-        // Predefined IDs to show
-        $deleteIds = [
-            26180, 26935, 10653, 25889, 10232, 25930, 12496, 25435, 15373, 26151,
-            10160, 25895, 21448, 26087, 11763, 25629, 26918, 13934, 26906, 26992,
-            14892, 27187, 11211, 25520, 16056, 25595, 12479, 26343, 21041, 26283,
-            11320, 25517, 20470, 25656, 18947, 27233, 10651, 25937, 21434, 27273,
-            13311, 25636, 10335, 26855, 20463, 25786, 17308, 27049, 17550, 26568,
-            19916, 27182, 10607, 26178, 27027, 27220, 27352, 12248, 26354, 14026,
-            26798, 25830, 19600, 26863, 12792, 26403, 25482, 26622, 16809, 27281,
-            12340, 26458, 17925, 25912, 26388, 27169, 10447, 27112, 25274, 26982,
-            17150, 26047, 13631, 26545, 12598, 25977, 26893, 27006, 21472, 26297,
-            11693, 25446, 23126, 26949, 15312, 26747, 25449, 26796, 11784, 26340,
-            22579, 25872, 12602, 26177, 17602, 26001, 26600, 26956, 25424, 26338,
-            20341, 26093, 26573, 123, 10829, 10767, 10522, 10666, 26580, 26848,
-            10645, 25867, 13029, 27061, 10214, 10774, 25441, 27190, 15206, 25423,
-            11310, 26167, 11655, 25810, 12291, 27176, 21502, 25929, 23684, 27299,
-            12768, 25857, 26999, 27042, 20501, 25835, 19818, 26588, 21231, 26543,
-            26446, 27240, 10547, 27086, 11235, 25419, 11238, 26742, 18828, 26941,
-            11851, 25840, 25978, 25801, 26705, 15383, 27280, 13545, 26441, 14220,
-            25896, 27117, 13792, 26275, 12013, 27331, 29141, 10926, 27150, 24795,
-            26488, 12557, 27069, 28328, 10204, 11061, 26169, 26475, 14486, 25436,
-            20777, 26498, 23516, 26710, 10662, 10816, 23330, 26370, 10600, 26139,
-            29512, 19134, 26115, 14410, 26209, 17448, 27132, 24939, 27330, 18523,
-            25917, 25140, 20650, 26815, 11260, 27146, 27192, 12459, 25974, 27790,
-            26401, 26667, 16317, 26146, 14682, 26725, 26971, 27263, 20003, 26267
-        ];
-        
+
+        $targetEmails = $this->getTargetEmails();
+
         $query = User::select(
-            'id', 'name', 'surname', 'email', 'username', 'ml_id', 'ml_server', 
-            'university', 'year_level', 'region', 'island', 'role', 'state', 
+            'id', 'name', 'surname', 'email', 'username', 'ml_id', 'ml_server',
+            'university', 'year_level', 'region', 'island', 'role', 'state',
             'created_at', 'verified_date'
-        )->whereIn('id', $deleteIds);
+        )->whereIn('email', $targetEmails);
 
         // Apply search filter
         if (!empty($search)) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
-                  ->orWhere('surname', 'like', '%' . $search . '%')
-                  ->orWhere('email', 'like', '%' . $search . '%')
-                  ->orWhere('username', 'like', '%' . $search . '%')
-                  ->orWhere('ml_id', 'like', '%' . $search . '%');
+                    ->orWhere('surname', 'like', '%' . $search . '%')
+                    ->orWhere('email', 'like', '%' . $search . '%')
+                    ->orWhere('username', 'like', '%' . $search . '%')
+                    ->orWhere('ml_id', 'like', '%' . $search . '%');
             });
         }
 
@@ -104,37 +77,68 @@ class UserManagementController extends Controller
         }
 
         $users = $query->orderByDesc('created_at')->paginate($perPage);
-        
+
         // Add debug information
         $response = response()->json($users);
-        $response->headers->set('X-Total-Target-Users', count($deleteIds));
+        $response->headers->set('X-Total-Target-Emails', count($targetEmails));
         $response->headers->set('X-Found-Users', $users->total());
-        
+
         return $response;
     }
 
-    public function bulkDeleteUsers(Request $request)
+    protected function getTargetEmails()
     {
-        $request->validate([
-            'user_ids' => 'required|array',
-            'user_ids.*' => 'integer|exists:users,id'
-        ]);
-
-        $userIds = $request->input('user_ids');
-        
-        try {
-            $deletedCount = User::whereIn('id', $userIds)->delete();
-            
-            return response()->json([
-                'success' => true,
-                'message' => "Successfully deleted {$deletedCount} users.",
-                'deleted_count' => $deletedCount
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error deleting users: ' . $e->getMessage()
-            ], 500);
-        }
+        return [
+            'floresmarcangelo9@gmail.com', 'johnrafaelespino563@gmail.com', 'devildigital161@gmail.com', 'juniocrisreyver@gmail.com',
+            'challejah@gmail.com', 'justinemarino656@gmail.com', 'melvvperalta@gmail.com', 'gabsantipolo@gmail.com',
+            'aellamaecabahug.yahoo.com@gmail.com', 'noelito.ymas@evsu.edu.ph', 'gericgwapo12@gmail.com', 'juliomiguelcamantesabesamis@gmail.com',
+            'pjbustane@gmail.com', 'jayzcartas17@gmail.com', 'telebricoshamir@gmail.com', 'jameboylabiste58@gmail.com',
+            'jimboylucero16@gmail.com', 'leovyfavilajr@gmail.com', 'capistranoacads@gmail.com', 'wyngardatienza11@gmail.com',
+            'ivanpaca17@gmail.com', 'bantilesjoephilipjr@gmail.com', 'yaonvince@gmail.com', 'yarennary@gmail.com',
+            'pauledar2008@gmail.com', 'miagacharls60@gmail.com', 'kentjahrein@gmail.com', 'jenbertnuique03@gmail.com',
+            'gian.roosevelt14@gmail.com', 'franzindalumpines7@gmail.com', 'ninioruaya14@gmail.com', 'mendolajhaymark@gmail.com',
+            'celestinocubijr@gmail.com', 'akherlopez1027@gmail.com', 'jibreelatomar2@gmail.com', 'justinelee.fs@gmail.com',
+            'cunananalliyahdennise@gmail.com', 'edmarkbryandaps@gmail.com', 'william.delosreyes2006@gmail.com', 'francis.lamberte@evsu.edu.ph',
+            'giomerfeliciano11@gmail.com', 'budzathrunskey14356@gmail.com', 'renzosode22@gmail.com', 'leemaro509@gmail.com',
+            'drylleignacio17@gmail.com', 'faermadjad@gmail.com', 'sorianoandrielloyd13@gmail.com', 'edwardarroyo1122@gmail.com',
+            'geraldalegre712@gmail.com', 'jasaldavia@pcu.edu.ph', 'stevenfactor75@gmail.com', 'domsclarence@gmail.com',
+            'princecarlobrina16@gmail.com', 'ranlidacalos738@gmail.com', 'jaybelbes123@gmail.com', 'richardsangines2@gmail.com',
+            'deanloydverde4@gmail.com', 'kobzakmad@gmail.com', 'johnpatrickdeuna8@gmail.com', 'lloydgolondrina5@gmail.com',
+            'baguioanthony009@gmail.com', 'wcaguilar@paterostechnologicalcollege.edu.ph', 'tapayanjaybee@gmail.com', 'karlbugaling@gmail.com',
+            'andriealonzo84@gmail.com', 'bagares.gemar09@gmail.com', 'datumohirjack24@gmail.com', 'aljasserrahaman7@gmail.com',
+            'rhaiedabubakar@gmail.com', 'jokksamia@gmail.com', 'pelinoalexander354@gmail.com', 'lylematandog3@gmail.com',
+            'kentasleyborres492@gmail.com', 'danahiezernasayao@gmail.com', 'earlaahm@gmail.com', 'dalisaymaclaurence@gmail.com',
+            'aljamelsultan@gmail.com', 'macatumbaskylle12@gmail.com', 'geraldezcyril16@gmail.com', 'jeroldrojas2004@gmail.com',
+            'egieedpalina8@gmail.com', 'babiarachelanne@gmail.com', 'markrenzodelacruz36@gmail.com', 'brianrussellepadilla13@gmail.com',
+            'jaminaranzel@gmail.com', 'edrickpintor@gmail.com', 'matiradranreb9@gmail.com', '22-09746@g.batstate-u.edu.ph',
+            'josephlenonlamit@gmail.com', 'cndlrmatt@gmail.com', 'regiecasas30@gmail.com', 'kiannoche4@gmail.com',
+            'torrescharleskent8@gmail.com', 'lanceoliverd@gmail.com', 'jhustine619@gmail.com', 'yuuftliampier@gmail.com',
+            'kingjanuadumpa@gmail.com', 'andreivaldeztamonabrina@gmail.com', 'cantillerjotherezyaeljan@gmail.com', 'argilgreg7@gmail.com',
+            'segmundvelasco@gmail.com', 'ceballosalf33@gmail.com', 'richelle.laurizen@gmail.com', 'arnarniele@gmail.com',
+            'julianrossholgado3rd@gmail.com', 'janusgratiae15@gmail.com', 'johnwilfredamoguis@gmail.com', 'taniojameer@gmail.com',
+            'morandantemattjireh@gmail.com', 'tidzkie332211@gmail.com', 'astriancastro93@gmail.com', 'sicnarfd16@gmail.com',
+            'fritzzyyy.centillas13@gmail.com', 'bobsboby583@gmail.com', 'charlesklanas08@gmail.com', 'angelojayvee23@gmail.com',
+            'eryllecompanero20@gmail.com', 'zephyrisnotgood@gmail.com', 'josephmontuyamina@gmail.com', 's2025100604@firstasia.edu.ph',
+            'radjethroy@gmail.com', 'wayneclarkz29@gmail.com', 'jaev.astillero.swu@phinmaed.com', 'tristancarldelapena@gmail.com',
+            'acemontas538@gmail.com', 's2025109504@firstasia.edu.ph', 's2025108755@firstasia.edu.ph', 'clarencedeleus126@gmail.com',
+            'betacurabambam@gmail.com', 'esperatyrn@gmail.com', 'encinakhennmikkel@gmail.com', 'fmiguelmontesco@gmail.com',
+            'abdulzamad.an864@s.msumain.edu.ph', 'kristianregiea@gmail.com', 'samerdimaarig@gmail.com', 'jakebrandon.mercado17@gmail.com',
+            'alucardyuzuke123@gmail.com', 'jhonbenedicttorresruba@gmail.com', 'hnor.alhusnie@gmail.com', 'knoxbullies.ml@gmail.com',
+            'bea133862@gmail.com', 'mendoza.dp36@s.msumain.edu.ph', 'nasifimam303@gmail.com', 'ralphsabandal563@gmail.com',
+            'aiciepadogdog6@gmail.com', 'stephenchadjuagpao@gmail.com', 'shainna.kim16@gmail.com', 'uttoarraofdalgan@gmail.com',
+            'sairadatuimam423@gmail.com', 'suamenjustine2005@gmail.com', 'botoys36@gmail.com', 'kizamaurinmonte@gmail.com',
+            'deanonalfred@gmail.com', 'rani972005@gmail.com', 'nilloahsley8@gmail.com', 'angeljazleenliquiran12345@gmail.com',
+            'esposajohan@gmail.com', 'advinculae098@gmail.com', 'sanchezhannanicole03@gmail.com', 'reypuenleona@gmail.com',
+            'bstm.hermosillaja@gmail.com', 'kyleyambao79@gmail.com', 'jonasmacusi4@gmail.com', 'neillagunay716@gmail.com',
+            'jelee2162val@student.fatima.edu.ph', 'garciajohnmichael894@gmail.com', 'jmlee8139@gmail.com', 'roljohnkentflores@gmail.com',
+            'christianelielpailma@gmail.com', 'kevinkurtdeguzman20@gmail.com', 'pastolerojayson09@gmail.com', 'jielofernandez32@gmail.com',
+            'johnrobertocruz02@gmail.com', 'bsentrep.salinojrp@gmail.com', 'aarondeblois96@gmail.com', 'johnrichplaza12@gmail.com',
+            'bsemc.lobitanajayl@gmail.com', 'egeecampusano@gmail.com', 'tamayojamesrusty18@gmail.com', 'jodieannemeterio@gmail.com',
+            'lhestertaperla@gmail.com', 'frickzwenzeleder@gmail.com', 'jameseichi139@gmail.com', 'westleecatalan3@gmail.com',
+            'reynaldlauzon14@gmail.com', 'bsemc.villarazajohnbrylel@gmail.com', 'sethleonardsanpedro@gmail.com', 'vincentsanpascual4@gmail.com',
+            'jrmanarang14@gmail.com', 'gremiorich3@gmail.com', 'ortinerojumong@gmail.com', 'aldwinedison16@gmail.com',
+            'pgreroma.ccsjdm@gmail.com', 'carltumanda5@gmail.com', 'johncarldomina@gmail.com', 'franzzenbenitez@gmail.com',
+            'markkenneth0914@gmail.com'
+        ];
     }
 }
