@@ -161,7 +161,7 @@ const CampusTournamentTeam = () => {
 
   const handleGenerateInviteCode = (e) => {
     e.stopPropagation();
-    
+
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('user_id');
 
@@ -258,13 +258,8 @@ const CampusTournamentTeam = () => {
           <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 py-10 md:py-16">
             <div className="flex flex-col items-center gap-2 md:gap-3">
               <img src="/images/About Page/SL Logo.png" alt="SL Logo" className="w-10 h-10 md:w-14 md:h-14 lg:w-16 lg:h-16 object-contain" />
-              <div className="flex flex-col items-center text-center">
-                <span className="text-white/80 text-[18px] md:text-[22px] lg:text-[26px] font-bold uppercase tracking-[0.2em] mb-1 font-montserrat">
-                  {teamFromProps?.tournament?.school_name || 'UNIVERSITY'}
-                </span>
-                <div className="text-white text-center font-montserrat font-extrabold text-[32px] md:text-[48px] lg:text-[56px] leading-tight">
-                  CAMPUS TOURNAMENT
-                </div>
+              <div className="text-white text-center font-montserrat font-extrabold text-[32px] md:text-[48px] lg:text-[56px] leading-tight">
+                CAMPUS TOURNAMENT
               </div>
             </div>
             <p className="mt-2 text-white/90 font-montserrat text-[12px] sm:text-[14px] md:text-base max-w-3xl text-center mx-auto">
@@ -349,12 +344,12 @@ const CampusTournamentTeam = () => {
                           <div className="flex flex-col flex-1 items-center justify-center w-full mb-2">
                             {teamFromProps.invite_code ? (
                               <div className="bg-neutral-900 border border-[#F2C21A]/30 rounded-lg px-4 py-1.5 w-full max-w-[120px] text-center shadow-inner cursor-pointer hover:bg-neutral-800 transition-colors"
-                                   onClick={() => {
-                                     navigator.clipboard.writeText(teamFromProps.invite_code);
-                                     setModalMessage('Invite code copied to clipboard!');
-                                     setShowSuccessModal(true);
-                                   }}
-                                   title="Click to copy code"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(teamFromProps.invite_code);
+                                  setModalMessage('Invite code copied to clipboard!');
+                                  setShowSuccessModal(true);
+                                }}
+                                title="Click to copy code"
                               >
                                 <div className="text-[9px] text-white/50 uppercase tracking-wide">Invite Code</div>
                                 <div className="text-sm md:text-base text-[#F2C21A] font-mono font-bold tracking-[0.2em] leading-tight mt-0.5">{teamFromProps.invite_code}</div>
@@ -370,7 +365,7 @@ const CampusTournamentTeam = () => {
                             )}
                           </div>
                         )}
-                        <button
+                          <button
                           type="button"
                           disabled={!isCaptainFromProps}
                           className={`bg-[#F2C21A] text-black font-montserrat text-xs md:text-sm font-semibold rounded-lg px-6 md:px-7 py-1.5 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] min-w-[88px] justify-center ${!isCaptainFromProps ? 'opacity-60 cursor-not-allowed' : ''}`}
@@ -388,7 +383,14 @@ const CampusTournamentTeam = () => {
                                 sessionStorage.setItem('campusTournamentCaptain', JSON.stringify(captainData));
                               }
 
-                              router.visit('/Tournament/CampusTournamentReg');
+                              // Include user_id if present (for admin/debug access), plus edit=true to bypass redirect
+                              const urlParams = new URLSearchParams(window.location.search);
+                              const userId = urlParams.get('user_id');
+                              const targetUrl = userId
+                                ? `/Tournament/CampusTournamentReg?user_id=${userId}&edit=true`
+                                : '/Tournament/CampusTournamentReg?edit=true';
+
+                              router.visit(targetUrl);
                             }
                           }}
                           title="Edit team details"
@@ -454,11 +456,11 @@ const CampusTournamentTeam = () => {
                         <div className="w-full mb-3">
                           {teamFromProps.invite_code ? (
                             <div className="w-full bg-neutral-900 border border-[#F2C21A]/30 rounded-lg p-3 text-center shadow-inner flex flex-col items-center justify-center cursor-pointer hover:bg-neutral-800 transition-colors"
-                                 onClick={() => {
-                                   navigator.clipboard.writeText(teamFromProps.invite_code);
-                                   setModalMessage('Invite code copied to clipboard!');
-                                   setShowSuccessModal(true);
-                                 }}
+                              onClick={() => {
+                                navigator.clipboard.writeText(teamFromProps.invite_code);
+                                setModalMessage('Invite code copied to clipboard!');
+                                setShowSuccessModal(true);
+                              }}
                             >
                               <div className="text-[10px] text-white/50 uppercase tracking-wider mb-1">Team Invite Code (Tap to Copy)</div>
                               <div className="text-xl text-[#F2C21A] font-mono font-bold tracking-[0.3em]">{teamFromProps.invite_code}</div>
@@ -477,10 +479,10 @@ const CampusTournamentTeam = () => {
 
                       <button
                         type="button"
-                        disabled={!isCaptainFromProps || teamFromProps.status === 'registered' || isSubmittable}
-                        className={`w-full bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-5 py-2 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] ${(!isCaptainFromProps || teamFromProps.status === 'registered' || isSubmittable) ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        disabled={!isCaptainFromProps || teamFromProps.status === 'registered'}
+                        className={`w-full bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-5 py-2 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] ${(!isCaptainFromProps || teamFromProps.status === 'registered') ? 'opacity-60 cursor-not-allowed' : ''}`}
                         onClick={() => {
-                          if (isCaptainFromProps && teamFromProps.status !== 'registered' && !isSubmittable) {
+                          if (isCaptainFromProps && teamFromProps.status !== 'registered') {
                             // Find the captain from team members
                             const captainMember = teamFromProps.members?.find(member => member.role === 'captain');
                             const captainData = captainMember?.player;
@@ -498,8 +500,8 @@ const CampusTournamentTeam = () => {
                             const userId = urlParams.get('user_id');
 
                             const targetUrl = userId
-                              ? `/Tournament/CampusTournamentReg?user_id=${userId}`
-                              : '/Tournament/CampusTournamentReg';
+                              ? `/Tournament/CampusTournamentReg?user_id=${userId}&edit=true`
+                              : '/Tournament/CampusTournamentReg?edit=true';
 
                             router.visit(targetUrl);
                           }
@@ -537,60 +539,60 @@ const CampusTournamentTeam = () => {
 
             {/* Success Modal */}
             {showSuccessModal && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-10" onClick={() => {
-                        setShowSuccessModal(false);
-                        router.reload({ only: ['team'] });
-                    }} />
-                    <div className="relative z-20 w-full max-w-md bg-neutral-900 border border-green-500/30 rounded-2xl p-6 md:p-8 shadow-[0_0_30px_-5px_rgba(74,222,128,0.15)] text-center flex flex-col items-center">
-                        <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mb-4 border border-green-500/50">
-                            <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                        </div>
-                        <h3 className="text-2xl font-bold text-white font-montserrat mb-2">
-                            Success!
-                        </h3>
-                        <p className="text-white/70 font-montserrat text-sm mb-6 max-w-[90%] whitespace-pre-line">
-                            {modalMessage}
-                        </p>
-                        <button
-                            onClick={() => {
-                                setShowSuccessModal(false);
-                                router.reload({ only: ['team'] });
-                            }}
-                            className="w-full bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-6 py-3 hover:bg-[#F2C21A]/90 transition-colors"
-                        >
-                            Continue
-                        </button>
-                    </div>
+              <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-10" onClick={() => {
+                  setShowSuccessModal(false);
+                  router.reload({ only: ['team'] });
+                }} />
+                <div className="relative z-20 w-full max-w-md bg-neutral-900 border border-green-500/30 rounded-2xl p-6 md:p-8 shadow-[0_0_30px_-5px_rgba(74,222,128,0.15)] text-center flex flex-col items-center">
+                  <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mb-4 border border-green-500/50">
+                    <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white font-montserrat mb-2">
+                    Success!
+                  </h3>
+                  <p className="text-white/70 font-montserrat text-sm mb-6 max-w-[90%] whitespace-pre-line">
+                    {modalMessage}
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowSuccessModal(false);
+                      router.reload({ only: ['team'] });
+                    }}
+                    className="w-full bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-6 py-3 hover:bg-[#F2C21A]/90 transition-colors"
+                  >
+                    Continue
+                  </button>
                 </div>
+              </div>
             )}
 
             {/* Error Modal */}
             {showErrorModal && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-10" onClick={() => setShowErrorModal(false)} />
-                    <div className="relative z-20 w-full max-w-md bg-neutral-900 border border-red-500/30 rounded-2xl p-6 md:p-8 shadow-[0_0_30px_-5px_rgba(239,68,68,0.15)] text-center flex flex-col items-center">
-                        <div className="w-16 h-16 mx-auto mb-4 bg-red-500/20 rounded-full flex items-center justify-center border border-red-500/50">
-                            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </div>
-                        <h3 className="text-2xl font-bold text-white font-montserrat mb-2">
-                            Error
-                        </h3>
-                        <p className="text-white/70 font-montserrat text-sm mb-6 max-w-[90%]">
-                            {modalMessage}
-                        </p>
-                        <button
-                            onClick={() => setShowErrorModal(false)}
-                            className="w-full bg-red-500 hover:bg-red-600 text-white font-montserrat text-sm font-semibold rounded-lg px-6 py-3 transition-colors"
-                        >
-                            Try Again
-                        </button>
-                    </div>
+              <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-10" onClick={() => setShowErrorModal(false)} />
+                <div className="relative z-20 w-full max-w-md bg-neutral-900 border border-red-500/30 rounded-2xl p-6 md:p-8 shadow-[0_0_30px_-5px_rgba(239,68,68,0.15)] text-center flex flex-col items-center">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-red-500/20 rounded-full flex items-center justify-center border border-red-500/50">
+                    <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white font-montserrat mb-2">
+                    Error
+                  </h3>
+                  <p className="text-white/70 font-montserrat text-sm mb-6 max-w-[90%]">
+                    {modalMessage}
+                  </p>
+                  <button
+                    onClick={() => setShowErrorModal(false)}
+                    className="w-full bg-red-500 hover:bg-red-600 text-white font-montserrat text-sm font-semibold rounded-lg px-6 py-3 transition-colors"
+                  >
+                    Try Again
+                  </button>
                 </div>
+              </div>
             )}
 
             {/* Confirmation/Submit Modal */}
@@ -749,30 +751,30 @@ const CampusTournamentTeam = () => {
             }
             {/* Success Modal */}
             {showSuccessModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10" onClick={() => setShowSuccessModal(false)} />
-                    <div className="relative z-20 w-full max-w-md bg-black/40 backdrop-blur-md text-white border border-white/20 rounded-2xl p-6 md:p-8 shadow-2xl">
-                        <div className="text-center">
-                            <div className="w-16 h-16 mx-auto mb-4 bg-green-500/20 rounded-full flex items-center justify-center">
-                                <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
-                            <h3 className="font-montserrat text-xl md:text-2xl font-semibold mb-3 text-green-400">
-                                Success!
-                            </h3>
-                            <p className="font-montserrat text-sm md:text-base text-white/80 mb-6 leading-relaxed">
-                                {modalMessage}
-                            </p>
-                            <button
-                                onClick={() => setShowSuccessModal(false)}
-                                className="w-full bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-6 py-3 hover:bg-[#F2C21A]/90 transition-colors"
-                            >
-                                Continue
-                            </button>
-                        </div>
+              <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10" onClick={() => setShowSuccessModal(false)} />
+                <div className="relative z-20 w-full max-w-md bg-black/40 backdrop-blur-md text-white border border-white/20 rounded-2xl p-6 md:p-8 shadow-2xl">
+                  <div className="text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-green-500/20 rounded-full flex items-center justify-center">
+                      <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                      </svg>
                     </div>
+                    <h3 className="font-montserrat text-xl md:text-2xl font-semibold mb-3 text-green-400">
+                      Success!
+                    </h3>
+                    <p className="font-montserrat text-sm md:text-base text-white/80 mb-6 leading-relaxed">
+                      {modalMessage}
+                    </p>
+                    <button
+                      onClick={() => setShowSuccessModal(false)}
+                      className="w-full bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-6 py-3 hover:bg-[#F2C21A]/90 transition-colors"
+                    >
+                      Continue
+                    </button>
+                  </div>
                 </div>
+              </div>
             )}
           </div>
         </div>
