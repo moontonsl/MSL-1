@@ -25,7 +25,7 @@ class SchoolController extends Controller
         }
 
         $schools = $schoolsQuery->select('id', 'name', 'region_id')
-                ->limit(10)
+                ->limit(20)
                 ->get();
 
         $formatted = $schools->map(function ($school) {

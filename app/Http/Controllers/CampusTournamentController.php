@@ -726,6 +726,35 @@ class CampusTournamentController extends Controller
     }
 
     /**
+     * Generate a unique invite code for a team
+     */
+    public function generateInviteCode(Request $request, $id)
+    {
+        $userId = $request->input('user_id');
+        $user = $userId ? \App\Models\User::find($userId) : Auth::user();
+
+        if (!$user) {
+             return response()->json(['error' => 'Unauthorized: User not found'], 401);
+        }
+
+        $team = \App\Models\CampusTournamentTeam::findOrFail($id);
+        
+        // Only captain can generate code
+        if ($team->captain_id !== $user->id) {
+            return response()->json(['error' => 'Only the team captain can generate an invite code.'], 403);
+        }
+
+        // Generate unique alphanumeric 6-character code
+        do {
+            $code = strtoupper(substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 6));
+        } while (\App\Models\CampusTournamentTeam::where('invite_code', $code)->exists());
+
+        $team->update(['invite_code' => $code]);
+
+        return redirect()->back()->with('message', "Team Invite Code generated successfully: {$code}. Send this code to your team members so they can join!");
+    }
+
+    /**
      * Update an existing team
      */
     public function updateTeam(Request $request, $teamId)
@@ -733,7 +762,7 @@ class CampusTournamentController extends Controller
         // 1. Validate the request
         $request->validate([
             'teamName' => 'required|string|max:50',
-            'discordId' => 'required|string|max:50',
+            'discordId' => 'nullable|string|max:50',
             'captain' => 'required|array',
             'captain.id' => 'required|integer',
             'captain.university' => 'required|string',
