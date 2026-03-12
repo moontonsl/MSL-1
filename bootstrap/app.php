@@ -33,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'team-update/*',
             'team-submit/*',
             'team-invite/*',
+            'team-generate-code/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
