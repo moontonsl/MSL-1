@@ -751,7 +751,7 @@ class CampusTournamentController extends Controller
 
         $team->update(['invite_code' => $code]);
 
-        return redirect()->back()->with('message', "Team Invite Code generated successfully: {$code}. Send this code to your team members so they can join!");
+        return redirect()->back()->with('message', 'Team Invite Code generated successfully!');
     }
 
     /**
@@ -776,13 +776,10 @@ class CampusTournamentController extends Controller
         
         $captain = $request->captain;
         
-        // Allow manual user_id override for guest access
-        $userId = $request->input('user_id'); 
-        $user = $userId ? \App\Models\User::find($userId) : Auth::user();
-
-        if (!$user) {
+        if (!Auth::check()) {
             return redirect()->back()->withErrors(['message' => 'Unauthorized']);
         }
+        $user = Auth::user();
         
         // 2. Find the existing team
         $team = \App\Models\CampusTournamentTeam::find($teamId);
@@ -800,20 +797,7 @@ class CampusTournamentController extends Controller
              return redirect()->back()->withErrors(['message' => 'Team cannot be updated after submission. Contact support/admin if changes are needed.']);
         }
 
-        // 5. COLLECT ALL PLAYER IDs TO CHECK (Captain + Members)
-        $playerIdsToCheck = [
-            $captain['id'],
-            $request->players['player2']['id'] ?? null,
-            $request->players['player3']['id'] ?? null,
-            $request->players['player4']['id'] ?? null,
-            $request->players['player5']['id'] ?? null,
-        ];
-        $playerIdsToCheck = array_filter($playerIdsToCheck);
-        if (count($playerIdsToCheck) !== count(array_unique($playerIdsToCheck))) {
-            return redirect()->back()->withErrors(['message' => "Duplicate players found in the roster."]);
-        }
-        
-        // 6. Check if team name already exists
+        // 5. Check if team name already exists
         $existingTeamName = \App\Models\CampusTournamentTeam::where('team_name', $request->teamName)
             ->where('tournament_id', $team->tournament_id)
             ->where('id', '!=', $teamId)
@@ -825,7 +809,7 @@ class CampusTournamentController extends Controller
         
         \DB::beginTransaction();
         try {
-            // 7. Update team details
+            // 6. Update team details
             $team->update([
                 'team_name' => $request->teamName,
                 'discord_id' => $request->discordId,

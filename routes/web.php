@@ -101,7 +101,7 @@ Route::get('/Tournament/CampusTournamentReg', function (\Illuminate\Http\Request
                       ->where('results_submitted', false);
             })->exists();
             
-        if ($hasTeam) {
+        if ($hasTeam && !$request->has('edit')) {
             return redirect()->route('campus.team', ['user_id' => $user->id]);
         }
     }
