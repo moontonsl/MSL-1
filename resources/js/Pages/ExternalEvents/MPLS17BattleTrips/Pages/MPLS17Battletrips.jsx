@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+import MLLogin from "@/Pages/MLLoginApi/MLLogin";
 import { Head } from "@inertiajs/react";
 import { Helmet } from "react-helmet";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutEventsBTS17.jsx";
@@ -22,7 +23,7 @@ const Tooltip = ({ text }) => (
 
 /* ================= MAIN COMPONENT ================= */
 
-export default function MPL17Battletrips() {
+export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
     const COMMUNITIES = ["Moonton Student Leader", "Community Heroes"];
 
         const initialForm = {
@@ -56,6 +57,12 @@ export default function MPL17Battletrips() {
         const [verified, setVerified] = useState(false);
         
         const [activeModal, setActiveModal] = useState(null);
+        const mlLoginRef = useRef(null);
+
+        const [verificationStatus, setVerificationStatus] = useState(null); // 'success', 'error'
+        const [showStatusModal, setShowStatusModal] = useState(false);
+        const [tempMlData, setTempMlData] = useState(null);
+        const [isSubmitting, setIsSubmitting] = useState(false);
 
         /* ================= VALIDATION ================= */
 
@@ -179,12 +186,49 @@ export default function MPL17Battletrips() {
             setErrors((prev) => ({ ...prev, [name]: "" }));
         };
 
-            const handleSubmit = (e) => {
-            e.preventDefault();
+             const handleSubmit = async (e) => {
+                e.preventDefault();
 
-            if (!validate()) return;
+                if (!validate()) return;
 
-            setShowModal(true);
+                setIsSubmitting(true);
+
+                const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/175DKq9yO06Z2Pw5qeLI9-6wjbyg8npvavssjWhg8H6Y/formResponse";
+                
+                const formBody = new FormData();
+                formBody.append("entry.1345442810", regionTitle || "Open to ALL REGIONS");
+                formBody.append("entry.1954274932", `Q: ${miniGameQuestion || "Which MPL PH Team has won the most championships?"} | A: ${form.answer}`);
+                formBody.append("entry.913757275", form.name);
+                formBody.append("entry.267578799", form.birthdate);
+                formBody.append("entry.381276010", form.region);
+                formBody.append("entry.1873824738", form.contact);
+                formBody.append("entry.1871396629", form.facebook);
+                formBody.append("entry.96358973", form.email);
+                formBody.append("entry.1332239123", mlbbId);
+                formBody.append("entry.1258292429", mlbbServer);
+                formBody.append("entry.611813938", form.validId);
+                formBody.append("entry.617516356", form.community);
+                formBody.append("entry.1885783994", form.likeMPLPage);
+                formBody.append("entry.165580188", form.likeMSLPage);
+                formBody.append("entry.22777953", form.likeCHPage);
+                formBody.append("entry.890072815", form.joinMPLGroup);
+                formBody.append("entry.2111417879", form.smartSubscriber);
+                formBody.append("entry.71135010", agreed ? "I agree to the Data Privacy Consent" : "No");
+
+                try {
+                    await fetch(GOOGLE_FORM_ACTION_URL, {
+                        method: "POST",
+                        body: formBody,
+                        mode: "no-cors",
+                    });
+
+                    setShowModal(true);
+                } catch (error) {
+                    console.error("Error submitting to GSheet:", error);
+                    alert("There was an error submitting your entry. Please try again.");
+                } finally {
+                    setIsSubmitting(false);
+                }
             };
 
         const handleSendCode = () => {
@@ -220,6 +264,45 @@ export default function MPL17Battletrips() {
             }))
         };
 
+        const handleLoginInfo = (info) => {
+            console.log("MLBB Login Info:", info);
+            
+            // Moonton API usually returns { code: 0, data: { uid, server_id, ... } }
+            // Or { success: true, data: { ... } } if from our backend
+            const data = info.data || info;
+            
+            if (info && info.data) {
+                const uid = data.uid || data.roleId;
+                const server = data.server_id || data.zoneId;
+                const ign = data.nick_name || data.name || "Player";
+
+                setTempMlData({ uid, server, ign });
+                setVerificationStatus('success');
+                setShowStatusModal(true);
+            } else {
+                setVerificationStatus('error');
+                setShowStatusModal(true);
+            }
+        };
+
+        const confirmVerification = () => {
+            if (tempMlData) {
+                setMlbbId(tempMlData.uid);
+                setMlbbServer(tempMlData.server);
+                setVerified(true);
+
+                setErrors((prev) => ({
+                    ...prev,
+                    mlbbId: "",
+                    mlbbServer: ""
+                }));
+
+                setShowVerifyModal(false);
+                setShowStatusModal(false);
+                setTempMlData(null);
+            }
+        };
+
         /* ================= UI ================= */
 
     return (
@@ -241,12 +324,12 @@ export default function MPL17Battletrips() {
 
                 </div>
 
-                <div className="text-black text-center mb-4 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-widest [text-shadow:_0_0_6px_#fff,_0_0_12px_rgba(255,255,255,.85)]">
-                    PROVINCE
+                <div className="text-black text-center mb-4 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-widest [text-shadow:_0_0_6px_#fff,_0_0_12px_rgba(255,255,255,.85)] uppercase">
+                    {regionTitle || "Open to ALL REGIONS"}
                 </div>
 
                 {/* FORM CARD */}
-                <div className="p-4 sm:p-6 md:p-8 w-full max-w-3xl rounded-xl border border-[#e59639] shadow-xl bg-white text-black">
+                <div className="p-4 sm:p-6 md:p-8 w-full max-w-3xl rounded-xl border border-solid border-[#e59639] shadow-xl bg-white text-black">
                     <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
 
                     {/* QUESTION */}
@@ -255,8 +338,8 @@ export default function MPL17Battletrips() {
                         MPL Battle Trips Mini Game
                         </h2>
 
-                        <div className="border border-[#e59639] p-4 rounded-lg bg-gray-50">
-                        Which MPL PH Team has won the most championships?
+                        <div className="border border-solid border-[#e59639] p-4 rounded-lg bg-gray-50">
+                        {miniGameQuestion || "Which MPL PH Team has won the most championships?"}
                         </div>
                     </div>
 
@@ -282,9 +365,9 @@ export default function MPL17Battletrips() {
                     <FormInput icon={<Mail />} label="Valid Email Address" name="email" placeholder="example@email.com" value={form.email} onChange={handleChange} tooltip="Use an active email address" error={errors.email} />
 
                     {/* MLBB ACCOUNT (AUTO VERIFIED) */}
-                    <FormInput icon={<Hash />} label="MLBB UID" name="mlbbId" value={mlbbId} disabled={true} error={errors.mlbbId} />
+                    <FormInput verified={verified} icon={<Hash />} label="MLBB UID" name="mlbbId" value={mlbbId} disabled={true} error={errors.mlbbId} />
 
-                    <FormInput icon={<Globe />} label="MLBB Server" name="mlbbServer" value={mlbbServer} disabled={true} error={errors.mlbbServer} />
+                    <FormInput verified={verified} icon={<Globe />} label="MLBB Server" name="mlbbServer" value={mlbbServer} disabled={true} error={errors.mlbbServer} />
                 
                     {/* VALID ID */}
                     <FormInput icon={<Globe />} label="Valid ID (Google Drive Link)" name="validId" placeholder="Paste Google Drive link here" value={form.validId} onChange={handleChange} tooltip="Set sharing to Anyone with the link" error={errors.validId} />
@@ -323,7 +406,7 @@ export default function MPL17Battletrips() {
                     <YesNoQuestion label="Are you a member of the MPL Official Group?" name="joinMPLGroup" value={form.joinMPLGroup} onChange={handleChange} error={errors.joinMPLGroup} />
 
                     {/* SMART */}
-                    <div className="border border-[#e59639] p-4 rounded-lg bg-gray-50">
+                    <div className="border border-solid border-[#e59639] p-4 rounded-lg bg-gray-50">
                         <label className="font-semibold block mb-2 text-center">
                             Are you a Smart Subscriber?
                         </label>
@@ -375,12 +458,16 @@ export default function MPL17Battletrips() {
                         )}
                     </div>
 
-                    {/* SUBMIT */}
+                     {/* SUBMIT */}
                     <button
                         type="submit"
-                        className="w-full py-3 rounded-lg font-bold text-white bg-[#e59639] hover:bg-[#d47f20]"
+                        disabled={isSubmitting}
+                        className={`w-full py-3 rounded-lg font-bold text-white transition-all flex items-center justify-center gap-2 ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#e59639] hover:bg-[#d47f20]'}`}
                     >
-                        Submit Answer
+                        {isSubmitting && (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        )}
+                        {isSubmitting ? "Submitting..." : "Submit Answer"}
                     </button>
             </form>
         </div>
@@ -507,24 +594,8 @@ export default function MPL17Battletrips() {
                         </button>
 
                         <button
-                            onClick={() => {
-                            // SIMULATED API RESPONSE
-                            const sampleUID = "123456789";
-                            const sampleServer = "3024";
-
-                            setMlbbId(sampleUID);
-                            setMlbbServer(sampleServer);
-                            setVerified(true);
-
-                            setErrors((prev) => ({
-                                ...prev,
-                                mlbbId: "",
-                                mlbbServer: ""
-                            }));
-
-                            setShowVerifyModal(false);
-                        }}
-                            className="px-6 py-2 rounded-lg font-bold text-white"
+                            onClick={() => mlLoginRef.current?.triggerLogin()}
+                            className="px-6 py-2 rounded-lg font-bold text-white shadow-md transition-all hover:scale-105"
                             style={{ backgroundColor: "#e59639" }}
                         >
                             Continue
@@ -535,6 +606,63 @@ export default function MPL17Battletrips() {
                 </div>
 
             </div>
+            )}
+
+            <MLLogin 
+                ref={mlLoginRef} 
+                onLoginInfo={handleLoginInfo}
+            />
+
+            {/* VERIFICATION STATUS MODAL */}
+            {showStatusModal && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[60]">
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-sm text-center shadow-2xl border-t-8 border-[#e59639]">
+                        {verificationStatus === 'success' ? (
+                            <>
+                                <div className="text-4xl mb-4 text-green-500">✅</div>
+                                <h2 className="text-xl font-bold mb-2">Account Linked!</h2>
+                                <p className="text-gray-600 text-sm mb-6">
+                                    We found your account: <br/>
+                                    <span className="font-bold text-black text-base">{tempMlData?.ign}</span>
+                                </p>
+                                
+                                <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-dashed border-gray-300">
+                                    <div className="flex justify-between text-sm mb-1">
+                                        <span className="text-gray-500 font-semibold">UID:</span>
+                                        <span className="font-mono text-black">{tempMlData?.uid}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-500 font-semibold">Server:</span>
+                                        <span className="font-mono text-black">{tempMlData?.server}</span>
+                                    </div>
+                                </div>
+
+                                <button 
+                                    onClick={confirmVerification}
+                                    className="w-full py-3 rounded-lg font-bold text-white shadow-lg transition-transform hover:scale-[1.02]"
+                                    style={{ backgroundColor: "#e59639" }}
+                                >
+                                    Confirm Account
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <div className="text-4xl mb-4">❌</div>
+                                <h2 className="text-xl font-bold mb-2">Verification Failed</h2>
+                                <p className="text-gray-600 text-sm mb-6">
+                                    We couldn't retrieve your MLBB profile. Please try logging in again.
+                                </p>
+                                <button 
+                                    onClick={() => setShowStatusModal(false)}
+                                    className="w-full py-3 rounded-lg font-bold text-white"
+                                    style={{ backgroundColor: "#e59639" }}
+                                >
+                                    Retry
+                                </button>
+                            </>
+                        )}
+                    </div>
+                </div>
             )}
 
             {activeModal && (
@@ -595,27 +723,41 @@ function FormInput({
     error,
     tooltip,
     type = "text",
-    disabled = false
+    disabled = false,
+    verified = false
     }) {
 
     return (
-        <div>
-            <label className="font-semibold mb-1 block">{label}</label>
+        <div className="w-full">
+            <div className="flex items-center justify-between mb-1">
+                <label className="font-semibold block">{label}</label>
+                {verified && (
+                    <span className="text-green-600 text-xs font-bold flex items-center gap-1">
+                         Verified Account
+                    </span>
+                )}
+            </div>
 
-            <div className="flex items-center gap-3 border border-[#e59639] px-4 py-3 rounded-md bg-white">
-            <div className="text-[#e59639]">{icon}</div>
+            <div className={`flex items-center gap-3 border border-solid px-4 py-3 rounded-md bg-white transition-all ${verified ? 'border-green-500 bg-green-50' : 'border-[#e59639]'}`}>
+                <div className={`${verified ? 'text-green-500' : 'text-[#e59639]'}`}>{icon}</div>
 
-            <input
-                type={type}
-                name={name}
-                value={value}
-                placeholder={placeholder}
-                onChange={onChange}
-                disabled={disabled}
-                className="w-full outline-none text-black disabled:bg-gray-100 disabled:cursor-not-allowed"
-            />
+                <input
+                    type={type}
+                    name={name}
+                    value={value}
+                    placeholder={placeholder}
+                    onChange={onChange}
+                    disabled={disabled}
+                    className="w-full outline-none text-black disabled:bg-transparent disabled:text-black disabled:cursor-not-allowed font-medium"
+                />
 
-            {tooltip && <Tooltip text={tooltip} />}
+                {verified && (
+                    <div className="text-green-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                )}
+
+                {tooltip && <Tooltip text={tooltip} />}
             </div>
 
             {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
@@ -625,7 +767,7 @@ function FormInput({
 
 function YesNoQuestion({ label, name, value, onChange, error }) {
     return (
-        <div className="border border-[#e59639] p-3 sm:p-4 rounded-lg bg-gray-50">
+        <div className="border border-solid border-[#e59639] p-3 sm:p-4 rounded-lg bg-gray-50">
 
         <label className="font-semibold block mb-2 text-center text-sm sm:text-base">
             {label}

@@ -1224,9 +1224,9 @@ Route::get('/GM26/Network', function () {
 
 
 //MPLS17 BATTLE TRIPS PAGE ROUTES
-Route::get('/MPLS17Battletrips', function () {
-    return Inertia::render('ExternalEvents/MPLS17BattleTrips/Pages/MPLS17Battletrips');
-})->name('MPLS17Battletrips');
+Route::get('/MPLS17Battletrips', [\App\Http\Controllers\MPLS17BattletripsController::class, 'index'])->name('MPLS17Battletrips');
+Route::get('/MPLS17Battletrips/update', [\App\Http\Controllers\MPLS17BattletripsController::class, 'update'])->name('MPLS17Battletrips.update');
+Route::post('/MPLS17Battletrips/update', [\App\Http\Controllers\MPLS17BattletripsController::class, 'store'])->name('MPLS17Battletrips.store');
 
 
 
