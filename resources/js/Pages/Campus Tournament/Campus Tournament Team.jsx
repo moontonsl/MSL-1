@@ -20,7 +20,8 @@ const generateMockTeamForUser = (user) => {
 };
 
 const CampusTournamentTeam = () => {
-  const { user, team: teamFromProps, isCaptain: isCaptainFromProps, message } = usePage().props || {};
+  const { user, team: teamFromProps, isCaptain: isCaptainFromProps, message, flash } = usePage().props || {};
+
 
   // If there's a message (error), show it
   if (message) {
@@ -124,6 +125,16 @@ const CampusTournamentTeam = () => {
 
   const hasPendingInvite = currentUserMember?.status === 'pending';
   const [isProcessingInvite, setIsProcessingInvite] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+
+  React.useEffect(() => {
+    if (flash?.message) {
+      setModalMessage(flash.message);
+      setShowSuccessModal(true);
+    }
+  }, [flash]);
 
   const handleAcceptInvite = () => {
     setIsProcessingInvite(true);
@@ -148,22 +159,28 @@ const CampusTournamentTeam = () => {
     });
   };
 
-  const handleCopyTeamLink = async (e) => {
+  const handleGenerateInviteCode = (e) => {
     e.stopPropagation();
-    try {
-      // Use team ID for the single link
-      const response = await fetch(`/api/team-invite-link/${teamFromProps.id}`);
-      if (response.ok) {
-        const data = await response.json();
-        navigator.clipboard.writeText(data.url);
-        alert('Team Invite Link copied! Send this single link to ALL your team members.');
-      } else {
-        alert('Failed to generate invite link.');
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('user_id');
+
+    router.post(`/team-generate-code/${teamFromProps.id}`, {
+      user_id: userId
+    }, {
+      onSuccess: (page) => {
+        // Inertia success handles the response through props, but we can access flash messages 
+        // if the controller is updated to flash, or we can just show success since the prop will have the new code.
+        setModalMessage(`Team Invite Code generated successfully!\n\nSend this code to your team members so they can join!`);
+        setShowSuccessModal(true);
+      },
+      onError: (errors) => {
+        console.error('Error generating code:', errors);
+        const errorMsg = errors.error || errors.message || 'Failed to generate invite code.';
+        setModalMessage(errorMsg);
+        setShowErrorModal(true);
       }
-    } catch (error) {
-      console.error('Error copying link:', error);
-      alert('Error generating invite link.');
-    }
+    });
   };
 
   const handleRejectInvite = () => {
@@ -284,9 +301,13 @@ const CampusTournamentTeam = () => {
               <div className="relative w-full max-w-7xl mx-auto text-white rounded-2xl overflow-hidden transition-all duration-300 shadow-2xl bg-gradient-to-br from-neutral-800/80 to-neutral-900/80 backdrop-blur-sm border border-neutral-700/50">
                 {/* Header */}
                 <div className="relative z-10 w-full h-16 md:h-20 flex items-center justify-between bg-neutral-900/70 px-4 md:px-6">
-                  <div className="flex-1 text-center">
-                    <div className="font-montserrat text-lg md:text-2xl tracking-wide">Team Name</div>
-                    <div className="font-montserrat text-xs md:text-sm text-white/70">{teamFromProps.team_name}</div>
+                  <div className="flex-1 relative flex flex-col items-center justify-center">
+                    <h2 className="text-lg md:text-2xl text-white font-montserrat tracking-wide">
+                      {teamFromProps?.team_name || 'Team Name'}
+                    </h2>
+                    <span className="text-white/70 text-xs md:text-sm mt-1 font-montserrat">
+                      {teamFromProps?.tournament?.school_name || 'School Name'}
+                    </span>
                   </div>
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 md:right-6">
                     <span className={`px-3 py-1 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider border ${teamFromProps.status === 'registered'
@@ -318,18 +339,33 @@ const CampusTournamentTeam = () => {
                         </div>
                       ))}
                       <div className="flex flex-col items-center gap-2">
-                        {/* Single Copy Link Button */}
+                        {/* Generate Code Section */}
                         {isCaptainFromProps && (
-                          <button
-                            type="button"
-                            className="bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 font-montserrat text-xs md:text-sm font-semibold rounded-lg px-6 md:px-7 py-1.5 border border-blue-500/30 min-w-[88px] justify-center transition-colors mb-1"
-                            onClick={handleCopyTeamLink}
-                            title="Copy single invite link for the whole team"
-                          >
-                            Copy Link
-                          </button>
+                          <div className="flex flex-col flex-1 items-center justify-center w-full mb-2">
+                            {teamFromProps.invite_code ? (
+                              <div className="bg-neutral-900 border border-[#F2C21A]/30 rounded-lg px-4 py-1.5 w-full max-w-[120px] text-center shadow-inner cursor-pointer hover:bg-neutral-800 transition-colors"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(teamFromProps.invite_code);
+                                  setModalMessage('Invite code copied to clipboard!');
+                                  setShowSuccessModal(true);
+                                }}
+                                title="Click to copy code"
+                              >
+                                <div className="text-[9px] text-white/50 uppercase tracking-wide">Invite Code</div>
+                                <div className="text-sm md:text-base text-[#F2C21A] font-mono font-bold tracking-[0.2em] leading-tight mt-0.5">{teamFromProps.invite_code}</div>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                className="bg-[#F2C21A]/10 hover:bg-[#F2C21A]/20 text-[#F2C21A] font-montserrat text-xs font-semibold rounded-lg px-3 py-2 border border-[#F2C21A]/30 w-full max-w-[120px] text-center transition-colors"
+                                onClick={handleGenerateInviteCode}
+                              >
+                                Generate Code
+                              </button>
+                            )}
+                          </div>
                         )}
-                        <button
+                          <button
                           type="button"
                           disabled={!isCaptainFromProps}
                           className={`bg-[#F2C21A] text-black font-montserrat text-xs md:text-sm font-semibold rounded-lg px-6 md:px-7 py-1.5 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] min-w-[88px] justify-center ${!isCaptainFromProps ? 'opacity-60 cursor-not-allowed' : ''}`}
@@ -347,7 +383,14 @@ const CampusTournamentTeam = () => {
                                 sessionStorage.setItem('campusTournamentCaptain', JSON.stringify(captainData));
                               }
 
-                              router.visit('/Tournament/CampusTournamentReg');
+                              // Include user_id if present (for admin/debug access), plus edit=true to bypass redirect
+                              const urlParams = new URLSearchParams(window.location.search);
+                              const userId = urlParams.get('user_id');
+                              const targetUrl = userId
+                                ? `/Tournament/CampusTournamentReg?user_id=${userId}&edit=true`
+                                : '/Tournament/CampusTournamentReg?edit=true';
+
+                              router.visit(targetUrl);
                             }
                           }}
                           title="Edit team details"
@@ -408,23 +451,38 @@ const CampusTournamentTeam = () => {
                     </div>
 
                     <div className="space-y-3 mt-3">
-                      {/* Mobile Copy Link Button */}
+                      {/* Mobile Generate Code Section */}
                       {isCaptainFromProps && (
-                        <button
-                          type="button"
-                          className="w-full bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 font-montserrat text-sm font-semibold rounded-lg px-5 py-2 border border-blue-500/30 transition-colors"
-                          onClick={handleCopyTeamLink}
-                        >
-                          Copy Invite Link
-                        </button>
+                        <div className="w-full mb-3">
+                          {teamFromProps.invite_code ? (
+                            <div className="w-full bg-neutral-900 border border-[#F2C21A]/30 rounded-lg p-3 text-center shadow-inner flex flex-col items-center justify-center cursor-pointer hover:bg-neutral-800 transition-colors"
+                              onClick={() => {
+                                navigator.clipboard.writeText(teamFromProps.invite_code);
+                                setModalMessage('Invite code copied to clipboard!');
+                                setShowSuccessModal(true);
+                              }}
+                            >
+                              <div className="text-[10px] text-white/50 uppercase tracking-wider mb-1">Team Invite Code (Tap to Copy)</div>
+                              <div className="text-xl text-[#F2C21A] font-mono font-bold tracking-[0.3em]">{teamFromProps.invite_code}</div>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              className="w-full bg-[#F2C21A]/10 hover:bg-[#F2C21A]/20 text-[#F2C21A] font-montserrat text-sm font-semibold rounded-lg px-5 py-2.5 border border-[#F2C21A]/30 transition-colors"
+                              onClick={handleGenerateInviteCode}
+                            >
+                              Generate Invite Code
+                            </button>
+                          )}
+                        </div>
                       )}
 
                       <button
                         type="button"
-                        disabled={!isCaptainFromProps || teamFromProps.status === 'registered' || isSubmittable}
-                        className={`w-full bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-5 py-2 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] ${(!isCaptainFromProps || teamFromProps.status === 'registered' || isSubmittable) ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        disabled={!isCaptainFromProps || teamFromProps.status === 'registered'}
+                        className={`w-full bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-5 py-2 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] ${(!isCaptainFromProps || teamFromProps.status === 'registered') ? 'opacity-60 cursor-not-allowed' : ''}`}
                         onClick={() => {
-                          if (isCaptainFromProps && teamFromProps.status !== 'registered' && !isSubmittable) {
+                          if (isCaptainFromProps && teamFromProps.status !== 'registered') {
                             // Find the captain from team members
                             const captainMember = teamFromProps.members?.find(member => member.role === 'captain');
                             const captainData = captainMember?.player;
@@ -442,8 +500,8 @@ const CampusTournamentTeam = () => {
                             const userId = urlParams.get('user_id');
 
                             const targetUrl = userId
-                              ? `/Tournament/CampusTournamentReg?user_id=${userId}`
-                              : '/Tournament/CampusTournamentReg';
+                              ? `/Tournament/CampusTournamentReg?user_id=${userId}&edit=true`
+                              : '/Tournament/CampusTournamentReg?edit=true';
 
                             router.visit(targetUrl);
                           }
@@ -478,6 +536,64 @@ const CampusTournamentTeam = () => {
             <div className="flex justify-center mt-10">
               {/* Placeholder for center content if needed */}
             </div>
+
+            {/* Success Modal */}
+            {showSuccessModal && (
+              <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-10" onClick={() => {
+                  setShowSuccessModal(false);
+                  router.reload({ only: ['team'] });
+                }} />
+                <div className="relative z-20 w-full max-w-md bg-neutral-900 border border-green-500/30 rounded-2xl p-6 md:p-8 shadow-[0_0_30px_-5px_rgba(74,222,128,0.15)] text-center flex flex-col items-center">
+                  <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mb-4 border border-green-500/50">
+                    <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white font-montserrat mb-2">
+                    Success!
+                  </h3>
+                  <p className="text-white/70 font-montserrat text-sm mb-6 max-w-[90%] whitespace-pre-line">
+                    {modalMessage}
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowSuccessModal(false);
+                      router.reload({ only: ['team'] });
+                    }}
+                    className="w-full bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-6 py-3 hover:bg-[#F2C21A]/90 transition-colors"
+                  >
+                    Continue
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Error Modal */}
+            {showErrorModal && (
+              <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-10" onClick={() => setShowErrorModal(false)} />
+                <div className="relative z-20 w-full max-w-md bg-neutral-900 border border-red-500/30 rounded-2xl p-6 md:p-8 shadow-[0_0_30px_-5px_rgba(239,68,68,0.15)] text-center flex flex-col items-center">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-red-500/20 rounded-full flex items-center justify-center border border-red-500/50">
+                    <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white font-montserrat mb-2">
+                    Error
+                  </h3>
+                  <p className="text-white/70 font-montserrat text-sm mb-6 max-w-[90%]">
+                    {modalMessage}
+                  </p>
+                  <button
+                    onClick={() => setShowErrorModal(false)}
+                    className="w-full bg-red-500 hover:bg-red-600 text-white font-montserrat text-sm font-semibold rounded-lg px-6 py-3 transition-colors"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Confirmation/Submit Modal */}
             {showConfirmModal && (
@@ -633,6 +749,33 @@ const CampusTournamentTeam = () => {
                 </div>
               )
             }
+            {/* Success Modal */}
+            {showSuccessModal && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10" onClick={() => setShowSuccessModal(false)} />
+                <div className="relative z-20 w-full max-w-md bg-black/40 backdrop-blur-md text-white border border-white/20 rounded-2xl p-6 md:p-8 shadow-2xl">
+                  <div className="text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-green-500/20 rounded-full flex items-center justify-center">
+                      <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <h3 className="font-montserrat text-xl md:text-2xl font-semibold mb-3 text-green-400">
+                      Success!
+                    </h3>
+                    <p className="font-montserrat text-sm md:text-base text-white/80 mb-6 leading-relaxed">
+                      {modalMessage}
+                    </p>
+                    <button
+                      onClick={() => setShowSuccessModal(false)}
+                      className="w-full bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-6 py-3 hover:bg-[#F2C21A]/90 transition-colors"
+                    >
+                      Continue
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

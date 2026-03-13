@@ -90,7 +90,21 @@ Route::get('/campus-tournament/public', [\App\Http\Controllers\CampusTournamentC
     ->name('campus.tournament.public');
 
 // Team Registration page (updated route)
-Route::get('/Tournament/CampusTournamentReg', function () {
+Route::get('/Tournament/CampusTournamentReg', function (\Illuminate\Http\Request $request) {
+    $userId = $request->query('user_id');
+    $user = $userId ? \App\Models\User::find($userId) : Auth::user();
+
+    if ($user) {
+        $hasTeam = \App\Models\CampusTournamentTeamMember::where('player_id', $user->id)
+            ->whereHas('team.tournament', function($query) {
+                $query->where('status', 'approved')
+                      ->where('results_submitted', false);
+            })->exists();
+            
+        if ($hasTeam && !$request->has('edit')) {
+            return redirect()->route('campus.team', ['user_id' => $user->id]);
+        }
+    }
     return Inertia::render('Campus Tournament/TeamRegistration');
 })->name('campus.teamregistration');
 
@@ -715,7 +729,7 @@ Route::get('/school-players', function (\Illuminate\Http\Request $request) {
               ->where('campus_tournaments.results_submitted', false);
         });
         
-        $players = $query->limit(10)->get(['id', 'username', 'name', 'surname']);
+        $players = $query->limit(20)->get(['id', 'username', 'name', 'surname']);
         
         return response()->json($players);
     } catch (\Exception $e) {
@@ -813,7 +827,7 @@ Route::post('/validate-credentials', function (\Illuminate\Http\Request $request
     // Block if: Member AND Not Captain AND Not Accepted AND Not Invited (Active Invite Link Context)
     if ($teamMember && $teamMember->role !== 'captain' && $teamMember->status !== 'accepted' && !$isInvitedToTeam) {
         // User is a member AND didn't come from a valid invite link -> BLOCK.
-        return response()->json(['message' => 'Get the link from you captain to be able to log in'], 403);
+        return response()->json(['message' => 'Get the code from your captain to be able to join the team.'], 403);
     }
     
     // Valid Captain or Invited Member or New User -> Log in
@@ -835,7 +849,7 @@ Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
     // Validate the request
     $request->validate([
         'teamName' => 'required|string|max:50',
-        'discordId' => 'required|string|max:50',
+        'discordId' => 'nullable|string|max:50',
         'captain' => 'required|array',
         'captain.id' => 'required|integer',
         'captain.university' => 'required|string',
@@ -925,20 +939,105 @@ Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
                 'team_id' => $team->id,
                 'player_id' => $player['id'],
                 'role' => $player['id'] === $captain['id'] ? 'captain' : 'member',
-
                 'status' => $player['id'] === $captain['id'] ? 'accepted' : 'pending',
             ]);
+
+            // Send invite email to members
+            if ($player['id'] !== $captain['id']) {
+                $memberUser = \App\Models\User::find($player['id']);
+                $captainUser = \App\Models\User::find($captain['id']);
+                if ($memberUser && $memberUser->email) {
+                    try {
+                        \Illuminate\Support\Facades\Mail::to($memberUser->email)
+                            ->send(new \App\Mail\TeamInviteMail($memberUser, $team, $captainUser));
+                    } catch (\Exception $e) {
+                         \Log::error('Failed to send team invite email to ' . $memberUser->email . ': ' . $e->getMessage());
+                    }
+                }
+            }
         }
         
         \DB::commit();
         
-        // Use captain's ID for the redirect context
-        return redirect()->route('campus.team', ['user_id' => $captain['id']])->with('message', 'Team registered successfully');
+        // Log in the captain if they aren't logged in to establish a session
+        $captainUser = \App\Models\User::find($captain['id']);
+        if ($captainUser) {
+            Auth::login($captainUser);
+            $request->session()->regenerate();
+        }
+        
+        return redirect()->route('campus.team', ['user_id' => $captain['id']])
+            ->with('message', 'Team registered successfully');
     } catch (\Exception $e) {
         \DB::rollBack();
         \Log::error('Team registration error: ' . $e->getMessage());
         return redirect()->back()->withErrors(['message' => 'Registration failed. Please try again.']);
     }
+});
+
+Route::post('/join-by-code', function (\Illuminate\Http\Request $request) {
+    $request->validate([
+        'username' => 'required|string',
+        'password' => 'required|string',
+        'team_code' => 'required|string|size:6',
+    ]);
+    
+    // Check credentials First
+    if (!Auth::validate($request->only('username', 'password'))) {
+        return response()->json(['message' => 'Login failed. Please check your credentials.'], 401);
+    }
+    
+    $user = \App\Models\User::where('username', $request->username)->first();
+    
+    // Find the team by code
+    $team = \App\Models\CampusTournamentTeam::where('invite_code', $request->team_code)->first();
+    
+    if (!$team) {
+        return response()->json(['message' => 'Invalid team code. Please check and try again.'], 404);
+    }
+
+    // Check if the user is already in A team
+    $existingTeam = \App\Models\CampusTournamentTeamMember::where('player_id', $user->id)
+        ->where('status', 'accepted')
+        ->whereHas('team.tournament', function($query) {
+            $query->where('status', 'approved')
+                  ->where('results_submitted', false);
+        })
+        ->first();
+
+    if ($existingTeam && $existingTeam->team_id !== $team->id) {
+        return response()->json(['message' => 'You are already in a team for an ongoing tournament.'], 403);
+    }
+
+    // Check if team is full (max 5 players including captain)
+    $currentMembersCount = \App\Models\CampusTournamentTeamMember::where('team_id', $team->id)
+        ->where('status', 'accepted')
+        ->count();
+
+    if ($currentMembersCount >= 5) {
+        return response()->json(['message' => 'This team is already full.'], 403);
+    }
+
+    // Add or update member status
+    $member = \App\Models\CampusTournamentTeamMember::where('team_id', $team->id)
+        ->where('player_id', $user->id)
+        ->first();
+
+    if ($member) {
+        $member->update(['status' => 'accepted']);
+    } else {
+        \App\Models\CampusTournamentTeamMember::create([
+            'team_id' => $team->id,
+            'player_id' => $user->id,
+            'role' => 'member',
+            'status' => 'accepted',
+        ]);
+    }
+    
+    Auth::login($user);
+    $request->session()->regenerate();
+    
+    return response()->json(['user' => $user]);
 });
 
 
@@ -999,6 +1098,7 @@ Route::post('/team-invite/{teamId}/reject', function (\Illuminate\Http\Request $
 
 Route::post('/team-submit/{id}', [\App\Http\Controllers\CampusTournamentController::class, 'submitTeam'])->name('team.submit');
 Route::put('/team-update/{id}', [\App\Http\Controllers\CampusTournamentController::class, 'updateTeam'])->name('team.update');
+Route::post('/team-generate-code/{id}', [\App\Http\Controllers\CampusTournamentController::class, 'generateInviteCode'])->name('team.generate-code');
 
 
 
