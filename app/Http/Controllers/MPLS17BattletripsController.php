@@ -11,7 +11,7 @@ class MPLS17BattletripsController extends Controller
     public function index()
     {
         return Inertia::render('ExternalEvents/MPLS17BattleTrips/Pages/MPLS17Battletrips', [
-            'regionTitle' => Setting::getValue('mpl_battle_trips_region', 'Open to ALL REGIONS'),
+            'regionTitle' => Setting::getValue('mpl_battle_trips_region', 'ALL REGIONS'),
             'miniGameQuestion' => Setting::getValue('mpl_battle_trips_question', 'Which MPL PH Team has won the most championships?'),
         ]);
     }
@@ -19,7 +19,7 @@ class MPLS17BattletripsController extends Controller
     public function update(Request $request)
     {
         return Inertia::render('ExternalEvents/MPLS17BattleTrips/Pages/Update', [
-            'currentRegion' => Setting::getValue('mpl_battle_trips_region', 'Open to ALL REGIONS'),
+            'currentRegion' => Setting::getValue('mpl_battle_trips_region', 'ALL REGIONS'),
             'currentQuestion' => Setting::getValue('mpl_battle_trips_question', 'Which MPL PH Team has won the most championships?'),
         ]);
     }

@@ -196,7 +196,7 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
                 const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/175DKq9yO06Z2Pw5qeLI9-6wjbyg8npvavssjWhg8H6Y/formResponse";
                 
                 const formBody = new FormData();
-                formBody.append("entry.1345442810", regionTitle || "Open to ALL REGIONS");
+                formBody.append("entry.1345442810", regionTitle || "ALL REGIONS");
                 formBody.append("entry.1954274932", `Q: ${miniGameQuestion || "Which MPL PH Team has won the most championships?"} | A: ${form.answer}`);
                 formBody.append("entry.913757275", form.name);
                 formBody.append("entry.267578799", form.birthdate);
@@ -325,7 +325,7 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
                 </div>
 
                 <div className="text-black text-center mb-4 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-widest [text-shadow:_0_0_6px_#fff,_0_0_12px_rgba(255,255,255,.85)] uppercase">
-                    {regionTitle || "Open to ALL REGIONS"}
+                    {regionTitle || "ALL REGIONS"}
                 </div>
 
                 {/* FORM CARD */}
@@ -587,8 +587,8 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
                     <div className="flex justify-center gap-3">
 
                         <button
-                            disabled
-                            className="px-4 py-2 rounded-lg border border-gray-300 opacity-50 cursor-not-allowed"
+                            onClick={() => window.location.href = '/'}
+                            className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
                         >
                             Cancel
                         </button>

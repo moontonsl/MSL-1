@@ -8,7 +8,7 @@ import Logo from "../Assets/Images/BTLogo.png";
 
 export default function Update({ currentRegion, currentQuestion }) {
     const REGIONS = [
-        "Open to ALL REGIONS",
+        "ALL REGIONS",
         "National Capital Region",
         "CALABARZON & Bicol Region",
         "Central & North Luzon",
