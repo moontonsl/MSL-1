@@ -710,7 +710,7 @@ const RegionalAdmin = () => {
                     </div>
                   </div>
 
-                  <div className="mt-4 flex flex-col gap-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="mt-4 flex flex-col gap-4 pr-2">
                     {activeTournaments.length > 0 ? (
                       activeTournaments
                         .slice((ongoingPage - 1) * itemsPerPage, ongoingPage * itemsPerPage)
@@ -763,7 +763,7 @@ const RegionalAdmin = () => {
 
                             {/* Dropdown Content */}
                             <div
-                              className={`transition-all duration-500 ease-in-out ${expanded[item.id] ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}
+                              className={`transition-all duration-700 ease-in-out ${expanded[item.id] ? 'max-h-[5000px] opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}
                             >
                               <div className="px-0 pb-0">
                                 <div className="mt-0 rounded-b-2xl bg-neutral-800/70 backdrop-blur-sm border-t border-neutral-700/40">

@@ -807,7 +807,7 @@ const CampusTournament = () => {
 
                           {/* Dropdown Content */}
                           <div
-                            className={`transition-all duration-500 ease-in-out ${expanded[item.id] ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}
+                            className={`transition-all duration-700 ease-in-out ${expanded[item.id] ? 'max-h-[5000px] opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}
                           >
                             <div className="px-0 pb-0">
                               <div className="mt-0 rounded-b-2xl bg-neutral-800/70 backdrop-blur-sm border-t border-neutral-700/40">
@@ -829,7 +829,7 @@ const CampusTournament = () => {
                                 </div>
 
                                 {/* Team Rows */}
-                                <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
+                                <div className="">
                                   {Array.isArray(item.teams) && item.teams.length > 0 ? (
                                     item.teams.map((team) => (
                                       <React.Fragment key={team.id}>
