@@ -13,40 +13,28 @@ class CampusController extends Controller
 {
     public function index(Request $request)
     {
-        // Get all islands and provinces for the filter dropdowns
-        $islands = Island::all();
-        $provinces = Province::all();
-        
         // Get the selected filters from request
-        $selectedIslandId = $request->get('island_id');
-        $selectedProvinceId = $request->get('province_id');
+        $selectedIslandName = $request->get('island'); // 'Luzon', 'Visayas', 'Mindanao'
         
-        // Build the schools query
-        $schoolsQuery = School::with(['region.island', 'municipality.province']);
+        // Build the communities query
+        $query = \App\Models\Community::with(['school.municipality.province']);
         
-        // Filter by island if selected
-        if ($selectedIslandId) {
-            $schoolsQuery->whereHas('region', function($query) use ($selectedIslandId) {
-                $query->where('island_id', $selectedIslandId);
-            });
+        // Filter by island name if selected
+        if ($selectedIslandName) {
+            $query->where('island', $selectedIslandName);
         }
         
-        // Filter by province if selected
-        if ($selectedProvinceId) {
-            $schoolsQuery->whereHas('municipality', function($query) use ($selectedProvinceId) {
-                $query->where('province_id', $selectedProvinceId);
-            });
-        }
-        
-        // Get paginated results (max 10 per page)
-        $schools = $schoolsQuery->paginate(10);
+        // Sort by school name (accessed via relationship)
+        $query->select('communities.*')
+              ->join('schools', 'communities.school_id', '=', 'schools.id')
+              ->orderBy('schools.name');
+            
+        // Get paginated results (10 per page as requested)
+        $communities = $query->paginate(10)->withQueryString();
         
         return Inertia::render('campus/index', [
-            'schools' => $schools,
-            'islands' => $islands,
-            'provinces' => $provinces,
-            'selectedIslandId' => $selectedIslandId,
-            'selectedProvinceId' => $selectedProvinceId
+            'communities' => $communities,
+            'selectedIsland' => $selectedIslandName,
         ]);
     }
 }

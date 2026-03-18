@@ -4,10 +4,11 @@
 require __DIR__.'/admin.php';
 require __DIR__.'/auth.php';
 
-// User Management Panel (No Auth Required)
-// Route::get('/user-management', [\App\Http\Controllers\UserManagementController::class, 'index'])->name('user-management');
-// Route::get('/user-management/api', [\App\Http\Controllers\UserManagementController::class, 'getUsers'])->name('user-management.api');
-// Route::post('/user-management/delete', [\App\Http\Controllers\UserManagementController::class, 'bulkDeleteUsers'])->name('user-management.delete');
+// User Management Panel (No Auth Required) jabu usermanagement
+Route::get('/user-management', [\App\Http\Controllers\UserManagementController::class, 'index'])->name('user-management');
+Route::post('/user-management/verify', [\App\Http\Controllers\UserManagementController::class, 'verifyCode'])->name('user-management.verify');
+Route::get('/user-management/api', [\App\Http\Controllers\UserManagementController::class, 'getUsers'])->name('user-management.api');
+Route::post('/user-management/delete', [\App\Http\Controllers\UserManagementController::class, 'bulkDeleteUsers'])->name('user-management.delete');
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProfileController;
@@ -39,6 +40,7 @@ use App\Http\Controllers\GoogleSheetMCCS2Controller;
 use App\Http\Controllers\Admin\DuplicateUsernameController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\CodashopController;
+use App\Http\Controllers\EventRegistrationController;
 
 Route::get('/', function () {
     return Inertia::render('Home/Home', [
@@ -53,6 +55,12 @@ Route::get('/', function () {
 Route::get('/about', function () {
     return Inertia::render('About Page/index');
 })->name('about');
+
+// Report Violation Page
+Route::get('/report-violation', function () {
+    return Inertia::render('ReportViolation/ReportViolation');
+})->name('report.violation');
+Route::post('/report-violation', [\App\Http\Controllers\ViolationReportController::class, 'store'])->name('report.violation.store');
 
 // Campus Tournament main route - redirects based on user role
 Route::get('/campus-tournament', function () {
@@ -82,7 +90,21 @@ Route::get('/campus-tournament/public', [\App\Http\Controllers\CampusTournamentC
     ->name('campus.tournament.public');
 
 // Team Registration page (updated route)
-Route::get('/Tournament/CampusTournamentReg', function () {
+Route::get('/Tournament/CampusTournamentReg', function (\Illuminate\Http\Request $request) {
+    $userId = $request->query('user_id');
+    $user = $userId ? \App\Models\User::find($userId) : Auth::user();
+
+    if ($user) {
+        $hasTeam = \App\Models\CampusTournamentTeamMember::where('player_id', $user->id)
+            ->whereHas('team.tournament', function($query) {
+                $query->where('status', 'approved')
+                      ->where('results_submitted', false);
+            })->exists();
+            
+        if ($hasTeam && !$request->has('edit')) {
+            return redirect()->route('campus.team', ['user_id' => $user->id]);
+        }
+    }
     return Inertia::render('Campus Tournament/TeamRegistration');
 })->name('campus.teamregistration');
 
@@ -110,8 +132,49 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/campus-tournaments/{id}/update-results', [\App\Http\Controllers\CampusTournamentController::class, 'updateResults'])->name('campus.tournaments.update-results');
     Route::post('/campus-tournaments/{id}/extend', [\App\Http\Controllers\CampusTournamentController::class, 'extendRegistration'])->name('campus.tournaments.extend');
     Route::get('/campus-tournaments/{id}/export', [\App\Http\Controllers\CampusTournamentController::class, 'exportToExcel'])->name('campus.tournaments.export');
+    Route::get('/campus-tournaments/export-prereg', [\App\Http\Controllers\CampusTournamentController::class, 'exportPreReg'])->name('campus.tournaments.export-prereg');
     Route::delete('/campus-tournaments/{id}', [\App\Http\Controllers\CampusTournamentController::class, 'destroy'])->name('campus.tournaments.destroy');
+    Route::get('/api/team-invite-link/{teamId}', [\App\Http\Controllers\CampusTournamentController::class, 'generateInviteLink'])->name('team.invite.link');
+    
+    // Team Invite Routes
+    // Team Invite Routes - MOVED OUTSIDE AUTH
+    // See lines below outside middleware group
+
+    Route::get('/api/my-team-invites', function () {
+        $user = Auth::user();
+        $invites = \App\Models\CampusTournamentTeamMember::where('player_id', $user->id)
+            ->where('status', 'pending')
+            ->whereHas('team.tournament', function($query) {
+                // Only showing active tournament invites
+                $query->where('status', 'approved')
+                      ->where('results_submitted', false);
+            })
+            ->with(['team.tournament', 'team.captain' => function($q) {
+                $q->select('id', 'name', 'surname', 'username');
+            }])
+            ->get();
+            
+        return response()->json($invites);
+    })->name('team.invites.pending');
+
+    // Team Submit Route - MOVED OUTSIDE AUTH
+    // Route::post('/team-submit/{id}', [\App\Http\Controllers\CampusTournamentController::class, 'submitTeam'])->name('team.submit');
 });
+
+// Oppo Roadshow Settings (Super Admin)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/Oppo-settings', [\App\Http\Controllers\Admin\OppoSettingsController::class, 'index'])->name('admin.oppo-settings.index');
+    Route::post('/Oppo-settings', [\App\Http\Controllers\Admin\OppoSettingsController::class, 'store'])->name('admin.oppo-settings.store');
+    Route::delete('/Oppo-settings/{id}', [\App\Http\Controllers\Admin\OppoSettingsController::class, 'destroy'])->name('admin.oppo-settings.destroy');
+    
+    // Date Management
+    Route::post('/Oppo-settings/dates', [\App\Http\Controllers\Admin\OppoSettingsController::class, 'storeDate'])->name('admin.oppo-settings.dates.store');
+    Route::delete('/Oppo-settings/dates/{id}', [\App\Http\Controllers\Admin\OppoSettingsController::class, 'destroyDate'])->name('admin.oppo-settings.dates.destroy');
+});
+
+// Public Oppo Roadshow API
+Route::get('/api/oppo/schools', [\App\Http\Controllers\Admin\OppoSettingsController::class, 'getRoadshowSchools'])->name('api.oppo.schools');
+Route::get('/api/oppo/roadshow-data', [\App\Http\Controllers\Admin\OppoSettingsController::class, 'getRoadshowData'])->name('api.oppo.data');
 
 // API endpoints for Campus Tournament registration
 Route::get('/user-info', function () {
@@ -173,15 +236,9 @@ Route::middleware(['auth', 'verified'])->get('/api/users/search', function (\Ill
         'id', 'username', 'name', 'surname', 'email', 'university', 'course', 'year_level', 'region', 'island'
     );
     
-    // Apply role-based filtering
-    // For SL users: if modification type is "School", allow searching everyone regardless of region/university
-    // Otherwise, filter by university (current behavior)
-    if ($user->role === 'SL') {
-        if ($modificationType !== 'School') {
-            $query->where('university', $user->university);
-        }
-        // If modificationType is 'School', no region/university filter is applied
-    } elseif ($user->role === 'Regional Admin') {
+    // Apply role-based filtering - Removed for unrestricted modification search
+    /*
+    if ($user->role === 'Regional Admin') {
         $assignedRegionIds = $user->getAssignedRegionIds();
         if (!empty($assignedRegionIds)) {
             $query->whereIn('region', $assignedRegionIds);
@@ -189,6 +246,7 @@ Route::middleware(['auth', 'verified'])->get('/api/users/search', function (\Ill
             $query->where('region', $user->region);
         }
     }
+    */
     
     // Search in username, name, surname, email
     $query->where(function($q) use ($search) {
@@ -201,6 +259,53 @@ Route::middleware(['auth', 'verified'])->get('/api/users/search', function (\Ill
     $users = $query->limit($limit)->get();
     
     return response()->json($users);
+});
+
+// Lookup user by username (for admin modifications)
+Route::middleware(['auth', 'verified'])->get('/api/users/lookup', function (\Illuminate\Http\Request $request) {
+    $user = Auth::user();
+    
+    // Only Regional Admin and Super Admin can lookup users for modification
+    if ($user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+        return response()->json(['error' => 'Access denied'], 403);
+    }
+    
+    $username = $request->query('username');
+    if (!$username) {
+        return response()->json(['error' => 'Username is required'], 400);
+    }
+
+    $targetUser = \App\Models\User::where('username', $username)->first();
+
+    if (!$targetUser) {
+        return response()->json(['error' => 'User not found'], 404);
+    }
+
+    // Role-based access check (Regional Admin specific) - REMOVED for modifications as requested
+    /*
+    if ($user->role === 'Regional Admin') {
+        $assignedRegionIds = $user->getAssignedRegionIds();
+         if (!empty($assignedRegionIds)) {
+            if (!in_array($targetUser->region, $assignedRegionIds)) {
+                return response()->json(['error' => 'Access denied: User not in your region'], 403);
+            }
+        } else {
+             if ($targetUser->region !== $user->region) {
+                return response()->json(['error' => 'Access denied: User not in your region'], 403);
+            }
+        }
+    }
+    */
+    
+    return response()->json([
+        'id' => $targetUser->id,
+        'username' => $targetUser->username,
+        'name' => $targetUser->name,
+        'surname' => $targetUser->surname,
+        'school' => $targetUser->university, 
+        'course' => $targetUser->course,
+        'studentId' => $targetUser->studentId,
+    ]);
 });
 
 // Get specific user by ID for modification requests
@@ -254,22 +359,15 @@ Route::middleware(['auth', 'verified'])->get('/api/users/{id}', function ($id) {
     }
     
     // Apply role-based filtering
+    // Role-based filtering removed for SL as requested
+    /*
     if ($user->role === 'SL') {
         if ($targetUser->university !== $user->university) {
             return response()->json(['error' => 'Access denied'], 403);
         }
-    } elseif ($user->role === 'Regional Admin') {
-        $assignedRegionIds = $user->getAssignedRegionIds();
-        if (!empty($assignedRegionIds)) {
-            if (!in_array($targetUser->region, $assignedRegionIds)) {
-                return response()->json(['error' => 'Access denied'], 403);
-            }
-        } else {
-            if ($targetUser->region !== $user->region) {
-                return response()->json(['error' => 'Access denied'], 403);
-            }
-        }
     }
+    */
+    // Regional Admin and Super Admin bypass region check as requested
     
     return response()->json($targetUser);
 });
@@ -288,20 +386,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         // Apply role-based filtering
         if ($user->role === 'SL') {
-            // Student Leaders can only see their own requests
-            $query->where('submitted_by', $user->id);
+            // Student Leaders can see all modification requests just like Regional/Super Admin
+            // $query->where('submitted_by', $user->id); 
         } elseif ($user->role === 'Regional Admin') {
-            // Regional Admins can see requests from their assigned regions
-            $assignedRegionIds = $user->getAssignedRegionIds();
-            if (!empty($assignedRegionIds)) {
-                $query->whereHas('user', function($q) use ($assignedRegionIds) {
-                    $q->whereIn('region', $assignedRegionIds);
-                });
-            } else {
-                $query->whereHas('user', function($q) use ($user) {
-                    $q->where('region', $user->region);
-                });
-            }
+            // Regional Admins can see all modification requests (restriction removed as requested)
+            // No additional filtering applied
         }
         // Super Admin can see all requests from all regions (no filtering applied)
         
@@ -340,17 +429,114 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/api/modification-requests', function (\Illuminate\Http\Request $request) {
         $user = Auth::user();
         
-        // Only SL can create modification requests
-        if ($user->role !== 'SL') {
-            return response()->json(['error' => 'Only Student Leaders can create modification requests'], 403);
+        // Allow SL, Regional Admin, and Super Admin
+        if ($user->role !== 'SL' && $user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Access denied'], 403);
         }
         
         $request->validate([
             'user_id' => 'required|exists:users,id',
-            'modification_type' => 'required|in:Full Name,School,Course',
+            'modification_type' => 'required|in:Full Name,School,Course,Student ID',
             'wrong_value' => 'required|string',
             'correct_value' => 'required|string',
         ]);
+        
+        // If user is Admin or SL, perform direct update or create request
+        if ($user->role === 'Regional Admin' || $user->role === 'Super Admin' || $user->role === 'SL') {
+            $targetUser = \App\Models\User::find($request->user_id);
+            
+            if (!$targetUser) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+            
+            // Allow Regional Admin to modify users outside their region (restriction removed as requested)
+            /*
+            if ($user->role === 'Regional Admin') {
+                $assignedRegionIds = $user->getAssignedRegionIds();
+                if (!empty($assignedRegionIds)) {
+                    if (!in_array($targetUser->region, $assignedRegionIds)) {
+                        return response()->json(['error' => 'Access denied: User not in your region'], 403);
+                    }
+                } else {
+                    if ($targetUser->region !== $user->region) {
+                        return response()->json(['error' => 'Access denied: User not in your region'], 403);
+                    }
+                }
+            }
+            */
+
+            // Use database transaction
+            \DB::beginTransaction();
+            try {
+                // 1. Update User Data
+                switch ($request->modification_type) {
+                    case 'Full Name':
+                        $nameParts = explode(' ', $request->correct_value, 2);
+                        $targetUser->update([
+                            'name' => $nameParts[0],
+                            'surname' => $nameParts[1] ?? '',
+                        ]);
+                        break;
+                    case 'School':
+                        $newSchoolName = $request->correct_value;
+                        $school = \App\Models\School::with('region.island')
+                            ->where('name', $newSchoolName)
+                            ->first();
+                        
+                        if ($school && $school->region) {
+                            $regionId = $school->region->id ?? null;
+                            $regionName = $school->region->name ?? null;
+                            if ($regionName) {
+                                $regionName = preg_replace('/^\d+\s*-\s*/', '', $regionName);
+                                $regionName = trim($regionName);
+                            }
+                            
+                            $islandName = null;
+                            if ($school->region->island) {
+                                $islandName = $school->region->island->name ?? null;
+                                if ($islandName) {
+                                    $islandName = preg_replace('/^\d+\s*-\s*/', '', $islandName);
+                                    $islandName = trim($islandName);
+                                }
+                            }
+                            
+                            $updateData = ['university' => $newSchoolName];
+                            if ($regionId !== null) $updateData['region'] = $regionId;
+                            if ($islandName) $updateData['island'] = $islandName;
+                            
+                            $targetUser->update($updateData);
+                        } else {
+                            $targetUser->update(['university' => $newSchoolName]);
+                        }
+                        break;
+                    case 'Course':
+                        $targetUser->update(['course' => $request->correct_value]);
+                        break;
+                    case 'Student ID':
+                        $targetUser->update(['studentId' => $request->correct_value]);
+                        break;
+                }
+
+                // 2. Create "Approved" History Record
+                $modificationRequest = \App\Models\ModificationRequest::create([
+                    'user_id' => $request->user_id,
+                    'modification_type' => $request->modification_type,
+                    'wrong_value' => $request->wrong_value,
+                    'correct_value' => $request->correct_value,
+                    'submitted_by' => $user->id,
+                    'status' => 'Approved', // Auto-approved
+                    'approved_by' => $user->id, // Approved by themselves
+                    'approved_at' => now(),
+                ]);
+
+                \DB::commit();
+                return response()->json(['success' => true, 'message' => 'User updated successfully', 'request' => $modificationRequest]);
+
+            } catch (\Exception $e) {
+                \DB::rollBack();
+                return response()->json(['error' => 'Failed to update user: ' . $e->getMessage()], 500);
+            }
+        }
         
         $modificationRequest = \App\Models\ModificationRequest::create([
             'user_id' => $request->user_id,
@@ -446,6 +632,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 case 'Course':
                     $targetUser->update(['course' => $modificationRequest->correct_value]);
                     break;
+                case 'Student ID':
+                    $targetUser->update(['studentId' => $modificationRequest->correct_value]);
+                    break;
             }
             
             // Only update status after user data is successfully updated
@@ -540,7 +729,7 @@ Route::get('/school-players', function (\Illuminate\Http\Request $request) {
               ->where('campus_tournaments.results_submitted', false);
         });
         
-        $players = $query->limit(10)->get(['id', 'username', 'name', 'surname']);
+        $players = $query->limit(20)->get(['id', 'username', 'name', 'surname']);
         
         return response()->json($players);
     } catch (\Exception $e) {
@@ -601,21 +790,51 @@ Route::get('/check-username-tournament', function (\Illuminate\Http\Request $req
 // FF25 attendance username checker
 Route::get('/ff25/check-username', [FF25AttendanceController::class, 'checkUsername'])->name('ff25.check-username');
 
+// Secure Attachment Viewing
+Route::get('/user/attachment/{user}', [\App\Http\Controllers\AttachmentController::class, 'show'])
+    ->middleware(['auth', 'verified'])
+    ->name('user.attachment.show');
+
+Route::post('/event-registration', [EventRegistrationController::class, 'store'])->name('event.registration.store');
+
 Route::post('/validate-credentials', function (\Illuminate\Http\Request $request) {
     $request->validate([
         'username' => 'required|string',
         'password' => 'required|string',
     ]);
     
-    // Validate credentials without logging in
-    if (Auth::attempt($request->only('username', 'password'))) {
-        $user = Auth::user();
-        Auth::logout(); // Don't keep them logged in, just validate
-        
-        return response()->json(['user' => $user]);
+    // Check credentials FIRST without logging in
+    if (!Auth::validate($request->only('username', 'password'))) {
+        return response()->json(['message' => 'Login failed. Please check your credentials.'], 401);
     }
     
-    return response()->json(['message' => 'Invalid credentials'], 401);
+    $user = \App\Models\User::where('username', $request->username)->first();
+    
+    // Check Team Status (Block Members UNLESS they have a valid invite)
+    // Check Team Status (Block Members UNLESS they have a valid invite)
+    $teamMember = \App\Models\CampusTournamentTeamMember::whereHas('team.tournament', function($query) {
+        $query->where('status', 'approved')
+              ->where('results_submitted', false);
+    })->where('player_id', $user->id)
+      ->latest()
+      ->first();
+      
+    $inviteTeamId = $request->input('invite_team_id');
+    
+    // Check if the user is invited to THIS specific team (via the signed link ID)
+    $isInvitedToTeam = $inviteTeamId && $teamMember && ((int)$inviteTeamId === $teamMember->team_id);
+
+    // Block if: Member AND Not Captain AND Not Accepted AND Not Invited (Active Invite Link Context)
+    if ($teamMember && $teamMember->role !== 'captain' && $teamMember->status !== 'accepted' && !$isInvitedToTeam) {
+        // User is a member AND didn't come from a valid invite link -> BLOCK.
+        return response()->json(['message' => 'Get the code from your captain to be able to join the team.'], 403);
+    }
+    
+    // Valid Captain or Invited Member or New User -> Log in
+    Auth::login($user);
+    $request->session()->regenerate();
+    
+    return response()->json(['user' => $user]);
 });
 
 // Faulty Username Update Route (Signed)
@@ -630,11 +849,12 @@ Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
     // Validate the request
     $request->validate([
         'teamName' => 'required|string|max:50',
-        'discordId' => 'required|string|max:50',
+        'discordId' => 'nullable|string|max:50',
         'captain' => 'required|array',
         'captain.id' => 'required|integer',
         'captain.university' => 'required|string',
         'players' => 'required|array',
+        'players.captain' => 'required|array',
         'players.player2' => 'required|array',
         'players.player3' => 'required|array',
         'players.player4' => 'required|array',
@@ -643,7 +863,7 @@ Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
     
     $captain = $request->captain;
     
-    // COLLECT ALL PLAYER IDs TO CHECK (Captain + Members)
+    // COLLECT ALL PLAYER IDS TO CHECK (Captain + Members)
     $playerIdsToCheck = [
         $captain['id'],
         $request->players['player2']['id'] ?? null,
@@ -651,28 +871,26 @@ Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
         $request->players['player4']['id'] ?? null,
         $request->players['player5']['id'] ?? null,
     ];
-    // Remove nulls
+    // Remove nulls and check for duplicates within the submitted list
     $playerIdsToCheck = array_filter($playerIdsToCheck);
+    if (count($playerIdsToCheck) !== count(array_unique($playerIdsToCheck))) {
+        return redirect()->back()->withErrors(['message' => "Duplicate players found in the roster. Each player can only be added once."]);
+    }
 
     // CHECK FOR EXISTING ACTIVE MEMBERSHIPS
-    // A player cannot be in another team if that team belongs to a tournament that is:
-    // 1. Approved
-    // 2. Not yet submitted results
-    // 3. STILL ONGOING (end_date >= now)
     $existingMembership = \App\Models\CampusTournamentTeamMember::whereIn('player_id', $playerIdsToCheck)
         ->whereHas('team.tournament', function($query) {
             $query->where('status', 'approved')
                   ->where('results_submitted', false)
-                  ->whereDate('end_date', '>=', now()); // Only block if tournament is still ongoing
+                  ->whereDate('end_date', '>=', now());
         })
         ->first();
 
     if ($existingMembership) {
-        // Find which player is the culprit for the error message
         $duplicatePlayerId = $existingMembership->player_id;
         $player = \App\Models\User::find($duplicatePlayerId);
         $name = $player ? $player->username : 'A player';
-        return response()->json(['message' => "$name is already registered in an ongoing tournament."], 400);
+        return redirect()->back()->withErrors(['message' => "$name is already registered in an ongoing tournament."]);
     }
     
     // Check if captain's school has an active approved tournament
@@ -684,7 +902,7 @@ Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
         ->first();
     
     if (!$tournament) {
-        return response()->json(['message' => 'No active tournament found for your school. Tournament may have ended or results already submitted.'], 400);
+        return redirect()->back()->withErrors(['message' => 'No active tournament found for your school.']);
     }
     
     // Check if team name already exists
@@ -693,104 +911,195 @@ Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
         ->first();
     
     if ($existingTeam) {
-        return response()->json(['message' => 'Team name already exists'], 400);
+        return redirect()->back()->withErrors(['message' => 'Team name already exists']);
     }
     
-    // Create team
-    $team = \App\Models\CampusTournamentTeam::create([
-        'tournament_id' => $tournament->id,
-        'team_name' => $request->teamName,
-        'discord_id' => $request->discordId,
-        'captain_id' => $captain['id'],
-    ]);
-    
-    // Add all players to team
-    $players = [
-        $request->players['captain'],
-        $request->players['player2'],
-        $request->players['player3'],
-        $request->players['player4'],
-        $request->players['player5'],
-    ];
-    
-    foreach ($players as $player) {
-        \App\Models\CampusTournamentTeamMember::create([
-            'team_id' => $team->id,
-            'player_id' => $player['id'],
-            'role' => $player['id'] === $captain['id'] ? 'captain' : 'member',
+    \DB::beginTransaction();
+    try {
+        // Create team
+        $team = \App\Models\CampusTournamentTeam::create([
+            'tournament_id' => $tournament->id,
+            'team_name' => $request->teamName,
+            'discord_id' => $request->discordId,
+            'captain_id' => $captain['id'],
+            'status' => 'assembling', // Default status
         ]);
+        
+        // Add all players to team
+        $players = [
+            $request->players['captain'],
+            $request->players['player2'],
+            $request->players['player3'],
+            $request->players['player4'],
+            $request->players['player5'],
+        ];
+        
+        foreach ($players as $player) {
+            \App\Models\CampusTournamentTeamMember::create([
+                'team_id' => $team->id,
+                'player_id' => $player['id'],
+                'role' => $player['id'] === $captain['id'] ? 'captain' : 'member',
+                'status' => $player['id'] === $captain['id'] ? 'accepted' : 'pending',
+            ]);
+
+            // Send invite email to members
+            if ($player['id'] !== $captain['id']) {
+                $memberUser = \App\Models\User::find($player['id']);
+                $captainUser = \App\Models\User::find($captain['id']);
+                if ($memberUser && $memberUser->email) {
+                    try {
+                        \Illuminate\Support\Facades\Mail::to($memberUser->email)
+                            ->send(new \App\Mail\TeamInviteMail($memberUser, $team, $captainUser));
+                    } catch (\Exception $e) {
+                         \Log::error('Failed to send team invite email to ' . $memberUser->email . ': ' . $e->getMessage());
+                    }
+                }
+            }
+        }
+        
+        \DB::commit();
+        
+        // Log in the captain if they aren't logged in to establish a session
+        $captainUser = \App\Models\User::find($captain['id']);
+        if ($captainUser) {
+            Auth::login($captainUser);
+            $request->session()->regenerate();
+        }
+        
+        return redirect()->route('campus.team', ['user_id' => $captain['id']])
+            ->with('message', 'Team registered successfully');
+    } catch (\Exception $e) {
+        \DB::rollBack();
+        \Log::error('Team registration error: ' . $e->getMessage());
+        return redirect()->back()->withErrors(['message' => 'Registration failed. Please try again.']);
     }
-    
-    return response()->json(['message' => 'Team registered successfully', 'team_id' => $team->id]);
 });
 
-Route::put('/team-update/{teamId}', function (\Illuminate\Http\Request $request, $teamId) {
-    // Validate the request
+Route::post('/join-by-code', function (\Illuminate\Http\Request $request) {
     $request->validate([
-        'teamName' => 'required|string|max:50',
-        'discordId' => 'required|string|max:50',
-        'captain' => 'required|array',
-        'captain.id' => 'required|integer',
-        'captain.university' => 'required|string',
-        'players' => 'required|array',
-        'players.player2' => 'required|array',
-        'players.player3' => 'required|array',
-        'players.player4' => 'required|array',
-        'players.player5' => 'required|array',
+        'username' => 'required|string',
+        'password' => 'required|string',
+        'team_code' => 'required|string|size:6',
     ]);
     
-    $captain = $request->captain;
+    // Check credentials First
+    if (!Auth::validate($request->only('username', 'password'))) {
+        return response()->json(['message' => 'Login failed. Please check your credentials.'], 401);
+    }
     
-    // Find the existing team
-    $team = \App\Models\CampusTournamentTeam::find($teamId);
+    $user = \App\Models\User::where('username', $request->username)->first();
+    
+    // Find the team by code
+    $team = \App\Models\CampusTournamentTeam::where('invite_code', $request->team_code)->first();
     
     if (!$team) {
-        return response()->json(['message' => 'Team not found'], 404);
+        return response()->json(['message' => 'Invalid team code. Please check and try again.'], 404);
     }
-    
-    // Check if captain is the team captain
-    if ($team->captain_id !== $captain['id']) {
-        return response()->json(['message' => 'Only the team captain can edit the team'], 403);
-    }
-    
-    // Check if team name already exists (excluding current team)
-    $existingTeam = \App\Models\CampusTournamentTeam::where('team_name', $request->teamName)
-        ->where('tournament_id', $team->tournament_id)
-        ->where('id', '!=', $teamId)
+
+    // Check if the user is already in A team
+    $existingTeam = \App\Models\CampusTournamentTeamMember::where('player_id', $user->id)
+        ->where('status', 'accepted')
+        ->whereHas('team.tournament', function($query) {
+            $query->where('status', 'approved')
+                  ->where('results_submitted', false);
+        })
         ->first();
-    
-    if ($existingTeam) {
-        return response()->json(['message' => 'Team name already exists'], 400);
+
+    if ($existingTeam && $existingTeam->team_id !== $team->id) {
+        return response()->json(['message' => 'You are already in a team for an ongoing tournament.'], 403);
     }
-    
-    // Update team details
-    $team->update([
-        'team_name' => $request->teamName,
-        'discord_id' => $request->discordId,
-    ]);
-    
-    // Delete existing team members
-    \App\Models\CampusTournamentTeamMember::where('team_id', $teamId)->delete();
-    
-    // Add all players to team
-    $players = [
-        $request->players['captain'],
-        $request->players['player2'],
-        $request->players['player3'],
-        $request->players['player4'],
-        $request->players['player5'],
-    ];
-    
-    foreach ($players as $player) {
+
+    // Check if team is full (max 5 players including captain)
+    $currentMembersCount = \App\Models\CampusTournamentTeamMember::where('team_id', $team->id)
+        ->where('status', 'accepted')
+        ->count();
+
+    if ($currentMembersCount >= 5) {
+        return response()->json(['message' => 'This team is already full.'], 403);
+    }
+
+    // Add or update member status
+    $member = \App\Models\CampusTournamentTeamMember::where('team_id', $team->id)
+        ->where('player_id', $user->id)
+        ->first();
+
+    if ($member) {
+        $member->update(['status' => 'accepted']);
+    } else {
         \App\Models\CampusTournamentTeamMember::create([
-            'team_id' => $teamId,
-            'player_id' => $player['id'],
-            'role' => $player['id'] === $captain['id'] ? 'captain' : 'member',
+            'team_id' => $team->id,
+            'player_id' => $user->id,
+            'role' => 'member',
+            'status' => 'accepted',
         ]);
     }
     
-    return response()->json(['message' => 'Team updated successfully', 'team_id' => $teamId]);
+    Auth::login($user);
+    $request->session()->regenerate();
+    
+    return response()->json(['user' => $user]);
 });
+
+
+
+
+// PUBLIC ROUTES for Team Submission and Update (Explicitly requested for unauth flow via user_id)
+// Team Invite Routes (Unauthenticated with user_id)
+Route::post('/team-invite/{teamId}/accept', function (\Illuminate\Http\Request $request, $teamId) {
+    // Get user from request or auth
+    $userId = $request->input('user_id');
+    $user = $userId ? \App\Models\User::find($userId) : \Illuminate\Support\Facades\Auth::user();
+
+    if (!$user) {
+        return redirect()->back()->withErrors(['message' => 'Unauthorized']);
+    }
+    
+    \Illuminate\Support\Facades\Log::info("Accept Invite Request: User {$user->id} for Team {$teamId}");
+
+    $member = \App\Models\CampusTournamentTeamMember::where('team_id', $teamId)
+        ->where('player_id', $user->id)
+        ->latest()
+        ->first();
+        
+    if (!$member) {
+        \Log::warning("Invite not found for User {$user->id} Team {$teamId}");
+        return redirect()->back()->withErrors(['message' => 'Invite not found']);
+    }
+    
+    \Log::info("Current Status: {$member->status}");
+    $updated = $member->update(['status' => 'accepted']);
+    \Log::info("Updated: " . ($updated ? 'Yes' : 'No') . ". New Status: " . $member->refresh()->status);
+
+    return redirect()->back()->with('message', 'Invite accepted');
+})->name('team.invite.accept');
+
+Route::post('/team-invite/{teamId}/reject', function (\Illuminate\Http\Request $request, $teamId) {
+    // Get user from request or auth
+    $userId = $request->input('user_id');
+    $user = $userId ? \App\Models\User::find($userId) : \Illuminate\Support\Facades\Auth::user();
+
+    if (!$user) {
+        return response()->json(['message' => 'Unauthorized'], 401);
+    }
+    
+    \Illuminate\Support\Facades\Log::info("Reject Invite Request: User {$user->id} for Team {$teamId}");
+
+    $member = \App\Models\CampusTournamentTeamMember::where('team_id', $teamId)
+        ->where('player_id', $user->id)
+        ->first();
+        
+    if (!$member) {
+        return response()->json(['message' => 'Invite not found'], 404);
+    }
+    
+    $member->update(['status' => 'rejected']);
+    return response()->json(['message' => 'Invite rejected']);
+})->name('team.invite.reject');
+
+Route::post('/team-submit/{id}', [\App\Http\Controllers\CampusTournamentController::class, 'submitTeam'])->name('team.submit');
+Route::put('/team-update/{id}', [\App\Http\Controllers\CampusTournamentController::class, 'updateTeam'])->name('team.update');
+Route::post('/team-generate-code/{id}', [\App\Http\Controllers\CampusTournamentController::class, 'generateInviteCode'])->name('team.generate-code');
+
 
 
 // Admin routes are defined in routes/admin.php
@@ -993,6 +1302,31 @@ Route::get('/FFFreedomWall', function () {
     return Inertia::render('FF25/FFFreedomWall');
 })->name('FFFreedomWall');
 
+//FFFreedomWall PAGE ROUTES
+Route::get('/M7WPRegistration', function () {
+    return Inertia::render('M7/M7WFRegistration');
+})->name('M7WFRegistration');
+
+//GM26 PAGE ROUTES
+Route::get('/GM26', function () {
+    return Inertia::render('ExternalEvents/GoldenMonth26/Pages/GM26');
+})->name('GM26');
+
+//GM26Comm PAGE ROUTES
+Route::get('/GM26/Comm', function () {
+    return Inertia::render('ExternalEvents/GoldenMonth26/Pages/GM26Comm');
+})->name('GM26Comm');
+
+//GM26Network PAGE ROUTES
+Route::get('/GM26/Network', function () {
+    return Inertia::render('ExternalEvents/GoldenMonth26/Pages/GM26Network');
+})->name('GM26Network');
+
+
+//MPLS17 BATTLE TRIPS PAGE ROUTES
+Route::get('/MPLS17Battletrips', [\App\Http\Controllers\MPLS17BattletripsController::class, 'index'])->name('MPLS17Battletrips');
+Route::get('/MPLS17Battletrips/update', [\App\Http\Controllers\MPLS17BattletripsController::class, 'update'])->name('MPLS17Battletrips.update');
+Route::post('/MPLS17Battletrips/update', [\App\Http\Controllers\MPLS17BattletripsController::class, 'store'])->name('MPLS17Battletrips.store');
 
 
 
@@ -1123,7 +1457,7 @@ Route::post('/api/user/upload-proof', function (\Illuminate\Http\Request $reques
             $filename = $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
             
             // Store the file in user-specific directory
-            $path = $file->storeAs('users/proofOfEnrollment/' . $user->id, $filename, 'public');
+            $path = $file->storeAs('users/proofOfEnrollment/' . $user->id, $filename, 'local');
             
             if (!$path) {
                 \Log::error('File storage failed for user ' . $user->id);
@@ -1167,21 +1501,14 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
 
 // MCC Routes
 Route::prefix('MCC')->name('MCC.')->group(function () {
-    Route::get('/', function () {
-        return redirect('/MCC/S2'); // Default to Season 2
-    })->name('main');
+    Route::get('/', [\App\Http\Controllers\MCCSeasonPublicController::class, 'redirectToActive'])->name('main');
     
-    Route::get('/S2', function () {
-        return Inertia::render('MCC Season 2/MCC Season 2');
-    })->name('season2');
-    
-    Route::get('/S1', function () {
-        return Inertia::render('MCC Season 2/MCC Season 1');
-    })->name('season1');
-
     Route::get('/calendar', function () {
         return Inertia::render('MCC/Calendar/index');
     })->name('calendar');
+
+    // Dynamic season route - must be last to avoid conflicts
+    Route::get('/{slug}', [\App\Http\Controllers\MCCSeasonPublicController::class, 'show'])->name('season');
 
     // Voting Routes
     Route::prefix('voting')->name('voting.')->group(function () {
@@ -1351,6 +1678,7 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
         'users.region',
         'users.island',
         'users.role',
+        'users.promotion_expires_at',
         'users.ml_id', 
         'users.ml_server', 
         'users.university', 
@@ -1375,16 +1703,18 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
         ->leftJoin('ml_users', 'users.ml_id', '=', 'ml_users.ml_id')
         ->leftJoin('users as verifiers', 'users.verified_by', '=', 'verifiers.id');
     
-    // Apply role-based filtering
-    if ($user->role === 'SL') {
-        $query->where('users.university', $user->university);
-    } elseif ($user->role === 'Regional Admin') {
-        $assignedRegionIds = $user->getAssignedRegionIds();
-        if (!empty($assignedRegionIds)) {
-            $query->whereIn('users.region', $assignedRegionIds);
-        } else {
-            // Fallback to single region if no assigned regions
-            $query->where('users.region', $user->region);
+    // Apply role-based filtering - Bypassed if searching to allow finding "wrong school" students
+    if (!$request->has('search') || empty($request->query('search'))) {
+        if ($user->role === 'SL') {
+            $query->where('users.university', $user->university);
+        } elseif ($user->role === 'Regional Admin') {
+            $assignedRegionIds = $user->getAssignedRegionIds();
+            if (!empty($assignedRegionIds)) {
+                $query->whereIn('users.region', $assignedRegionIds);
+            } else {
+                // Fallback to single region if no assigned regions
+                $query->where('users.region', $user->region);
+            }
         }
     }
     // Super Admin can view all users (no filtering applied)
@@ -1408,7 +1738,8 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
             ->where('users.role', '!=', 'Super Admin')
             ->where('users.role', '!=', 'Regional Admin');
         
-        if ($request->has('state')) {
+        // Apply state filtering only if not searching
+        if ($request->has('state') && (!$request->has('search') || empty($request->query('search')))) {
             $query->where('users.state', $request->query('state'));
         }
     }
@@ -1616,7 +1947,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
     
     //Pang promote sa student to SL
-    Route::patch('/api/sladmin/users/{userId}/promote', function ($userId) {
+    Route::patch('/api/sladmin/users/{userId}/promote', function ($userId, \Illuminate\Http\Request $request) {
         $user = Auth::user();
         if ($user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
             return response()->json(['error' => 'Access denied. Only Regional Admins and Super Admins can promote users to Student Leader.'], 403);
@@ -1646,15 +1977,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return response()->json(['error' => 'User not found, not verified, or access denied.'], 404);
         }
         
-        $targetUser->update([
-            'role' => 'SL'
-        ]);
+        $updateData = ['role' => 'SL'];
         
-        return response()->json(['success' => true, 'message' => 'User promoted to Student Leader successfully']);
+        if ($request->has('duration') && $request->duration > 0) {
+            $updateData['promotion_expires_at'] = now()->addDays((int)$request->duration);
+        } else {
+            $updateData['promotion_expires_at'] = null; // Permanent
+        }
+        
+        $targetUser->update($updateData);
+        
+        $message = 'User promoted to Student Leader successfully';
+        if (isset($updateData['promotion_expires_at'])) {
+            $message .= ' for ' . $request->duration . ' days';
+        }
+        
+        return response()->json(['success' => true, 'message' => $message]);
     });
     
     //Pang promote sa student to Regional Admin (Super Admin only)
-    Route::patch('/api/sladmin/users/{userId}/promote-regional-admin', function ($userId) {
+    Route::patch('/api/sladmin/users/{userId}/promote-regional-admin', function ($userId, \Illuminate\Http\Request $request) {
         $user = Auth::user();
         if ($user->role !== 'Super Admin') {
             return response()->json(['error' => 'Access denied. Only Super Admins can promote users to Regional Admin.'], 403);
@@ -1672,23 +2014,37 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return response()->json(['error' => 'User not found, not verified, or already has an admin role.'], 404);
         }
         
-        $targetUser->update([
-            'role' => 'Regional Admin'
-        ]);
+        $updateData = ['role' => 'Regional Admin'];
         
-        return response()->json(['success' => true, 'message' => 'User promoted to Regional Admin successfully']);
+        if ($request->has('duration') && $request->duration > 0) {
+            $updateData['promotion_expires_at'] = now()->addDays((int)$request->duration);
+        } else {
+            $updateData['promotion_expires_at'] = null; // Permanent
+        }
+        
+        $targetUser->update($updateData);
+        
+        $message = 'User promoted to Regional Admin successfully';
+        if (isset($updateData['promotion_expires_at'])) {
+            $message .= ' for ' . $request->duration . ' days';
+        }
+        
+        return response()->json(['success' => true, 'message' => $message]);
     });
     
     //pang demote ng student leader
     Route::patch('/api/sladmin/users/{userId}/demote', function ($userId) {
         $user = Auth::user();
-        if ($user->role !== 'Regional Admin') {
-            return response()->json(['error' => 'Access denied. Only Regional Admins can demote Student Leaders.'], 403);
+        if ($user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Access denied. Only Regional Admins and Super Admins can demote Student Leaders.'], 403);
         }
         
         $query = \App\Models\User::where('id', $userId)
-            ->where('role', 'SL')
-            ->where('region', $user->region);
+            ->where('role', 'SL');
+        
+        if ($user->role === 'Regional Admin') {
+            $query->where('region', $user->region);
+        }
         
         $targetUser = $query->first();
             
@@ -1879,6 +2235,17 @@ Route::get('/codashop/init-payment', function () {
 })->name('codashop.init-payment.get');
 Route::post('/codashop/init-payment', [\App\Http\Controllers\CodashopController::class, 'initPayment'])->name('codashop.init-payment');
 
+// Community Routes
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/community/create', [\App\Http\Controllers\CommunityController::class, 'create'])->name('community.create');
+    Route::post('/community', [\App\Http\Controllers\CommunityController::class, 'store'])->name('community.store');
+    Route::get('/api/community/schools', [\App\Http\Controllers\CommunityController::class, 'getSchoolsByIsland'])->name('community.getSchools');
+    Route::get('/api/community/provinces', [\App\Http\Controllers\CommunityController::class, 'getProvincesByRegion'])->name('community.getProvinces');
+    Route::get('/api/community/municipalities', [\App\Http\Controllers\CommunityController::class, 'getMunicipalitiesByProvince'])->name('community.getMunicipalities');
+    Route::patch('/community/{id}', [\App\Http\Controllers\CommunityController::class, 'update'])->name('community.update');
+    Route::delete('/community/{id}', [\App\Http\Controllers\CommunityController::class, 'destroy'])->name('community.destroy');
+});
+
 // Custom Event Canonical Routes - Handle dynamic event links like /NewEvent
 // This catch-all route should be placed at the very end to avoid conflicts with other routes
 Route::get('/{canonical}', function ($canonical) {
@@ -1894,3 +2261,7 @@ Route::get('/{canonical}', function ($canonical) {
     // If no event found, return 404
     abort(404, 'Event not found');
 })->where('canonical', '^[a-zA-Z0-9\-_]+$'); // Only match alphanumeric, hyphens, underscores
+
+
+
+

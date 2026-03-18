@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MslEvent;
+use App\Models\MCCSeason;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -11,8 +12,17 @@ class EventsController extends Controller
     public function index()
     {
         $events = MslEvent::activeAndFeatured()->get();
+        
+        // Get active MCC season
+        $activeMccSeason = MCCSeason::active()->first();
+        
         return Inertia::render('Events/Events', [
-            'events' => $events
+            'events' => $events,
+            'activeMccSeason' => $activeMccSeason ? [
+                'season_number' => $activeMccSeason->season_number,
+                'season_name' => $activeMccSeason->season_name,
+                'route_slug' => $activeMccSeason->route_slug,
+            ] : null,
         ]);
     }
 

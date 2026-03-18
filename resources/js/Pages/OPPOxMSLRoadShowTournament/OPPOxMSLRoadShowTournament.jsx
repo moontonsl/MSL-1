@@ -19,11 +19,27 @@ export default function OPPOxMSLRoadShowTournament() {
     agree: false,
   });
 
-  const universities = [
+  const [universities, setUniversities] = useState([
     "University of Saint La Salle",
     "Davao del Norte State College",
     "Pamantasan ng Lungsod ng Muntinlupa"
-  ];
+  ]);
+
+  useEffect(() => {
+    const fetchSchools = async () => {
+      try {
+        const response = await fetch('/api/oppo/schools');
+        const data = await response.json();
+        if (data.length > 0) {
+          setUniversities(data);
+        }
+      } catch (error) {
+        console.error('Error fetching roadshow schools:', error);
+      }
+    };
+
+    fetchSchools();
+  }, []);
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showMechanics, setShowMechanics] = useState(false);
@@ -48,7 +64,7 @@ export default function OPPOxMSLRoadShowTournament() {
     const duplicates = [];
     const usernameLower = username.toLowerCase().trim();
     const usernameFields = ["captain", "player2", "player3", "player4", "player5"];
-    
+
     usernameFields.forEach(field => {
       if (field !== fieldName) {
         const value = allUsernames[field];
@@ -74,28 +90,28 @@ export default function OPPOxMSLRoadShowTournament() {
     // Check for duplicates first
     const duplicateFields = checkDuplicateUsernames(fieldName, username, formToCheck);
     if (duplicateFields) {
-      setValidationErrors(prev => ({ 
-        ...prev, 
-        [fieldName]: "Duplicate username. Each player must have a unique username." 
+      setValidationErrors(prev => ({
+        ...prev,
+        [fieldName]: "Duplicate username. Each player must have a unique username."
       }));
       // Also update duplicate fields
       duplicateFields.forEach(field => {
-        setValidationErrors(prev => ({ 
-          ...prev, 
-          [field]: "Duplicate username. Each player must have a unique username." 
+        setValidationErrors(prev => ({
+          ...prev,
+          [field]: "Duplicate username. Each player must have a unique username."
         }));
       });
       return;
     }
 
     setValidatingUsernames(prev => ({ ...prev, [fieldName]: true }));
-    
+
     // Get university from currentForm or form state
     const universityToCheck = (currentForm || form).university;
     if (!universityToCheck) {
-      setValidationErrors(prev => ({ 
-        ...prev, 
-        [fieldName]: "Please select a university first" 
+      setValidationErrors(prev => ({
+        ...prev,
+        [fieldName]: "Please select a university first"
       }));
       return;
     }
@@ -103,7 +119,7 @@ export default function OPPOxMSLRoadShowTournament() {
     try {
       const response = await fetch(`/check-username-tournament?username=${encodeURIComponent(username)}&university=${encodeURIComponent(universityToCheck)}`);
       const data = await response.json();
-      
+
       if (data.exists && data.verified) {
         // User exists and is verified - check duplicates again after validation
         // Use the currentForm parameter or form state
@@ -122,22 +138,22 @@ export default function OPPOxMSLRoadShowTournament() {
         }
       } else if (data.exists && !data.verified) {
         // User exists but is not verified
-        setValidationErrors(prev => ({ 
-          ...prev, 
-          [fieldName]: "Username not verified" 
+        setValidationErrors(prev => ({
+          ...prev,
+          [fieldName]: "Username not verified"
         }));
       } else {
         // User does not exist
-        setValidationErrors(prev => ({ 
-          ...prev, 
+        setValidationErrors(prev => ({
+          ...prev,
           [fieldName]: `Username not found in ${universityToCheck}`
         }));
       }
     } catch (error) {
       console.error("Error validating username:", error);
-      setValidationErrors(prev => ({ 
-        ...prev, 
-        [fieldName]: "Error validating username. Please try again." 
+      setValidationErrors(prev => ({
+        ...prev,
+        [fieldName]: "Error validating username. Please try again."
       }));
     } finally {
       setValidatingUsernames(prev => ({ ...prev, [fieldName]: false }));
@@ -150,7 +166,7 @@ export default function OPPOxMSLRoadShowTournament() {
       ...form,
       [name]: type === "checkbox" ? checked : value,
     };
-    
+
     setForm(newForm);
 
     // If university changes, clear all validation errors and re-validate usernames
@@ -175,9 +191,9 @@ export default function OPPOxMSLRoadShowTournament() {
     if (name === "captain" || name.startsWith("player")) {
       // Check if university is selected before validating
       if (!newForm.university) {
-        setValidationErrors(prev => ({ 
-          ...prev, 
-          [name]: "Please select a university first" 
+        setValidationErrors(prev => ({
+          ...prev,
+          [name]: "Please select a university first"
         }));
         return;
       }
@@ -185,21 +201,21 @@ export default function OPPOxMSLRoadShowTournament() {
       // Check for duplicates immediately
       const duplicateFields = checkDuplicateUsernames(name, value, newForm);
       if (duplicateFields && value.trim()) {
-        setValidationErrors(prev => ({ 
-          ...prev, 
-          [name]: "Duplicate username. Each player must have a unique username." 
+        setValidationErrors(prev => ({
+          ...prev,
+          [name]: "Duplicate username. Each player must have a unique username."
         }));
         // Also mark duplicate fields
         duplicateFields.forEach(field => {
-          setValidationErrors(prev => ({ 
-            ...prev, 
-            [field]: "Duplicate username. Each player must have a unique username." 
+          setValidationErrors(prev => ({
+            ...prev,
+            [field]: "Duplicate username. Each player must have a unique username."
           }));
         });
       } else {
         // Clear previous error for this field if no duplicates
         setValidationErrors(prev => ({ ...prev, [name]: "" }));
-        
+
         // Re-validate other fields that might have been marked as duplicate
         const usernameFields = ["captain", "player2", "player3", "player4", "player5"];
         usernameFields.forEach(field => {
@@ -219,12 +235,12 @@ export default function OPPOxMSLRoadShowTournament() {
           }
         });
       }
-      
+
       // Clear existing timeout
       if (timeoutRefs.current[name]) {
         clearTimeout(timeoutRefs.current[name]);
       }
-      
+
       // Debounce validation (only if no duplicates)
       if (!duplicateFields || !value.trim()) {
         timeoutRefs.current[name] = setTimeout(() => {
@@ -255,7 +271,7 @@ export default function OPPOxMSLRoadShowTournament() {
     usernameFields.forEach(field => {
       usernames[field] = form[field];
     });
-    
+
     // Check all fields for duplicates
     let hasDuplicates = false;
     usernameFields.forEach(field => {
@@ -263,9 +279,9 @@ export default function OPPOxMSLRoadShowTournament() {
         const duplicateFields = checkDuplicateUsernames(field, form[field], form);
         if (duplicateFields) {
           hasDuplicates = true;
-          setValidationErrors(prev => ({ 
-            ...prev, 
-            [field]: "Duplicate username. Each player must have a unique username." 
+          setValidationErrors(prev => ({
+            ...prev,
+            [field]: "Duplicate username. Each player must have a unique username."
           }));
         }
       }
@@ -442,13 +458,12 @@ export default function OPPOxMSLRoadShowTournament() {
               <label className="block font-medium mb-1 text-sm sm:text-base">
                 Team Captain Username
               </label>
-              <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${
-                validationErrors.captain === "VALID" 
-                  ? 'bg-green-500/10 border border-green-500' 
-                  : validationErrors.captain 
-                    ? 'bg-red-500/10 border border-red-500' 
+              <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${validationErrors.captain === "VALID"
+                  ? 'bg-green-500/10 border border-green-500'
+                  : validationErrors.captain
+                    ? 'bg-red-500/10 border border-red-500'
                     : 'bg-white/5'
-              }`}>
+                }`}>
                 {validatingUsernames.captain ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#F2C21A]"></div>
                 ) : validationErrors.captain === "VALID" ? (
@@ -478,13 +493,12 @@ export default function OPPOxMSLRoadShowTournament() {
             {[2, 3, 4, 5].map((num) => (
               <div key={num}>
                 <label className="block font-medium mb-1 text-sm sm:text-base">{`Player ${num} Username`}</label>
-                <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${
-                  validationErrors[`player${num}`] === "VALID" 
-                    ? 'bg-green-500/10 border border-green-500' 
-                    : validationErrors[`player${num}`] 
-                      ? 'bg-red-500/10 border border-red-500' 
+                <div className={`flex items-center rounded-xl p-2.5 sm:p-3 gap-2 sm:gap-3 ${validationErrors[`player${num}`] === "VALID"
+                    ? 'bg-green-500/10 border border-green-500'
+                    : validationErrors[`player${num}`]
+                      ? 'bg-red-500/10 border border-red-500'
                       : 'bg-white/5'
-                }`}>
+                  }`}>
                   {validatingUsernames[`player${num}`] ? (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#F2C21A]"></div>
                   ) : validationErrors[`player${num}`] === "VALID" ? (
@@ -556,11 +570,10 @@ export default function OPPOxMSLRoadShowTournament() {
             <button
               type="submit"
               disabled={!form.agree || Object.values(validationErrors).some(error => error !== "" && error !== "VALID")}
-              className={`w-full mt-4 font-bold py-3 rounded-xl transition-colors text-sm sm:text-base ${
-                form.agree && !Object.values(validationErrors).some(error => error !== "" && error !== "VALID")
+              className={`w-full mt-4 font-bold py-3 rounded-xl transition-colors text-sm sm:text-base ${form.agree && !Object.values(validationErrors).some(error => error !== "" && error !== "VALID")
                   ? "bg-[#F2C21A] hover:bg-[#ddb518] text-black cursor-pointer"
                   : "bg-gray-500 text-gray-300 cursor-not-allowed"
-              }`}
+                }`}
             >
               Submit Registration
             </button>
@@ -568,16 +581,16 @@ export default function OPPOxMSLRoadShowTournament() {
 
             {/* Logos */}
             <div className="flex flex-row justify-center items-center mt-6 space-x-4 sm:space-x-6">
-            <img
+              <img
                 src={oppologo}
                 alt="OPPO Logo"
                 className="h-12 sm:h-20 w-auto"
-            />
-            <img
+              />
+              <img
                 src={msllogo}
                 alt="MSL Logo"
                 className="h-10 sm:h-16 w-auto"
-            />
+              />
             </div>
 
           </form>

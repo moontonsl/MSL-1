@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Head, usePage } from "@inertiajs/react";
+import { Head, usePage, router } from "@inertiajs/react";
 import MainLayout from "@/Layouts/MainLayout.jsx";
 
 function PlayerSearchInput({ label, placeholder, subtext, value, onChange, onSelect, excludeIds, university }) {
@@ -129,8 +129,6 @@ export default function TeamRegistration() {
 
             if (captainData) {
                 setCaptain(JSON.parse(captainData));
-                // Clear the session storage after reading
-                sessionStorage.removeItem('campusTournamentCaptain');
             }
 
             if (editTeamData) {
@@ -143,9 +141,6 @@ export default function TeamRegistration() {
                 if (captainMember?.player) {
                     setCaptain(captainMember.player);
                 }
-
-                // Clear the session storage after reading
-                sessionStorage.removeItem('campusTournamentEditTeam');
             }
         } catch (error) {
             console.error('Error loading team data:', error);
@@ -208,7 +203,6 @@ export default function TeamRegistration() {
             // Pre-fill selected players
             setSelectedPlayers(prev => ({
                 ...prev,
-                // Captain is handled by the dependency on `captain` state above
                 captain: captain,
                 player2: memberPlayers[0] || null,
                 player3: memberPlayers[1] || null,
@@ -219,7 +213,6 @@ export default function TeamRegistration() {
     }, [captain, isEditMode, existingTeam]);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [showErrorModal, setShowErrorModal] = useState(false);
     const [modalMessage, setModalMessage] = useState('');
     const [isLoading, setIsLoading] = useState(true);
@@ -237,43 +230,58 @@ export default function TeamRegistration() {
             .map(player => player.id);
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
         setIsSubmitting(true);
 
-        try {
-            const url = isEditMode ? `/team-update/${existingTeam.id}` : '/team-registration';
-            const method = isEditMode ? 'PUT' : 'POST';
+        const playerIds = Object.values(selectedPlayers)
+            .filter(p => p !== null)
+            .map(p => p.id);
 
-            const response = await fetch(url, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                },
-                body: JSON.stringify({
-                    teamName: formData.teamName,
-                    discordId: formData.discordId,
-                    captain: captain,
-                    players: selectedPlayers
-                }),
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                setModalMessage(isEditMode ? 'Team updated successfully!' : 'Team registered successfully!');
-                setShowSuccessModal(true);
-            } else {
-                const errorData = await response.json();
-                setModalMessage((isEditMode ? 'Update' : 'Registration') + ' failed: ' + (errorData.message || 'Unknown error'));
-                setShowErrorModal(true);
-            }
-        } catch (error) {
-            console.error('Registration error:', error);
-            setModalMessage((isEditMode ? 'Update' : 'Registration') + ' failed. Please try again.');
+        const hasDuplicates = new Set(playerIds).size !== playerIds.length;
+        if (hasDuplicates) {
+            setModalMessage('Duplicate players found in the roster. Please ensure each player is unique.');
             setShowErrorModal(true);
-        } finally {
             setIsSubmitting(false);
+            return;
+        }
+
+        const url = isEditMode ? `/team-update/${existingTeam.id}` : '/team-registration';
+        const routerMethod = isEditMode ? router.put : router.post;
+
+        // Get user_id from URL if present (for unauthenticated access)
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('user_id');
+
+        const options = {
+            preserveScroll: true,
+            onSuccess: () => {
+                // Clear session storage only on complete success
+                sessionStorage.removeItem('campusTournamentCaptain');
+                sessionStorage.removeItem('campusTournamentEditTeam');
+            },
+            onError: (errors) => {
+                const errorMessage = errors.message ||
+                    Object.values(errors).flat().join(', ') ||
+                    ((isEditMode ? 'Update' : 'Registration') + ' failed. Please try again.');
+                setModalMessage(errorMessage);
+                setShowErrorModal(true);
+            },
+            onFinish: () => setIsSubmitting(false)
+        };
+
+        const data = {
+            teamName: formData.teamName,
+            discordId: formData.discordId,
+            captain: captain,
+            players: selectedPlayers,
+            user_id: userId // Send user_id if present
+        };
+
+        if (isEditMode) {
+            router.put(url, data, options);
+        } else {
+            router.post(url, data, options);
         }
     };
 
@@ -395,7 +403,7 @@ export default function TeamRegistration() {
                             </div>
 
                             <InputGroup
-                                label="Discord ID (For Communication)"
+                                label="Discord ID (Optional)"
                                 placeholder="Enter your Discord ID"
                                 subtext="Format: username#0000 or User ID"
                                 value={formData.discordId}
@@ -494,47 +502,8 @@ export default function TeamRegistration() {
                 </div>
             </section>
 
-            {/* Success Modal */}
-            {showSuccessModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10" onClick={() => {
-                        setShowSuccessModal(false);
-                        // Redirect back to team view
-                        window.location.href = `/Tournament/CampusTournamentTeam?user_id=${captain?.id}`;
-                    }} />
-                    <div className="relative z-20 w-full max-w-md bg-black/40 backdrop-blur-md text-white border border-white/20 rounded-2xl p-6 md:p-8 shadow-2xl">
-                        <div className="text-center">
-                            {/* Success Icon */}
-                            <div className="w-16 h-16 mx-auto mb-4 bg-green-500/20 rounded-full flex items-center justify-center">
-                                <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
 
-                            {/* Success Message */}
-                            <h3 className="font-montserrat text-xl md:text-2xl font-semibold mb-3 text-green-400">
-                                Success!
-                            </h3>
-
-                            <p className="font-montserrat text-sm md:text-base text-white/80 mb-6 leading-relaxed">
-                                {modalMessage}
-                            </p>
-
-                            {/* Close Button */}
-                            <button
-                                onClick={() => {
-                                    setShowSuccessModal(false);
-                                    // Redirect back to team view
-                                    window.location.href = `/Tournament/CampusTournamentTeam?user_id=${captain?.id}`;
-                                }}
-                                className="w-full bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-6 py-3 hover:bg-[#F2C21A]/90 transition-colors"
-                            >
-                                Continue
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Error Modal */}
 
             {/* Error Modal */}
             {showErrorModal && (

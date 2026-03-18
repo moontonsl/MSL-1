@@ -21,14 +21,14 @@ const UploadPage = () => {
                 setFile(null);
                 return;
             }
-            
+
             // Validate file size (2MB limit)
             if (selectedFile.size > 2 * 1024 * 1024) {
                 setError('File size must be less than 2MB');
                 setFile(null);
                 return;
             }
-            
+
             setFile(selectedFile);
             setError('');
         }
@@ -36,7 +36,7 @@ const UploadPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!file) {
             setError('Please select a file to upload');
             return;
@@ -54,10 +54,10 @@ const UploadPage = () => {
         const formData = new FormData();
         formData.append('proofOfEnrollment', file);
         formData.append('year_level', yearLevel);
-        
+
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
         formData.append('_token', csrfToken);
-        
+
         // Debug logging
         console.log('File details:', {
             name: file.name,
@@ -75,14 +75,14 @@ const UploadPage = () => {
             // Check if response is JSON before trying to parse it
             const contentType = response.headers.get('content-type');
             let data;
-            
+
             if (contentType && contentType.includes('application/json')) {
                 data = await response.json();
             } else {
                 // If not JSON, get the text to see what the server returned
                 const textResponse = await response.text();
                 console.error('Server returned non-JSON response:', textResponse);
-                throw new Error('Server returned an invalid response. Please try again or contact support.');
+                throw new Error('Something went wrong. Please RELOAD the page and try again.');
             }
 
             if (response.ok) {
@@ -91,7 +91,7 @@ const UploadPage = () => {
                 // Reset file input
                 const fileInput = document.getElementById('file-input');
                 if (fileInput) fileInput.value = '';
-                
+
                 // Redirect to waiting page after 2 seconds
                 setTimeout(() => {
                     router.visit('/user/waiting');
@@ -114,13 +114,13 @@ const UploadPage = () => {
         } catch (err) {
             console.error('Upload error:', err);
             let errorMessage = 'An unexpected error occurred. Please try again.';
-            
+
             if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
                 errorMessage = 'Network error. Please check your connection and try again.';
             } else if (err.message) {
                 errorMessage = err.message;
             }
-            
+
             setError(errorMessage);
         } finally {
             setUploading(false);
@@ -137,14 +137,14 @@ const UploadPage = () => {
     return (
         <UserStateLayout>
             <Head title="Upload Proof of Enrollment" />
-            
+
             <div className="min-h-screen bg-gradient-to-br from-black via-[#1a1a1a] to-[#000] flex items-center justify-center p-4">
                 <div className="max-w-2xl w-full">
                     <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 shadow-2xl">
                         {/* Header */}
                         <div className="text-center mb-8">
                             <div className="inline-flex items-center justify-center h-20 w-20 bg-gray-500/20 rounded-2xl">
-                                <img src="/MSL_LOGO.png" alt="MSL Logo" className="h-20 w-20"/>
+                                <img src="/MSL_LOGO.png" alt="MSL Logo" className="h-20 w-20" />
                             </div>
                             <h1 className="text-3xl font-bold text-white mb-2 mt-6">
                                 Account Renewal Required
@@ -163,7 +163,7 @@ const UploadPage = () => {
                                         Action Required
                                     </h3>
                                     <p className="text-gray-300 leading-relaxed">
-                                        Your account has been marked for renewal. To regain access to the MSL platform, 
+                                        Your account has been marked for renewal. To regain access to the MSL platform,
                                         please upload a current proof of enrollment document and update your year level.
                                     </p>
                                 </div>
@@ -215,7 +215,7 @@ const UploadPage = () => {
                                     <p className="text-gray-400 mb-4">
                                         Please upload a clear image or PDF of your current proof of enrollment
                                     </p>
-                                    
+
                                     <input
                                         id="file-input"
                                         type="file"
@@ -223,7 +223,7 @@ const UploadPage = () => {
                                         onChange={handleFileChange}
                                         className="hidden"
                                     />
-                                    
+
                                     <button
                                         type="button"
                                         onClick={() => document.getElementById('file-input').click()}
@@ -231,7 +231,7 @@ const UploadPage = () => {
                                     >
                                         Choose File
                                     </button>
-                                    
+
                                     <p className="text-xs text-gray-500 mt-2">
                                         Accepted formats: JPEG, PNG, GIF, PDF (Max 2MB)
                                     </p>
@@ -246,7 +246,7 @@ const UploadPage = () => {
                                 <p className="text-gray-400 mb-4">
                                     Please select your current year level
                                 </p>
-                                
+
                                 <select
                                     value={yearLevel}
                                     onChange={(e) => setYearLevel(e.target.value)}

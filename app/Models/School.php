@@ -9,6 +9,14 @@ use App\Models\Province;
 
 class School extends Model
 {
+    public $timestamps = false;
+    protected $fillable = ['name', 'region_id', 'municipality_id'];
+
+    public function community()
+    {
+        return $this->hasOne(Community::class);
+    }
+
     public function municipality()
     {
         return $this->belongsTo(Municipality::class);

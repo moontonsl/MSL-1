@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { Head, router } from "@inertiajs/react";
 import MainLayout from "@/Layouts/MainLayout.jsx";
 
-export default function Registration() {
+export default function Registration({ inviteTeamId }) {
+  const [activeTab, setActiveTab] = useState('create');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [teamCode, setTeamCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -14,41 +16,55 @@ export default function Registration() {
     setError('');
 
     try {
-      // Validate credentials without actually logging in
-      const response = await fetch('/validate-credentials', {
+      if (activeTab === 'join' && !teamCode) {
+        setError('Please enter the team code.');
+        setIsLoading(false);
+        return;
+      }
+
+      const endpoint = activeTab === 'join' ? '/join-by-code' : '/validate-credentials';
+      const payload = {
+        username: username,
+        password: password,
+        invite_team_id: inviteTeamId,
+      };
+
+      if (activeTab === 'join') {
+        payload.team_code = teamCode;
+      }
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
         },
-        body: JSON.stringify({
-          username: username,
-          password: password,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
         const userData = await response.json();
 
         if (userData.user) {
-          // Check if user is verified
           if (userData.user.state !== 'Verified') {
             setError("Only verified users can participate in campus tournaments. Please complete your verification first.");
             return;
           }
 
-          // Check if user is already in a team (PRIORITY CHECK)
+          if (activeTab === 'join') {
+            router.visit('/Tournament/CampusTournamentTeam');
+            return;
+          }
+
           const teamCheckResponse = await fetch(`/team-check?user_id=${userData.user.id}`);
           if (teamCheckResponse.ok) {
             const teamData = await teamCheckResponse.json();
             if (teamData.isInTeam) {
-              // User is already in a team, redirect to team view
-              router.visit(`/Tournament/CampusTournamentTeam?user_id=${userData.user.id}`);
+              router.visit('/Tournament/CampusTournamentTeam');
               return;
             }
           }
 
-          // If not in a team, THEN check for available tournaments
           const tournamentResponse = await fetch('/approved-tournaments');
           const tournaments = await tournamentResponse.json();
 
@@ -57,26 +73,33 @@ export default function Registration() {
           );
 
           if (hasApprovedTournament) {
-            // Store captain data in session storage and redirect
             sessionStorage.setItem('campusTournamentCaptain', JSON.stringify(userData.user));
             router.visit('/Tournament/CampusTournamentReg');
           } else {
-            // No tournament available
             setError("There's no available tournament in your campus");
           }
         } else {
           setError('Login failed. Please check your credentials.');
         }
       } else {
-        // Login failed - wrong credentials
-        setError('Login failed. Please check your credentials.');
+        if (response.status === 419) {
+          setError('Session expired. Please refresh the page and try again.');
+        } else {
+          try {
+            const errorData = await response.json();
+            setError(errorData.message || 'Login failed. Please check your credentials.');
+          } catch (e) {
+            setError('Login failed. Please check your credentials.');
+          }
+        }
       }
     } catch (error) {
-      setError('Login failed. Please check your credentials.');
+      setError('An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
+
   return (
     <MainLayout>
       <Head title="Campus Tournament" />
@@ -109,6 +132,24 @@ export default function Registration() {
             <div className="text-center text-white font-bold tracking-tight text-[20px] md:text-[24px] lg:text-[30px] uppercase rounded-md py-2 mb-3">
               Registration
             </div>
+
+            <div className="flex bg-white/10 p-1 mb-6 rounded-lg">
+              <button
+                type="button"
+                onClick={() => { setActiveTab('create'); setError(''); }}
+                className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${activeTab === 'create' ? 'bg-[#F2C21A] text-black shadow' : 'text-white/70 hover:text-white'}`}
+              >
+                Create Team
+              </button>
+              <button
+                type="button"
+                onClick={() => { setActiveTab('join'); setError(''); }}
+                className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${activeTab === 'join' ? 'bg-[#F2C21A] text-black shadow' : 'text-white/70 hover:text-white'}`}
+              >
+                Join Team
+              </button>
+            </div>
+
             <form className="space-y-4" onSubmit={handleLogin}>
               {error && (
                 <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-200 text-sm">
@@ -144,13 +185,30 @@ export default function Registration() {
                 />
               </div>
 
+              {activeTab === 'join' && (
+                <div>
+                  <label className="block text-[12px] md:text-sm text-white/70 font-medium mb-1">
+                    Team Code
+                  </label>
+                  <input
+                    type="text"
+                    value={teamCode}
+                    onChange={(e) => setTeamCode(e.target.value.toUpperCase())}
+                    className="w-full rounded-full border border-white/30 bg-transparent text-white placeholder-white/40 px-4 py-2.5 focus:outline-none focus:border-yellow-400/60 tracking-widest"
+                    placeholder="Enter Team Code"
+                    maxLength={6}
+                    required
+                  />
+                </div>
+              )}
+
               <div className="pt-2 flex justify-center">
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="px-6 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-sm border border-white/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full md:w-auto px-10 py-2.5 rounded-full bg-[#F2C21A] hover:bg-[#d9ae17] text-black font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  {isLoading ? 'Logging in...' : 'Login'}
+                  {isLoading ? 'Processing...' : (activeTab === 'create' ? 'Continue' : 'Join Team')}
                 </button>
               </div>
             </form>

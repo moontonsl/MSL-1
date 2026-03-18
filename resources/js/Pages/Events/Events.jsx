@@ -7,7 +7,11 @@ import MCClogoHD from './MCC HD.png';
 import laylaImage from './LAYLA PARANORMAL OPERATIVE COLLECTOR RENDER PNG 2.png';
 import REDimage from './RED 1.png';
 
-function Events({ events = [] }) {
+function Events({ events = [], activeMccSeason }) {
+    // Determine the MCC link based on active season
+    const mccLink = activeMccSeason
+        ? `/MCC/${activeMccSeason.route_slug}`
+        : '/MCC';
 
     return (
         <>
@@ -49,7 +53,7 @@ function Events({ events = [] }) {
                                 </div>
 
                                 <div className="mt-4 pt-3">
-                                    <Link href="/MCC">
+                                    <Link href={mccLink}>
                                         <div className="flex w-[190px] h-[58px] justify-center items-center gap-[5.7px] rounded-full border border-[#F3C718] bg-[#F3C718] cursor-pointer hover:bg-[#F3C718] transition-all duration-300">
                                             <span className="text-black font-['Montserrat'] text-[18.5px] font-bold leading-[140%]">Learn More</span>
                                         </div>
@@ -175,7 +179,7 @@ function Events({ events = [] }) {
 
                                 {/* Learn More Button */}
                                 <div className="w-full flex justify-start mt-3">
-                                    <Link href="/MCC">
+                                    <Link href={mccLink}>
                                         <div className="flex w-[140px] sm:w-[150px] h-[40px] sm:h-[45px] justify-center items-center gap-1 rounded-full border border-[#F3C718] bg-[#F3C718] cursor-pointer hover:bg-[#F3C718] transition-all duration-300">
                                             <span className="text-black font-['Montserrat'] text-[14px] sm:text-[15px] font-bold leading-[140%]">
                                                 Learn More

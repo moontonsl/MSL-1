@@ -26,7 +26,9 @@ class CampusTournamentController extends Controller
         
         // Get tournaments created by this SL with teams and members
         $tournaments = CampusTournament::where('sl_id', $user->id)
-            ->with(['teams.members' => function($query) {
+            ->with(['teams' => function($query) {
+                $query->where('status', 'registered');
+            }, 'teams.members' => function($query) {
                 // Ensure captain comes first (assuming role 'captain' is alphabetically before 'member'?? No, 'c' comes before 'm'. Perfect.)
                 // Or explicit sort:
                 $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
@@ -76,6 +78,9 @@ class CampusTournamentController extends Controller
         // Get approved tournaments with teams and members for the Ongoing Tournaments section
         // Show all approved tournaments (both active and completed) so we can filter them on frontend
         $approvedQuery = CampusTournament::with([
+            'teams' => function($query) {
+                $query->where('status', 'registered');
+            },
             'teams.members' => function($query) {
                 $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
             },
@@ -125,10 +130,24 @@ class CampusTournamentController extends Controller
         $validator = Validator::make($request->all(), [
             'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'required|date|after:start_date',
+            'tournament_type' => 'required|in:Online,Onsite',
         ]);
         
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // Check if a tournament already exists for this school with overlapping dates
+        $existingTournament = CampusTournament::where('school_name', $user->university)
+            ->where('status', '!=', 'rejected')
+            ->where(function ($query) use ($request) {
+                $query->where('start_date', '<=', $request->end_date)
+                      ->where('end_date', '>=', $request->start_date);
+            })
+            ->exists();
+            
+        if ($existingTournament) {
+            return response()->json(['error' => 'A tournament is already scheduled completely or partially on these dates.'], 422);
         }
         
         $tournament = CampusTournament::create([
@@ -137,6 +156,7 @@ class CampusTournamentController extends Controller
             'sl_id' => $user->id,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
+            'tournament_type' => $request->tournament_type,
             'status' => 'pending',
         ]);
         
@@ -167,10 +187,16 @@ class CampusTournamentController extends Controller
             $hasAccess = true;
         } elseif ($user->role === 'Regional Admin') {
             $assignedRegionIds = $user->getAssignedRegionIds();
+            
+            // Fix: Explicitly include user's own region to handle potential lookup failures
+            if ($user->region && !in_array($user->region, $assignedRegionIds)) {
+                $assignedRegionIds[] = $user->region;
+            }
+
             if (!empty($assignedRegionIds)) {
                 $hasAccess = in_array($tournament->studentLeader->region, $assignedRegionIds);
             } else {
-                $hasAccess = $tournament->studentLeader->region === $user->region;
+                $hasAccess = $tournament->studentLeader->region == $user->region;
             }
         }
         
@@ -218,10 +244,16 @@ class CampusTournamentController extends Controller
             $hasAccess = true;
         } elseif ($user->role === 'Regional Admin') {
             $assignedRegionIds = $user->getAssignedRegionIds();
+            
+            // Fix: Explicitly include user's own region to handle potential lookup failures
+            if ($user->region && !in_array($user->region, $assignedRegionIds)) {
+                $assignedRegionIds[] = $user->region;
+            }
+
             if (!empty($assignedRegionIds)) {
                 $hasAccess = in_array($tournament->studentLeader->region, $assignedRegionIds);
             } else {
-                $hasAccess = $tournament->studentLeader->region === $user->region;
+                $hasAccess = $tournament->studentLeader->region == $user->region;
             }
         }
         
@@ -270,10 +302,16 @@ class CampusTournamentController extends Controller
             $hasAccess = true;
         } elseif ($user->role === 'Regional Admin') {
             $assignedRegionIds = $user->getAssignedRegionIds();
+            
+            // Fix: Explicitly include user's own region to handle potential lookup failures
+            if ($user->region && !in_array($user->region, $assignedRegionIds)) {
+                $assignedRegionIds[] = $user->region;
+            }
+
             if (!empty($assignedRegionIds)) {
                 $hasAccess = in_array($tournament->studentLeader->region, $assignedRegionIds);
             } else {
-                $hasAccess = $tournament->studentLeader->region === $user->region;
+                $hasAccess = $tournament->studentLeader->region == $user->region;
             }
         }
         
@@ -302,9 +340,11 @@ class CampusTournamentController extends Controller
         
         $tournament = CampusTournament::findOrFail($id);
         
-        // Only SL who created it can delete, and only if pending
-        if ($tournament->sl_id !== $user->id || $tournament->status !== 'pending') {
-            return response()->json(['error' => 'You can only delete your own pending tournaments'], 403);
+        // Allow Regional Admin and Super Admin to delete
+        if ($user->role === 'Regional Admin' || $user->role === 'Super Admin') {
+            // Authorized
+        } elseif ($tournament->sl_id !== $user->id || !in_array($tournament->status, ['pending', 'rejected'])) {
+            return response()->json(['error' => 'You can only delete your own pending or rejected tournaments'], 403);
         }
         
         $tournament->delete();
@@ -322,9 +362,16 @@ class CampusTournamentController extends Controller
     {
         // Get all approved tournaments with teams and members
         $tournaments = CampusTournament::where('status', 'approved')
-            ->with(['teams.members' => function($query) {
-                $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
-            }, 'teams.members.player', 'studentLeader'])
+            ->with([
+                'teams' => function($query) {
+                    $query->where('status', 'registered');
+                },
+                'teams.members' => function($query) {
+                    $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
+                }, 
+                'teams.members.player', 
+                'studentLeader'
+            ])
             ->orderBy('start_date', 'desc')
             ->get();
             
@@ -346,7 +393,9 @@ class CampusTournamentController extends Controller
             return response()->json(['error' => 'Only Student Leaders can submit results'], 403);
         }
         
-        $tournament = CampusTournament::with('teams')->findOrFail($id);
+        $tournament = CampusTournament::with(['teams' => function($query) {
+            $query->where('status', 'registered');
+        }])->findOrFail($id);
         
         // Check if user owns this tournament
         if ($tournament->sl_id !== $user->id) {
@@ -375,31 +424,35 @@ class CampusTournamentController extends Controller
         
         $results = $request->results;
         
-        // Validate that exactly one team has '1st' result
+        // Dynamic Winner Set Calculation: 1 set for every 8 teams
+        $registeredTeamsCount = $tournament->teams()->where('status', 'registered')->count();
+        $allowedSets = max(1, ceil($registeredTeamsCount / 8));
+        
+        // Count the selected 1st, 2nd, and 3rd place teams
         $firstPlaceTeams = array_filter($results, function($result) {
             return $result['result'] === '1st';
         });
         
-        if (count($firstPlaceTeams) !== 1) {
-            return response()->json(['error' => 'Exactly one team must be marked as 1st place'], 422);
-        }
-        
-        // Validate that exactly one team has '2nd' result
         $secondPlaceTeams = array_filter($results, function($result) {
             return $result['result'] === '2nd';
         });
         
-        if (count($secondPlaceTeams) !== 1) {
-            return response()->json(['error' => 'Exactly one team must be marked as 2nd place'], 422);
-        }
-        
-        // Validate that exactly one team has '3rd' result
         $thirdPlaceTeams = array_filter($results, function($result) {
             return $result['result'] === '3rd';
         });
         
-        if (count($thirdPlaceTeams) !== 1) {
-            return response()->json(['error' => 'Exactly one team must be marked as 3rd place'], 422);
+        $firstCount = count($firstPlaceTeams);
+        $secondCount = count($secondPlaceTeams);
+        $thirdCount = count($thirdPlaceTeams);
+        
+        // Validate that between 1 and $allowedSets sets have been selected
+        if ($firstCount < 1 || $firstCount > $allowedSets) {
+            return response()->json(['error' => "You must mark between 1 and {$allowedSets} team(s) as 1st place based on {$registeredTeamsCount} registered teams"], 422);
+        }
+        
+        // Ensure that the number of 1st, 2nd, and 3rd place teams match
+        if ($firstCount !== $secondCount || $firstCount !== $thirdCount) {
+            return response()->json(['error' => "The number of 1st, 2nd, and 3rd place teams must match. You marked {$firstCount} as 1st, {$secondCount} as 2nd, and {$thirdCount} as 3rd."], 422);
         }
         
         // Validate that all teams in the tournament have results
@@ -449,7 +502,9 @@ class CampusTournamentController extends Controller
             return response()->json(['error' => 'Unauthorized to update results'], 403);
         }
         
-        $tournament = CampusTournament::with('teams')->findOrFail($id);
+        $tournament = CampusTournament::with(['teams' => function($query) {
+            $query->where('status', 'registered');
+        }])->findOrFail($id);
         
         // Check permissions
         if ($user->role === 'SL') {
@@ -483,31 +538,35 @@ class CampusTournamentController extends Controller
         
         $results = $request->results;
         
-        // Validate that exactly one team has '1st' result
+        // Dynamic Winner Set Calculation: 1 set for every 8 teams
+        $registeredTeamsCount = $tournament->teams()->where('status', 'registered')->count();
+        $allowedSets = max(1, ceil($registeredTeamsCount / 8));
+        
+        // Count the selected 1st, 2nd, and 3rd place teams
         $firstPlaceTeams = array_filter($results, function($result) {
             return $result['result'] === '1st';
         });
         
-        if (count($firstPlaceTeams) !== 1) {
-            return response()->json(['error' => 'Exactly one team must be marked as 1st place'], 422);
-        }
-        
-        // Validate that exactly one team has '2nd' result
         $secondPlaceTeams = array_filter($results, function($result) {
             return $result['result'] === '2nd';
         });
         
-        if (count($secondPlaceTeams) !== 1) {
-            return response()->json(['error' => 'Exactly one team must be marked as 2nd place'], 422);
-        }
-        
-        // Validate that exactly one team has '3rd' result
         $thirdPlaceTeams = array_filter($results, function($result) {
             return $result['result'] === '3rd';
         });
         
-        if (count($thirdPlaceTeams) !== 1) {
-            return response()->json(['error' => 'Exactly one team must be marked as 3rd place'], 422);
+        $firstCount = count($firstPlaceTeams);
+        $secondCount = count($secondPlaceTeams);
+        $thirdCount = count($thirdPlaceTeams);
+        
+        // Validate that between 1 and $allowedSets sets have been selected
+        if ($firstCount < 1 || $firstCount > $allowedSets) {
+            return response()->json(['error' => "You must mark between 1 and {$allowedSets} team(s) as 1st place based on {$registeredTeamsCount} registered teams"], 422);
+        }
+        
+        // Ensure that the number of 1st, 2nd, and 3rd place teams match
+        if ($firstCount !== $secondCount || $firstCount !== $thirdCount) {
+            return response()->json(['error' => "The number of 1st, 2nd, and 3rd place teams must match. You marked {$firstCount} as 1st, {$secondCount} as 2nd, and {$thirdCount} as 3rd."], 422);
         }
         
         // Validate that all teams in the tournament have results
@@ -547,25 +606,39 @@ class CampusTournamentController extends Controller
     /**
      * Show team view for registered team members
      */
+    /**
+     * Show team view for registered team members
+     */
     public function teamView(\Illuminate\Http\Request $request)
     {
-        // Get user ID from query parameter or authenticated user
-        $userId = $request->query('user_id');
-        $user = null;
-        
-        if ($userId) {
-            // Get user data by ID
-            $user = \App\Models\User::find($userId);
-        } else {
-            // Fallback to authenticated user
+        // 1. Priority: Check for Signed URL (Invite Link)
+        // The user wants the Invite Link to ALWAYS show the Login Page first,
+        // even if the user is already logged in.
+        if ($request->has('signature')) {
+            if (!$request->hasValidSignature()) {
+                abort(403, 'Invalid or expired invite link.');
+            }
+
+            // Valid Signature (Team Invite): Render Login Page with Team Invite Context.
+            $inviteTeamId = $request->query('invite_team_id');
+            return Inertia::render('Campus Tournament/Registration', [
+                'inviteTeamId' => $inviteTeamId
+            ]);
+        }
+
+        // 2. Standard Access: Must be Authenticated
+        if (Auth::check()) {
             $user = Auth::user();
+        } else {
+            // Unauthenticated and NO signature -> Block.
+            abort(403, 'Unauthorized access.');
         }
         
         if (!$user) {
             return Inertia::render('Campus Tournament/Campus Tournament Team', [
                 'team' => null,
                 'user' => null,
-                'message' => 'User not found.'
+                'message' => 'User not found or access denied.'
             ]);
         }
         
@@ -604,6 +677,199 @@ class CampusTournamentController extends Controller
         ]);
     }
 
+
+
+    /**
+     * Finalize and submit a team
+     */
+    /**
+     * Finalize and submit a team
+     */
+    public function submitTeam(Request $request, $id)
+    {
+        // Allow manual user_id override for guest access
+        $userId = $request->input('user_id');
+        $user = $userId ? \App\Models\User::find($userId) : Auth::user();
+
+        if (!$user) {
+             return redirect()->back()->withErrors(['message' => 'Unauthorized: User not found']);
+        }
+
+        $team = \App\Models\CampusTournamentTeam::with('members')->findOrFail($id);
+        
+        // 1. Check if user is the captain
+        $captainMember = $team->members()->where('role', 'captain')->where('player_id', $user->id)->first();
+        if (!$captainMember) {
+            return redirect()->back()->withErrors(['message' => 'Only the team captain can submit the team.']);
+        }
+        
+        // 2. Check if team is already registered
+        if ($team->status === 'registered') {
+             return redirect()->back()->withErrors(['message' => 'Team is already registered.']);
+        }
+
+        // 3. Check if we have 5 members
+        if ($team->members()->count() !== 5) {
+             return redirect()->back()->withErrors(['message' => 'Team must have exactly 5 members.']);
+        }
+        
+        // 4. Check if all members have accepted
+        $pendingCount = $team->members()->where('status', '!=', 'accepted')->count();
+        if ($pendingCount > 0) {
+             return redirect()->back()->withErrors(['message' => 'All team members must accept their invites before submitting.']);
+        }
+        
+        // 5. Update status
+        $team->update(['status' => 'registered']);
+        
+        return redirect()->back()->with('message', 'Team submitted successfully! Your roster is now final.');
+    }
+
+    /**
+     * Generate a unique invite code for a team
+     */
+    public function generateInviteCode(Request $request, $id)
+    {
+        $userId = $request->input('user_id');
+        $user = $userId ? \App\Models\User::find($userId) : Auth::user();
+
+        if (!$user) {
+             return response()->json(['error' => 'Unauthorized: User not found'], 401);
+        }
+
+        $team = \App\Models\CampusTournamentTeam::findOrFail($id);
+        
+        // Only captain can generate code
+        if ($team->captain_id !== $user->id) {
+            return response()->json(['error' => 'Only the team captain can generate an invite code.'], 403);
+        }
+
+        // Generate unique alphanumeric 6-character code
+        do {
+            $code = strtoupper(substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 6));
+        } while (\App\Models\CampusTournamentTeam::where('invite_code', $code)->exists());
+
+        $team->update(['invite_code' => $code]);
+
+        return redirect()->back()->with('message', 'Team Invite Code generated successfully!');
+    }
+
+    /**
+     * Update an existing team
+     */
+    public function updateTeam(Request $request, $teamId)
+    {
+        // 1. Validate the request
+        $request->validate([
+            'teamName' => 'required|string|max:50',
+            'discordId' => 'nullable|string|max:50',
+            'captain' => 'required|array',
+            'captain.id' => 'required|integer',
+            'captain.university' => 'required|string',
+            'players' => 'required|array',
+            'players.captain' => 'required|array',
+            'players.player2' => 'required|array',
+            'players.player3' => 'required|array',
+            'players.player4' => 'required|array',
+            'players.player5' => 'required|array',
+        ]);
+        
+        $captain = $request->captain;
+        
+        if (!Auth::check()) {
+            return redirect()->back()->withErrors(['message' => 'Unauthorized']);
+        }
+        $user = Auth::user();
+        
+        // 2. Find the existing team
+        $team = \App\Models\CampusTournamentTeam::find($teamId);
+        if (!$team) {
+            return redirect()->back()->withErrors(['message' => 'Team not found']);
+        }
+        
+        // 3. Check if current user is the captain
+        if ($team->captain_id !== $user->id) {
+            return redirect()->back()->withErrors(['message' => 'Only the team captain can edit the team']);
+        }
+        
+        // 4. IMPORTANT: Check if team is already submitted/registered
+        if ($team->status === 'registered') {
+             return redirect()->back()->withErrors(['message' => 'Team cannot be updated after submission. Contact support/admin if changes are needed.']);
+        }
+
+        // 5. Check if team name already exists
+        $existingTeamName = \App\Models\CampusTournamentTeam::where('team_name', $request->teamName)
+            ->where('tournament_id', $team->tournament_id)
+            ->where('id', '!=', $teamId)
+            ->first();
+        
+        if ($existingTeamName) {
+            return redirect()->back()->withErrors(['message' => 'Team name already exists']);
+        }
+        
+        \DB::beginTransaction();
+        try {
+            // 6. Update team details
+            $team->update([
+                'team_name' => $request->teamName,
+                'discord_id' => $request->discordId,
+            ]);
+            
+            // 8. Handle Members Update
+            $currentMembers = \App\Models\CampusTournamentTeamMember::where('team_id', $teamId)->get()->keyBy('player_id');
+            
+            $players = [
+                $request->players['captain'],
+                $request->players['player2'],
+                $request->players['player3'],
+                $request->players['player4'],
+                $request->players['player5'],
+            ];
+            
+            $newPlayerIds = [];
+            
+            foreach ($players as $player) {
+                if (isset($player['id'])) {
+                    $newPlayerIds[] = $player['id'];
+                    $playerId = $player['id'];
+                    $role = ($playerId == $captain['id']) ? 'captain' : 'member';
+                    
+                    if (isset($currentMembers[$playerId])) {
+                         $currentMembers[$playerId]->update(['role' => $role]);
+                    } else {
+                        \App\Models\CampusTournamentTeamMember::create([
+                            'team_id' => $team->id,
+                            'player_id' => $playerId,
+                            'role' => $role,
+                            'status' => ($playerId == $captain['id']) ? 'accepted' : 'pending',
+                        ]);
+                    }
+                }
+            }
+            
+            // 9. Remove members not in the new list
+            \App\Models\CampusTournamentTeamMember::where('team_id', $teamId)
+                ->whereNotIn('player_id', $newPlayerIds)
+                ->delete();
+            
+            \DB::commit();
+            
+            // Redirect to Team View (campus.team) instead of back()
+            // Pass user_id if we have it (for guest/unauth context flow)
+            $params = [];
+            if ($user) {
+                $params['user_id'] = $user->id;
+            }
+            
+            return redirect()->route('campus.team', $params)->with('message', 'Team updated successfully');
+            
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Team update error: ' . $e->getMessage());
+            return redirect()->back()->withErrors(['message' => 'Update failed. ' . $e->getMessage()]);
+        }
+    }
+
     /**
      * Export tournament results to Excel
      */
@@ -616,7 +882,9 @@ class CampusTournamentController extends Controller
             return response()->json(['error' => 'Unauthorized to export results'], 403);
         }
         
-        $tournament = CampusTournament::with(['teams.members.player'])->findOrFail($id);
+        $tournament = CampusTournament::with(['teams' => function($query) {
+            $query->where('status', 'registered');
+        }, 'teams.members.player'])->findOrFail($id);
         
         // Check permissions
         if ($user->role === 'SL') {
@@ -635,68 +903,38 @@ class CampusTournamentController extends Controller
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         
-        // Set document properties
-        $spreadsheet->getProperties()
-            ->setCreator('MSL Campus Tournament')
-            ->setTitle('Tournament Results - ' . $tournament->school_name)
-            ->setSubject('Tournament Results')
-            ->setDescription('Campus Tournament Results Export');
-        
-        // Title
-        $sheet->setCellValue('A1', strtoupper($tournament->school_name) . ' TOURNAMENT RESULTS');
-        $sheet->mergeCells('A1:V1');
-        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
-        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        
-        // Tournament Information
-        $row = 3;
-        $sheet->setCellValue('A' . $row, 'Registration Start Date:');
-        $sheet->setCellValue('B' . $row, $tournament->start_date->format('F d, Y'));
-        $sheet->getStyle('A' . $row)->getFont()->setBold(true);
-        
-        $row++;
-        $sheet->setCellValue('A' . $row, 'Registration End Date:');
-        $sheet->setCellValue('B' . $row, $tournament->end_date->format('F d, Y'));
-        $sheet->getStyle('A' . $row)->getFont()->setBold(true);
-        
-        $row++;
-        $sheet->setCellValue('A' . $row, 'Results Submitted:');
-        $sheet->setCellValue('B' . $row, $tournament->results_submitted_at->format('F d, Y h:i A'));
-        $sheet->getStyle('A' . $row)->getFont()->setBold(true);
-        
-        // Add spacing
-        $row += 2;
-        
-        // Headers - Main columns
-        $mainHeaders = ['Rank', 'Team Name'];
+        // Add Tournament Info at the top
+        $sheet->setCellValue('A2', 'Registration Start Date:');
+        $sheet->setCellValue('B2', $tournament->start_date ? $tournament->start_date->format('F d, Y') : '-');
+
+        $sheet->setCellValue('A3', 'Registration End Date:');
+        $sheet->setCellValue('B3', $tournament->end_date ? $tournament->end_date->format('F d, Y') : '-');
+
+        $sheet->setCellValue('A4', 'Results Submitted:');
+        $sheet->setCellValue('B4', $tournament->results_submitted_at ? $tournament->results_submitted_at->format('F d, Y h:i A') : '-');
+
+        $sheet->setCellValue('A5', 'Submitted By:');
+        $sheet->setCellValue('B5', $tournament->sl_name ?? '-');
+
+        $sheet->setCellValue('A6', 'Tournament Type:');
+        $sheet->setCellValue('B6', $tournament->tournament_type ? ucwords($tournament->tournament_type) : '-');
+
+        // Style the labels
+        $sheet->getStyle('A2:A6')->getFont()->setBold(true);
+
+        // School Name at top right (Column F)
+        $sheet->setCellValue('F1', strtoupper($tournament->school_name));
+        $sheet->getStyle('F1')->getFont()->setBold(true);
+        $sheet->getStyle('F1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+
+        // Headers (starting at Row 8)
+        $headers = ['Rank', 'Team Name', 'Player Name', 'IGN', 'Server', 'UID'];
         $col = 'A';
-        foreach ($mainHeaders as $header) {
-            $sheet->setCellValue($col . $row, $header);
-            $sheet->getStyle($col . $row)->getFont()->setBold(true);
-            $sheet->getStyle($col . $row)->getFill()
-                ->setFillType(Fill::FILL_SOLID)
-                ->getStartColor()->setARGB('FFD3D3D3');
-            $sheet->getStyle($col . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        foreach ($headers as $header) {
+            $sheet->setCellValue($col . '8', $header);
+            $sheet->getStyle($col . '8')->getFont()->setBold(true);
+            $sheet->getStyle($col . '8')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             $col++;
-        }
-        
-        // Headers - Player columns (Name, IGN, ID, Server for each of 5 players)
-        for ($i = 1; $i <= 5; $i++) {
-            $playerHeaders = [
-                "Player $i Name",
-                "Player $i IGN",
-                "Player $i ID",
-                "Player $i Server"
-            ];
-            foreach ($playerHeaders as $header) {
-                $sheet->setCellValue($col . $row, $header);
-                $sheet->getStyle($col . $row)->getFont()->setBold(true);
-                $sheet->getStyle($col . $row)->getFill()
-                    ->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('FFD3D3D3');
-                $sheet->getStyle($col . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $col++;
-            }
         }
         
         // Sort teams by result
@@ -705,102 +943,63 @@ class CampusTournamentController extends Controller
             return $order[$team->result] ?? 5;
         });
         
-        // Data rows
-        $row++;
+        // Data rows starting at Row 9
+        $row = 9;
         foreach ($teams as $team) {
-            // Determine rank display text
+            // Determine rank display text and color
             $result = $team->result ?? 'participant';
-            if ($result === 'participant') {
-                $rank = 'Participant';
-            } elseif ($result === '1st') {
-                $rank = '1st';
+            $rankString = 'Participant';
+            $rankColor = null;
+
+            if ($result === '1st') {
+                $rankString = '1st';
+                $rankColor = 'FFFFCC00'; // Yellow/Gold
             } elseif ($result === '2nd') {
-                $rank = '2nd';
+                $rankString = '2nd';
+                $rankColor = 'FFC0C0C0'; // Silver
             } elseif ($result === '3rd') {
-                $rank = '3rd';
-            } else {
-                $rank = 'Participant';
+                $rankString = '3rd';
+                $rankColor = 'FFCD7F32'; // Bronze
             }
-            
-            $sheet->setCellValue('A' . $row, $rank);
-            $sheet->setCellValue('B' . $row, $team->team_name);
-            
-            // Add player data (Name, IGN, ID, Server for each player)
-            $players = $team->members->sortBy('role', SORT_REGULAR, true); // Captain first
-            $playerCol = 'C';
-            $columnIndex = 2; // Starting from column C (0=A, 1=B, 2=C)
-            
-            foreach ($players->take(5) as $member) {
+
+            // Get members sorted: Captain first, then others
+            $members = $team->members->sortBy('role', SORT_REGULAR, true);
+
+            foreach ($members as $member) {
                 $player = $member->player;
                 
-                // Player Name
-                $playerName = $player ? trim($player->name . ' ' . $player->surname) : 'Unknown';
-                $sheet->setCellValue($playerCol . $row, $playerName);
-                $playerCol++;
-                $columnIndex++;
-                
-                // ML IGN - clean and validate
-                $mlIgn = '-';
-                if ($player && !empty($player->ml_ign)) {
-                    $mlIgn = trim($player->ml_ign);
-                    // Limit length to prevent display issues
-                    if (strlen($mlIgn) > 50) {
-                        $mlIgn = substr($mlIgn, 0, 50);
-                    }
+                // Set Row Values
+                $sheet->setCellValue('A' . $row, $rankString);
+                $sheet->setCellValue('B' . $row, $team->team_name);
+                $sheet->setCellValue('C' . $row, $player ? trim($player->name . ' ' . $player->surname) : 'Unknown');
+                $sheet->setCellValue('D' . $row, $player ? $player->ml_ign : '-');
+                $sheet->setCellValue('E' . $row, $player ? $player->ml_server : '-');
+                $sheet->setCellValue('F' . $row, $player ? $player->ml_id : '-');
+
+                // Apply rank color to the rank and team name columns (A and B) as per image
+                if ($rankColor) {
+                    $sheet->getStyle('A' . $row . ':B' . $row)->getFill()
+                        ->setFillType(Fill::FILL_SOLID)
+                        ->getStartColor()->setARGB($rankColor);
                 }
-                $sheet->setCellValue($playerCol . $row, $mlIgn);
-                $playerCol++;
-                $columnIndex++;
-                
-                // ML ID - clean and validate
-                $mlId = '-';
-                if ($player && !empty($player->ml_id)) {
-                    $mlId = trim($player->ml_id);
-                }
-                $sheet->setCellValue($playerCol . $row, $mlId);
-                $playerCol++;
-                $columnIndex++;
-                
-                // ML Server - clean and validate
-                $mlServer = '-';
-                if ($player && !empty($player->ml_server)) {
-                    $mlServer = trim($player->ml_server);
-                }
-                $sheet->setCellValue($playerCol . $row, $mlServer);
-                $playerCol++;
-                $columnIndex++;
+
+                $row++;
             }
-            
-            // Color code ranks - apply to entire row for better visibility
-            if ($result === '1st') {
-                $sheet->getStyle('A' . $row)->getFill()
-                    ->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('FFFFD700'); // Gold
-            } elseif ($result === '2nd') {
-                $sheet->getStyle('A' . $row)->getFill()
-                    ->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('FFC0C0C0'); // Silver
-            } elseif ($result === '3rd') {
-                $sheet->getStyle('A' . $row)->getFill()
-                    ->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('FFCD7F32'); // Bronze
-            }
-            
-            $row++;
         }
         
-        // Auto-size columns (A to V = 22 columns: Rank, Team + 5 players × 4 fields)
-        foreach (range('A', 'V') as $col) {
+        // Auto-size columns A to F
+        foreach (range('A', 'F') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
         
-        // Disable text wrapping for all data cells to prevent display issues
-        $sheet->getStyle('A7:V' . ($row - 1))->getAlignment()->setWrapText(false);
-        
-        // Add borders to the table
+        // Add borders to the table (starting from row 8)
         $lastRow = $row - 1;
-        $sheet->getStyle('A7:V' . $lastRow)->getBorders()->getAllBorders()
+        $sheet->getStyle('A8:F' . $lastRow)->getBorders()->getAllBorders()
             ->setBorderStyle(Border::BORDER_THIN);
+        
+        // Center alignment for certain columns
+        $sheet->getStyle('A8:A' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('E8:F' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
         
         // Create filename
         $filename = 'Tournament_Results_' . str_replace(' ', '_', $tournament->school_name) . '_' . date('Y-m-d') . '.xlsx';
@@ -815,5 +1014,164 @@ class CampusTournamentController extends Controller
         
         $writer->save('php://output');
         exit;
+    }
+    /**
+     * Export pre-registration data to Excel (Super Admin only)
+     * Fetches ALL approved tournaments for the given island within a date range
+     */
+    public function exportPreReg(\Illuminate\Http\Request $request)
+    {
+        $user = Auth::user();
+
+        // Only Super Admin can generate pre-registration export
+        if ($user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Only Super Admins can generate pre-registration exports'], 403);
+        }
+
+        // Validate inputs
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'island'     => 'required|string',
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after_or_equal:start_date',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $island    = $request->island;
+        $startDate = $request->start_date;
+        $endDate   = $request->end_date;
+
+        // Fetch ALL approved tournaments for the given island within the date range
+        // Island is stored on the student leader (SL) user record
+        $tournaments = CampusTournament::with([
+                'teams' => function ($query) {
+                    $query->where('status', 'registered');
+                },
+                'teams.members' => function ($query) {
+                    $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
+                },
+                'teams.members.player',
+                'studentLeader',
+            ])
+            ->where('status', 'approved')
+            ->whereHas('studentLeader', function ($q) use ($island) {
+                $q->where('island', $island);
+            })
+            ->where(function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('start_date', [$startDate, $endDate])
+                  ->orWhereBetween('end_date', [$startDate, $endDate]);
+            })
+            ->orderBy('start_date', 'asc')
+            ->get();
+
+        if ($tournaments->isEmpty()) {
+            return response()->json(['error' => 'No approved tournaments found for the selected island and date range.'], 404);
+        }
+
+        // Create Spreadsheet
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Header info rows — show the user-selected date range
+        $sheet->setCellValue('A1', 'Registration Start Date:');
+        $sheet->setCellValue('B1', \Carbon\Carbon::parse($startDate)->format('F d, Y'));
+        $sheet->setCellValue('A2', 'Registration End Date:');
+        $sheet->setCellValue('B2', \Carbon\Carbon::parse($endDate)->format('F d, Y'));
+
+        $sheet->getStyle('A1:A2')->getFont()->setBold(true);
+
+        // Blank row 3, headers on row 4
+        $headers = ['Island', 'School', 'Team Name', 'Player Name', 'IGN', 'Server', 'UID'];
+        $col = 'A';
+        foreach ($headers as $header) {
+            $sheet->setCellValue($col . '4', $header);
+            $sheet->getStyle($col . '4')->getFont()->setBold(true);
+            $sheet->getStyle($col . '4')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $col++;
+        }
+
+        // Data rows starting at row 5 — iterate ALL tournaments
+        $row = 5;
+        foreach ($tournaments as $tournament) {
+            foreach ($tournament->teams as $team) {
+                $members = $team->members->sortBy('role', SORT_REGULAR, true); // captain first
+
+                foreach ($members as $member) {
+                    $player = $member->player;
+                    $playerIsland = ($player && $player->island) ? $player->island : $island;
+
+                    $sheet->setCellValue('A' . $row, $playerIsland);
+                    $sheet->setCellValue('B' . $row, $player ? $player->university : ($tournament->school_name ?? '-'));
+                    $sheet->setCellValue('C' . $row, $team->team_name);
+                    $sheet->setCellValue('D' . $row, $player ? trim($player->name . ' ' . $player->surname) : 'Unknown');
+                    $sheet->setCellValue('E' . $row, $player ? $player->ml_ign : '-');
+                    $sheet->setCellValue('F' . $row, $player ? $player->ml_server : '-');
+                    $sheet->setCellValue('G' . $row, $player ? $player->ml_id : '-');
+
+                    $row++;
+                }
+            }
+        }
+
+        // Auto-size columns A-G
+        foreach (range('A', 'G') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Add borders to table (row 4 onwards)
+        $lastRow = $row - 1;
+        if ($lastRow >= 4) {
+            $sheet->getStyle('A4:G' . $lastRow)->getBorders()->getAllBorders()
+                ->setBorderStyle(Border::BORDER_THIN);
+        }
+
+        // Center alignment for Island, IGN, Server, UID columns
+        $sheet->getStyle('A4:A' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('E4:G' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+
+        // Filename includes date range
+        $filename = 'PreReg_' . str_replace(' ', '_', $island) . '_' . $startDate . '_to_' . $endDate . '.xlsx';
+
+        $writer = new Xlsx($spreadsheet);
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer->save('php://output');
+        exit;
+    }
+
+    /**
+     * Generate a signed invite link for a specific player
+     */
+    /**
+     * Generate a signed invite link for the TEAM
+     */
+    public function generateInviteLink($teamId)
+    {
+        $user = Auth::user();
+        
+        // Find member record for auth user in this team
+        $authMember = \App\Models\CampusTournamentTeamMember::where('player_id', $user->id)
+            ->where('team_id', $teamId)
+            ->where('role', 'captain')
+            ->first();
+            
+        if (!$authMember) {
+            return response()->json(['error' => 'Unauthorized. Only the team captain can generate links.'], 403);
+        }
+
+        // Generate Signed URL for the TEAM (valid for 7 days)
+        // We use 'invite_team_id' to distinguish it from the old 'user_id' logic
+        $url = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+            'campus.team',
+            now()->addDays(7),
+            ['invite_team_id' => $teamId]
+        );
+        
+        return response()->json(['url' => $url]);
     }
 }

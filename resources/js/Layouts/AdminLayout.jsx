@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { FaNewspaper, FaCalendar, FaUsers, FaTachometerAlt, FaSignOutAlt, FaBed, FaBook, FaConciergeBell, FaCog, FaTh, FaEllipsisH, FaImages, FaGamepad, FaUserGraduate, FaUserShield, FaCamera } from 'react-icons/fa';
+import { FaNewspaper, FaCalendar, FaUsers, FaTachometerAlt, FaSignOutAlt, FaBed, FaBook, FaConciergeBell, FaCog, FaTh, FaEllipsisH, FaImages, FaGamepad, FaUserGraduate, FaUserShield, FaCamera, FaTrophy } from 'react-icons/fa';
 
 export default function AdminLayout({ children }) {
     const { auth } = usePage().props;
@@ -16,8 +16,11 @@ export default function AdminLayout({ children }) {
         { name: 'Carousel Management', href: route('admin.carousel'), routeName: 'admin.carousel', icon: FaImages },
         { name: 'Buffs and Support', href: route('admin.event-photos'), routeName: 'admin.event-photos', icon: FaCamera },
         { name: 'MSL Event Management', href: route('admin.msl-events.index'), routeName: 'admin.msl-events.index', icon: FaGamepad },
+        { name: 'MCC Season Management', href: route('admin.mcc-seasons.index'), routeName: 'admin.mcc-seasons.index', icon: FaTrophy },
         { name: 'Event Calendar', href: route('admin.events'), routeName: 'admin.events', icon: FaCalendar },
         { name: 'Footer Management', href: route('admin.footer'), routeName: 'admin.footer', icon: FaCog },
+        { name: 'Oppo Settings', href: route('admin.oppo-settings.index'), routeName: 'admin.oppo-settings.index', icon: FaCog },
+        { name: 'Violation Reports', href: route('admin.violation-reports.index'), routeName: 'admin.violation-reports.index', icon: FaUserShield },
         { name: 'Settings', href: route('admin.settings'), routeName: 'admin.settings', icon: FaCog },
     ];
 
@@ -92,49 +95,10 @@ export default function AdminLayout({ children }) {
                                 )}
                                 <span className="text-gray-800 font-semibold text-xl">{activeNav ? activeNav.name : ''}</span>
                             </div>
-                            <div className="flex items-center space-x-4 relative">
-                                <div className="relative">
-                                    <button
-                                        onClick={() => setDropdownOpen(!dropdownOpen)}
-                                        className="flex items-center space-x-3 font-medium bg-[#212121] rounded-lg px-4 py-2 hover:bg-[#4A4A60] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#212121]"
-                                    >
-                                        <span className="text-white font-medium">Super Admin</span>
-                                        <svg
-                                            className={`w-4 h-4 text-white transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`}
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </button>
+                            <div className="flex items-center space-x-4">
 
-                                    {/* Dropdown Menu */}
-                                    {dropdownOpen && (
-                                        <>
-                                            {/* Invisible overlay to close dropdown when clicking outside */}
-                                            <div
-                                                className="fixed inset-0 z-10"
-                                                onClick={() => setDropdownOpen(false)}
-                                            />
-                                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-20 border border-gray-200">
-                                                <div className="px-4 py-2 border-b border-gray-200">
-                                                    <p className="text-sm text-gray-500">Signed in as</p>
-                                                    <p className="text-sm font-medium text-gray-900 truncate">{auth.user.name}</p>
-                                                </div>
-                                                <Link
-                                                    href={route('admin.logout')}
-                                                    method="post"
-                                                    as="button"
-                                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center transition-colors duration-200"
-                                                    onClick={() => setDropdownOpen(false)}
-                                                >
-                                                    <FaSignOutAlt className="w-4 h-4 mr-2" />
-                                                    Logout
-                                                </Link>
-                                            </div>
-                                        </>
-                                    )}
+                                <div className="flex items-center space-x-3 font-medium bg-[#212121] rounded-lg px-4 py-2">
+                                    <span className="text-white font-medium">{auth.user.name}</span>
                                 </div>
                             </div>
                         </div>

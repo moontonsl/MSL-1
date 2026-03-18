@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class CampusTournamentTeam extends Model
 {
     protected $fillable = [
-        'tournament_id', 'team_name', 'discord_id', 'captain_id', 'result'
+        'tournament_id', 'team_name', 'discord_id', 'captain_id', 'invite_code', 'result', 'status'
     ];
 
     public function tournament(): BelongsTo

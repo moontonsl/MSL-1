@@ -1,239 +1,171 @@
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, Search, Filter } from "lucide-react";
-import { Header, Footer } from "@/Components";
+import { PhilippinesMap } from "@/Components";
+import MainLayout from "@/Layouts/MainLayout";
 import { router } from '@inertiajs/react';
-import style from "@/Components/CSS/Campus.module.css";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
-export default function Campus({ schools, islands, provinces, selectedIslandId, selectedProvinceId }) {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [islandFilter, setIslandFilter] = useState(selectedIslandId || '');
-    const [provinceFilter, setProvinceFilter] = useState(selectedProvinceId || '');
+export default function Campus({ communities, selectedIsland }) {
+    const [hoveredMapCode, setHoveredMapCode] = useState(null);
 
-    const handleFilterChange = () => {
-        const params = new URLSearchParams();
-        if (islandFilter) params.append('island_id', islandFilter);
-        if (provinceFilter) params.append('province_id', provinceFilter);
-        
-        router.get('/campus', Object.fromEntries(params), {
+    const handleTabChange = (island) => {
+        router.get('/campus', { island }, {
             preserveState: true,
-            replace: true
+            replace: true,
+            preserveScroll: true
         });
     };
 
-    const handlePageChange = (page) => {
-        const params = new URLSearchParams();
-        if (islandFilter) params.append('island_id', islandFilter);
-        if (provinceFilter) params.append('province_id', provinceFilter);
-        params.append('page', page);
-        
-        router.get('/campus', Object.fromEntries(params), {
-            preserveState: true,
-            replace: true
-        });
+    const handlePageChange = (url) => {
+        if (url) {
+            router.get(url, {}, {
+                preserveState: true,
+                replace: true,
+                preserveScroll: true
+            });
+        }
     };
 
-    const filteredSchools = schools.data.filter(school =>
-        school.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        school.municipality?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        school.region?.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const tabs = ["Luzon", "Visayas", "Mindanao"];
 
     return (
-        <div className="min-h-screen bg-black text-white">
-            <div className="relative z-10">
-                <Header />
-            </div>
+        <MainLayout data-theme="dark">
+            <div className="font-sans flex flex-col min-h-screen">
+                <main
+                    className="flex-grow flex flex-col md:flex-row min-h-[calc(100vh-64px)] relative"
+                    style={{
+                        backgroundImage: "url('/images/MCC/MCC2_BG.png')",
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                        backgroundAttachment: "fixed"
+                    }}
+                >
+                    {/* Overlay for better readability */}
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-0"></div>
 
-            <main
-                className="relative z-0 min-h-screen py-8 md:py-16 flex items-center justify-center overflow-hidden"
-                style={{
-                    backgroundImage: "url('/images/MCC/MCC2_BG.png')",
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                    backgroundAttachment: "fixed"
-                }}
-            >
-                <div className="w-full max-w-7xl mx-auto px-4">
-                    {/* Header */}
-                    <div className="text-center mb-8">
-                        <h1 className="text-4xl font-bold text-white mb-4">School Directory</h1>
-                        <p className="text-gray-300">Browse schools across the Philippines</p>
-                    </div>
+                    {/* DIV1: Left Side - Tabs and List */}
+                    <div className="w-full md:w-1/2 p-8 lg:p-12 flex flex-col border-b md:border-b-0 md:border-r border-white/10 relative z-10">
+                        <h1 className="text-4xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-200 uppercase tracking-widest">
+                            Campus Directory
+                        </h1>
 
-                    {/* Filters */}
-                    <div className="bg-black/50 backdrop-blur-sm rounded-lg p-6 mb-8">
-                        <div className="flex flex-wrap gap-4 items-end">
-                            {/* Search */}
-                            <div className="flex-1 min-w-64">
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Search Schools
-                                </label>
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                                    <input
-                                        type="text"
-                                        placeholder="Search by school name, municipality, or region..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Island Filter */}
-                            <div className="min-w-48">
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Filter by Island
-                                </label>
-                                <select
-                                    value={islandFilter}
-                                    onChange={(e) => setIslandFilter(e.target.value)}
-                                    className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        {/* Tabs */}
+                        <div className="flex space-x-6 mb-8 border-b border-white/10 pb-4">
+                            {tabs.map((tab) => (
+                                <button
+                                    key={tab}
+                                    onClick={() => handleTabChange(tab)}
+                                    className={`text-xl font-bold uppercase tracking-wider pb-2 transition-all duration-300 ${selectedIsland === tab
+                                        ? "text-yellow-400 border-b-2 border-yellow-400 shadow-[0_4px_12px_rgba(250,204,21,0.3)]"
+                                        : "text-gray-400 hover:text-white"
+                                        }`}
                                 >
-                                    <option value="">All Islands</option>
-                                    {islands.map(island => (
-                                        <option key={island.id} value={island.id}>
-                                            {island.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {/* Province Filter */}
-                            <div className="min-w-48">
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Filter by Province
-                                </label>
-                                <select
-                                    value={provinceFilter}
-                                    onChange={(e) => setProvinceFilter(e.target.value)}
-                                    className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="">All Provinces</option>
-                                    {provinces.map(province => (
-                                        <option key={province.id} value={province.id}>
-                                            {province.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {/* Apply Filter Button */}
+                                    {tab}
+                                </button>
+                            ))}
                             <button
-                                onClick={handleFilterChange}
-                                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition-colors"
+                                onClick={() => handleTabChange('')}
+                                className={`text-xl font-bold uppercase tracking-wider pb-2 transition-all duration-300 ${!selectedIsland
+                                    ? "text-yellow-400 border-b-2 border-yellow-400 shadow-[0_4px_12px_rgba(250,204,21,0.3)]"
+                                    : "text-gray-400 hover:text-white"
+                                    }`}
                             >
-                                <Filter className="w-4 h-4" />
-                                Apply Filters
+                                ALL
                             </button>
                         </div>
-                    </div>
 
-                    {/* Table */}
-                    <div className="bg-black/50 backdrop-blur-sm rounded-lg overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="bg-gray-800">
-                                    <tr>
-                                        <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">School Name</th>
-                                        <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">Municipality</th>
-                                        <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">Province</th>
-                                        <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">Region</th>
-                                        <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">Island</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-700">
-                                    {filteredSchools.map((school) => (
-                                        <tr key={school.id} className="hover:bg-gray-800/50 transition-colors">
-                                            <td className="px-6 py-4 text-sm text-white font-medium">
-                                                {school.name}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-gray-300">
-                                                {school.municipality?.name || 'N/A'}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-gray-300">
-                                                {school.municipality?.province?.name || 'N/A'}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-gray-300">
-                                                {school.region?.name || 'N/A'}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-gray-300">
-                                                {school.region?.island?.name || 'N/A'}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        {/* School List */}
+                        <div className="flex-grow overflow-y-auto pr-4 custom-scrollbar space-y-2">
+                            {communities.data.map((community) => (
+                                <a
+                                    key={community.id}
+                                    href={community.school_link || "#"}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onMouseEnter={() => setHoveredMapCode(community.map_code)}
+                                    onMouseLeave={() => setHoveredMapCode(null)}
+                                    className="block group p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-yellow-500/50 transition-all duration-300 cursor-pointer backdrop-blur-md"
+                                >
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <h3 className="text-lg font-bold text-white group-hover:text-yellow-400 transition-colors uppercase tracking-wide">
+                                                {community.school?.name || "UNKNOWN SCHOOL"}
+                                            </h3>
+                                            <p className="text-sm text-gray-400 mt-1 uppercase flex items-center gap-2">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
+                                                {community.location || community.school?.municipality?.name || ""}
+                                            </p>
+                                        </div>
+                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                            <ChevronRight className="w-5 h-5 text-yellow-400" />
+                                        </div>
+                                    </div>
+                                </a>
+                            ))}
+                            {communities.data.length === 0 && (
+                                <div className="text-gray-500 italic p-4 text-center">No schools found for this selection.</div>
+                            )}
                         </div>
 
-                        {/* Pagination */}
-                        <div className="bg-gray-800 px-6 py-4 flex items-center justify-between">
-                            <div className="text-sm text-gray-400">
-                                Showing {schools.from || 0} to {schools.to || 0} of {schools.total} results
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <button
-                                    onClick={() => handlePageChange(schools.current_page - 1)}
-                                    disabled={!schools.prev_page_url}
-                                    className="px-3 py-2 text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                                >
-                                    <ChevronLeft className="w-4 h-4" />
-                                    Previous
-                                </button>
-                                
-                                <div className="flex items-center space-x-1">
-                                    {Array.from({ length: Math.min(5, schools.last_page) }, (_, i) => {
-                                        const page = i + 1;
-                                        const isCurrentPage = page === schools.current_page;
-                                        return (
-                                            <button
-                                                key={page}
-                                                onClick={() => handlePageChange(page)}
-                                                className={`px-3 py-2 text-sm font-medium rounded-lg ${
-                                                    isCurrentPage
-                                                        ? 'bg-blue-600 text-white'
-                                                        : 'text-gray-300 bg-gray-700 hover:bg-gray-600'
-                                                }`}
-                                            >
-                                                {page}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-
-                                <button
-                                    onClick={() => handlePageChange(schools.current_page + 1)}
-                                    disabled={!schools.next_page_url}
-                                    className="px-3 py-2 text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                                >
-                                    Next
-                                    <ChevronRight className="w-4 h-4" />
-                                </button>
-                            </div>
-                        </div>
+                        {/* Footer / Pagination */}
+                        <div className="mt-6 pt-4 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center gap-4">
+                            <div className="text-sm font-bold text-gray-400 uppercase tracking-wider">
+                                SHOWING {communities.from || 0}-{communities.to || 0} OF {communities.total} SCHOOLS
                             </div>
 
-                    {/* Philippines Map */}
-                    <div className="mt-8 bg-black/50 backdrop-blur-sm rounded-lg p-6">
-                        <h2 className="text-2xl font-bold text-white mb-4 text-center">Philippines Map</h2>
-                        <div className="flex justify-center">
-                            <div className="text-center">
-                                <div className="text-gray-400 mb-4">
-                                    <p>Interactive Philippines Map</p>
-                                    <p className="text-sm">Map visualization will be added here</p>
-                                </div>
-                                <div className="w-96 h-64 bg-gray-800 rounded-lg border border-gray-600 flex items-center justify-center">
-                                    <span className="text-gray-500">Map Placeholder</span>
-                                </div>
+                            {/* Pagination Controls */}
+                            <div className="flex items-center gap-2">
+                                {communities.links.map((link, index) => {
+                                    let content = null;
+                                    let isArrow = false;
+
+                                    if (link.label.includes('Previous')) {
+                                        content = <ChevronLeft className="w-5 h-5" />;
+                                        isArrow = true;
+                                    } else if (link.label.includes('Next')) {
+                                        content = <ChevronRight className="w-5 h-5" />;
+                                        isArrow = true;
+                                    } else {
+                                        content = <span className="font-bold">{link.label}</span>;
+                                    }
+
+                                    return (
+                                        <button
+                                            key={index}
+                                            onClick={() => handlePageChange(link.url)}
+                                            disabled={!link.url || link.active}
+                                            className={`
+                                                flex items-center justify-center rounded-lg transition-all duration-300
+                                                ${isArrow ? 'p-2' : 'w-10 h-10'}
+                                                ${link.active
+                                                    ? "bg-yellow-500 text-black shadow-lg shadow-yellow-500/20 scale-105"
+                                                    : !link.url
+                                                        ? "text-gray-600 cursor-not-allowed"
+                                                        : "bg-white/5 text-gray-300 hover:bg-white/20 hover:text-white"
+                                                }
+                                            `}
+                                        >
+                                            {content}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
-                </div>
-            </main>
 
-            <div className="relative z-10">
-                <Footer />
+                    {/* DIV2: Right Side - Philippines Map */}
+                    <div className="w-full md:w-1/2 flex flex-col items-center justify-start p-8 relative z-10 min-h-[500px] md:min-h-auto">
+                        <div className="w-full h-full max-w-xl relative flex items-start justify-center -mt-32">
+                            {/* Glow effect behind map */}
+                            <div className="absolute inset-0 bg-yellow-500/5 blur-3xl rounded-full transform scale-75 pointer-events-none"></div>
+
+                            <PhilippinesMap
+                                className="w-full h-full max-h-[80vh] drop-shadow-2xl relative z-10"
+                                hoveredMapCode={hoveredMapCode}
+                            />
+                        </div>
+                    </div>
+                </main>
             </div>
-        </div>
+        </MainLayout>
     );
 }

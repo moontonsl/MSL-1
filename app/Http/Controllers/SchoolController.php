@@ -17,7 +17,7 @@ class SchoolController extends Controller
         }
 
         $schoolsQuery = School::with('region.island')
-                ->where('name', 'like', '%' . $query . '%');
+                ->where('name', 'like', $query . '%');
 
         // Filter by region if provided
         if ($regionId) {
@@ -25,7 +25,7 @@ class SchoolController extends Controller
         }
 
         $schools = $schoolsQuery->select('id', 'name', 'region_id')
-                ->limit(10)
+                ->limit(20)
                 ->get();
 
         $formatted = $schools->map(function ($school) {

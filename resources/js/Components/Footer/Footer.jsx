@@ -1,11 +1,11 @@
 import styles from './Footer.module.scss';
 import { Link, usePage } from '@inertiajs/react';
-import { Facebook, Youtube } from 'lucide-react';
+import { Facebook, Youtube, Shield } from 'lucide-react';
 import ThemeToggleButton from '../ThemeToggleButton.jsx';
 
 const Footer = () => {
     const { footer } = usePage().props;
-    
+
     // Fallback to default values if footer data is not available
     const navSections = footer?.nav_sections || [
         {
@@ -35,7 +35,7 @@ const Footer = () => {
     const moontonLogo = footer?.moonton_logo || '/moonton-logo.png';
 
     return (
-        <footer className={styles.footer + ' text-white'}>
+        <footer className={`${styles.footer} text-white relative z-[9999] pointer-events-auto`}>
             <div className={styles.footerTop}>
                 <div className={styles.footerInfo}>
                     <div className={styles.logo}>
@@ -58,6 +58,15 @@ const Footer = () => {
                             </ul>
                         </div>
                     ))}
+
+                    <div className={styles.navs}>
+                        <div className={styles.categoryTitle}>Safe Spaces</div>
+                        <p className={styles.safeSpaceText}>We are committed to RA 11313 compliance.</p>
+                        <Link href="/report-violation" className={styles.reportButton}>
+                            <Shield size={16} />
+                            <span>Report Violation</span>
+                        </Link>
+                    </div>
                 </div>
             </div>
 
@@ -81,15 +90,15 @@ const Footer = () => {
 
             <div className={styles.footerBottom}>
                 <div className={styles.footerCopyright}>{copyright}</div>
-				<div className={styles.socials}>
-					<div className="hidden"><ThemeToggleButton /></div>
-					<a href={youtubeUrl} target="_blank" rel="noopener noreferrer" aria-label="YouTube">
-						<Youtube size={20} />
-					</a>
-					<a href={facebookUrl} target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-						<Facebook size={20} />
-					</a>
-				</div>
+                <div className={styles.socials}>
+                    <div className="hidden"><ThemeToggleButton /></div>
+                    <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                        <Youtube size={20} />
+                    </a>
+                    <a href={facebookUrl} target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                        <Facebook size={20} />
+                    </a>
+                </div>
             </div>
         </footer>
     );
