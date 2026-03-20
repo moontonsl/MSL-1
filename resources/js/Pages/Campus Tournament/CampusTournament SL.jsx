@@ -79,15 +79,20 @@ const CampusTournament = () => {
     return localTournaments.map(tournament => ({
       ...tournament,
       teams: tournament.teams ? tournament.teams
-        .filter(team => team.status === 'registered')
+        .filter(team => ['registered', 'assembling'].includes(team.status))
         .map(team => ({
           id: team.id,
           name: team.team_name,
+          status: team.status,
           result: team.result || 'participant', // Include result field
           players: team.members ? team.members.map(member => ({
             id: member.player_id,
-            name: member.player ? `${member.player.name} ${member.player.surname}`.trim() : 'Unknown Player',
-            verified: true, // Assuming all registered players are verified
+            name: member.player
+              ? `${member.player.name} ${member.player.surname}`.trim()
+              : 'Unknown Player',
+            verified: Boolean(member?.verified ?? member?.player?.verified ?? true),
+            // Nickname / in-game name (used as "IGN" in the UI).
+            ign: member.player?.ml_ign ?? member.player?.ign ?? null,
             role: member.role
           })) : []
         })) : []
@@ -556,25 +561,47 @@ const CampusTournament = () => {
   };
 
   const PlayerCell = ({ player }) => {
+    const verified = Boolean(player?.verified);
     return (
-      <div className="w-full md:w-auto flex flex-col items-center gap-1 text-white/80 text-xs md:text-sm font-montserrat">
-        <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border border-white/20 bg-white/10">
-          <svg
-            className="absolute inset-0 m-auto w-5 h-5 text-white/50"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-          {player?.avatarUrl && (
-            <img src={player.avatarUrl} alt={player?.name || 'Player'} className="w-full h-full object-cover" />
-          )}
+      <div className="w-full flex items-center gap-3 justify-start min-w-0 text-white/80 text-xs md:text-sm font-montserrat">
+        <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-full flex-shrink-0">
+          {/* Image/icon clipped by the inner circle */}
+          <div className="relative w-full h-full overflow-hidden rounded-full border border-white/20 bg-white/10">
+            {!player?.avatarUrl && (
+              <svg
+                className="absolute inset-0 m-auto w-5 h-5 text-white/50"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            )}
+            {player?.avatarUrl && (
+              <img
+                src={player.avatarUrl}
+                alt={player?.name || 'Player'}
+                className="w-full h-full object-cover"
+              />
+            )}
+          </div>
+
+          {/* Verification dot that can overflow outside the avatar */}
+          <span
+            className={`absolute bottom-[-3px] right-[-3px] z-20 w-4 h-4 rounded-full border border-black/60 shadow-[0_0_8px_rgba(0,0,0,0.5)] ${
+              verified ? 'bg-green-400' : 'bg-red-500'
+            }`}
+          />
         </div>
-        <div className="flex items-center gap-2">
-          <span className="truncate max-w-[8ch] md:max-w-[12ch]">{player?.name || 'Player'}</span>
-          <span className={`w-2.5 h-2.5 rounded-full ${player?.verified ? 'bg-green-400' : 'bg-red-500'}`} />
+
+        <div className="flex flex-col min-w-0 items-start">
+          <span className="block truncate max-w-[9ch] md:max-w-[10ch] text-white/90 text-sm leading-tight">
+            {player?.name || 'Player'}
+          </span>
+          <span className="block truncate max-w-[9ch] md:max-w-[10ch] text-white/60 text-xs leading-tight">
+            {player?.ign || '—'}
+          </span>
         </div>
       </div>
     );
@@ -836,11 +863,20 @@ const CampusTournament = () => {
                                         {/* Desktop Row */}
                                         <div className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3 border-t border-white/10 hover:bg-white/5 transition">
                                           <div className="text-white/90 font-montserrat md:truncate">{team.name}</div>
-                                          {team.players.slice(0, 5).map((player, idx) => (
-                                            <div className="flex justify-center" key={idx}>
-                                              <PlayerCell player={player} />
+                                          {team.status === 'assembling' ? (
+                                            <div className="col-span-5 text-center text-white/50 italic py-2 font-montserrat text-sm border-x border-white/5">
+                                              members are still pending in invite
                                             </div>
-                                          ))}
+                                          ) : (
+                                            team.players.slice(0, 5).map((player, idx) => (
+                                              <div
+                                                className="flex items-center justify-start w-full min-w-0"
+                                                key={idx}
+                                              >
+                                                <PlayerCell player={player} />
+                                              </div>
+                                            ))
+                                          )}
                                           <div className="flex justify-center">
                                             <select
                                               value={team.result || 'participant'}
@@ -855,6 +891,12 @@ const CampusTournament = () => {
                                             </select>
                                           </div>
                                         </div>
+                                        {/* Mobile Row with Pending Message */}
+                                        {team.status === 'assembling' && (
+                                          <div className="md:hidden w-full px-4 py-1.5 bg-white/5 border-t border-white/5 text-center text-white/50 italic text-[10px] font-montserrat">
+                                            members are still pending in invite
+                                          </div>
+                                        )}
                                         {/* Mobile Row */}
                                         <div className="grid md:hidden [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-2 items-center px-4 py-3 border-t border-white/10 hover:bg-white/5 transition">
                                           <div className="text-white/90 font-montserrat truncate">{team.name}</div>
@@ -1071,15 +1113,32 @@ const CampusTournament = () => {
                 {mobileViewTeam.players.slice(0, 5).map((player, idx) => (
                   <div key={idx} className="flex items-center justify-between border border-white/10 rounded-lg px-3 py-2 bg-white/5">
                     <div className="flex items-center gap-3">
-                      <div className="relative w-9 h-9 rounded-full overflow-hidden border border-white/20 bg-white/10">
-                        <svg className="absolute inset-0 m-auto w-5 h-5 text-white/50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
-                          <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                        </svg>
+                      <div className="relative w-9 h-9 rounded-full">
+                        {/* Image/icon clipped by the inner circle */}
+                        <div className="relative w-full h-full overflow-hidden rounded-full border border-white/20 bg-white/10">
+                          {/* Default icon */}
+                          <svg className="absolute inset-0 m-auto w-5 h-5 text-white/50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
+                            <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                          </svg>
+                        </div>
+
+                        {/* Verification dot that can overflow outside the avatar */}
+                        <span
+                          className={`absolute bottom-[-3px] right-[-3px] z-20 w-4 h-4 rounded-full border border-black/60 shadow-[0_0_8px_rgba(0,0,0,0.5)] ${
+                            player?.verified ? 'bg-green-400' : 'bg-red-500'
+                          }`}
+                        />
                       </div>
-                      <div className="font-montserrat text-sm">{player.name}</div>
+                      <div className="min-w-0">
+                        <div className="font-montserrat text-sm text-white/90 leading-tight truncate">
+                          {player.name}
+                        </div>
+                        <div className="font-montserrat text-xs text-white/60 leading-tight truncate max-w-[12ch]">
+                          {player?.ign || '—'}
+                        </div>
+                      </div>
                     </div>
-                    <span className={`w-2.5 h-2.5 rounded-full ${player.verified ? 'bg-green-400' : 'bg-red-500'}`} />
                   </div>
                 ))}
               </div>

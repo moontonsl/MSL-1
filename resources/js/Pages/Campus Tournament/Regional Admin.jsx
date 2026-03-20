@@ -29,6 +29,9 @@ const RegionalAdmin = () => {
   const [newEndDate, setNewEndDate] = useState('');
   const [isExtending, setIsExtending] = useState(false);
 
+  // Ongoing Teams View Modal State
+  const [viewingTeamsTournament, setViewingTeamsTournament] = useState(null); // tournament being viewed (ongoing section)
+
   // Pre-Reg Export Modal State
   const [showPreRegModal, setShowPreRegModal] = useState(false);
   const [preRegIsland, setPreRegIsland] = useState('Luzon');
@@ -36,10 +39,51 @@ const RegionalAdmin = () => {
   const [preRegEnd, setPreRegEnd] = useState('');
   const [preRegError, setPreRegError] = useState('');
 
+  // Prevent background scroll while any modal is open (including the View modal).
+  useEffect(() => {
+    const anyModalOpen = Boolean(
+      viewingTeamsTournament ||
+      viewing ||
+      mobileViewTeam ||
+      showPreRegModal ||
+      extendingTournament ||
+      showConfirmModal ||
+      showSuccessModal ||
+      showSubmitModal
+    );
+
+    if (!anyModalOpen) return;
+
+    const prevOverflow = document.body.style.overflow;
+    const prevPaddingRight = document.body.style.paddingRight;
+
+    // Avoid layout shift when the scrollbar disappears.
+    const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.overflow = 'hidden';
+    if (scrollBarWidth > 0) {
+      document.body.style.paddingRight = `${scrollBarWidth}px`;
+    }
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.paddingRight = prevPaddingRight;
+    };
+  }, [
+    viewingTeamsTournament,
+    viewing,
+    mobileViewTeam,
+    showPreRegModal,
+    extendingTournament,
+    showConfirmModal,
+    showSuccessModal,
+    showSubmitModal,
+  ]);
+
   // Use real approved tournaments data instead of mock data
   const [staticTournaments, setStaticTournaments] = useState(approvedTournaments || []);
 
   const [filterStatus, setFilterStatus] = useState('ongoing'); // 'ongoing' | 'completed'
+  const [activeTab, setActiveTab] = useState('requests'); // 'requests' | 'ongoing' | 'completed'
   const [showOnline, setShowOnline] = useState(true);
   const [showOnsite, setShowOnsite] = useState(true);
 
@@ -70,7 +114,10 @@ const RegionalAdmin = () => {
           players: team.members ? team.members.map(member => ({
             id: member.player_id,
             name: member.player ? `${member.player.name} ${member.player.surname}`.trim() : 'Unknown Player',
-            verified: true, // Assuming all registered players are verified
+            // Development/testing: allow mock data to specify verification per player.
+            // In production data we default to true if not present.
+            verified: Boolean(member?.verified ?? member?.player?.verified ?? true),
+            ign: member.player?.ml_ign ?? member.player?.ign ?? null,
             role: member.role
           })) : []
         })) : []
@@ -346,6 +393,56 @@ const RegionalAdmin = () => {
     );
   };
 
+  // Modal-specific player cell:
+  // - Name + IGN stack on the left
+  // - Avatar/icon on the right
+  const PlayerCellModal = ({ player }) => {
+    const verified = Boolean(player?.verified);
+    return (
+      <div className="w-full flex items-center gap-3 justify-start min-w-0">
+        <div className="relative w-9 h-9 rounded-full flex-shrink-0">
+          {/* Keep the image clipped, but allow the verification dot to overflow outside the avatar. */}
+          <div className="relative w-full h-full overflow-hidden rounded-full border border-white/20 bg-white/10">
+            <svg
+              className="absolute inset-0 m-auto w-5 h-5 text-white/50"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            {player?.avatarUrl && (
+              <img
+                src={player.avatarUrl}
+                alt={player?.name || 'Player'}
+                className="w-full h-full object-cover"
+              />
+            )}
+          </div>
+
+          {/* Verification indicator (dot) OVER avatar */}
+          <span
+            className={`absolute bottom-[-3px] right-[-3px] z-20 w-4 h-4 rounded-full border border-black/60 shadow-[0_0_8px_rgba(0,0,0,0.5)] ${
+              verified ? 'bg-green-400' : 'bg-red-500'
+            }`}
+          />
+        </div>
+
+        <div className="flex flex-col min-w-0 items-start">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="truncate max-w-[100px] text-white/90 text-sm font-montserrat leading-tight">
+              {player?.name || 'Player'}
+            </span>
+          </div>
+          <span className="truncate max-w-[100px] text-white/60 text-xs font-montserrat leading-tight">
+            {player?.ign || '—'}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
   const getStatusClasses = (status) => {
     switch (status) {
       case '1st': return 'bg-yellow-500/20 text-yellow-300 border border-yellow-400/30';
@@ -354,6 +451,24 @@ const RegionalAdmin = () => {
       case 'participant': return 'bg-blue-500/20 text-blue-300 border border-blue-400/30';
       default: return 'bg-white/10 text-white/70 border border-white/20';
     }
+  };
+
+  const getTeamConfirmation = (team) => {
+    const players = Array.isArray(team?.players) ? team.players : [];
+    const firstFive = players.slice(0, 5);
+    const allVerified = firstFive.length > 0 && firstFive.every((p) => Boolean(p?.verified));
+
+    if (allVerified) {
+      return {
+        label: 'Confirmed',
+        pillClassName: 'bg-green-500/20 text-green-200 border border-green-400/30',
+      };
+    }
+
+    return {
+      label: 'Pending',
+      pillClassName: 'bg-red-500/20 text-red-200 border border-red-400/30',
+    };
   };
 
   const handleSetResult = (tournamentId, teamId, newResult) => {
@@ -519,8 +634,88 @@ const RegionalAdmin = () => {
                 </button>
               )}
             </div>
-            {/* TOURNAMENT REQUESTS (Always Visible) */}
-            <div className="mb-12">
+            {/* Tabs: Requests | Ongoing | Completed */}
+            <div className="mt-6 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10">
+              <div className="flex space-x-4">
+                <button
+                  onClick={() => setActiveTab('requests')}
+                  className={`pb-2 px-4 font-montserrat font-bold text-lg md:text-xl transition-colors relative ${activeTab === 'requests' ? 'text-[#F2C21A]' : 'text-white/50 hover:text-white/80'
+                    }`}
+                >
+                  Requests ({localTournaments.length})
+                  {activeTab === 'requests' && (
+                    <div className="absolute bottom-0 left-0 w-full h-1 bg-[#F2C21A] rounded-t-full" />
+                  )}
+                </button>
+
+                <button
+                  onClick={() => {
+                    setFilterStatus('ongoing');
+                    setActiveTab('ongoing');
+                  }}
+                  className={`pb-2 px-4 font-montserrat font-bold text-lg md:text-xl transition-colors relative ${activeTab === 'ongoing' ? 'text-[#F2C21A]' : 'text-white/50 hover:text-white/80'
+                    }`}
+                >
+                  Ongoing ({activeTournaments.length})
+                  {activeTab === 'ongoing' && (
+                    <div className="absolute bottom-0 left-0 w-full h-1 bg-[#F2C21A] rounded-t-full" />
+                  )}
+                </button>
+
+                <button
+                  onClick={() => {
+                    setFilterStatus('completed');
+                    setActiveTab('completed');
+                  }}
+                  className={`pb-2 px-4 font-montserrat font-bold text-lg md:text-xl transition-colors relative ${activeTab === 'completed' ? 'text-[#F2C21A]' : 'text-white/50 hover:text-white/80'
+                    }`}
+                >
+                  Completed ({completedTournaments.length})
+                  {activeTab === 'completed' && (
+                    <div className="absolute bottom-0 left-0 w-full h-1 bg-[#F2C21A] rounded-t-full" />
+                  )}
+                </button>
+              </div>
+
+              {/* Only show Online/Onsite filters for Ongoing/Completed tabs */}
+              {activeTab !== 'requests' && (
+                <div className="flex items-center gap-6 px-4 pb-2 md:pb-0">
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <div className="relative flex items-center justify-center">
+                      <input
+                        type="checkbox"
+                        checked={showOnline}
+                        onChange={(e) => setShowOnline(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-5 h-5 border-2 border-white/30 rounded-md peer-checked:bg-[#F2C21A] peer-checked:border-[#F2C21A] transition-all duration-200 group-hover:border-[#F2C21A]/50"></div>
+                      <svg className="absolute w-3 h-3 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="font-montserrat text-sm text-white/80 group-hover:text-white transition-colors">Online</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <div className="relative flex items-center justify-center">
+                      <input
+                        type="checkbox"
+                        checked={showOnsite}
+                        onChange={(e) => setShowOnsite(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-5 h-5 border-2 border-white/30 rounded-md peer-checked:bg-[#F2C21A] peer-checked:border-[#F2C21A] transition-all duration-200 group-hover:border-[#F2C21A]/50"></div>
+                      <svg className="absolute w-3 h-3 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="font-montserrat text-sm text-white/80 group-hover:text-white transition-colors">Onsite</span>
+                  </label>
+                </div>
+              )}
+            </div>
+            {/* Tournament Requests */}
+            <div className={`mb-12 ${activeTab === 'requests' ? '' : 'hidden'}`}>
               <div className="text-white font-montserrat font-extrabold text-[22px] md:text-[28px] leading-tight">
                 Tournament Requests
               </div>
@@ -635,68 +830,8 @@ const RegionalAdmin = () => {
               </div>
             </div>
 
-            {/* Filter Tabs */}
-            <div className="mt-6 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10">
-              <div className="flex space-x-4">
-                <button
-                  onClick={() => setFilterStatus('ongoing')}
-                  className={`pb-2 px-4 font-montserrat font-bold text-lg md:text-xl transition-colors relative ${filterStatus === 'ongoing' ? 'text-[#F2C21A]' : 'text-white/50 hover:text-white/80'
-                    }`}
-                >
-                  Ongoing ({activeTournaments.length})
-                  {filterStatus === 'ongoing' && (
-                    <div className="absolute bottom-0 left-0 w-full h-1 bg-[#F2C21A] rounded-t-full" />
-                  )}
-                </button>
-                <button
-                  onClick={() => setFilterStatus('completed')}
-                  className={`pb-2 px-4 font-montserrat font-bold text-lg md:text-xl transition-colors relative ${filterStatus === 'completed' ? 'text-[#F2C21A]' : 'text-white/50 hover:text-white/80'
-                    }`}
-                >
-                  Completed ({completedTournaments.length})
-                  {filterStatus === 'completed' && (
-                    <div className="absolute bottom-0 left-0 w-full h-1 bg-[#F2C21A] rounded-t-full" />
-                  )}
-                </button>
-              </div>
-
-              <div className="flex items-center gap-6 px-4 pb-2 md:pb-0">
-                <label className="flex items-center gap-2 cursor-pointer group">
-                  <div className="relative flex items-center justify-center">
-                    <input
-                      type="checkbox"
-                      checked={showOnline}
-                      onChange={(e) => setShowOnline(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-5 h-5 border-2 border-white/30 rounded-md peer-checked:bg-[#F2C21A] peer-checked:border-[#F2C21A] transition-all duration-200 group-hover:border-[#F2C21A]/50"></div>
-                    <svg className="absolute w-3 h-3 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span className="font-montserrat text-sm text-white/80 group-hover:text-white transition-colors">Online</span>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer group">
-                  <div className="relative flex items-center justify-center">
-                    <input
-                      type="checkbox"
-                      checked={showOnsite}
-                      onChange={(e) => setShowOnsite(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-5 h-5 border-2 border-white/30 rounded-md peer-checked:bg-[#F2C21A] peer-checked:border-[#F2C21A] transition-all duration-200 group-hover:border-[#F2C21A]/50"></div>
-                    <svg className="absolute w-3 h-3 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span className="font-montserrat text-sm text-white/80 group-hover:text-white transition-colors">Onsite</span>
-                </label>
-              </div>
-            </div>
-
             {/* ONGOING VIEW */}
-            {filterStatus === 'ongoing' && (
+            {activeTab === 'ongoing' && (
               <>
 
 
@@ -721,43 +856,109 @@ const RegionalAdmin = () => {
                           >
                             {/* Ongoing Tournament Card Content */}
                             {/* Header */}
-                            <div className="relative z-10 w-full h-16 md:h-20 flex items-center justify-between bg-neutral-900/70 px-4 md:px-6">
-                              <div className="flex-1 text-center">
-                                <div className="font-montserrat text-lg md:text-2xl tracking-wide uppercase">{item.schoolName ? `${item.schoolName.toUpperCase()} TOURNAMENT` : 'TOURNAMENT'}</div>
-                                <div className="font-montserrat text-xs md:text-sm text-white/70">
-                                  {formatDate(item.startDate)} - {formatDate(item.endDate)}
+                            <div className="relative z-10 w-full bg-neutral-900/70 px-4 md:px-6 py-3">
+                              {/* Desktop Row (matches screenshot layout) */}
+                              <div className="hidden md:grid grid-cols-[minmax(260px,2.2fr)_minmax(120px,1fr)_minmax(120px,1fr)_minmax(160px,1.2fr)_auto] items-center gap-3">
+                                {(() => {
+                                  const verifiedCount = Array.isArray(item.teams) ? item.teams.length : 0;
+                                  const pendingCount = 0;
+                                  const totalRegistration = verifiedCount + pendingCount;
+
+                                  return (
+                                    <>
+                                <div className="text-left">
+                                  <div className="text-[11px] font-montserrat text-white/60">School Name</div>
+                                  <div className="font-montserrat text-lg tracking-wide uppercase text-white/95">
+                                    {item.schoolName ? `${item.schoolName.toUpperCase()} TOURNAMENT` : 'TOURNAMENT'}
+                                  </div>
+                                  <div className="font-montserrat text-xs text-white/70">
+                                    {formatDate(item.startDate)} - {formatDate(item.endDate)}
+                                  </div>
                                 </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  onClick={(e) => { e.stopPropagation(); handleExtendClick(item); }}
-                                  className="px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 text-white/90 text-xs font-montserrat transition-colors"
-                                >
-                                  Extend
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={(e) => { e.stopPropagation(); handleDeleteTournament(item); }}
-                                  className="px-3 py-1.5 rounded-lg border border-red-500/50 bg-red-500/20 hover:bg-red-500/30 text-white/90 text-xs font-montserrat transition-colors"
-                                >
-                                  Delete
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => toggleExpand(item.id)}
-                                  aria-label="Toggle teams"
-                                  className="grid place-items-center w-9 h-9 rounded-lg border border-white/20 hover:bg-white/10 transition"
-                                >
-                                  <svg
-                                    className={`w-5 h-5 transition-transform duration-300 ${expanded[item.id] ? 'rotate-180' : ''}`}
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
+
+                                <div className="text-center font-montserrat">
+                                  <div className="text-[11px] text-white/60">Verified Teams</div>
+                                  <div className="text-base text-white/90">{verifiedCount}</div>
+                                </div>
+
+                                <div className="text-center font-montserrat">
+                                  <div className="text-[11px] text-white/60">Pending Teams</div>
+                                  <div className="text-base text-white/90">{pendingCount}</div>
+                                </div>
+
+                                <div className="text-center font-montserrat">
+                                  <div className="text-[11px] text-white/60">Total Registration</div>
+                                  <div className="text-base text-white/90">{totalRegistration}</div>
+                                </div>
+
+                                <div className="flex items-center justify-end gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => setViewingTeamsTournament(item)}
+                                    className="px-4 py-1.5 rounded-lg border border-white/20 bg-neutral-800/40 hover:bg-neutral-700/50 text-white/90 text-xs font-montserrat transition-colors"
                                   >
-                                    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
-                                </button>
+                                    View
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); handleExtendClick(item); }}
+                                    className="px-4 py-1.5 rounded-lg border border-[#F2C21A]/60 bg-[#F2C21A]/90 hover:bg-[#d4a817] text-black text-xs font-montserrat transition-colors"
+                                  >
+                                    Resched
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); handleDeleteTournament(item); }}
+                                    className="px-4 py-1.5 rounded-lg border border-red-500/50 bg-red-500/20 hover:bg-red-500/30 text-white/90 text-xs font-montserrat transition-colors"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                                    </>
+                                  );
+                                })()}
+                              </div>
+
+                              {/* Mobile Row */}
+                              <div className="md:hidden flex flex-col gap-3">
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-montserrat text-base tracking-wide uppercase text-white/95 truncate">
+                                    {item.schoolName ? `${item.schoolName.toUpperCase()} TOURNAMENT` : 'TOURNAMENT'}
+                                  </div>
+                                  <div className="font-montserrat text-xs text-white/70 mt-1">
+                                    {formatDate(item.startDate)} - {formatDate(item.endDate)}
+                                  </div>
+                                  <div className="flex items-center gap-3 mt-2 text-[11px] text-white/70 font-montserrat">
+                                    <span>Verified: {Array.isArray(item.teams) ? item.teams.length : 0}</span>
+                                    <span>Pending: 0</span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 justify-end flex-wrap">
+                                  <button
+                                    type="button"
+                                    onClick={() => setViewingTeamsTournament(item)}
+                                    className="px-2 py-1.5 rounded-lg border border-white/20 bg-neutral-800/40 hover:bg-neutral-700/50 text-white/90 text-[11px] font-montserrat transition-colors"
+                                  >
+                                    View
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); handleExtendClick(item); }}
+                                    className="px-2 py-1.5 rounded-lg border border-[#F2C21A]/60 bg-[#F2C21A]/90 hover:bg-[#d4a817] text-black text-[11px] font-montserrat transition-colors"
+                                  >
+                                    Resched
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); handleDeleteTournament(item); }}
+                                    className="px-2 py-1.5 rounded-lg border border-red-500/50 bg-red-500/20 hover:bg-red-500/30 text-white/90 text-[11px] font-montserrat transition-colors"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
                               </div>
                             </div>
 
@@ -852,7 +1053,7 @@ const RegionalAdmin = () => {
             )}
 
             {/* COMPLETED VIEW */}
-            {filterStatus === 'completed' && (
+            {activeTab === 'completed' && (
               <>
                 {/* Tournament Results Viewer (Completed Tournaments) */}
                 {completedTournaments.length > 0 ? (
@@ -1084,6 +1285,7 @@ const RegionalAdmin = () => {
                 onChange={(e) => setPreRegIsland(e.target.value)}
                 className="w-full bg-neutral-700/60 border border-white/20 rounded-lg px-4 py-2.5 text-white font-montserrat text-sm focus:outline-none focus:border-[#F2C21A] focus:ring-1 focus:ring-[#F2C21A]"
               >
+                <option value="All">All (Luzon, Visayas, Mindanao)</option>
                 <option value="Luzon">Luzon</option>
                 <option value="Visayas">Visayas</option>
                 <option value="Mindanao">Mindanao</option>
@@ -1201,6 +1403,125 @@ const RegionalAdmin = () => {
         </div>
       )}
 
+      {/* View Modal (Ongoing Teams) */}
+      {viewingTeamsTournament && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 overflow-hidden">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setViewingTeamsTournament(null)} />
+
+          <div className="relative z-10 w-full max-w-[1400px] rounded-2xl border border-white/10 bg-gradient-to-br from-neutral-800/90 to-neutral-900/90 p-5 md:p-6 text-white shadow-2xl">
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <div className="font-montserrat font-semibold text-lg md:text-xl">
+                  {(viewingTeamsTournament.schoolName || viewingTeamsTournament.school_name || '').toUpperCase() || 'TOURNAMENT'}
+                </div>
+                <div className="mt-0.5 text-white/70 font-montserrat text-sm">
+                  {formatDate(viewingTeamsTournament.startDate || viewingTeamsTournament.start_date)} - {formatDate(viewingTeamsTournament.endDate || viewingTeamsTournament.end_date)}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setViewingTeamsTournament(null)}
+                className="text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-md px-2 py-1 font-montserrat text-sm"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="max-h-[70vh] overflow-y-auto overflow-x-auto custom-scrollbar pr-2">
+              {/* Table Header - Desktop */}
+              <div className="hidden md:grid [grid-template-columns:minmax(180px,1.3fr)_repeat(5,minmax(140px,1.2fr))_minmax(170px,1.2fr)] gap-2 px-6 md:px-10 py-2 text-white/70 text-xs md:text-sm border-b border-white/10 font-montserrat bg-neutral-900/30 min-w-[1200px] justify-items-start">
+                <div className="self-center w-full">Team name</div>
+                <div className="text-center">Captain</div>
+                <div className="text-center">Player 2</div>
+                <div className="text-center">Player 3</div>
+                <div className="text-center">Player 4</div>
+                <div className="text-center">Player 5</div>
+                <div className="grid place-items-center">Status</div>
+              </div>
+
+              {/* Table Header - Mobile (Team + Status) */}
+              <div className="md:hidden grid [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-5 px-4 py-2 text-white/70 text-xs border-b border-white/10 font-montserrat bg-neutral-900/30">
+                <div className="self-center">Team name</div>
+                <div className="justify-self-start text-left">Status</div>
+                <div className="text-right"></div>
+              </div>
+
+              {/* Team Rows */}
+              {Array.isArray(viewingTeamsTournament.teams) && viewingTeamsTournament.teams.length > 0 ? (
+                viewingTeamsTournament.teams.map((team) => (
+                  <React.Fragment key={team.id}>
+                    {/* Desktop Row */}
+                    <div
+                      className="hidden md:grid [grid-template-columns:minmax(180px,1.3fr)_repeat(5,minmax(140px,1.2fr))_minmax(170px,1.2fr)] gap-2 items-center px-6 md:px-10 py-3 border-t border-white/10 bg-neutral-900/20 hover:bg-neutral-900/40 transition min-w-[1200px] justify-items-start"
+                    >
+                      <div className="text-white/90 font-montserrat md:truncate whitespace-normal w-full text-left">{team.name}</div>
+
+                      {(() => {
+                        const players = Array.isArray(team?.players) ? team.players.slice(0, 5) : [];
+                        const captain = players[0];
+                        const p2 = players[1];
+                        const p3 = players[2];
+                        const p4 = players[3];
+                        const p5 = players[4];
+                        const { label, pillClassName } = getTeamConfirmation(team);
+
+                        const renderPlayer = (player) => (player ? <PlayerCellModal player={player} /> : null);
+
+                        return (
+                          <>
+                            {renderPlayer(captain)}
+                            {renderPlayer(p2)}
+                            {renderPlayer(p3)}
+                            {renderPlayer(p4)}
+                            {renderPlayer(p5)}
+                            <div className="flex justify-center">
+                              <span className={`rounded-md px-2 py-1 text-xs md:text-sm min-w-[128px] text-center font-montserrat ${pillClassName}`}>
+                                {label}
+                              </span>
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </div>
+
+                    {/* Mobile Row */}
+                    <div className="grid md:hidden [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-2 items-center px-4 py-3 border-t border-white/10 bg-neutral-900/20 hover:bg-neutral-900/40 transition">
+                      <div className="text-white/90 font-montserrat truncate">{team.name}</div>
+                      {(() => {
+                        const { label, pillClassName } = getTeamConfirmation(team);
+                        return (
+                          <>
+                            <div className="flex justify-start">
+                              <span className={`rounded-md px-2 py-1 text-xs min-w-[112px] text-center font-montserrat ${pillClassName}`}>
+                                {label}
+                              </span>
+                            </div>
+                            <div className="flex justify-end">
+                              <button
+                                type="button"
+                                onClick={() => setMobileViewTeam(team)}
+                                className="px-3 py-1 rounded-md border border-white/30 text-white/90 text-xs bg-white/10 hover:bg-white/20"
+                              >
+                                View
+                              </button>
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </React.Fragment>
+                ))
+              ) : (
+                <div className="px-4 py-10 text-center text-white/60 font-montserrat">
+                  No teams registered yet.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mobile Players Modal (Shared) */}
       {mobileViewTeam && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -1229,7 +1550,14 @@ const RegionalAdmin = () => {
                         <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                       </svg>
                     </div>
-                    <div className="font-montserrat text-sm">{player.name}</div>
+                    <div className="flex flex-col min-w-0">
+                      <div className="font-montserrat text-sm leading-tight text-white/90">
+                        {player.name}
+                      </div>
+                      <div className="font-montserrat text-xs leading-tight text-white/60 truncate max-w-[10ch]">
+                        {player?.ign || '—'}
+                      </div>
+                    </div>
                   </div>
                   <span className={`w-2.5 h-2.5 rounded-full ${player.verified ? 'bg-green-400' : 'bg-red-500'}`} />
                 </div>
