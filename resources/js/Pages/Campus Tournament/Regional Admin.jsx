@@ -1285,6 +1285,7 @@ const RegionalAdmin = () => {
                 onChange={(e) => setPreRegIsland(e.target.value)}
                 className="w-full bg-neutral-700/60 border border-white/20 rounded-lg px-4 py-2.5 text-white font-montserrat text-sm focus:outline-none focus:border-[#F2C21A] focus:ring-1 focus:ring-[#F2C21A]"
               >
+                <option value="All">All (Luzon, Visayas, Mindanao)</option>
                 <option value="Luzon">Luzon</option>
                 <option value="Visayas">Visayas</option>
                 <option value="Mindanao">Mindanao</option>

@@ -27,7 +27,7 @@ class CampusTournamentController extends Controller
         // Get tournaments created by this SL with teams and members
         $tournaments = CampusTournament::where('sl_id', $user->id)
             ->with(['teams' => function($query) {
-                $query->where('status', 'registered');
+                $query->whereIn('status', ['registered', 'assembling']);
             }, 'teams.members' => function($query) {
                 // Ensure captain comes first (assuming role 'captain' is alphabetically before 'member'?? No, 'c' comes before 'm'. Perfect.)
                 // Or explicit sort:
@@ -1057,7 +1057,9 @@ class CampusTournamentController extends Controller
             ])
             ->where('status', 'approved')
             ->whereHas('studentLeader', function ($q) use ($island) {
-                $q->where('island', $island);
+                if ($island !== 'All') {
+                    $q->where('island', $island);
+                }
             })
             ->where(function ($q) use ($startDate, $endDate) {
                 $q->whereBetween('start_date', [$startDate, $endDate])

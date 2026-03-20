@@ -79,10 +79,11 @@ const CampusTournament = () => {
     return localTournaments.map(tournament => ({
       ...tournament,
       teams: tournament.teams ? tournament.teams
-        .filter(team => team.status === 'registered')
+        .filter(team => ['registered', 'assembling'].includes(team.status))
         .map(team => ({
           id: team.id,
           name: team.team_name,
+          status: team.status,
           result: team.result || 'participant', // Include result field
           players: team.members ? team.members.map(member => ({
             id: member.player_id,
@@ -862,14 +863,20 @@ const CampusTournament = () => {
                                         {/* Desktop Row */}
                                         <div className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3 border-t border-white/10 hover:bg-white/5 transition">
                                           <div className="text-white/90 font-montserrat md:truncate">{team.name}</div>
-                                          {team.players.slice(0, 5).map((player, idx) => (
-                                            <div
-                                              className="flex items-center justify-start w-full min-w-0"
-                                              key={idx}
-                                            >
-                                              <PlayerCell player={player} />
+                                          {team.status === 'assembling' ? (
+                                            <div className="col-span-5 text-center text-white/50 italic py-2 font-montserrat text-sm border-x border-white/5">
+                                              members are still pending in invite
                                             </div>
-                                          ))}
+                                          ) : (
+                                            team.players.slice(0, 5).map((player, idx) => (
+                                              <div
+                                                className="flex items-center justify-start w-full min-w-0"
+                                                key={idx}
+                                              >
+                                                <PlayerCell player={player} />
+                                              </div>
+                                            ))
+                                          )}
                                           <div className="flex justify-center">
                                             <select
                                               value={team.result || 'participant'}
@@ -884,6 +891,12 @@ const CampusTournament = () => {
                                             </select>
                                           </div>
                                         </div>
+                                        {/* Mobile Row with Pending Message */}
+                                        {team.status === 'assembling' && (
+                                          <div className="md:hidden w-full px-4 py-1.5 bg-white/5 border-t border-white/5 text-center text-white/50 italic text-[10px] font-montserrat">
+                                            members are still pending in invite
+                                          </div>
+                                        )}
                                         {/* Mobile Row */}
                                         <div className="grid md:hidden [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-2 items-center px-4 py-3 border-t border-white/10 hover:bg-white/5 transition">
                                           <div className="text-white/90 font-montserrat truncate">{team.name}</div>
