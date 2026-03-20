@@ -29,12 +29,10 @@ class CampusTournamentController extends Controller
             ->with(['teams' => function($query) {
                 $query->whereIn('status', ['registered', 'assembling']);
             }, 'teams.members' => function($query) {
-                // Ensure captain comes first (assuming role 'captain' is alphabetically before 'member'?? No, 'c' comes before 'm'. Perfect.)
-                // Or explicit sort:
-                $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
-            }, 'teams.members.player', 'teams.members' => function($query) {
-                $query->select('id', 'team_id', 'player_id', 'role', 'status');
-            }])
+                $query->select('id', 'team_id', 'player_id', 'role', 'status')
+                      ->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END")
+                      ->orderBy('id', 'asc');
+            }, 'teams.members.player'])
             ->orderBy('created_at', 'desc')
             ->get();
             
@@ -84,8 +82,9 @@ class CampusTournamentController extends Controller
                 $query->whereIn('status', ['registered', 'assembling']);
             },
             'teams.members' => function($query) {
-                $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END")
-                      ->select('id', 'team_id', 'player_id', 'role', 'status');
+                $query->select('id', 'team_id', 'player_id', 'role', 'status')
+                      ->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END")
+                      ->orderBy('id', 'asc');
             },
             'teams.members.player',
             'studentLeader'
@@ -656,7 +655,8 @@ class CampusTournamentController extends Controller
             })
             ->with(['team.tournament', 'team.members' => function($query) {
                 // Sorting logic for members
-                $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
+                $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END")
+                      ->orderBy('id', 'asc');
             }, 'team.members.player'])
             // Order by creation time to get the NEWEST team (resolves duplicate issue)
             ->latest() 
@@ -795,9 +795,16 @@ class CampusTournamentController extends Controller
             return redirect()->back()->withErrors(['message' => 'Only the team captain can edit the team']);
         }
         
-        // 4. IMPORTANT: Check if team is already submitted/registered
-        if ($team->status === 'registered') {
-             return redirect()->back()->withErrors(['message' => 'Team cannot be updated after submission. Contact support/admin if changes are needed.']);
+        // 4. IMPORTANT: Check if team can be updated
+        $tournament = $team->tournament;
+        $now = now();
+        // Since dates are 'date' casts, start_date is midnight. end_date is also midnight of that day.
+        $isWithinRegistration = $tournament && 
+            $now->gte($tournament->start_date) && 
+            $now->lte(\Carbon\Carbon::parse($tournament->end_date)->endOfDay());
+        
+        if ($team->status === 'registered' && !$isWithinRegistration) {
+             return redirect()->back()->withErrors(['message' => 'Team cannot be updated after the registration period has ended.']);
         }
 
         // 5. Check if team name already exists
@@ -835,7 +842,10 @@ class CampusTournamentController extends Controller
                 if (isset($player['id'])) {
                     $newPlayerIds[] = $player['id'];
                     $playerId = $player['id'];
-                    $role = ($playerId == $captain['id']) ? 'captain' : 'member';
+                    
+                    // Safety: Determine if this player is the captain based on the team's captain_id
+                    // This ensures that even if the request is inconsistent, the database stays correct.
+                    $role = ($playerId == $team->captain_id || $playerId == $captain['id']) ? 'captain' : 'member';
                     
                     if (isset($currentMembers[$playerId])) {
                          $currentMembers[$playerId]->update(['role' => $role]);
@@ -844,7 +854,7 @@ class CampusTournamentController extends Controller
                             'team_id' => $team->id,
                             'player_id' => $playerId,
                             'role' => $role,
-                            'status' => ($playerId == $captain['id']) ? 'accepted' : 'pending',
+                            'status' => ($role == 'captain') ? 'accepted' : 'pending',
                         ]);
                     }
                 }
@@ -1053,7 +1063,9 @@ class CampusTournamentController extends Controller
                     $query->where('status', 'registered');
                 },
                 'teams.members' => function ($query) {
-                    $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
+                    $query->with('player')
+                          ->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END")
+                          ->orderBy('id', 'asc');
                 },
                 'teams.members.player',
                 'studentLeader',

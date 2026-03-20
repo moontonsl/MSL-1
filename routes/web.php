@@ -1070,6 +1070,16 @@ Route::post('/team-invite/{teamId}/accept', function (\Illuminate\Http\Request $
     $updated = $member->update(['status' => 'accepted']);
     \Log::info("Updated: " . ($updated ? 'Yes' : 'No') . ". New Status: " . $member->refresh()->status);
 
+    if ($updated) {
+        $acceptedCount = \App\Models\CampusTournamentTeamMember::where('team_id', $teamId)
+            ->where('status', 'accepted')
+            ->count();
+            
+        if ($acceptedCount === 5) {
+            \App\Models\CampusTournamentTeam::where('id', $teamId)->update(['status' => 'registered']);
+        }
+    }
+
     return redirect()->back()->with('message', 'Invite accepted');
 })->name('team.invite.accept');
 
