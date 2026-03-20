@@ -32,7 +32,9 @@ class CampusTournamentController extends Controller
                 // Ensure captain comes first (assuming role 'captain' is alphabetically before 'member'?? No, 'c' comes before 'm'. Perfect.)
                 // Or explicit sort:
                 $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
-            }, 'teams.members.player'])
+            }, 'teams.members.player', 'teams.members' => function($query) {
+                $query->select('id', 'team_id', 'player_id', 'role', 'status');
+            }])
             ->orderBy('created_at', 'desc')
             ->get();
             
@@ -79,10 +81,11 @@ class CampusTournamentController extends Controller
         // Show all approved tournaments (both active and completed) so we can filter them on frontend
         $approvedQuery = CampusTournament::with([
             'teams' => function($query) {
-                $query->where('status', 'registered');
+                $query->whereIn('status', ['registered', 'assembling']);
             },
             'teams.members' => function($query) {
-                $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
+                $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END")
+                      ->select('id', 'team_id', 'player_id', 'role', 'status');
             },
             'teams.members.player',
             'studentLeader'
