@@ -106,10 +106,11 @@ const RegionalAdmin = () => {
       results_submitted: tournament.results_submitted,
       results_submitted_at: tournament.results_submitted_at,
       teams: tournament.teams ? tournament.teams
-        .filter(team => team.status === 'registered')
+        .filter(team => ['registered', 'assembling'].includes(team.status))
         .map(team => ({
           id: team.id,
           name: team.team_name,
+          status: team.status,
           result: team.result,
           players: team.members ? team.members.map(member => ({
             id: member.player_id,
@@ -117,6 +118,7 @@ const RegionalAdmin = () => {
             // Development/testing: allow mock data to specify verification per player.
             // In production data we default to true if not present.
             verified: Boolean(member?.verified ?? member?.player?.verified ?? true),
+            accepted: member.status === 'accepted',
             ign: member.player?.ml_ign ?? member.player?.ign ?? null,
             role: member.role
           })) : []
@@ -387,7 +389,7 @@ const RegionalAdmin = () => {
         </div>
         <div className="flex items-center gap-2">
           <span className="truncate max-w-[8ch] md:max-w-[12ch]">{player?.name || 'Player'}</span>
-          <span className={`w-2.5 h-2.5 rounded-full ${player?.verified ? 'bg-green-400' : 'bg-red-500'}`} />
+          <span className={`w-2.5 h-2.5 rounded-full ${player?.accepted ? 'bg-green-400' : 'bg-red-500'}`} />
         </div>
       </div>
     );
@@ -424,7 +426,7 @@ const RegionalAdmin = () => {
           {/* Verification indicator (dot) OVER avatar */}
           <span
             className={`absolute bottom-[-3px] right-[-3px] z-20 w-4 h-4 rounded-full border border-black/60 shadow-[0_0_8px_rgba(0,0,0,0.5)] ${
-              verified ? 'bg-green-400' : 'bg-red-500'
+              player?.accepted ? 'bg-green-400' : 'bg-red-500'
             }`}
           />
         </div>
@@ -860,8 +862,8 @@ const RegionalAdmin = () => {
                               {/* Desktop Row (matches screenshot layout) */}
                               <div className="hidden md:grid grid-cols-[minmax(260px,2.2fr)_minmax(120px,1fr)_minmax(120px,1fr)_minmax(160px,1.2fr)_auto] items-center gap-3">
                                 {(() => {
-                                  const verifiedCount = Array.isArray(item.teams) ? item.teams.length : 0;
-                                  const pendingCount = 0;
+                                  const verifiedCount = Array.isArray(item.teams) ? item.teams.filter(t => t.status === 'registered').length : 0;
+                                  const pendingCount = Array.isArray(item.teams) ? item.teams.filter(t => t.status === 'assembling').length : 0;
                                   const totalRegistration = verifiedCount + pendingCount;
 
                                   return (
@@ -998,18 +1000,30 @@ const RegionalAdmin = () => {
                                             </div>
                                           ))}
                                           <div className="flex justify-center">
-                                            <span className={`rounded-md px-2 py-1 text-xs md:text-sm min-w-[128px] text-center ${getStatusClasses(team.result || 'participant')}`}>
-                                              {(team.result || 'participant').charAt(0).toUpperCase() + (team.result || 'participant').slice(1)}
-                                            </span>
+                                            {team.status === 'assembling' ? (
+                                              <span className="rounded-md px-2 py-1 text-xs md:text-sm min-w-[128px] text-center bg-red-500/20 text-red-400 border border-red-500/30 font-montserrat font-semibold">
+                                                Pending
+                                              </span>
+                                            ) : (
+                                              <span className={`rounded-md px-2 py-1 text-xs md:text-sm min-w-[128px] text-center ${getStatusClasses(team.result || 'participant')}`}>
+                                                {(team.result || 'participant').charAt(0).toUpperCase() + (team.result || 'participant').slice(1)}
+                                              </span>
+                                            )}
                                           </div>
                                         </div>
                                         {/* Mobile Row */}
                                         <div className="grid md:hidden [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-2 items-center px-4 py-3 border-t border-white/10 hover:bg-white/5 transition">
                                           <div className="text-white/90 font-montserrat truncate">{team.name}</div>
                                           <div className="flex justify-start">
-                                            <span className={`rounded-md px-2 py-1 text-xs min-w-[112px] text-center ${getStatusClasses(team.result || 'participant')}`}>
-                                              {(team.result || 'participant').charAt(0).toUpperCase() + (team.result || 'participant').slice(1)}
-                                            </span>
+                                            {team.status === 'assembling' ? (
+                                              <span className="rounded-md px-2 py-1 text-xs min-w-[112px] text-center bg-red-500/20 text-red-400 border border-red-500/30 font-montserrat font-semibold">
+                                                Pending
+                                              </span>
+                                            ) : (
+                                              <span className={`rounded-md px-2 py-1 text-xs min-w-[112px] text-center ${getStatusClasses(team.result || 'participant')}`}>
+                                                {(team.result || 'participant').charAt(0).toUpperCase() + (team.result || 'participant').slice(1)}
+                                              </span>
+                                            )}
                                           </div>
                                           <div className="flex justify-end">
                                             <button
