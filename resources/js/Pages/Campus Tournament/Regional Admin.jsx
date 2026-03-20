@@ -458,9 +458,9 @@ const RegionalAdmin = () => {
   const getTeamConfirmation = (team) => {
     const players = Array.isArray(team?.players) ? team.players : [];
     const firstFive = players.slice(0, 5);
-    const allVerified = firstFive.length > 0 && firstFive.every((p) => Boolean(p?.verified));
+    const allAccepted = firstFive.length > 0 && firstFive.every((p) => Boolean(p?.accepted));
 
-    if (allVerified) {
+    if (allAccepted) {
       return {
         label: 'Confirmed',
         pillClassName: 'bg-green-500/20 text-green-200 border border-green-400/30',
@@ -862,8 +862,8 @@ const RegionalAdmin = () => {
                               {/* Desktop Row (matches screenshot layout) */}
                               <div className="hidden md:grid grid-cols-[minmax(260px,2.2fr)_minmax(120px,1fr)_minmax(120px,1fr)_minmax(160px,1.2fr)_auto] items-center gap-3">
                                 {(() => {
-                                  const verifiedCount = Array.isArray(item.teams) ? item.teams.filter(t => t.status === 'registered').length : 0;
-                                  const pendingCount = Array.isArray(item.teams) ? item.teams.filter(t => t.status === 'assembling').length : 0;
+                                  const verifiedCount = Array.isArray(item.teams) ? item.teams.filter(t => t.status === 'registered' && t.players.length >= 5 && t.players.slice(0, 5).every(p => p.accepted)).length : 0;
+                                  const pendingCount = Array.isArray(item.teams) ? item.teams.filter(t => t.status === 'assembling' || t.players.length < 5 || t.players.slice(0, 5).some(p => !p.accepted)).length : 0;
                                   const totalRegistration = verifiedCount + pendingCount;
 
                                   return (
@@ -1000,7 +1000,7 @@ const RegionalAdmin = () => {
                                             </div>
                                           ))}
                                           <div className="flex justify-center">
-                                            {team.status === 'assembling' ? (
+                                            {(team.status === 'assembling' || team.players.length < 5 || team.players.slice(0, 5).some(p => !p.accepted)) ? (
                                               <span className="rounded-md px-2 py-1 text-xs md:text-sm min-w-[128px] text-center bg-red-500/20 text-red-400 border border-red-500/30 font-montserrat font-semibold">
                                                 Pending
                                               </span>
@@ -1015,7 +1015,7 @@ const RegionalAdmin = () => {
                                         <div className="grid md:hidden [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-2 items-center px-4 py-3 border-t border-white/10 hover:bg-white/5 transition">
                                           <div className="text-white/90 font-montserrat truncate">{team.name}</div>
                                           <div className="flex justify-start">
-                                            {team.status === 'assembling' ? (
+                                            {(team.status === 'assembling' || team.players.length < 5 || team.players.slice(0, 5).some(p => !p.accepted)) ? (
                                               <span className="rounded-md px-2 py-1 text-xs min-w-[112px] text-center bg-red-500/20 text-red-400 border border-red-500/30 font-montserrat font-semibold">
                                                 Pending
                                               </span>
