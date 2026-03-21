@@ -86,6 +86,21 @@ const CampusTournamentTeam = () => {
       statusText = 'Empty';
     }
 
+    const nameElement = player?.facebook_link ? (
+      <a
+        href={player.facebook_link}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        className="truncate max-w-[8ch] md:max-w-[12ch] hover:text-blue-400 transition-colors"
+        title="View Facebook Profile"
+      >
+        {formatPlayer(player)}
+      </a>
+    ) : (
+      <span className="truncate max-w-[8ch] md:max-w-[12ch]">{formatPlayer(player)}</span>
+    );
+
     return (
       <div
         onClick={() => player && setSelectedPlayer(player)}
@@ -101,7 +116,7 @@ const CampusTournamentTeam = () => {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className="truncate max-w-[8ch] md:max-w-[12ch]">{formatPlayer(player)}</span>
+          {nameElement}
           {member && <span className={`w-2.5 h-2.5 rounded-full ${statusColor}`} title={statusText} />}
         </div>
         {status !== 'accepted' && member && (
@@ -148,6 +163,7 @@ const CampusTournamentTeam = () => {
   const [isProcessingInvite, setIsProcessingInvite] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
 
   React.useEffect(() => {

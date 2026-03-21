@@ -87,11 +87,12 @@ const CampusTournament = () => {
           result: team.result || 'participant', // Include result field
           players: team.members ? team.members.map(member => ({
             id: member.player_id,
-            name: member.player ? member.player.name : 'Unknown Player',
+            name: member.player ? `${member.player.name || ''} ${member.player.surname || ''}`.trim() : 'Unknown Player',
             ign: member.player ? member.player.ml_ign : '',
             verified: member.player ? !!member.player.email_verified_at : false,
             accepted: member.status === 'accepted',
-            role: member.role
+            role: member.role,
+            facebook_link: member.player ? member.player.facebook_link : null
           })) : []
         })) : []
     }));
@@ -560,6 +561,7 @@ const CampusTournament = () => {
 
   const PlayerCell = ({ player }) => {
     const verified = Boolean(player?.verified);
+    const nameDisplay = player?.name || 'Player';
     return (
       <div className="w-full flex items-center gap-3 justify-start min-w-0 text-white/80 text-xs md:text-sm font-montserrat">
         <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-full flex-shrink-0">
@@ -579,7 +581,7 @@ const CampusTournament = () => {
             {player?.avatarUrl && (
               <img
                 src={player.avatarUrl}
-                alt={player?.name || 'Player'}
+                alt={nameDisplay}
                 className="w-full h-full object-cover"
               />
             )}
@@ -594,9 +596,21 @@ const CampusTournament = () => {
         </div>
 
         <div className="flex flex-col min-w-0 items-start">
-          <span className="block truncate max-w-[9ch] md:max-w-[10ch] text-white/90 text-sm leading-tight">
-            {player?.name || 'Player'}
-          </span>
+          {player?.facebook_link ? (
+            <a
+              href={player.facebook_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block truncate max-w-[9ch] md:max-w-[10ch] text-white/90 text-sm leading-tight hover:text-blue-400 transition-colors"
+              title="View Facebook Profile"
+            >
+              {nameDisplay}
+            </a>
+          ) : (
+            <span className="block truncate max-w-[9ch] md:max-w-[10ch] text-white/90 text-sm leading-tight">
+              {nameDisplay}
+            </span>
+          )}
           <span className="block truncate max-w-[9ch] md:max-w-[10ch] text-white/60 text-xs leading-tight">
             {player?.ign || '—'}
           </span>

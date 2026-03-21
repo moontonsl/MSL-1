@@ -120,7 +120,8 @@ const RegionalAdmin = () => {
             verified: Boolean(member?.verified ?? member?.player?.verified ?? true),
             accepted: member.status === 'accepted',
             ign: member.player?.ml_ign ?? member.player?.ign ?? null,
-            role: member.role
+            role: member.role,
+            facebook_link: member.player?.facebook_link ?? null
           })) : []
         })) : []
     }));
@@ -371,6 +372,7 @@ const RegionalAdmin = () => {
 
 
   const PlayerCell = ({ player }) => {
+    const nameDisplay = player?.name || 'Player';
     return (
       <div className="w-full md:w-auto flex flex-col items-center gap-1 text-white/80 text-xs md:text-sm font-montserrat">
         <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border border-white/20 bg-white/10">
@@ -384,11 +386,23 @@ const RegionalAdmin = () => {
             <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
           {player?.avatarUrl && (
-            <img src={player.avatarUrl} alt={player?.name || 'Player'} className="w-full h-full object-cover" />
+            <img src={player.avatarUrl} alt={nameDisplay} className="w-full h-full object-cover" />
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className="truncate max-w-[8ch] md:max-w-[12ch]">{player?.name || 'Player'}</span>
+          {player?.facebook_link ? (
+            <a
+              href={player.facebook_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="truncate max-w-[8ch] md:max-w-[12ch] hover:text-blue-400 transition-colors"
+              title="View Facebook Profile"
+            >
+              {nameDisplay}
+            </a>
+          ) : (
+            <span className="truncate max-w-[8ch] md:max-w-[12ch]">{nameDisplay}</span>
+          )}
           <span className={`w-2.5 h-2.5 rounded-full ${player?.accepted ? 'bg-green-400' : 'bg-red-500'}`} />
         </div>
       </div>
@@ -400,6 +414,7 @@ const RegionalAdmin = () => {
   // - Avatar/icon on the right
   const PlayerCellModal = ({ player }) => {
     const verified = Boolean(player?.verified);
+    const nameDisplay = player?.name || 'Player';
     return (
       <div className="w-full flex items-center gap-3 justify-start min-w-0">
         <div className="relative w-9 h-9 rounded-full flex-shrink-0">
@@ -417,7 +432,7 @@ const RegionalAdmin = () => {
             {player?.avatarUrl && (
               <img
                 src={player.avatarUrl}
-                alt={player?.name || 'Player'}
+                alt={nameDisplay}
                 className="w-full h-full object-cover"
               />
             )}
@@ -433,9 +448,21 @@ const RegionalAdmin = () => {
 
         <div className="flex flex-col min-w-0 items-start">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="truncate max-w-[100px] text-white/90 text-sm font-montserrat leading-tight">
-              {player?.name || 'Player'}
-            </span>
+            {player?.facebook_link ? (
+              <a
+                href={player.facebook_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="truncate max-w-[100px] text-white/90 text-sm font-montserrat leading-tight hover:text-blue-400 transition-colors"
+                title="View Facebook Profile"
+              >
+                {nameDisplay}
+              </a>
+            ) : (
+              <span className="truncate max-w-[100px] text-white/90 text-sm font-montserrat leading-tight">
+                {nameDisplay}
+              </span>
+            )}
           </div>
           <span className="truncate max-w-[100px] text-white/60 text-xs font-montserrat leading-tight">
             {player?.ign || '—'}
