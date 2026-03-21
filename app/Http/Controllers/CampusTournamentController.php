@@ -780,7 +780,6 @@ class CampusTournamentController extends Controller
             'discordId' => 'nullable|string|max:50',
             'captain' => 'required|array',
             'captain.id' => 'required|integer',
-            'captain.university' => 'required|string',
             'players' => 'required|array',
             'players.captain' => 'required|array',
             'players.player2' => 'required|array',
