@@ -657,7 +657,10 @@ class CampusTournamentController extends Controller
                 // Sorting logic for members
                 $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END")
                       ->orderBy('id', 'asc');
-            }, 'team.members.player'])
+            }, 'team.members.player' => function($query) {
+                // Include facebook_link in player data
+                $query->select('id', 'name', 'surname', 'username', 'facebook_link');
+            }])
             // Order by creation time to get the NEWEST team (resolves duplicate issue)
             ->latest() 
             ->first();
@@ -672,6 +675,15 @@ class CampusTournamentController extends Controller
         
         $team = $teamMember->team;
         $isCaptain = $teamMember->role === 'captain';
+        
+        // Auto-register: if all members have accepted, set team status to registered
+        if ($team->status === 'assembling') {
+            $allAccepted = $team->members->every(fn($m) => $m->status === 'accepted');
+            if ($allAccepted && $team->members->count() === 5) {
+                $team->update(['status' => 'registered']);
+                $team->refresh();
+            }
+        }
         
         return Inertia::render('Campus Tournament/Campus Tournament Team', [
             'team' => $team,
