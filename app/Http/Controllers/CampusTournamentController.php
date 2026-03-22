@@ -1062,13 +1062,24 @@ class CampusTournamentController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        // Increase memory and execution limits for large exports
+        if (function_exists('ini_set')) {
+            @ini_set('memory_limit', '1024M');
+            @ini_set('max_execution_time', '300');
+        }
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(300);
+        }
+
         $island    = $request->island;
         $startDate = $request->start_date;
         $endDate   = $request->end_date;
 
         // Fetch ALL approved tournaments for the given island within the date range
-        // Island is stored on the student leader (SL) user record
-        $tournaments = CampusTournament::with([
+        // Disable query log to save memory
+        \DB::disableQueryLog();
+
+        $query = CampusTournament::with([
                 'teams' => function ($query) {
                     $query->where('status', 'registered');
                 },
@@ -1077,7 +1088,6 @@ class CampusTournamentController extends Controller
                           ->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END")
                           ->orderBy('id', 'asc');
                 },
-                'teams.members.player',
                 'studentLeader',
             ])
             ->where('status', 'approved')
@@ -1090,10 +1100,10 @@ class CampusTournamentController extends Controller
                 $q->whereBetween('start_date', [$startDate, $endDate])
                   ->orWhereBetween('end_date', [$startDate, $endDate]);
             })
-            ->orderBy('start_date', 'asc')
-            ->get();
+            ->orderBy('start_date', 'asc');
 
-        if ($tournaments->isEmpty()) {
+        // Check if there are any results before creating the spreadsheet
+        if ($query->count() === 0) {
             return response()->json(['error' => 'No approved tournaments found for the selected island and date range.'], 404);
         }
 
@@ -1119,28 +1129,35 @@ class CampusTournamentController extends Controller
             $col++;
         }
 
-        // Data rows starting at row 5 — iterate ALL tournaments
+        // Data rows starting at row 5 — iterate ALL tournaments in chunks
         $row = 5;
-        foreach ($tournaments as $tournament) {
-            foreach ($tournament->teams as $team) {
-                $members = $team->members->sortBy('role', SORT_REGULAR, true); // captain first
+        
+        $query->chunk(50, function ($tournaments) use ($island, $sheet, &$row) {
+            foreach ($tournaments as $tournament) {
+                foreach ($tournament->teams as $team) {
+                    $members = $team->members; // Already sorted by query
 
-                foreach ($members as $member) {
-                    $player = $member->player;
-                    $playerIsland = ($player && $player->island) ? $player->island : $island;
+                    foreach ($members as $member) {
+                        $player = $member->player;
+                        // Use player island, fallback to SL island, then filter island
+                        $playerIsland = ($player && $player->island) ? $player->island : ($tournament->studentLeader->island ?? $island);
 
-                    $sheet->setCellValue('A' . $row, $playerIsland);
-                    $sheet->setCellValue('B' . $row, $player ? $player->university : ($tournament->school_name ?? '-'));
-                    $sheet->setCellValue('C' . $row, $team->team_name);
-                    $sheet->setCellValue('D' . $row, $player ? trim($player->name . ' ' . $player->surname) : 'Unknown');
-                    $sheet->setCellValue('E' . $row, $player ? $player->ml_ign : '-');
-                    $sheet->setCellValue('F' . $row, $player ? $player->ml_server : '-');
-                    $sheet->setCellValue('G' . $row, $player ? $player->ml_id : '-');
+                        $sheet->setCellValue('A' . $row, $playerIsland);
+                        $sheet->setCellValue('B' . $row, $player ? $player->university : ($tournament->school_name ?? '-'));
+                        $sheet->setCellValue('C' . $row, $team->team_name);
+                        $sheet->setCellValue('D' . $row, $player ? trim($player->name . ' ' . $player->surname) : 'Unknown');
+                        $sheet->setCellValueExplicit('E' . $row, $player ? $player->ml_ign : '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                        $sheet->setCellValueExplicit('F' . $row, $player ? $player->ml_server : '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                        $sheet->setCellValueExplicit('G' . $row, $player ? $player->ml_id : '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
 
-                    $row++;
+                        $row++;
+                    }
                 }
             }
-        }
+        });
+
+        // Restore query log
+        \DB::enableQueryLog();
 
         // Auto-size columns A-G
         foreach (range('A', 'G') as $col) {
