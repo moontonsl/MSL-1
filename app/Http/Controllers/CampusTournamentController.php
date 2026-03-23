@@ -24,8 +24,8 @@ class CampusTournamentController extends Controller
     {
         $user = Auth::user();
         
-        // Get tournaments created by this SL with teams and members
-        $tournaments = CampusTournament::where('sl_id', $user->id)
+        // Get tournaments for this SL's school with teams and members
+        $tournaments = CampusTournament::where('school_name', $user->university)
             ->with(['teams' => function($query) {
                 $query->whereIn('status', ['registered', 'assembling']);
             }, 'teams.members' => function($query) {
@@ -399,9 +399,9 @@ class CampusTournamentController extends Controller
             $query->where('status', 'registered');
         }])->findOrFail($id);
         
-        // Check if user owns this tournament
-        if ($tournament->sl_id !== $user->id) {
-            return response()->json(['error' => 'You can only submit results for your own tournaments'], 403);
+        // Check if user's school matches the tournament's school
+        if ($tournament->school_name !== $user->university) {
+            return response()->json(['error' => 'You can only submit results for tournaments in your school'], 403);
         }
         
         // Check if tournament is approved
@@ -510,9 +510,9 @@ class CampusTournamentController extends Controller
         
         // Check permissions
         if ($user->role === 'SL') {
-            // SL must own the tournament
-            if ($tournament->sl_id !== $user->id) {
-                return response()->json(['error' => 'You can only update results for your own tournaments'], 403);
+            // SL's school must match the tournament's school
+            if ($tournament->school_name !== $user->university) {
+                return response()->json(['error' => 'You can only update results for tournaments in your school'], 403);
             }
         }
         // Regional Admins/Super Admins bypass the sl_id check (Region check is implicitly handled by what they can see/access, 
