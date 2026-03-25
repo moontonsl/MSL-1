@@ -24,14 +24,14 @@ class CampusTournamentController extends Controller
     {
         $user = Auth::user();
         
-        // Get tournaments created by this SL with teams and members
-        $tournaments = CampusTournament::where('sl_id', $user->id)
+        // Get tournaments for this SL's school with teams and members
+        $tournaments = CampusTournament::where('school_name', $user->university)
             ->with(['teams' => function($query) {
-                $query->where('status', 'registered');
+                $query->whereIn('status', ['registered', 'assembling']);
             }, 'teams.members' => function($query) {
-                // Ensure captain comes first (assuming role 'captain' is alphabetically before 'member'?? No, 'c' comes before 'm'. Perfect.)
-                // Or explicit sort:
-                $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
+                $query->select('id', 'team_id', 'player_id', 'role', 'status')
+                      ->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END")
+                      ->orderBy('id', 'asc');
             }, 'teams.members.player'])
             ->orderBy('created_at', 'desc')
             ->get();
@@ -79,10 +79,12 @@ class CampusTournamentController extends Controller
         // Show all approved tournaments (both active and completed) so we can filter them on frontend
         $approvedQuery = CampusTournament::with([
             'teams' => function($query) {
-                $query->where('status', 'registered');
+                $query->whereIn('status', ['registered', 'assembling']);
             },
             'teams.members' => function($query) {
-                $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
+                $query->select('id', 'team_id', 'player_id', 'role', 'status')
+                      ->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END")
+                      ->orderBy('id', 'asc');
             },
             'teams.members.player',
             'studentLeader'
@@ -397,9 +399,9 @@ class CampusTournamentController extends Controller
             $query->where('status', 'registered');
         }])->findOrFail($id);
         
-        // Check if user owns this tournament
-        if ($tournament->sl_id !== $user->id) {
-            return response()->json(['error' => 'You can only submit results for your own tournaments'], 403);
+        // Check if user's school matches the tournament's school
+        if ($tournament->school_name !== $user->university) {
+            return response()->json(['error' => 'You can only submit results for tournaments in your school'], 403);
         }
         
         // Check if tournament is approved
@@ -508,9 +510,9 @@ class CampusTournamentController extends Controller
         
         // Check permissions
         if ($user->role === 'SL') {
-            // SL must own the tournament
-            if ($tournament->sl_id !== $user->id) {
-                return response()->json(['error' => 'You can only update results for your own tournaments'], 403);
+            // SL's school must match the tournament's school
+            if ($tournament->school_name !== $user->university) {
+                return response()->json(['error' => 'You can only update results for tournaments in your school'], 403);
             }
         }
         // Regional Admins/Super Admins bypass the sl_id check (Region check is implicitly handled by what they can see/access, 
@@ -653,8 +655,12 @@ class CampusTournamentController extends Controller
             })
             ->with(['team.tournament', 'team.members' => function($query) {
                 // Sorting logic for members
-                $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
-            }, 'team.members.player'])
+                $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END")
+                      ->orderBy('id', 'asc');
+            }, 'team.members.player' => function($query) {
+                // Include facebook_link in player data
+                $query->select('id', 'name', 'surname', 'username', 'facebook_link');
+            }])
             // Order by creation time to get the NEWEST team (resolves duplicate issue)
             ->latest() 
             ->first();
@@ -669,6 +675,15 @@ class CampusTournamentController extends Controller
         
         $team = $teamMember->team;
         $isCaptain = $teamMember->role === 'captain';
+        
+        // Auto-register: if all members have accepted, set team status to registered
+        if ($team->status === 'assembling') {
+            $allAccepted = $team->members->every(fn($m) => $m->status === 'accepted');
+            if ($allAccepted && $team->members->count() === 5) {
+                $team->update(['status' => 'registered']);
+                $team->refresh();
+            }
+        }
         
         return Inertia::render('Campus Tournament/Campus Tournament Team', [
             'team' => $team,
@@ -765,7 +780,6 @@ class CampusTournamentController extends Controller
             'discordId' => 'nullable|string|max:50',
             'captain' => 'required|array',
             'captain.id' => 'required|integer',
-            'captain.university' => 'required|string',
             'players' => 'required|array',
             'players.captain' => 'required|array',
             'players.player2' => 'required|array',
@@ -792,9 +806,16 @@ class CampusTournamentController extends Controller
             return redirect()->back()->withErrors(['message' => 'Only the team captain can edit the team']);
         }
         
-        // 4. IMPORTANT: Check if team is already submitted/registered
-        if ($team->status === 'registered') {
-             return redirect()->back()->withErrors(['message' => 'Team cannot be updated after submission. Contact support/admin if changes are needed.']);
+        // 4. IMPORTANT: Check if team can be updated
+        $tournament = $team->tournament;
+        $now = now();
+        // Since dates are 'date' casts, start_date is midnight. end_date is also midnight of that day.
+        $isWithinRegistration = $tournament && 
+            $now->gte($tournament->start_date) && 
+            $now->lte(\Carbon\Carbon::parse($tournament->end_date)->endOfDay());
+        
+        if ($team->status === 'registered' && !$isWithinRegistration) {
+             return redirect()->back()->withErrors(['message' => 'Team cannot be updated after the registration period has ended.']);
         }
 
         // 5. Check if team name already exists
@@ -832,7 +853,10 @@ class CampusTournamentController extends Controller
                 if (isset($player['id'])) {
                     $newPlayerIds[] = $player['id'];
                     $playerId = $player['id'];
-                    $role = ($playerId == $captain['id']) ? 'captain' : 'member';
+                    
+                    // Safety: Determine if this player is the captain based on the team's captain_id
+                    // This ensures that even if the request is inconsistent, the database stays correct.
+                    $role = ($playerId == $team->captain_id || $playerId == $captain['id']) ? 'captain' : 'member';
                     
                     if (isset($currentMembers[$playerId])) {
                          $currentMembers[$playerId]->update(['role' => $role]);
@@ -841,7 +865,7 @@ class CampusTournamentController extends Controller
                             'team_id' => $team->id,
                             'player_id' => $playerId,
                             'role' => $role,
-                            'status' => ($playerId == $captain['id']) ? 'accepted' : 'pending',
+                            'status' => ($role == 'captain') ? 'accepted' : 'pending',
                         ]);
                     }
                 }
@@ -1007,13 +1031,12 @@ class CampusTournamentController extends Controller
         // Create writer and save to output
         $writer = new Xlsx($spreadsheet);
         
-        // Set headers for download
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="' . $filename . '"');
-        header('Cache-Control: max-age=0');
-        
-        $writer->save('php://output');
-        exit;
+        return response()->streamDownload(function() use ($writer) {
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'max-age=0',
+        ]);
     }
     /**
      * Export pre-registration data to Excel (Super Admin only)
@@ -1039,34 +1062,48 @@ class CampusTournamentController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        // Increase memory and execution limits for large exports
+        if (function_exists('ini_set')) {
+            @ini_set('memory_limit', '1024M');
+            @ini_set('max_execution_time', '300');
+        }
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(300);
+        }
+
         $island    = $request->island;
         $startDate = $request->start_date;
         $endDate   = $request->end_date;
 
         // Fetch ALL approved tournaments for the given island within the date range
-        // Island is stored on the student leader (SL) user record
-        $tournaments = CampusTournament::with([
+        // Disable query log to save memory
+        \DB::disableQueryLog();
+
+        $query = CampusTournament::with([
                 'teams' => function ($query) {
                     $query->where('status', 'registered');
                 },
                 'teams.members' => function ($query) {
-                    $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
+                    $query->with('player')
+                          ->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END")
+                          ->orderBy('id', 'asc');
                 },
-                'teams.members.player',
                 'studentLeader',
             ])
             ->where('status', 'approved')
             ->whereHas('studentLeader', function ($q) use ($island) {
-                $q->where('island', $island);
+                if ($island !== 'All') {
+                    $q->where('island', $island);
+                }
             })
             ->where(function ($q) use ($startDate, $endDate) {
                 $q->whereBetween('start_date', [$startDate, $endDate])
                   ->orWhereBetween('end_date', [$startDate, $endDate]);
             })
-            ->orderBy('start_date', 'asc')
-            ->get();
+            ->orderBy('start_date', 'asc');
 
-        if ($tournaments->isEmpty()) {
+        // Check if there are any results before creating the spreadsheet
+        if ($query->count() === 0) {
             return response()->json(['error' => 'No approved tournaments found for the selected island and date range.'], 404);
         }
 
@@ -1092,28 +1129,35 @@ class CampusTournamentController extends Controller
             $col++;
         }
 
-        // Data rows starting at row 5 — iterate ALL tournaments
+        // Data rows starting at row 5 — iterate ALL tournaments in chunks
         $row = 5;
-        foreach ($tournaments as $tournament) {
-            foreach ($tournament->teams as $team) {
-                $members = $team->members->sortBy('role', SORT_REGULAR, true); // captain first
+        
+        $query->chunk(50, function ($tournaments) use ($island, $sheet, &$row) {
+            foreach ($tournaments as $tournament) {
+                foreach ($tournament->teams as $team) {
+                    $members = $team->members; // Already sorted by query
 
-                foreach ($members as $member) {
-                    $player = $member->player;
-                    $playerIsland = ($player && $player->island) ? $player->island : $island;
+                    foreach ($members as $member) {
+                        $player = $member->player;
+                        // Use player island, fallback to SL island, then filter island
+                        $playerIsland = ($player && $player->island) ? $player->island : ($tournament->studentLeader->island ?? $island);
 
-                    $sheet->setCellValue('A' . $row, $playerIsland);
-                    $sheet->setCellValue('B' . $row, $player ? $player->university : ($tournament->school_name ?? '-'));
-                    $sheet->setCellValue('C' . $row, $team->team_name);
-                    $sheet->setCellValue('D' . $row, $player ? trim($player->name . ' ' . $player->surname) : 'Unknown');
-                    $sheet->setCellValue('E' . $row, $player ? $player->ml_ign : '-');
-                    $sheet->setCellValue('F' . $row, $player ? $player->ml_server : '-');
-                    $sheet->setCellValue('G' . $row, $player ? $player->ml_id : '-');
+                        $sheet->setCellValue('A' . $row, $playerIsland);
+                        $sheet->setCellValue('B' . $row, $player ? $player->university : ($tournament->school_name ?? '-'));
+                        $sheet->setCellValue('C' . $row, $team->team_name);
+                        $sheet->setCellValue('D' . $row, $player ? trim($player->name . ' ' . $player->surname) : 'Unknown');
+                        $sheet->setCellValueExplicit('E' . $row, $player ? $player->ml_ign : '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                        $sheet->setCellValueExplicit('F' . $row, $player ? $player->ml_server : '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                        $sheet->setCellValueExplicit('G' . $row, $player ? $player->ml_id : '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
 
-                    $row++;
+                        $row++;
+                    }
                 }
             }
-        }
+        });
+
+        // Restore query log
+        \DB::enableQueryLog();
 
         // Auto-size columns A-G
         foreach (range('A', 'G') as $col) {
@@ -1136,12 +1180,12 @@ class CampusTournamentController extends Controller
 
         $writer = new Xlsx($spreadsheet);
 
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="' . $filename . '"');
-        header('Cache-Control: max-age=0');
-
-        $writer->save('php://output');
-        exit;
+        return response()->streamDownload(function() use ($writer) {
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'max-age=0',
+        ]);
     }
 
     /**

@@ -79,16 +79,20 @@ const CampusTournament = () => {
     return localTournaments.map(tournament => ({
       ...tournament,
       teams: tournament.teams ? tournament.teams
-        .filter(team => team.status === 'registered')
+        .filter(team => ['registered', 'assembling'].includes(team.status))
         .map(team => ({
           id: team.id,
           name: team.team_name,
+          status: team.status,
           result: team.result || 'participant', // Include result field
           players: team.members ? team.members.map(member => ({
             id: member.player_id,
-            name: member.player ? `${member.player.name} ${member.player.surname}`.trim() : 'Unknown Player',
-            verified: true, // Assuming all registered players are verified
-            role: member.role
+            name: member.player ? `${member.player.name || ''} ${member.player.surname || ''}`.trim() : 'Unknown Player',
+            ign: member.player ? member.player.ml_ign : '',
+            verified: member.player ? !!member.player.email_verified_at : false,
+            accepted: member.status === 'accepted',
+            role: member.role,
+            facebook_link: member.player ? member.player.facebook_link : null
           })) : []
         })) : []
     }));
@@ -556,25 +560,60 @@ const CampusTournament = () => {
   };
 
   const PlayerCell = ({ player }) => {
+    const verified = Boolean(player?.verified);
+    const nameDisplay = player?.name || 'Player';
     return (
-      <div className="w-full md:w-auto flex flex-col items-center gap-1 text-white/80 text-xs md:text-sm font-montserrat">
-        <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border border-white/20 bg-white/10">
-          <svg
-            className="absolute inset-0 m-auto w-5 h-5 text-white/50"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-          {player?.avatarUrl && (
-            <img src={player.avatarUrl} alt={player?.name || 'Player'} className="w-full h-full object-cover" />
-          )}
+      <div className="w-full flex items-center gap-3 justify-start min-w-0 text-white/80 text-xs md:text-sm font-montserrat">
+        <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-full flex-shrink-0">
+          {/* Image/icon clipped by the inner circle */}
+          <div className="relative w-full h-full overflow-hidden rounded-full border border-white/20 bg-white/10">
+            {!player?.avatarUrl && (
+              <svg
+                className="absolute inset-0 m-auto w-5 h-5 text-white/50"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            )}
+            {player?.avatarUrl && (
+              <img
+                src={player.avatarUrl}
+                alt={nameDisplay}
+                className="w-full h-full object-cover"
+              />
+            )}
+          </div>
+
+          {/* Verification dot that can overflow outside the avatar */}
+          <span
+            className={`absolute bottom-[-3px] right-[-3px] z-20 w-4 h-4 rounded-full border border-black/60 shadow-[0_0_8px_rgba(0,0,0,0.5)] ${
+              player?.accepted ? 'bg-green-400' : 'bg-red-500'
+            }`}
+          />
         </div>
-        <div className="flex items-center gap-2">
-          <span className="truncate max-w-[8ch] md:max-w-[12ch]">{player?.name || 'Player'}</span>
-          <span className={`w-2.5 h-2.5 rounded-full ${player?.verified ? 'bg-green-400' : 'bg-red-500'}`} />
+
+        <div className="flex flex-col min-w-0 items-start">
+          {player?.facebook_link ? (
+            <a
+              href={player.facebook_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block truncate max-w-[9ch] md:max-w-[10ch] text-white/90 text-sm leading-tight hover:text-blue-400 transition-colors"
+              title="View Facebook Profile"
+            >
+              {nameDisplay}
+            </a>
+          ) : (
+            <span className="block truncate max-w-[9ch] md:max-w-[10ch] text-white/90 text-sm leading-tight">
+              {nameDisplay}
+            </span>
+          )}
+          <span className="block truncate max-w-[9ch] md:max-w-[10ch] text-white/60 text-xs leading-tight">
+            {player?.ign || '—'}
+          </span>
         </div>
       </div>
     );
@@ -807,7 +846,7 @@ const CampusTournament = () => {
 
                           {/* Dropdown Content */}
                           <div
-                            className={`transition-all duration-500 ease-in-out ${expanded[item.id] ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}
+                            className={`transition-all duration-700 ease-in-out ${expanded[item.id] ? 'max-h-[5000px] opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}
                           >
                             <div className="px-0 pb-0">
                               <div className="mt-0 rounded-b-2xl bg-neutral-800/70 backdrop-blur-sm border-t border-neutral-700/40">
@@ -829,7 +868,7 @@ const CampusTournament = () => {
                                 </div>
 
                                 {/* Team Rows */}
-                                <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
+                                <div className="">
                                   {Array.isArray(item.teams) && item.teams.length > 0 ? (
                                     item.teams.map((team) => (
                                       <React.Fragment key={team.id}>
@@ -837,7 +876,10 @@ const CampusTournament = () => {
                                         <div className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3 border-t border-white/10 hover:bg-white/5 transition">
                                           <div className="text-white/90 font-montserrat md:truncate">{team.name}</div>
                                           {team.players.slice(0, 5).map((player, idx) => (
-                                            <div className="flex justify-center" key={idx}>
+                                            <div
+                                              className="flex items-center justify-start w-full min-w-0"
+                                              key={idx}
+                                            >
                                               <PlayerCell player={player} />
                                             </div>
                                           ))}
@@ -1071,15 +1113,32 @@ const CampusTournament = () => {
                 {mobileViewTeam.players.slice(0, 5).map((player, idx) => (
                   <div key={idx} className="flex items-center justify-between border border-white/10 rounded-lg px-3 py-2 bg-white/5">
                     <div className="flex items-center gap-3">
-                      <div className="relative w-9 h-9 rounded-full overflow-hidden border border-white/20 bg-white/10">
-                        <svg className="absolute inset-0 m-auto w-5 h-5 text-white/50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
-                          <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                        </svg>
+                      <div className="relative w-9 h-9 rounded-full">
+                        {/* Image/icon clipped by the inner circle */}
+                        <div className="relative w-full h-full overflow-hidden rounded-full border border-white/20 bg-white/10">
+                          {/* Default icon */}
+                          <svg className="absolute inset-0 m-auto w-5 h-5 text-white/50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
+                            <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                          </svg>
+                        </div>
+
+                        {/* Verification dot that can overflow outside the avatar */}
+                        <span
+                          className={`absolute bottom-[-3px] right-[-3px] z-20 w-4 h-4 rounded-full border border-black/60 shadow-[0_0_8px_rgba(0,0,0,0.5)] ${
+                            player?.verified ? 'bg-green-400' : 'bg-red-500'
+                          }`}
+                        />
                       </div>
-                      <div className="font-montserrat text-sm">{player.name}</div>
+                      <div className="min-w-0">
+                        <div className="font-montserrat text-sm text-white/90 leading-tight truncate">
+                          {player.name}
+                        </div>
+                        <div className="font-montserrat text-xs text-white/60 leading-tight truncate max-w-[12ch]">
+                          {player?.ign || '—'}
+                        </div>
+                      </div>
                     </div>
-                    <span className={`w-2.5 h-2.5 rounded-full ${player.verified ? 'bg-green-400' : 'bg-red-500'}`} />
                   </div>
                 ))}
               </div>
