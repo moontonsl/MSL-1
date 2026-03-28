@@ -870,7 +870,12 @@ const CampusTournament = () => {
                                 {/* Team Rows */}
                                 <div className="">
                                   {Array.isArray(item.teams) && item.teams.length > 0 ? (
-                                    item.teams.map((team) => (
+                                    (() => {
+                                      const registeredCount = item.teams.filter(t => t.status === 'registered').length;
+                                      const show3rd = registeredCount >= 8;
+                                      const show4th = registeredCount >= 16;
+                                      
+                                      return item.teams.map((team) => (
                                       <React.Fragment key={team.id}>
                                         {/* Desktop Row */}
                                         <div className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3 border-t border-white/10 hover:bg-white/5 transition">
@@ -893,7 +898,8 @@ const CampusTournament = () => {
                                               <option className="text-black" value="participant">Participant</option>
                                               <option className="text-black" value="1st">1st</option>
                                               <option className="text-black" value="2nd">2nd</option>
-                                              <option className="text-black" value="3rd">3rd</option>
+                                              {show3rd && <option className="text-black" value="3rd">3rd</option>}
+                                              {show4th && <option className="text-black" value="4th">4th</option>}
                                             </select>
                                           </div>
                                         </div>
@@ -910,7 +916,8 @@ const CampusTournament = () => {
                                               <option className="text-black" value="participant">Participant</option>
                                               <option className="text-black" value="1st">1st</option>
                                               <option className="text-black" value="2nd">2nd</option>
-                                              <option className="text-black" value="3rd">3rd</option>
+                                              {show3rd && <option className="text-black" value="3rd">3rd</option>}
+                                              {show4th && <option className="text-black" value="4th">4th</option>}
                                             </select>
                                           </div>
                                           <div className="flex justify-end">
@@ -924,7 +931,8 @@ const CampusTournament = () => {
                                           </div>
                                         </div>
                                       </React.Fragment>
-                                    ))
+                                    ));
+                                    })()
                                   ) : (
                                     <div className="px-4 py-6 text-center text-white/60 font-montserrat">No teams registered yet.</div>
                                   )}
