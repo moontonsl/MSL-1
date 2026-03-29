@@ -1024,6 +1024,9 @@ class CampusTournamentController extends Controller
             } elseif ($result === '3rd') {
                 $rankString = '3rd';
                 $rankColor = 'FFCD7F32'; // Bronze
+            } elseif ($result === '4th') {
+                $rankString = '4th';
+                $rankColor = 'FF90EE90'; // Light Green (or null if preferred, but adding a subtle color helps distinguish it)
             }
 
             // Get members sorted: Captain first, then others
