@@ -334,9 +334,9 @@ const CampusTournament = () => {
 
   const getBracketCounts = (registeredTeamsCount) => {
     let maxFirst = 1, maxSecond = 1, maxThird = 0, maxFourth = 0;
-    if (registeredTeamsCount <= 8) {
+    if (registeredTeamsCount <= 7) {
       maxFirst = 1; maxSecond = 1; maxThird = 0; maxFourth = 0;
-    } else if (registeredTeamsCount >= 9 && registeredTeamsCount <= 15) {
+    } else if (registeredTeamsCount >= 8 && registeredTeamsCount <= 15) {
       maxFirst = 1; maxSecond = 1; maxThird = 1; maxFourth = 0;
     } else if (registeredTeamsCount >= 16 && registeredTeamsCount <= 23) {
       maxFirst = 1; maxSecond = 1; maxThird = 1; maxFourth = 1;
