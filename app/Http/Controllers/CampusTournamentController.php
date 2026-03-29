@@ -444,19 +444,15 @@ class CampusTournamentController extends Controller
         // Bracket validation logic based on the image mapping
         $maxFirst = 1; $maxSecond = 1; $maxThird = 0; $maxFourth = 0;
         
-        if ($registeredTeamsCount < 4) {
-             $maxFirst = 1; $maxSecond = 1;
-        } elseif ($registeredTeamsCount >= 4 && $registeredTeamsCount <= 7) {
-             $maxFirst = 1; $maxSecond = 1;
-        } elseif ($registeredTeamsCount >= 8 && $registeredTeamsCount <= 15) {
-             $maxFirst = 1; $maxSecond = 1; $maxThird = 1;
+        if ($registeredTeamsCount <= 8) {
+             $maxFirst = 1; $maxSecond = 1; $maxThird = 0; $maxFourth = 0;
+        } elseif ($registeredTeamsCount >= 9 && $registeredTeamsCount <= 15) {
+             $maxFirst = 1; $maxSecond = 1; $maxThird = 1; $maxFourth = 0;
         } elseif ($registeredTeamsCount >= 16 && $registeredTeamsCount <= 23) {
              $maxFirst = 1; $maxSecond = 1; $maxThird = 1; $maxFourth = 1;
         } elseif ($registeredTeamsCount >= 24 && $registeredTeamsCount <= 31) {
              $maxFirst = 2; $maxSecond = 2; $maxThird = 2; $maxFourth = 1;
-        } elseif ($registeredTeamsCount == 32) {
-             $maxFirst = 2; $maxSecond = 2; $maxThird = 2; $maxFourth = 2;
-        } elseif ($registeredTeamsCount >= 33 && $registeredTeamsCount <= 39) {
+        } elseif ($registeredTeamsCount >= 32 && $registeredTeamsCount <= 39) {
              $maxFirst = 2; $maxSecond = 2; $maxThird = 2; $maxFourth = 2;
         } elseif ($registeredTeamsCount >= 40 && $registeredTeamsCount <= 47) {
              $maxFirst = 3; $maxSecond = 3; $maxThird = 3; $maxFourth = 2;
@@ -574,19 +570,15 @@ class CampusTournamentController extends Controller
         // Bracket validation logic based on the image mapping
         $maxFirst = 1; $maxSecond = 1; $maxThird = 0; $maxFourth = 0;
         
-        if ($registeredTeamsCount < 4) {
-             $maxFirst = 1; $maxSecond = 1;
-        } elseif ($registeredTeamsCount >= 4 && $registeredTeamsCount <= 7) {
-             $maxFirst = 1; $maxSecond = 1;
-        } elseif ($registeredTeamsCount >= 8 && $registeredTeamsCount <= 15) {
-             $maxFirst = 1; $maxSecond = 1; $maxThird = 1;
+        if ($registeredTeamsCount <= 8) {
+             $maxFirst = 1; $maxSecond = 1; $maxThird = 0; $maxFourth = 0;
+        } elseif ($registeredTeamsCount >= 9 && $registeredTeamsCount <= 15) {
+             $maxFirst = 1; $maxSecond = 1; $maxThird = 1; $maxFourth = 0;
         } elseif ($registeredTeamsCount >= 16 && $registeredTeamsCount <= 23) {
              $maxFirst = 1; $maxSecond = 1; $maxThird = 1; $maxFourth = 1;
         } elseif ($registeredTeamsCount >= 24 && $registeredTeamsCount <= 31) {
              $maxFirst = 2; $maxSecond = 2; $maxThird = 2; $maxFourth = 1;
-        } elseif ($registeredTeamsCount == 32) {
-             $maxFirst = 2; $maxSecond = 2; $maxThird = 2; $maxFourth = 2;
-        } elseif ($registeredTeamsCount >= 33 && $registeredTeamsCount <= 39) {
+        } elseif ($registeredTeamsCount >= 32 && $registeredTeamsCount <= 39) {
              $maxFirst = 2; $maxSecond = 2; $maxThird = 2; $maxFourth = 2;
         } elseif ($registeredTeamsCount >= 40 && $registeredTeamsCount <= 47) {
              $maxFirst = 3; $maxSecond = 3; $maxThird = 3; $maxFourth = 2;
