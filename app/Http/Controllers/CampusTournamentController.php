@@ -444,9 +444,9 @@ class CampusTournamentController extends Controller
         // Bracket validation logic based on the image mapping
         $maxFirst = 1; $maxSecond = 1; $maxThird = 0; $maxFourth = 0;
         
-        if ($registeredTeamsCount <= 8) {
+        if ($registeredTeamsCount <= 7) {
              $maxFirst = 1; $maxSecond = 1; $maxThird = 0; $maxFourth = 0;
-        } elseif ($registeredTeamsCount >= 9 && $registeredTeamsCount <= 15) {
+        } elseif ($registeredTeamsCount >= 8 && $registeredTeamsCount <= 15) {
              $maxFirst = 1; $maxSecond = 1; $maxThird = 1; $maxFourth = 0;
         } elseif ($registeredTeamsCount >= 16 && $registeredTeamsCount <= 23) {
              $maxFirst = 1; $maxSecond = 1; $maxThird = 1; $maxFourth = 1;
@@ -570,9 +570,9 @@ class CampusTournamentController extends Controller
         // Bracket validation logic based on the image mapping
         $maxFirst = 1; $maxSecond = 1; $maxThird = 0; $maxFourth = 0;
         
-        if ($registeredTeamsCount <= 8) {
+        if ($registeredTeamsCount <= 7) {
              $maxFirst = 1; $maxSecond = 1; $maxThird = 0; $maxFourth = 0;
-        } elseif ($registeredTeamsCount >= 9 && $registeredTeamsCount <= 15) {
+        } elseif ($registeredTeamsCount >= 8 && $registeredTeamsCount <= 15) {
              $maxFirst = 1; $maxSecond = 1; $maxThird = 1; $maxFourth = 0;
         } elseif ($registeredTeamsCount >= 16 && $registeredTeamsCount <= 23) {
              $maxFirst = 1; $maxSecond = 1; $maxThird = 1; $maxFourth = 1;
