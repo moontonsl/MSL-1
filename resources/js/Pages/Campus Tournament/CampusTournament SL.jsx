@@ -332,6 +332,26 @@ const CampusTournament = () => {
     return 'bg-green-500/30 border border-green-400/70 text-white';
   };
 
+  const getBracketCounts = (registeredTeamsCount) => {
+    let maxFirst = 1, maxSecond = 1, maxThird = 0, maxFourth = 0;
+    if (registeredTeamsCount <= 8) {
+      maxFirst = 1; maxSecond = 1; maxThird = 0; maxFourth = 0;
+    } else if (registeredTeamsCount >= 9 && registeredTeamsCount <= 15) {
+      maxFirst = 1; maxSecond = 1; maxThird = 1; maxFourth = 0;
+    } else if (registeredTeamsCount >= 16 && registeredTeamsCount <= 23) {
+      maxFirst = 1; maxSecond = 1; maxThird = 1; maxFourth = 1;
+    } else if (registeredTeamsCount >= 24 && registeredTeamsCount <= 31) {
+      maxFirst = 2; maxSecond = 2; maxThird = 2; maxFourth = 1;
+    } else if (registeredTeamsCount >= 32 && registeredTeamsCount <= 39) {
+      maxFirst = 2; maxSecond = 2; maxThird = 2; maxFourth = 2;
+    } else if (registeredTeamsCount >= 40 && registeredTeamsCount <= 47) {
+      maxFirst = 3; maxSecond = 3; maxThird = 3; maxFourth = 2;
+    } else if (registeredTeamsCount >= 48) {
+      maxFirst = 3; maxSecond = 3; maxThird = 3; maxFourth = 3;
+    }
+    return { maxFirst, maxSecond, maxThird, maxFourth };
+  };
+
   const handleSubmitResults = async (tournamentId) => {
     const tournament = transformedTournaments.find((t) => t.id === tournamentId);
 
@@ -346,69 +366,75 @@ const CampusTournament = () => {
       return;
     }
 
-    // Check if exactly one team is marked as 1st place
+    const registeredCount = tournament.teams.filter(t => t.status === 'registered').length;
+    const { maxFirst, maxSecond, maxThird, maxFourth } = getBracketCounts(registeredCount);
+    const show3rd = maxThird > 0;
+    const show4th = maxFourth > 0;
+
+    // Check 1st place
     const firstPlaceTeams = tournament.teams.filter(team => team.result === '1st');
-    if (firstPlaceTeams.length === 0) {
+    if (firstPlaceTeams.length !== maxFirst) {
       setSubmitModalData({
         type: 'error',
-        title: 'No 1st Place Team Selected',
-        message: 'Please select exactly one 1st place team before submitting results.',
-        showCancel: false
-      });
-      setShowSubmitModal(true);
-      return;
-    }
-    if (firstPlaceTeams.length > 1) {
-      setSubmitModalData({
-        type: 'error',
-        title: 'Multiple 1st Place Teams Selected',
-        message: 'Only one team can be marked as 1st place. Please select only one 1st place team.',
+        title: 'Invalid 1st Place Selection',
+        message: `Based on ${registeredCount} registered teams, you must select exactly ${maxFirst} 1st place team(s).`,
         showCancel: false
       });
       setShowSubmitModal(true);
       return;
     }
 
-    // Check if exactly one team is marked as 2nd place
+    // Check 2nd place
     const secondPlaceTeams = tournament.teams.filter(team => team.result === '2nd');
-    if (secondPlaceTeams.length === 0) {
+    if (secondPlaceTeams.length !== maxSecond) {
       setSubmitModalData({
         type: 'error',
-        title: 'No 2nd Place Team Selected',
-        message: 'Please select exactly one 2nd place team before submitting results.',
-        showCancel: false
-      });
-      setShowSubmitModal(true);
-      return;
-    }
-    if (secondPlaceTeams.length > 1) {
-      setSubmitModalData({
-        type: 'error',
-        title: 'Multiple 2nd Place Teams Selected',
-        message: 'Only one team can be marked as 2nd place. Please select only one 2nd place team.',
+        title: 'Invalid 2nd Place Selection',
+        message: `Based on ${registeredCount} registered teams, you must select exactly ${maxSecond} 2nd place team(s).`,
         showCancel: false
       });
       setShowSubmitModal(true);
       return;
     }
 
-    // Check if exactly one team is marked as 3rd place
+    // Check 3rd place
     const thirdPlaceTeams = tournament.teams.filter(team => team.result === '3rd');
-    if (thirdPlaceTeams.length === 0) {
+    if (show3rd && thirdPlaceTeams.length !== maxThird) {
       setSubmitModalData({
         type: 'error',
-        title: 'No 3rd Place Team Selected',
-        message: 'Please select exactly one 3rd place team before submitting results.',
+        title: 'Invalid 3rd Place Selection',
+        message: `Based on ${registeredCount} registered teams, you must select exactly ${maxThird} 3rd place team(s).`,
+        showCancel: false
+      });
+      setShowSubmitModal(true);
+      return;
+    } else if (!show3rd && thirdPlaceTeams.length > 0) {
+      setSubmitModalData({
+        type: 'error',
+        title: 'Invalid 3rd Place Selection',
+        message: `3rd place is not available for ${registeredCount} registered teams.`,
         showCancel: false
       });
       setShowSubmitModal(true);
       return;
     }
-    if (thirdPlaceTeams.length > 1) {
+
+    // Check 4th place
+    const fourthPlaceTeams = tournament.teams.filter(team => team.result === '4th');
+    if (show4th && fourthPlaceTeams.length !== maxFourth) {
       setSubmitModalData({
         type: 'error',
-        title: 'Multiple 3rd Place Teams Selected',
-        message: 'Only one team can be marked as 3rd place. Please select only one 3rd place team.',
+        title: 'Invalid 4th Place Selection',
+        message: `Based on ${registeredCount} registered teams, you must select exactly ${maxFourth} 4th place team(s).`,
+        showCancel: false
+      });
+      setShowSubmitModal(true);
+      return;
+    } else if (!show4th && fourthPlaceTeams.length > 0) {
+      setSubmitModalData({
+        type: 'error',
+        title: 'Invalid 4th Place Selection',
+        message: `4th place is not available for ${registeredCount} registered teams.`,
         showCancel: false
       });
       setShowSubmitModal(true);
@@ -429,13 +455,17 @@ const CampusTournament = () => {
     }
 
     // Show confirmation modal
-    const firstPlaceTeam = firstPlaceTeams[0];
-    const secondPlaceTeam = secondPlaceTeams[0];
-    const thirdPlaceTeam = thirdPlaceTeams[0];
+    let messageStr = `Are you sure you want to ${isEditingResults ? 'update' : 'submit'} the results?\n`;
+    messageStr += `\n1st Place: ${firstPlaceTeams.map(t => t.name).join(', ')}`;
+    messageStr += `\n2nd Place: ${secondPlaceTeams.map(t => t.name).join(', ')}`;
+    if (show3rd && thirdPlaceTeams.length > 0) messageStr += `\n3rd Place: ${thirdPlaceTeams.map(t => t.name).join(', ')}`;
+    if (show4th && fourthPlaceTeams.length > 0) messageStr += `\n4th Place: ${fourthPlaceTeams.map(t => t.name).join(', ')}`;
+    messageStr += `\n\n${isEditingResults ? 'This will update the existing rankings.' : 'This action cannot be undone.'}`;
+
     setSubmitModalData({
       type: 'confirm',
       title: isEditingResults ? 'Confirm Update Results' : 'Confirm Results Submission',
-      message: `Are you sure you want to ${isEditingResults ? 'update' : 'submit'} the results?\n\n1st Place: ${firstPlaceTeam.name}\n2nd Place: ${secondPlaceTeam.name}\n3rd Place: ${thirdPlaceTeam.name}\n\n${isEditingResults ? 'This will update the existing rankings.' : 'This action cannot be undone.'}`,
+      message: messageStr,
       showCancel: true,
       tournamentId: tournamentId,
       tournament: tournament
@@ -872,8 +902,9 @@ const CampusTournament = () => {
                                   {Array.isArray(item.teams) && item.teams.length > 0 ? (
                                     (() => {
                                       const registeredCount = item.teams.filter(t => t.status === 'registered').length;
-                                      const show3rd = registeredCount >= 8;
-                                      const show4th = registeredCount >= 16;
+                                      const counts = getBracketCounts(registeredCount);
+                                      const show3rd = counts.maxThird > 0;
+                                      const show4th = counts.maxFourth > 0;
                                       
                                       return item.teams.map((team) => (
                                       <React.Fragment key={team.id}>
