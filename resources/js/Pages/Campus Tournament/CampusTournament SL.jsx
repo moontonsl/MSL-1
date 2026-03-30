@@ -79,16 +79,20 @@ const CampusTournament = () => {
     return localTournaments.map(tournament => ({
       ...tournament,
       teams: tournament.teams ? tournament.teams
-        .filter(team => team.status === 'registered')
+        .filter(team => ['registered', 'assembling'].includes(team.status))
         .map(team => ({
           id: team.id,
           name: team.team_name,
+          status: team.status,
           result: team.result || 'participant', // Include result field
           players: team.members ? team.members.map(member => ({
             id: member.player_id,
-            name: member.player ? `${member.player.name} ${member.player.surname}`.trim() : 'Unknown Player',
-            verified: true, // Assuming all registered players are verified
-            role: member.role
+            name: member.player ? `${member.player.name || ''} ${member.player.surname || ''}`.trim() : 'Unknown Player',
+            ign: member.player ? member.player.ml_ign : '',
+            verified: member.player ? !!member.player.email_verified_at : false,
+            accepted: member.status === 'accepted',
+            role: member.role,
+            facebook_link: member.player ? member.player.facebook_link : null
           })) : []
         })) : []
     }));
@@ -328,6 +332,26 @@ const CampusTournament = () => {
     return 'bg-green-500/30 border border-green-400/70 text-white';
   };
 
+  const getBracketCounts = (registeredTeamsCount) => {
+    let maxFirst = 1, maxSecond = 1, maxThird = 0, maxFourth = 0;
+    if (registeredTeamsCount <= 7) {
+      maxFirst = 1; maxSecond = 1; maxThird = 0; maxFourth = 0;
+    } else if (registeredTeamsCount >= 8 && registeredTeamsCount <= 15) {
+      maxFirst = 1; maxSecond = 1; maxThird = 1; maxFourth = 0;
+    } else if (registeredTeamsCount >= 16 && registeredTeamsCount <= 23) {
+      maxFirst = 1; maxSecond = 1; maxThird = 1; maxFourth = 1;
+    } else if (registeredTeamsCount >= 24 && registeredTeamsCount <= 31) {
+      maxFirst = 2; maxSecond = 2; maxThird = 2; maxFourth = 1;
+    } else if (registeredTeamsCount >= 32 && registeredTeamsCount <= 39) {
+      maxFirst = 2; maxSecond = 2; maxThird = 2; maxFourth = 2;
+    } else if (registeredTeamsCount >= 40 && registeredTeamsCount <= 47) {
+      maxFirst = 3; maxSecond = 3; maxThird = 3; maxFourth = 2;
+    } else if (registeredTeamsCount >= 48) {
+      maxFirst = 3; maxSecond = 3; maxThird = 3; maxFourth = 3;
+    }
+    return { maxFirst, maxSecond, maxThird, maxFourth };
+  };
+
   const handleSubmitResults = async (tournamentId) => {
     const tournament = transformedTournaments.find((t) => t.id === tournamentId);
 
@@ -342,69 +366,75 @@ const CampusTournament = () => {
       return;
     }
 
-    // Check if exactly one team is marked as 1st place
+    const registeredCount = tournament.teams.filter(t => t.status === 'registered').length;
+    const { maxFirst, maxSecond, maxThird, maxFourth } = getBracketCounts(registeredCount);
+    const show3rd = maxThird > 0;
+    const show4th = maxFourth > 0;
+
+    // Check 1st place
     const firstPlaceTeams = tournament.teams.filter(team => team.result === '1st');
-    if (firstPlaceTeams.length === 0) {
+    if (firstPlaceTeams.length !== maxFirst) {
       setSubmitModalData({
         type: 'error',
-        title: 'No 1st Place Team Selected',
-        message: 'Please select exactly one 1st place team before submitting results.',
-        showCancel: false
-      });
-      setShowSubmitModal(true);
-      return;
-    }
-    if (firstPlaceTeams.length > 1) {
-      setSubmitModalData({
-        type: 'error',
-        title: 'Multiple 1st Place Teams Selected',
-        message: 'Only one team can be marked as 1st place. Please select only one 1st place team.',
+        title: 'Invalid 1st Place Selection',
+        message: `Based on ${registeredCount} registered teams, you must select exactly ${maxFirst} 1st place team(s).`,
         showCancel: false
       });
       setShowSubmitModal(true);
       return;
     }
 
-    // Check if exactly one team is marked as 2nd place
+    // Check 2nd place
     const secondPlaceTeams = tournament.teams.filter(team => team.result === '2nd');
-    if (secondPlaceTeams.length === 0) {
+    if (secondPlaceTeams.length !== maxSecond) {
       setSubmitModalData({
         type: 'error',
-        title: 'No 2nd Place Team Selected',
-        message: 'Please select exactly one 2nd place team before submitting results.',
-        showCancel: false
-      });
-      setShowSubmitModal(true);
-      return;
-    }
-    if (secondPlaceTeams.length > 1) {
-      setSubmitModalData({
-        type: 'error',
-        title: 'Multiple 2nd Place Teams Selected',
-        message: 'Only one team can be marked as 2nd place. Please select only one 2nd place team.',
+        title: 'Invalid 2nd Place Selection',
+        message: `Based on ${registeredCount} registered teams, you must select exactly ${maxSecond} 2nd place team(s).`,
         showCancel: false
       });
       setShowSubmitModal(true);
       return;
     }
 
-    // Check if exactly one team is marked as 3rd place
+    // Check 3rd place
     const thirdPlaceTeams = tournament.teams.filter(team => team.result === '3rd');
-    if (thirdPlaceTeams.length === 0) {
+    if (show3rd && thirdPlaceTeams.length !== maxThird) {
       setSubmitModalData({
         type: 'error',
-        title: 'No 3rd Place Team Selected',
-        message: 'Please select exactly one 3rd place team before submitting results.',
+        title: 'Invalid 3rd Place Selection',
+        message: `Based on ${registeredCount} registered teams, you must select exactly ${maxThird} 3rd place team(s).`,
+        showCancel: false
+      });
+      setShowSubmitModal(true);
+      return;
+    } else if (!show3rd && thirdPlaceTeams.length > 0) {
+      setSubmitModalData({
+        type: 'error',
+        title: 'Invalid 3rd Place Selection',
+        message: `3rd place is not available for ${registeredCount} registered teams.`,
         showCancel: false
       });
       setShowSubmitModal(true);
       return;
     }
-    if (thirdPlaceTeams.length > 1) {
+
+    // Check 4th place
+    const fourthPlaceTeams = tournament.teams.filter(team => team.result === '4th');
+    if (show4th && fourthPlaceTeams.length !== maxFourth) {
       setSubmitModalData({
         type: 'error',
-        title: 'Multiple 3rd Place Teams Selected',
-        message: 'Only one team can be marked as 3rd place. Please select only one 3rd place team.',
+        title: 'Invalid 4th Place Selection',
+        message: `Based on ${registeredCount} registered teams, you must select exactly ${maxFourth} 4th place team(s).`,
+        showCancel: false
+      });
+      setShowSubmitModal(true);
+      return;
+    } else if (!show4th && fourthPlaceTeams.length > 0) {
+      setSubmitModalData({
+        type: 'error',
+        title: 'Invalid 4th Place Selection',
+        message: `4th place is not available for ${registeredCount} registered teams.`,
         showCancel: false
       });
       setShowSubmitModal(true);
@@ -425,13 +455,17 @@ const CampusTournament = () => {
     }
 
     // Show confirmation modal
-    const firstPlaceTeam = firstPlaceTeams[0];
-    const secondPlaceTeam = secondPlaceTeams[0];
-    const thirdPlaceTeam = thirdPlaceTeams[0];
+    let messageStr = `Are you sure you want to ${isEditingResults ? 'update' : 'submit'} the results?\n`;
+    messageStr += `\n1st Place: ${firstPlaceTeams.map(t => t.name).join(', ')}`;
+    messageStr += `\n2nd Place: ${secondPlaceTeams.map(t => t.name).join(', ')}`;
+    if (show3rd && thirdPlaceTeams.length > 0) messageStr += `\n3rd Place: ${thirdPlaceTeams.map(t => t.name).join(', ')}`;
+    if (show4th && fourthPlaceTeams.length > 0) messageStr += `\n4th Place: ${fourthPlaceTeams.map(t => t.name).join(', ')}`;
+    messageStr += `\n\n${isEditingResults ? 'This will update the existing rankings.' : 'This action cannot be undone.'}`;
+
     setSubmitModalData({
       type: 'confirm',
       title: isEditingResults ? 'Confirm Update Results' : 'Confirm Results Submission',
-      message: `Are you sure you want to ${isEditingResults ? 'update' : 'submit'} the results?\n\n1st Place: ${firstPlaceTeam.name}\n2nd Place: ${secondPlaceTeam.name}\n3rd Place: ${thirdPlaceTeam.name}\n\n${isEditingResults ? 'This will update the existing rankings.' : 'This action cannot be undone.'}`,
+      message: messageStr,
       showCancel: true,
       tournamentId: tournamentId,
       tournament: tournament
@@ -556,25 +590,60 @@ const CampusTournament = () => {
   };
 
   const PlayerCell = ({ player }) => {
+    const verified = Boolean(player?.verified);
+    const nameDisplay = player?.name || 'Player';
     return (
-      <div className="w-full md:w-auto flex flex-col items-center gap-1 text-white/80 text-xs md:text-sm font-montserrat">
-        <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border border-white/20 bg-white/10">
-          <svg
-            className="absolute inset-0 m-auto w-5 h-5 text-white/50"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-          {player?.avatarUrl && (
-            <img src={player.avatarUrl} alt={player?.name || 'Player'} className="w-full h-full object-cover" />
-          )}
+      <div className="w-full flex items-center gap-3 justify-start min-w-0 text-white/80 text-xs md:text-sm font-montserrat">
+        <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-full flex-shrink-0">
+          {/* Image/icon clipped by the inner circle */}
+          <div className="relative w-full h-full overflow-hidden rounded-full border border-white/20 bg-white/10">
+            {!player?.avatarUrl && (
+              <svg
+                className="absolute inset-0 m-auto w-5 h-5 text-white/50"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            )}
+            {player?.avatarUrl && (
+              <img
+                src={player.avatarUrl}
+                alt={nameDisplay}
+                className="w-full h-full object-cover"
+              />
+            )}
+          </div>
+
+          {/* Verification dot that can overflow outside the avatar */}
+          <span
+            className={`absolute bottom-[-3px] right-[-3px] z-20 w-4 h-4 rounded-full border border-black/60 shadow-[0_0_8px_rgba(0,0,0,0.5)] ${
+              player?.accepted ? 'bg-green-400' : 'bg-red-500'
+            }`}
+          />
         </div>
-        <div className="flex items-center gap-2">
-          <span className="truncate max-w-[8ch] md:max-w-[12ch]">{player?.name || 'Player'}</span>
-          <span className={`w-2.5 h-2.5 rounded-full ${player?.verified ? 'bg-green-400' : 'bg-red-500'}`} />
+
+        <div className="flex flex-col min-w-0 items-start">
+          {player?.facebook_link ? (
+            <a
+              href={player.facebook_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block truncate max-w-[9ch] md:max-w-[10ch] text-white/90 text-sm leading-tight hover:text-blue-400 transition-colors"
+              title="View Facebook Profile"
+            >
+              {nameDisplay}
+            </a>
+          ) : (
+            <span className="block truncate max-w-[9ch] md:max-w-[10ch] text-white/90 text-sm leading-tight">
+              {nameDisplay}
+            </span>
+          )}
+          <span className="block truncate max-w-[9ch] md:max-w-[10ch] text-white/60 text-xs leading-tight">
+            {player?.ign || '—'}
+          </span>
         </div>
       </div>
     );
@@ -831,13 +900,22 @@ const CampusTournament = () => {
                                 {/* Team Rows */}
                                 <div className="">
                                   {Array.isArray(item.teams) && item.teams.length > 0 ? (
-                                    item.teams.map((team) => (
+                                    (() => {
+                                      const registeredCount = item.teams.filter(t => t.status === 'registered').length;
+                                      const counts = getBracketCounts(registeredCount);
+                                      const show3rd = counts.maxThird > 0;
+                                      const show4th = counts.maxFourth > 0;
+                                      
+                                      return item.teams.map((team) => (
                                       <React.Fragment key={team.id}>
                                         {/* Desktop Row */}
                                         <div className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3 border-t border-white/10 hover:bg-white/5 transition">
                                           <div className="text-white/90 font-montserrat md:truncate">{team.name}</div>
                                           {team.players.slice(0, 5).map((player, idx) => (
-                                            <div className="flex justify-center" key={idx}>
+                                            <div
+                                              className="flex items-center justify-start w-full min-w-0"
+                                              key={idx}
+                                            >
                                               <PlayerCell player={player} />
                                             </div>
                                           ))}
@@ -851,7 +929,8 @@ const CampusTournament = () => {
                                               <option className="text-black" value="participant">Participant</option>
                                               <option className="text-black" value="1st">1st</option>
                                               <option className="text-black" value="2nd">2nd</option>
-                                              <option className="text-black" value="3rd">3rd</option>
+                                              {show3rd && <option className="text-black" value="3rd">3rd</option>}
+                                              {show4th && <option className="text-black" value="4th">4th</option>}
                                             </select>
                                           </div>
                                         </div>
@@ -868,7 +947,8 @@ const CampusTournament = () => {
                                               <option className="text-black" value="participant">Participant</option>
                                               <option className="text-black" value="1st">1st</option>
                                               <option className="text-black" value="2nd">2nd</option>
-                                              <option className="text-black" value="3rd">3rd</option>
+                                              {show3rd && <option className="text-black" value="3rd">3rd</option>}
+                                              {show4th && <option className="text-black" value="4th">4th</option>}
                                             </select>
                                           </div>
                                           <div className="flex justify-end">
@@ -882,7 +962,8 @@ const CampusTournament = () => {
                                           </div>
                                         </div>
                                       </React.Fragment>
-                                    ))
+                                    ));
+                                    })()
                                   ) : (
                                     <div className="px-4 py-6 text-center text-white/60 font-montserrat">No teams registered yet.</div>
                                   )}
@@ -1071,15 +1152,32 @@ const CampusTournament = () => {
                 {mobileViewTeam.players.slice(0, 5).map((player, idx) => (
                   <div key={idx} className="flex items-center justify-between border border-white/10 rounded-lg px-3 py-2 bg-white/5">
                     <div className="flex items-center gap-3">
-                      <div className="relative w-9 h-9 rounded-full overflow-hidden border border-white/20 bg-white/10">
-                        <svg className="absolute inset-0 m-auto w-5 h-5 text-white/50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
-                          <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                        </svg>
+                      <div className="relative w-9 h-9 rounded-full">
+                        {/* Image/icon clipped by the inner circle */}
+                        <div className="relative w-full h-full overflow-hidden rounded-full border border-white/20 bg-white/10">
+                          {/* Default icon */}
+                          <svg className="absolute inset-0 m-auto w-5 h-5 text-white/50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
+                            <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                          </svg>
+                        </div>
+
+                        {/* Verification dot that can overflow outside the avatar */}
+                        <span
+                          className={`absolute bottom-[-3px] right-[-3px] z-20 w-4 h-4 rounded-full border border-black/60 shadow-[0_0_8px_rgba(0,0,0,0.5)] ${
+                            player?.verified ? 'bg-green-400' : 'bg-red-500'
+                          }`}
+                        />
                       </div>
-                      <div className="font-montserrat text-sm">{player.name}</div>
+                      <div className="min-w-0">
+                        <div className="font-montserrat text-sm text-white/90 leading-tight truncate">
+                          {player.name}
+                        </div>
+                        <div className="font-montserrat text-xs text-white/60 leading-tight truncate max-w-[12ch]">
+                          {player?.ign || '—'}
+                        </div>
+                      </div>
                     </div>
-                    <span className={`w-2.5 h-2.5 rounded-full ${player.verified ? 'bg-green-400' : 'bg-red-500'}`} />
                   </div>
                 ))}
               </div>

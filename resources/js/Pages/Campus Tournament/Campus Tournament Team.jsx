@@ -86,6 +86,21 @@ const CampusTournamentTeam = () => {
       statusText = 'Empty';
     }
 
+    const nameElement = player?.facebook_link ? (
+      <a
+        href={player.facebook_link}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        className="truncate max-w-[8ch] md:max-w-[12ch] hover:text-blue-400 transition-colors"
+        title="View Facebook Profile"
+      >
+        {formatPlayer(player)}
+      </a>
+    ) : (
+      <span className="truncate max-w-[8ch] md:max-w-[12ch]">{formatPlayer(player)}</span>
+    );
+
     return (
       <div
         onClick={() => player && setSelectedPlayer(player)}
@@ -101,7 +116,7 @@ const CampusTournamentTeam = () => {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className="truncate max-w-[8ch] md:max-w-[12ch]">{formatPlayer(player)}</span>
+          {nameElement}
           {member && <span className={`w-2.5 h-2.5 rounded-full ${statusColor}`} title={statusText} />}
         </div>
         {status !== 'accepted' && member && (
@@ -123,10 +138,32 @@ const CampusTournamentTeam = () => {
     return teamFromProps.members.find(m => m.player_id === user.id);
   }, [user, teamFromProps]);
 
+  const sortedMembers = useMemo(() => {
+    if (!teamFromProps?.members) return [];
+    return [...teamFromProps.members].sort((a, b) => {
+      if (a.role === 'captain') return -1;
+      if (b.role === 'captain') return 1;
+      return (a.id || 0) - (b.id || 0);
+    });
+  }, [teamFromProps?.members]);
+
+  const canEdit = useMemo(() => {
+    if (!isCaptainFromProps) return false;
+    if (!teamFromProps?.tournament) return false;
+
+    const now = new Date();
+    const start = new Date(teamFromProps.tournament.start_date);
+    const end = new Date(teamFromProps.tournament.end_date);
+    end.setHours(23, 59, 59, 999);
+
+    return now >= start && now <= end;
+  }, [isCaptainFromProps, teamFromProps]);
+
   const hasPendingInvite = currentUserMember?.status === 'pending';
   const [isProcessingInvite, setIsProcessingInvite] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
 
   React.useEffect(() => {
@@ -206,45 +243,8 @@ const CampusTournamentTeam = () => {
     });
   };
 
-  // Check if team is submittable (all 5 members accepted)
-  const isSubmittable = useMemo(() => {
-    if (!teamFromProps || !teamFromProps.members) return false;
-    if (teamFromProps.members.length < 5) return false;
-    return teamFromProps.members.every(m => m.status === 'accepted');
-  }, [teamFromProps]);
+  // Team is always mocked for now; backend can replace via props later
 
-  // Confirmation Modal State
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [showAcceptModal, setShowAcceptModal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(null);
-
-  const handleSubmitClick = () => {
-    setShowConfirmModal(true);
-  };
-
-  const handleConfirmSubmit = () => {
-    setIsProcessingInvite(true);
-    setErrorMessage(null);
-
-    // Get user_id from URL if present (for unauthenticated access)
-    const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get('user_id');
-
-    router.post(`/team-submit/${teamFromProps.id}`, {
-      user_id: userId
-    }, {
-      onSuccess: () => {
-        alert('Team submitted successfully!');
-        setShowConfirmModal(false);
-        // Page automatically refreshes with new status
-      },
-      onError: (errors) => {
-        console.error('Submit error:', errors);
-        setErrorMessage(errors.message || Object.values(errors).flat().join(', ') || 'Failed to submit team.');
-      },
-      onFinish: () => setIsProcessingInvite(false)
-    });
-  };
 
 
 
@@ -333,7 +333,7 @@ const CampusTournamentTeam = () => {
                     </div>
 
                     <div className="grid [grid-template-columns:repeat(5,minmax(140px,1fr))_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3">
-                      {teamFromProps.members && teamFromProps.members.slice(0, 5).map((member, idx) => (
+                      {sortedMembers.slice(0, 5).map((member, idx) => (
                         <div className="flex justify-center" key={idx}>
                           <PlayerCell member={member} />
                         </div>
@@ -367,12 +367,12 @@ const CampusTournamentTeam = () => {
                         )}
                           <button
                           type="button"
-                          disabled={!isCaptainFromProps}
-                          className={`bg-[#F2C21A] text-black font-montserrat text-xs md:text-sm font-semibold rounded-lg px-6 md:px-7 py-1.5 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] min-w-[88px] justify-center ${!isCaptainFromProps ? 'opacity-60 cursor-not-allowed' : ''}`}
+                          disabled={!canEdit}
+                          className={`bg-[#F2C21A] text-black font-montserrat text-xs md:text-sm font-semibold rounded-lg px-6 md:px-7 py-1.5 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] min-w-[88px] justify-center ${!canEdit ? 'opacity-60 cursor-not-allowed' : 'hover:brightness-110'}`}
                           onClick={() => {
-                            if (isCaptainFromProps) {
-                              // Find the captain from team members
-                              const captainMember = teamFromProps.members?.find(member => member.role === 'captain');
+                            if (canEdit) {
+                              // Find the captain from sorted members
+                              const captainMember = sortedMembers.find(member => member.role === 'captain');
                               const captainData = captainMember?.player;
 
                               // Store team data for editing
@@ -393,23 +393,10 @@ const CampusTournamentTeam = () => {
                               router.visit(targetUrl);
                             }
                           }}
-                          title="Edit team details"
+                          title={canEdit ? "Edit team details" : "Editing is only allowed during the registration period."}
                         >
                           Edit
                         </button>
-
-                        {/* Submit Team Button */}
-                        {isCaptainFromProps && teamFromProps.status === 'assembling' && (
-                          <button
-                            type="button"
-                            disabled={!isSubmittable || isProcessingInvite}
-                            className={`bg-green-600 text-white font-montserrat text-xs md:text-sm font-semibold rounded-lg px-3 py-1.5 shadow-lg min-w-[88px] justify-center transition-all ${(!isSubmittable || isProcessingInvite) ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-green-500 hover:scale-105'}`}
-                            onClick={handleSubmitClick}
-                            title={!isSubmittable ? "All 5 members must accept invites before submitting." : "Finalize and submit your team"}
-                          >
-                            {isProcessingInvite ? 'Submitting...' : 'Submit Team'}
-                          </button>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -417,7 +404,7 @@ const CampusTournamentTeam = () => {
                   {/* Mobile vertical list */}
                   <div className="md:hidden mt-0 rounded-b-2xl bg-neutral-800/70 backdrop-blur-sm border-t border-neutral-700/40 px-4 py-3">
                     <div className="space-y-3">
-                      {teamFromProps.members && teamFromProps.members.slice(0, 5).map((member, idx) => {
+                      {sortedMembers.slice(0, 5).map((member, idx) => {
                         const status = member.status || 'accepted';
                         let statusColor = 'bg-green-400';
                         if (status === 'pending') statusColor = 'bg-yellow-400';
@@ -479,12 +466,12 @@ const CampusTournamentTeam = () => {
 
                       <button
                         type="button"
-                        disabled={!isCaptainFromProps || teamFromProps.status === 'registered'}
-                        className={`w-full bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-5 py-2 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] ${(!isCaptainFromProps || teamFromProps.status === 'registered') ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        disabled={!canEdit}
+                        className={`w-full bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-5 py-2 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] ${!canEdit ? 'opacity-60 cursor-not-allowed' : 'active:scale-95 transition-transform'}`}
                         onClick={() => {
-                          if (isCaptainFromProps && teamFromProps.status !== 'registered') {
-                            // Find the captain from team members
-                            const captainMember = teamFromProps.members?.find(member => member.role === 'captain');
+                          if (canEdit) {
+                            // Find the captain from sorted members
+                            const captainMember = sortedMembers.find(member => member.role === 'captain');
                             const captainData = captainMember?.player;
 
                             // Store team data for editing
@@ -506,22 +493,11 @@ const CampusTournamentTeam = () => {
                             router.visit(targetUrl);
                           }
                         }}
-                        title="Edit team details"
+                        title={canEdit ? "Edit team details" : "Editing is only allowed during the registration period."}
                       >
                         Edit team
                       </button>
 
-                      {/* Submit Team Button Mobile */}
-                      {isCaptainFromProps && teamFromProps.status === 'assembling' && (
-                        <button
-                          type="button"
-                          disabled={!isSubmittable || isProcessingInvite}
-                          className={`w-full mt-2 bg-green-600 text-white font-montserrat text-sm font-semibold rounded-lg px-5 py-2 shadow-lg transition-all ${(!isSubmittable || isProcessingInvite) ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-green-500'}`}
-                          onClick={handleSubmitClick}
-                        >
-                          {isProcessingInvite ? 'Submitting...' : 'Submit Team'}
-                        </button>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -595,63 +571,6 @@ const CampusTournamentTeam = () => {
               </div>
             )}
 
-            {/* Confirmation/Submit Modal */}
-            {showConfirmModal && (
-              <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-10" onClick={isProcessingInvite ? null : () => setShowConfirmModal(false)} />
-                <div className="relative z-20 w-full max-w-md bg-neutral-900 border border-[#F2C21A]/30 rounded-2xl p-6 shadow-[0_0_30px_-5px_rgba(242,194,26,0.15)] flex flex-col items-center text-center">
-
-                  <div className="w-16 h-16 rounded-full bg-[#F2C21A]/20 flex items-center justify-center mb-4 border border-[#F2C21A]/50">
-                    <svg className="w-8 h-8 text-[#F2C21A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                  </div>
-
-                  <h3 className="text-2xl font-bold text-white font-montserrat mb-2">
-                    Submit Team?
-                  </h3>
-
-                  <p className="text-white/70 font-montserrat text-sm mb-6 max-w-[80%]">
-                    Are you sure you want to finalize your roster? This action cannot be undone. Your team will be officially registered.
-                  </p>
-
-                  {errorMessage && (
-                    <div className="w-full mb-4 px-4 py-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-xs text-left">
-                      <strong>Error:</strong> {errorMessage}
-                    </div>
-                  )}
-
-                  <div className="flex w-full gap-3">
-                    <button
-                      onClick={() => {
-                        setShowConfirmModal(false);
-                        setErrorMessage(null);
-                      }}
-                      disabled={isProcessingInvite}
-                      className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white font-montserrat font-semibold rounded-xl transition-colors disabled:opacity-50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleConfirmSubmit}
-                      disabled={isProcessingInvite}
-                      className="flex-1 py-3 bg-[#F2C21A] hover:bg-[#d9ae18] text-black font-montserrat font-bold rounded-xl shadow-lg transition-transform transform active:scale-95 disabled:opacity-50 disabled:transform-none"
-                    >
-                      {isProcessingInvite ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <svg className="animate-spin h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Processing...
-                        </span>
-                      ) : 'Confirm Submit'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )
-            }
 
             {/* Player Details Modal */}
             {showAcceptModal && (

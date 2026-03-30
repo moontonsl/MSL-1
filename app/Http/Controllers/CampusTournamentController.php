@@ -24,14 +24,14 @@ class CampusTournamentController extends Controller
     {
         $user = Auth::user();
         
-        // Get tournaments created by this SL with teams and members
-        $tournaments = CampusTournament::where('sl_id', $user->id)
+        // Get tournaments for this SL's school with teams and members
+        $tournaments = CampusTournament::where('school_name', $user->university)
             ->with(['teams' => function($query) {
-                $query->where('status', 'registered');
+                $query->whereIn('status', ['registered', 'assembling']);
             }, 'teams.members' => function($query) {
-                // Ensure captain comes first (assuming role 'captain' is alphabetically before 'member'?? No, 'c' comes before 'm'. Perfect.)
-                // Or explicit sort:
-                $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
+                $query->select('id', 'team_id', 'player_id', 'role', 'status')
+                      ->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END")
+                      ->orderBy('id', 'asc');
             }, 'teams.members.player'])
             ->orderBy('created_at', 'desc')
             ->get();
@@ -79,10 +79,12 @@ class CampusTournamentController extends Controller
         // Show all approved tournaments (both active and completed) so we can filter them on frontend
         $approvedQuery = CampusTournament::with([
             'teams' => function($query) {
-                $query->where('status', 'registered');
+                $query->whereIn('status', ['registered', 'assembling']);
             },
             'teams.members' => function($query) {
-                $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
+                $query->select('id', 'team_id', 'player_id', 'role', 'status')
+                      ->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END")
+                      ->orderBy('id', 'asc');
             },
             'teams.members.player',
             'studentLeader'
@@ -397,9 +399,9 @@ class CampusTournamentController extends Controller
             $query->where('status', 'registered');
         }])->findOrFail($id);
         
-        // Check if user owns this tournament
-        if ($tournament->sl_id !== $user->id) {
-            return response()->json(['error' => 'You can only submit results for your own tournaments'], 403);
+        // Check if user's school matches the tournament's school
+        if ($tournament->school_name !== $user->university) {
+            return response()->json(['error' => 'You can only submit results for tournaments in your school'], 403);
         }
         
         // Check if tournament is approved
@@ -415,53 +417,65 @@ class CampusTournamentController extends Controller
         $validator = Validator::make($request->all(), [
             'results' => 'required|array',
             'results.*.team_id' => 'required|integer|exists:campus_tournament_teams,id',
-            'results.*.result' => 'required|in:participant,1st,2nd,3rd',
+            'results.*.result' => 'required|in:participant,1st,2nd,3rd,4th',
         ]);
         
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
         
-        $results = $request->results;
-        
-        // Dynamic Winner Set Calculation: 1 set for every 8 teams
-        $registeredTeamsCount = $tournament->teams()->where('status', 'registered')->count();
-        $allowedSets = max(1, ceil($registeredTeamsCount / 8));
-        
-        // Count the selected 1st, 2nd, and 3rd place teams
-        $firstPlaceTeams = array_filter($results, function($result) {
-            return $result['result'] === '1st';
-        });
-        
-        $secondPlaceTeams = array_filter($results, function($result) {
-            return $result['result'] === '2nd';
-        });
-        
-        $thirdPlaceTeams = array_filter($results, function($result) {
-            return $result['result'] === '3rd';
-        });
-        
-        $firstCount = count($firstPlaceTeams);
-        $secondCount = count($secondPlaceTeams);
-        $thirdCount = count($thirdPlaceTeams);
-        
-        // Validate that between 1 and $allowedSets sets have been selected
-        if ($firstCount < 1 || $firstCount > $allowedSets) {
-            return response()->json(['error' => "You must mark between 1 and {$allowedSets} team(s) as 1st place based on {$registeredTeamsCount} registered teams"], 422);
-        }
-        
-        // Ensure that the number of 1st, 2nd, and 3rd place teams match
-        if ($firstCount !== $secondCount || $firstCount !== $thirdCount) {
-            return response()->json(['error' => "The number of 1st, 2nd, and 3rd place teams must match. You marked {$firstCount} as 1st, {$secondCount} as 2nd, and {$thirdCount} as 3rd."], 422);
-        }
-        
-        // Validate that all teams in the tournament have results
         $tournamentTeamIds = $tournament->teams->pluck('id')->toArray();
+        
+        // Filter out any results that are for non-registered teams (like pending) 
+        // to prevent submission blockage.
+        $results = array_filter($request->results, function($result) use ($tournamentTeamIds) {
+            return in_array($result['team_id'], $tournamentTeamIds);
+        });
+        
         $resultTeamIds = array_column($results, 'team_id');
         
         if (count($tournamentTeamIds) !== count($resultTeamIds) || 
             !empty(array_diff($tournamentTeamIds, $resultTeamIds))) {
-            return response()->json(['error' => 'Results must be provided for all teams in the tournament'], 422);
+            return response()->json(['error' => 'Results must be provided for all registered teams in the tournament'], 422);
+        }
+        
+        $registeredTeamsCount = count($tournamentTeamIds);
+        
+        // Bracket validation logic based on the image mapping
+        $maxFirst = 1; $maxSecond = 1; $maxThird = 0; $maxFourth = 0;
+        
+        if ($registeredTeamsCount <= 7) {
+             $maxFirst = 1; $maxSecond = 1; $maxThird = 0; $maxFourth = 0;
+        } elseif ($registeredTeamsCount >= 8 && $registeredTeamsCount <= 15) {
+             $maxFirst = 1; $maxSecond = 1; $maxThird = 1; $maxFourth = 0;
+        } elseif ($registeredTeamsCount >= 16 && $registeredTeamsCount <= 23) {
+             $maxFirst = 1; $maxSecond = 1; $maxThird = 1; $maxFourth = 1;
+        } elseif ($registeredTeamsCount >= 24 && $registeredTeamsCount <= 31) {
+             $maxFirst = 2; $maxSecond = 2; $maxThird = 2; $maxFourth = 1;
+        } elseif ($registeredTeamsCount >= 32 && $registeredTeamsCount <= 39) {
+             $maxFirst = 2; $maxSecond = 2; $maxThird = 2; $maxFourth = 2;
+        } elseif ($registeredTeamsCount >= 40 && $registeredTeamsCount <= 47) {
+             $maxFirst = 3; $maxSecond = 3; $maxThird = 3; $maxFourth = 2;
+        } else {
+             $maxFirst = 3; $maxSecond = 3; $maxThird = 3; $maxFourth = 3;
+        }
+        
+        $firstCount = count(array_filter($results, function($r) { return $r['result'] === '1st'; }));
+        $secondCount = count(array_filter($results, function($r) { return $r['result'] === '2nd'; }));
+        $thirdCount = count(array_filter($results, function($r) { return $r['result'] === '3rd'; }));
+        $fourthCount = count(array_filter($results, function($r) { return $r['result'] === '4th'; }));
+        
+        if ($firstCount !== $maxFirst) {
+            return response()->json(['error' => "You must select exactly {$maxFirst} 1st place team(s) based on {$registeredTeamsCount} registered teams."], 422);
+        }
+        if ($secondCount !== $maxSecond) {
+            return response()->json(['error' => "You must select exactly {$maxSecond} 2nd place team(s)."], 422);
+        }
+        if ($thirdCount !== $maxThird) {
+            return response()->json(['error' => ($maxThird > 0 ? "You must select exactly {$maxThird} 3rd place team(s)." : "3rd place is not available for this bracket.")], 422);
+        }
+        if ($fourthCount !== $maxFourth) {
+            return response()->json(['error' => ($maxFourth > 0 ? "You must select exactly {$maxFourth} 4th place team(s)." : "4th place is not available for this bracket.")], 422);
         }
         
         try {
@@ -508,9 +522,9 @@ class CampusTournamentController extends Controller
         
         // Check permissions
         if ($user->role === 'SL') {
-            // SL must own the tournament
-            if ($tournament->sl_id !== $user->id) {
-                return response()->json(['error' => 'You can only update results for your own tournaments'], 403);
+            // SL's school must match the tournament's school
+            if ($tournament->school_name !== $user->university) {
+                return response()->json(['error' => 'You can only update results for tournaments in your school'], 403);
             }
         }
         // Regional Admins/Super Admins bypass the sl_id check (Region check is implicitly handled by what they can see/access, 
@@ -529,53 +543,65 @@ class CampusTournamentController extends Controller
         $validator = Validator::make($request->all(), [
             'results' => 'required|array',
             'results.*.team_id' => 'required|integer|exists:campus_tournament_teams,id',
-            'results.*.result' => 'required|in:participant,1st,2nd,3rd',
+            'results.*.result' => 'required|in:participant,1st,2nd,3rd,4th',
         ]);
         
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
         
-        $results = $request->results;
-        
-        // Dynamic Winner Set Calculation: 1 set for every 8 teams
-        $registeredTeamsCount = $tournament->teams()->where('status', 'registered')->count();
-        $allowedSets = max(1, ceil($registeredTeamsCount / 8));
-        
-        // Count the selected 1st, 2nd, and 3rd place teams
-        $firstPlaceTeams = array_filter($results, function($result) {
-            return $result['result'] === '1st';
-        });
-        
-        $secondPlaceTeams = array_filter($results, function($result) {
-            return $result['result'] === '2nd';
-        });
-        
-        $thirdPlaceTeams = array_filter($results, function($result) {
-            return $result['result'] === '3rd';
-        });
-        
-        $firstCount = count($firstPlaceTeams);
-        $secondCount = count($secondPlaceTeams);
-        $thirdCount = count($thirdPlaceTeams);
-        
-        // Validate that between 1 and $allowedSets sets have been selected
-        if ($firstCount < 1 || $firstCount > $allowedSets) {
-            return response()->json(['error' => "You must mark between 1 and {$allowedSets} team(s) as 1st place based on {$registeredTeamsCount} registered teams"], 422);
-        }
-        
-        // Ensure that the number of 1st, 2nd, and 3rd place teams match
-        if ($firstCount !== $secondCount || $firstCount !== $thirdCount) {
-            return response()->json(['error' => "The number of 1st, 2nd, and 3rd place teams must match. You marked {$firstCount} as 1st, {$secondCount} as 2nd, and {$thirdCount} as 3rd."], 422);
-        }
-        
-        // Validate that all teams in the tournament have results
         $tournamentTeamIds = $tournament->teams->pluck('id')->toArray();
+        
+        // Filter out any results that are for non-registered teams (like pending) 
+        // to prevent submission blockage.
+        $results = array_filter($request->results, function($result) use ($tournamentTeamIds) {
+            return in_array($result['team_id'], $tournamentTeamIds);
+        });
+        
         $resultTeamIds = array_column($results, 'team_id');
         
         if (count($tournamentTeamIds) !== count($resultTeamIds) || 
             !empty(array_diff($tournamentTeamIds, $resultTeamIds))) {
-            return response()->json(['error' => 'Results must be provided for all teams in the tournament'], 422);
+            return response()->json(['error' => 'Results must be provided for all registered teams in the tournament'], 422);
+        }
+        
+        $registeredTeamsCount = count($tournamentTeamIds);
+        
+        // Bracket validation logic based on the image mapping
+        $maxFirst = 1; $maxSecond = 1; $maxThird = 0; $maxFourth = 0;
+        
+        if ($registeredTeamsCount <= 7) {
+             $maxFirst = 1; $maxSecond = 1; $maxThird = 0; $maxFourth = 0;
+        } elseif ($registeredTeamsCount >= 8 && $registeredTeamsCount <= 15) {
+             $maxFirst = 1; $maxSecond = 1; $maxThird = 1; $maxFourth = 0;
+        } elseif ($registeredTeamsCount >= 16 && $registeredTeamsCount <= 23) {
+             $maxFirst = 1; $maxSecond = 1; $maxThird = 1; $maxFourth = 1;
+        } elseif ($registeredTeamsCount >= 24 && $registeredTeamsCount <= 31) {
+             $maxFirst = 2; $maxSecond = 2; $maxThird = 2; $maxFourth = 1;
+        } elseif ($registeredTeamsCount >= 32 && $registeredTeamsCount <= 39) {
+             $maxFirst = 2; $maxSecond = 2; $maxThird = 2; $maxFourth = 2;
+        } elseif ($registeredTeamsCount >= 40 && $registeredTeamsCount <= 47) {
+             $maxFirst = 3; $maxSecond = 3; $maxThird = 3; $maxFourth = 2;
+        } else {
+             $maxFirst = 3; $maxSecond = 3; $maxThird = 3; $maxFourth = 3;
+        }
+        
+        $firstCount = count(array_filter($results, function($r) { return $r['result'] === '1st'; }));
+        $secondCount = count(array_filter($results, function($r) { return $r['result'] === '2nd'; }));
+        $thirdCount = count(array_filter($results, function($r) { return $r['result'] === '3rd'; }));
+        $fourthCount = count(array_filter($results, function($r) { return $r['result'] === '4th'; }));
+        
+        if ($firstCount !== $maxFirst) {
+            return response()->json(['error' => "You must select exactly {$maxFirst} 1st place team(s) based on {$registeredTeamsCount} registered teams."], 422);
+        }
+        if ($secondCount !== $maxSecond) {
+            return response()->json(['error' => "You must select exactly {$maxSecond} 2nd place team(s)."], 422);
+        }
+        if ($thirdCount !== $maxThird) {
+            return response()->json(['error' => ($maxThird > 0 ? "You must select exactly {$maxThird} 3rd place team(s)." : "3rd place is not available for this bracket.")], 422);
+        }
+        if ($fourthCount !== $maxFourth) {
+            return response()->json(['error' => ($maxFourth > 0 ? "You must select exactly {$maxFourth} 4th place team(s)." : "4th place is not available for this bracket.")], 422);
         }
         
         try {
@@ -653,8 +679,12 @@ class CampusTournamentController extends Controller
             })
             ->with(['team.tournament', 'team.members' => function($query) {
                 // Sorting logic for members
-                $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
-            }, 'team.members.player'])
+                $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END")
+                      ->orderBy('id', 'asc');
+            }, 'team.members.player' => function($query) {
+                // Include facebook_link in player data
+                $query->select('id', 'name', 'surname', 'username', 'facebook_link');
+            }])
             // Order by creation time to get the NEWEST team (resolves duplicate issue)
             ->latest() 
             ->first();
@@ -669,6 +699,15 @@ class CampusTournamentController extends Controller
         
         $team = $teamMember->team;
         $isCaptain = $teamMember->role === 'captain';
+        
+        // Auto-register: if all members have accepted, set team status to registered
+        if ($team->status === 'assembling') {
+            $allAccepted = $team->members->every(fn($m) => $m->status === 'accepted');
+            if ($allAccepted && $team->members->count() === 5) {
+                $team->update(['status' => 'registered']);
+                $team->refresh();
+            }
+        }
         
         return Inertia::render('Campus Tournament/Campus Tournament Team', [
             'team' => $team,
@@ -765,7 +804,6 @@ class CampusTournamentController extends Controller
             'discordId' => 'nullable|string|max:50',
             'captain' => 'required|array',
             'captain.id' => 'required|integer',
-            'captain.university' => 'required|string',
             'players' => 'required|array',
             'players.captain' => 'required|array',
             'players.player2' => 'required|array',
@@ -792,9 +830,16 @@ class CampusTournamentController extends Controller
             return redirect()->back()->withErrors(['message' => 'Only the team captain can edit the team']);
         }
         
-        // 4. IMPORTANT: Check if team is already submitted/registered
-        if ($team->status === 'registered') {
-             return redirect()->back()->withErrors(['message' => 'Team cannot be updated after submission. Contact support/admin if changes are needed.']);
+        // 4. IMPORTANT: Check if team can be updated
+        $tournament = $team->tournament;
+        $now = now();
+        // Since dates are 'date' casts, start_date is midnight. end_date is also midnight of that day.
+        $isWithinRegistration = $tournament && 
+            $now->gte($tournament->start_date) && 
+            $now->lte(\Carbon\Carbon::parse($tournament->end_date)->endOfDay());
+        
+        if ($team->status === 'registered' && !$isWithinRegistration) {
+             return redirect()->back()->withErrors(['message' => 'Team cannot be updated after the registration period has ended.']);
         }
 
         // 5. Check if team name already exists
@@ -832,7 +877,10 @@ class CampusTournamentController extends Controller
                 if (isset($player['id'])) {
                     $newPlayerIds[] = $player['id'];
                     $playerId = $player['id'];
-                    $role = ($playerId == $captain['id']) ? 'captain' : 'member';
+                    
+                    // Safety: Determine if this player is the captain based on the team's captain_id
+                    // This ensures that even if the request is inconsistent, the database stays correct.
+                    $role = ($playerId == $team->captain_id || $playerId == $captain['id']) ? 'captain' : 'member';
                     
                     if (isset($currentMembers[$playerId])) {
                          $currentMembers[$playerId]->update(['role' => $role]);
@@ -841,7 +889,7 @@ class CampusTournamentController extends Controller
                             'team_id' => $team->id,
                             'player_id' => $playerId,
                             'role' => $role,
-                            'status' => ($playerId == $captain['id']) ? 'accepted' : 'pending',
+                            'status' => ($role == 'captain') ? 'accepted' : 'pending',
                         ]);
                     }
                 }
@@ -919,32 +967,48 @@ class CampusTournamentController extends Controller
         $sheet->setCellValue('A6', 'Tournament Type:');
         $sheet->setCellValue('B6', $tournament->tournament_type ? ucwords($tournament->tournament_type) : '-');
 
+        // Calculate Bracket Type
+        $registeredTeamsCount = $tournament->teams->count();
+        $bracketType = '-';
+        if ($registeredTeamsCount >= 4 && $registeredTeamsCount <= 7) $bracketType = '4 to 8 Teams';
+        elseif ($registeredTeamsCount >= 8 && $registeredTeamsCount <= 15) $bracketType = '8 to 15 Teams';
+        elseif ($registeredTeamsCount >= 16 && $registeredTeamsCount <= 23) $bracketType = '16 to 23 Teams';
+        elseif ($registeredTeamsCount >= 24 && $registeredTeamsCount <= 31) $bracketType = '24 to 31 Teams';
+        elseif ($registeredTeamsCount == 32) $bracketType = '32 Teams';
+        elseif ($registeredTeamsCount >= 33 && $registeredTeamsCount <= 39) $bracketType = '33 to 39 Teams';
+        elseif ($registeredTeamsCount >= 40 && $registeredTeamsCount <= 47) $bracketType = '40 to 47 Teams';
+        elseif ($registeredTeamsCount >= 48) $bracketType = '48 Teams';
+        else $bracketType = '< 4 Teams';
+
+        $sheet->setCellValue('A7', 'Bracket Type:');
+        $sheet->setCellValue('B7', $bracketType);
+
         // Style the labels
-        $sheet->getStyle('A2:A6')->getFont()->setBold(true);
+        $sheet->getStyle('A2:A7')->getFont()->setBold(true);
 
         // School Name at top right (Column F)
         $sheet->setCellValue('F1', strtoupper($tournament->school_name));
         $sheet->getStyle('F1')->getFont()->setBold(true);
         $sheet->getStyle('F1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
-        // Headers (starting at Row 8)
+        // Headers (starting at Row 9)
         $headers = ['Rank', 'Team Name', 'Player Name', 'IGN', 'Server', 'UID'];
         $col = 'A';
         foreach ($headers as $header) {
-            $sheet->setCellValue($col . '8', $header);
-            $sheet->getStyle($col . '8')->getFont()->setBold(true);
-            $sheet->getStyle($col . '8')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->setCellValue($col . '9', $header);
+            $sheet->getStyle($col . '9')->getFont()->setBold(true);
+            $sheet->getStyle($col . '9')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             $col++;
         }
         
         // Sort teams by result
         $teams = $tournament->teams->sortBy(function($team) {
-            $order = ['1st' => 1, '2nd' => 2, '3rd' => 3, 'participant' => 4];
-            return $order[$team->result] ?? 5;
+            $order = ['1st' => 1, '2nd' => 2, '3rd' => 3, '4th' => 4, 'participant' => 5];
+            return $order[$team->result] ?? 6;
         });
         
-        // Data rows starting at Row 9
-        $row = 9;
+        // Data rows starting at Row 10
+        $row = 10;
         foreach ($teams as $team) {
             // Determine rank display text and color
             $result = $team->result ?? 'participant';
@@ -960,6 +1024,9 @@ class CampusTournamentController extends Controller
             } elseif ($result === '3rd') {
                 $rankString = '3rd';
                 $rankColor = 'FFCD7F32'; // Bronze
+            } elseif ($result === '4th') {
+                $rankString = '4th';
+                $rankColor = 'FF90EE90'; // Light Green (or null if preferred, but adding a subtle color helps distinguish it)
             }
 
             // Get members sorted: Captain first, then others
@@ -994,12 +1061,12 @@ class CampusTournamentController extends Controller
         
         // Add borders to the table (starting from row 8)
         $lastRow = $row - 1;
-        $sheet->getStyle('A8:F' . $lastRow)->getBorders()->getAllBorders()
+        $sheet->getStyle('A9:F' . $lastRow)->getBorders()->getAllBorders()
             ->setBorderStyle(Border::BORDER_THIN);
         
         // Center alignment for certain columns
-        $sheet->getStyle('A8:A' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('E8:F' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+        $sheet->getStyle('A9:A' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('E9:F' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
         
         // Create filename
         $filename = 'Tournament_Results_' . str_replace(' ', '_', $tournament->school_name) . '_' . date('Y-m-d') . '.xlsx';
@@ -1007,13 +1074,12 @@ class CampusTournamentController extends Controller
         // Create writer and save to output
         $writer = new Xlsx($spreadsheet);
         
-        // Set headers for download
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="' . $filename . '"');
-        header('Cache-Control: max-age=0');
-        
-        $writer->save('php://output');
-        exit;
+        return response()->streamDownload(function() use ($writer) {
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'max-age=0',
+        ]);
     }
     /**
      * Export pre-registration data to Excel (Super Admin only)
@@ -1039,34 +1105,48 @@ class CampusTournamentController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        // Increase memory and execution limits for large exports
+        if (function_exists('ini_set')) {
+            @ini_set('memory_limit', '1024M');
+            @ini_set('max_execution_time', '300');
+        }
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(300);
+        }
+
         $island    = $request->island;
         $startDate = $request->start_date;
         $endDate   = $request->end_date;
 
         // Fetch ALL approved tournaments for the given island within the date range
-        // Island is stored on the student leader (SL) user record
-        $tournaments = CampusTournament::with([
+        // Disable query log to save memory
+        \DB::disableQueryLog();
+
+        $query = CampusTournament::with([
                 'teams' => function ($query) {
-                    $query->where('status', 'registered');
+                    $query->whereIn('status', ['registered', 'assembling', 'pending']);
                 },
                 'teams.members' => function ($query) {
-                    $query->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END");
+                    $query->with('player')
+                          ->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END")
+                          ->orderBy('id', 'asc');
                 },
-                'teams.members.player',
                 'studentLeader',
             ])
             ->where('status', 'approved')
             ->whereHas('studentLeader', function ($q) use ($island) {
-                $q->where('island', $island);
+                if ($island !== 'All') {
+                    $q->where('island', $island);
+                }
             })
             ->where(function ($q) use ($startDate, $endDate) {
                 $q->whereBetween('start_date', [$startDate, $endDate])
                   ->orWhereBetween('end_date', [$startDate, $endDate]);
             })
-            ->orderBy('start_date', 'asc')
-            ->get();
+            ->orderBy('start_date', 'asc');
 
-        if ($tournaments->isEmpty()) {
+        // Check if there are any results before creating the spreadsheet
+        if ($query->count() === 0) {
             return response()->json(['error' => 'No approved tournaments found for the selected island and date range.'], 404);
         }
 
@@ -1092,28 +1172,35 @@ class CampusTournamentController extends Controller
             $col++;
         }
 
-        // Data rows starting at row 5 — iterate ALL tournaments
+        // Data rows starting at row 5 — iterate ALL tournaments in chunks
         $row = 5;
-        foreach ($tournaments as $tournament) {
-            foreach ($tournament->teams as $team) {
-                $members = $team->members->sortBy('role', SORT_REGULAR, true); // captain first
+        
+        $query->chunk(50, function ($tournaments) use ($island, $sheet, &$row) {
+            foreach ($tournaments as $tournament) {
+                foreach ($tournament->teams as $team) {
+                    $members = $team->members; // Already sorted by query
 
-                foreach ($members as $member) {
-                    $player = $member->player;
-                    $playerIsland = ($player && $player->island) ? $player->island : $island;
+                    foreach ($members as $member) {
+                        $player = $member->player;
+                        // Use player island, fallback to SL island, then filter island
+                        $playerIsland = ($player && $player->island) ? $player->island : ($tournament->studentLeader->island ?? $island);
 
-                    $sheet->setCellValue('A' . $row, $playerIsland);
-                    $sheet->setCellValue('B' . $row, $player ? $player->university : ($tournament->school_name ?? '-'));
-                    $sheet->setCellValue('C' . $row, $team->team_name);
-                    $sheet->setCellValue('D' . $row, $player ? trim($player->name . ' ' . $player->surname) : 'Unknown');
-                    $sheet->setCellValue('E' . $row, $player ? $player->ml_ign : '-');
-                    $sheet->setCellValue('F' . $row, $player ? $player->ml_server : '-');
-                    $sheet->setCellValue('G' . $row, $player ? $player->ml_id : '-');
+                        $sheet->setCellValue('A' . $row, $playerIsland);
+                        $sheet->setCellValue('B' . $row, $player ? $player->university : ($tournament->school_name ?? '-'));
+                        $sheet->setCellValue('C' . $row, $team->team_name);
+                        $sheet->setCellValue('D' . $row, $player ? trim($player->name . ' ' . $player->surname) : 'Unknown');
+                        $sheet->setCellValueExplicit('E' . $row, $player ? $player->ml_ign : '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                        $sheet->setCellValueExplicit('F' . $row, $player ? $player->ml_server : '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                        $sheet->setCellValueExplicit('G' . $row, $player ? $player->ml_id : '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
 
-                    $row++;
+                        $row++;
+                    }
                 }
             }
-        }
+        });
+
+        // Restore query log
+        \DB::enableQueryLog();
 
         // Auto-size columns A-G
         foreach (range('A', 'G') as $col) {
@@ -1136,12 +1223,12 @@ class CampusTournamentController extends Controller
 
         $writer = new Xlsx($spreadsheet);
 
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="' . $filename . '"');
-        header('Cache-Control: max-age=0');
-
-        $writer->save('php://output');
-        exit;
+        return response()->streamDownload(function() use ($writer) {
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'max-age=0',
+        ]);
     }
 
     /**
