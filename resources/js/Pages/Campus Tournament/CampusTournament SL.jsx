@@ -913,7 +913,7 @@ const CampusTournament = () => {
                                   {Array.isArray(item.teams) && item.teams.length > 0 ? (
                                     (() => {
                                       const registeredCount = item.teams.filter(t => t.status === 'registered').length;
-                                      const counts = getBracketCounts(registeredCount);
+                                      const counts = getBracketCounts(registeredCount, item.tournament_type);
                                       const show3rd = counts.maxThird > 0;
                                       const show4th = counts.maxFourth > 0;
                                       
