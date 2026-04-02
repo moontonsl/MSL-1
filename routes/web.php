@@ -108,6 +108,11 @@ Route::get('/Tournament/CampusTournamentReg', function (\Illuminate\Http\Request
     return Inertia::render('Campus Tournament/TeamRegistration');
 })->name('campus.teamregistration');
 
+// Solo Registration - join dashboard
+Route::get('/Tournament/SoloPlayer', function () {
+    return Inertia::render('Campus Tournament/TournamentJoinDashboard');
+})->name('campus.tournament.solo.player');
+
 // Campus Team page - shows logged-in player's team
 Route::get('/Tournament/CampusTournamentTeam', [\App\Http\Controllers\CampusTournamentController::class, 'teamView'])
     ->name('campus.team');
