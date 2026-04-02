@@ -332,7 +332,7 @@ const CampusTournament = () => {
     return 'bg-green-500/30 border border-green-400/70 text-white';
   };
 
-  const getBracketCounts = (registeredTeamsCount) => {
+  const getBracketCounts = (registeredTeamsCount, tournamentType = 'Online') => {
     let maxFirst = 1, maxSecond = 1, maxThird = 0, maxFourth = 0;
     if (registeredTeamsCount <= 7) {
       maxFirst = 1; maxSecond = 1; maxThird = 0; maxFourth = 0;
@@ -349,6 +349,17 @@ const CampusTournament = () => {
     } else if (registeredTeamsCount >= 48) {
       maxFirst = 3; maxSecond = 3; maxThird = 3; maxFourth = 3;
     }
+
+    // Onsite tournaments always have at least 1st-4th if teams are available
+    if (tournamentType === 'Onsite') {
+      if (registeredTeamsCount >= 3) {
+        maxThird = Math.max(maxThird, 1);
+      }
+      if (registeredTeamsCount >= 4) {
+        maxFourth = Math.max(maxFourth, 1);
+      }
+    }
+
     return { maxFirst, maxSecond, maxThird, maxFourth };
   };
 
@@ -367,7 +378,7 @@ const CampusTournament = () => {
     }
 
     const registeredCount = tournament.teams.filter(t => t.status === 'registered').length;
-    const { maxFirst, maxSecond, maxThird, maxFourth } = getBracketCounts(registeredCount);
+    const { maxFirst, maxSecond, maxThird, maxFourth } = getBracketCounts(registeredCount, tournament.tournament_type);
     const show3rd = maxThird > 0;
     const show4th = maxFourth > 0;
 
@@ -902,7 +913,7 @@ const CampusTournament = () => {
                                   {Array.isArray(item.teams) && item.teams.length > 0 ? (
                                     (() => {
                                       const registeredCount = item.teams.filter(t => t.status === 'registered').length;
-                                      const counts = getBracketCounts(registeredCount);
+                                      const counts = getBracketCounts(registeredCount, item.tournament_type);
                                       const show3rd = counts.maxThird > 0;
                                       const show4th = counts.maxFourth > 0;
                                       

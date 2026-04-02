@@ -459,6 +459,16 @@ class CampusTournamentController extends Controller
         } else {
              $maxFirst = 3; $maxSecond = 3; $maxThird = 3; $maxFourth = 3;
         }
+
+        // Onsite tournaments always have at least 1st-4th if teams are available
+        if ($tournament->tournament_type === 'Onsite') {
+            if ($registeredTeamsCount >= 3) {
+                $maxThird = max($maxThird, 1);
+            }
+            if ($registeredTeamsCount >= 4) {
+                $maxFourth = max($maxFourth, 1);
+            }
+        }
         
         $firstCount = count(array_filter($results, function($r) { return $r['result'] === '1st'; }));
         $secondCount = count(array_filter($results, function($r) { return $r['result'] === '2nd'; }));
@@ -584,6 +594,16 @@ class CampusTournamentController extends Controller
              $maxFirst = 3; $maxSecond = 3; $maxThird = 3; $maxFourth = 2;
         } else {
              $maxFirst = 3; $maxSecond = 3; $maxThird = 3; $maxFourth = 3;
+        }
+
+        // Onsite tournaments always have at least 1st-4th if teams are available
+        if ($tournament->tournament_type === 'Onsite') {
+            if ($registeredTeamsCount >= 3) {
+                $maxThird = max($maxThird, 1);
+            }
+            if ($registeredTeamsCount >= 4) {
+                $maxFourth = max($maxFourth, 1);
+            }
         }
         
         $firstCount = count(array_filter($results, function($r) { return $r['result'] === '1st'; }));
