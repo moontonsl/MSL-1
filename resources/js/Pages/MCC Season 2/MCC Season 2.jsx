@@ -97,8 +97,8 @@ const MCCS2Home = () => {
         {/* Main Content skeleton based on provided figma-to-code */}
         <div className="min-h-[6500px] flex flex-col justify-start items-center gap-1 overflow-visible pb-24">
           {/* Hero and intro block */}
-          <div className="h-[3250px] xl:h-[2800px] flex flex-col justify-start items-center overflow-hidden">
-            <div className="w-[1920px] h-[3250px] xl:h-[2800px] relative">
+          <div className="h-[3000px] xl:h-[2550px] flex flex-col justify-start items-center overflow-hidden">
+            <div className="w-[1920px] h-[3000px] xl:h-[2550px] relative">
               {/* Season chip moved under subtitle */}
 
 
@@ -249,10 +249,10 @@ const MCCS2Home = () => {
               <div className="w-[1920px] min-h-[720px] p-2.5 left-0 absolute top-[2480px] xl:top-[2080px] inline-flex justify-center items-center overflow-visible">
                 <div className="flex-1 self-stretch p-2.5 inline-flex flex-col justify-start items-start gap-2.5 overflow-visible">
                   <div className="self-stretch p-2.5 flex flex-col justify-start items-center gap-2.5 overflow-visible">
-                    <div className="text-center justify-start text-white text-4xl font-bold font-['Montserrat'] leading-[56px]">MLBB COLLEGIATE CUP</div>
+                    <div className="text-center justify-start text-white text-2xl font-bold font-['Montserrat'] leading-[56px]">MLBB COLLEGIATE CUP</div>
                   </div>
-                  <div className="self-stretch p-2.5 flex flex-col justify-start items-center gap-2.5 overflow-visible">
-                    <div className="w-[1364px] justify-start text-white text-3xl font-medium font-['Montserrat']">MSL Collegiate Cup (MCC) is the trademark collegiate tournament of Moonton Student Leaders Philippines (MSL Philippines). Established in 2021 through its predecessor —  the School Rivals — and recently rebranded as MCC in 2023, it stands tall and proud as the premier and one of the biggest nationwide collegiate tournaments that shares the opportunity for a higher scale of competitive gaming.<br/><br/>Set up with impeccable standards and state-of-the-art tournament system,  MCC shines through as it has direct developer support from Moonton. With its pro-level production, it is a league beaming alongside the esteemed MLBB Professional League (MPL) and MLBB Developmental League (MDL). With its reach expanding from Luzon, NCR, Visayas, and Mindanao regions, MCC is committed to giving collegiate teams across the country a greater avenue to hone and showcase their talents and potentials as student gamers. It also promotes camaraderie and enthusiasm among the players that transcends beyond the competitive gaming horizon. In pursuit of inclusivity especially at the grassroots level, MCC continues to strive for greater, stronger, and better gaming opportunities for every collegiate team to join and enjoy.<br/></div>
+                  <div className="self-stretch p-0 flex flex-col justify-start items-center gap-0 overflow-visible -mt-5">
+                    <div className="w-[1364px] justify-start text-white text-xl font-medium font-['Montserrat']">MSL Collegiate Cup (MCC) is the trademark collegiate tournament of Moonton Student Leaders Philippines (MSL Philippines). Established in 2021 through its predecessor —  the School Rivals — and recently rebranded as MCC in 2023, it stands tall and proud as the premier and one of the biggest nationwide collegiate tournaments that shares the opportunity for a higher scale of competitive gaming.<br/><br/>Set up with impeccable standards and state-of-the-art tournament system,  MCC shines through as it has direct developer support from Moonton. With its pro-level production, it is a league beaming alongside the esteemed MLBB Professional League (MPL) and MLBB Developmental League (MDL). With its reach expanding from Luzon, NCR, Visayas, and Mindanao regions, MCC is committed to giving collegiate teams across the country a greater avenue to hone and showcase their talents and potentials as student gamers. It also promotes camaraderie and enthusiasm among the players that transcends beyond the competitive gaming horizon. In pursuit of inclusivity especially at the grassroots level, MCC continues to strive for greater, stronger, and better gaming opportunities for every collegiate team to join and enjoy.<br/></div>
                   </div>
                 </div>
               </div>
