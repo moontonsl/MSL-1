@@ -943,33 +943,43 @@ class CampusTournamentController extends Controller
      */
     public function exportToExcel($id)
     {
-        $user = Auth::user();
-        
-        // Allow SL, Regional Admin, and Super Admin
-        if ($user->role !== 'SL' && $user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
-            return response()->json(['error' => 'Unauthorized to export results'], 403);
-        }
-        
-        $tournament = CampusTournament::with(['teams' => function($query) {
-            $query->where('status', 'registered');
-        }, 'teams.members.player'])->findOrFail($id);
-        
-        // Check permissions
-        if ($user->role === 'SL') {
-             // Check if user owns this tournament
-            if ($tournament->sl_id !== $user->id) {
-                return response()->json(['error' => 'You can only export your own tournaments'], 403);
+        try {
+            $user = Auth::user();
+
+            // Allow SL, Regional Admin, and Super Admin
+            if ($user->role !== 'SL' && $user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+                return response()->json(['error' => 'Unauthorized to export results'], 403);
             }
-        }
-        
-        // Check if results are submitted
-        if (!$tournament->results_submitted) {
-            return response()->json(['error' => 'Results must be submitted before exporting'], 400);
-        }
-        
-        // Create new Spreadsheet
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
+
+            // Increase limits for export reliability.
+            if (function_exists('ini_set')) {
+                @ini_set('memory_limit', '512M');
+                @ini_set('max_execution_time', '300');
+            }
+            if (function_exists('set_time_limit')) {
+                @set_time_limit(300);
+            }
+
+            $tournament = CampusTournament::with(['teams' => function($query) {
+                $query->where('status', 'registered');
+            }, 'teams.members.player'])->findOrFail($id);
+
+            // Check permissions
+            if ($user->role === 'SL') {
+                // Check if user owns this tournament
+                if ($tournament->sl_id !== $user->id) {
+                    return response()->json(['error' => 'You can only export your own tournaments'], 403);
+                }
+            }
+
+            // Check if results are submitted
+            if (!$tournament->results_submitted) {
+                return response()->json(['error' => 'Results must be submitted before exporting'], 400);
+            }
+
+            // Create new Spreadsheet
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
         
         // Add Tournament Info at the top
         $sheet->setCellValue('A2', 'Registration Start Date:');
@@ -1088,18 +1098,35 @@ class CampusTournamentController extends Controller
         $sheet->getStyle('A9:A' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle('E9:F' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
         
-        // Create filename
-        $filename = 'Tournament_Results_' . str_replace(' ', '_', $tournament->school_name) . '_' . date('Y-m-d') . '.xlsx';
-        
-        // Create writer and save to output
-        $writer = new Xlsx($spreadsheet);
-        
-        return response()->streamDownload(function() use ($writer) {
-            $writer->save('php://output');
-        }, $filename, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'Cache-Control' => 'max-age=0',
-        ]);
+            // Create a safe filename (avoid header-breaking characters).
+            $safeSchoolName = preg_replace('/[^A-Za-z0-9_\-]/', '_', (string) $tournament->school_name);
+            $safeSchoolName = trim($safeSchoolName, '_');
+            if ($safeSchoolName === '') {
+                $safeSchoolName = 'School';
+            }
+            $filename = 'Tournament_Results_' . $safeSchoolName . '_' . date('Y-m-d') . '.xlsx';
+
+            // Create writer and save to output
+            $writer = new Xlsx($spreadsheet);
+
+            return response()->streamDownload(function() use ($writer) {
+                // Prevent stray output from corrupting XLSX stream.
+                while (ob_get_level() > 0) {
+                    ob_end_clean();
+                }
+                $writer->save('php://output');
+            }, $filename, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Cache-Control' => 'max-age=0',
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Campus tournament export failed', [
+                'tournament_id' => $id,
+                'user_id' => Auth::id(),
+                'message' => $e->getMessage(),
+            ]);
+            return response()->json(['error' => 'Failed to export tournament results. Please try again.'], 500);
+        }
     }
     /**
      * Export pre-registration data to Excel (Super Admin only)
