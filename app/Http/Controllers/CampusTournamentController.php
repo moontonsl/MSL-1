@@ -1067,11 +1067,11 @@ class CampusTournamentController extends Controller
                 
                 // Set Row Values
                 $sheet->setCellValue('A' . $row, $rankString);
-                $sheet->setCellValue('B' . $row, $team->team_name);
-                $sheet->setCellValue('C' . $row, $player ? trim($player->name . ' ' . $player->surname) : 'Unknown');
-                $sheet->setCellValue('D' . $row, $player ? $player->ml_ign : '-');
-                $sheet->setCellValue('E' . $row, $player ? $player->ml_server : '-');
-                $sheet->setCellValue('F' . $row, $player ? $player->ml_id : '-');
+                $sheet->setCellValueExplicit('B' . $row, $team->team_name, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->setCellValueExplicit('C' . $row, $player ? trim($player->name . ' ' . $player->surname) : 'Unknown', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->setCellValueExplicit('D' . $row, $player ? $player->ml_ign : '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->setCellValueExplicit('E' . $row, $player ? $player->ml_server : '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->setCellValueExplicit('F' . $row, $player ? $player->ml_id : '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
 
                 // Apply rank color to the rank and team name columns (A and B) as per image
                 if ($rankColor) {
