@@ -26,7 +26,6 @@ export default function Registration({ inviteTeamId }) {
   const [roleMenuPos, setRoleMenuPos] = useState(null);
 
   const roleOptions = [
-    "Multirole",
     "Jungler",
     "Roam",
     "Gold Laner",
@@ -39,30 +38,11 @@ export default function Registration({ inviteTeamId }) {
 
   const toggleRole = (role) => {
     setRolesError("");
-
-    setSelectedRoles((prev) => {
-      const isSelected = prev.includes(role);
-
-      if (isSelected) {
-        return prev.filter((r) => r !== role);
-      }
-
-      if (role === "Multirole") {
-        return ["Multirole"];
-      }
-
-      const withoutMultirole = prev.filter((r) => r !== "Multirole");
-
-      if (withoutMultirole.length >= 3) {
-        setRolesError("You can select up to 3 roles.");
-        return withoutMultirole;
-      }
-
-      return [...withoutMultirole, role];
-    });
+    setSelectedRoles([role]);
+    setIsRoleOpen(false);
   };
 
-  const soloRoleLabel = selectedRoles.length > 0 ? selectedRoles.join(", ") : "Select Role";
+  const soloRoleLabel = selectedRoles.length > 0 ? selectedRoles[0] : "Select your role";
 
   const updateRoleMenuPosition = useCallback(() => {
     const el = roleTriggerRef.current;
@@ -96,9 +76,37 @@ export default function Registration({ inviteTeamId }) {
     return () => document.removeEventListener("mousedown", onPointerDown);
   }, [isRoleOpen]);
 
+  // Handle ?view=solo query parameter (for "Change Role" return trip)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('view') === 'solo' && authUser) {
+      setCurrentView('solo_matchmaking');
+    }
+  }, [authUser]);
+
   const csrf = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") ?? "";
 
   const usernameContainsAt = () => username.includes("@");
+
+  const checkTeamAndRedirect = async (user) => {
+    try {
+      const resp = await fetch(`/team-check?user_id=${user.id}`);
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.isInTeam) {
+          if (data.team_type === "solo") {
+            window.location.href = "/Tournament/SoloPlayer";
+          } else {
+            window.location.href = "/Tournament/CampusTournamentTeam";
+          }
+          return true;
+        }
+      }
+    } catch (e) {
+      console.error("Team check failed", e);
+    }
+    return false;
+  };
 
   const submitLoginOnly = async () => {
     setIsLoading(true);
@@ -140,6 +148,11 @@ export default function Registration({ inviteTeamId }) {
             );
             return;
           }
+
+          // Check if user is already in a team before showing selection
+          const redirected = await checkTeamAndRedirect(userData.user);
+          if (redirected) return;
+
           setAuthUser(userData.user);
           sessionStorage.setItem("campusTournamentCaptain", JSON.stringify(userData.user));
           setCurrentView("selection");
@@ -238,36 +251,6 @@ export default function Registration({ inviteTeamId }) {
     }
   };
 
-  const submitSoloFlow = async () => {
-    setIsLoading(true);
-    setError("");
-    setRolesError("");
-
-    try {
-      if (!username || !password) {
-        setError("Please enter your username and password.");
-        return;
-      }
-
-      if (usernameContainsAt()) {
-        setError(
-          "Use your MSL username from student registration, not an email. For local testing try msltcap1."
-        );
-        return;
-      }
-
-      if (selectedRoles.length === 0) {
-        setRolesError("Please select at least 1 role.");
-        return;
-      }
-
-      setError("Solo registration is a layout-only flow right now (no backend wired).");
-    } catch {
-      setError("An error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleCreateTeam = async () => {
     setError("");
@@ -300,6 +283,55 @@ export default function Registration({ inviteTeamId }) {
       } else {
         setError("There's no available tournament in your campus");
       }
+    } catch {
+      setError("An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const enterSoloMatchmaking = async () => {
+    setError("");
+    setIsLoading(true);
+
+    try {
+      // 1. Check if user is already in a team (solo or regular)
+      const redirected = await checkTeamAndRedirect(authUser);
+      if (redirected) return;
+
+      // 2. Check for approved tournament
+      const tournamentResponse = await fetch("/approved-tournaments");
+      const tournaments = await tournamentResponse.json();
+
+      const hasApprovedTournament = tournaments.some((t) => t.school_name === authUser.university);
+
+      if (hasApprovedTournament) {
+        // Only show role selection if NOT already in a team
+        setCurrentView("solo_matchmaking");
+      } else {
+        setError("There's no available tournament in your campus");
+      }
+    } catch {
+      setError("An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const submitSoloFlow = async () => {
+    setIsLoading(true);
+    setError("");
+    setRolesError("");
+
+    try {
+      if (selectedRoles.length === 0) {
+        setRolesError("Please select 1 role.");
+        return;
+      }
+
+      // Store selected role in session storage to be picked up by the dashboard
+      sessionStorage.setItem("soloMatchmakingRole", selectedRoles[0]);
+      window.location.href = "/Tournament/SoloPlayer";
     } catch {
       setError("An error occurred. Please try again.");
     } finally {
@@ -455,13 +487,11 @@ export default function Registration({ inviteTeamId }) {
                       </button>
                       <button
                         type="button"
-                        onClick={() => {
-                          setError("");
-                          setCurrentView("solo_matchmaking");
-                        }}
-                        className="w-full py-3 rounded-full bg-neutral-700 text-white font-semibold text-sm hover:bg-neutral-600 transition-colors"
+                        disabled={isLoading}
+                        onClick={enterSoloMatchmaking}
+                        className="w-full py-3 rounded-full bg-neutral-700 text-white font-semibold text-sm hover:bg-neutral-600 transition-colors disabled:opacity-50"
                       >
-                        Solo Matchmaking
+                        {isLoading && currentView === "selection" ? "Checking..." : "Solo Matchmaking"}
                       </button>
                     </div>
                     {error && (
@@ -547,42 +577,12 @@ export default function Registration({ inviteTeamId }) {
                       Connect with solo players from your school and build your dream team.
                     </p>
 
-                    <form className="space-y-4 overflow-visible min-h-0" onSubmit={handleFormSubmit}>
+                    <form className="space-y-6 overflow-visible min-h-0" onSubmit={handleFormSubmit}>
                       {error && (
                         <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-200 text-sm">
                           {error}
                         </div>
                       )}
-
-                      <div>
-                        <label className="block text-[12px] md:text-sm text-white/70 font-medium mb-1">
-                          MSL Username
-                        </label>
-                        <input
-                          type="text"
-                          value={username}
-                          onChange={(e) => setUsername(e.target.value)}
-                          className={inputClassLogin}
-                          placeholder="Enter your MSL Username"
-                          required
-                          autoComplete="username"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-[12px] md:text-sm text-white/70 font-medium mb-1">
-                          Password
-                        </label>
-                        <input
-                          type="password"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          className={inputClassLogin}
-                          placeholder="Enter your password"
-                          required
-                          autoComplete="current-password"
-                        />
-                      </div>
 
                       <div className="relative overflow-visible z-50">
                         <label className="block text-[12px] md:text-sm text-white/70 font-medium mb-1">Role</label>
@@ -653,11 +653,9 @@ export default function Registration({ inviteTeamId }) {
                           )}
 
                         {rolesError && <div className="mt-2 text-[11px] text-red-300/90">{rolesError}</div>}
-                        {!rolesError && (
                           <div className="mt-2 text-[11px] text-white/60">
-                            {selectedRoles.includes("Multirole") ? "Multirole selected." : "Select up to 3 roles."}
+                            Select one role for matchmaking.
                           </div>
-                        )}
                       </div>
 
                       <div className="pt-2 flex justify-center">
