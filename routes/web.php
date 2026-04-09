@@ -108,10 +108,6 @@ Route::get('/Tournament/CampusTournamentReg', function (\Illuminate\Http\Request
     return Inertia::render('Campus Tournament/TeamRegistration');
 })->name('campus.teamregistration');
 
-// Solo Registration - join dashboard
-Route::get('/Tournament/SoloPlayer', function () {
-    return Inertia::render('Campus Tournament/TournamentJoinDashboard');
-})->name('campus.tournament.solo.player');
 
 // Campus Team page - shows logged-in player's team
 Route::get('/Tournament/CampusTournamentTeam', [\App\Http\Controllers\CampusTournamentController::class, 'teamView'])
@@ -140,6 +136,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/campus-tournaments/export-prereg', [\App\Http\Controllers\CampusTournamentController::class, 'exportPreReg'])->name('campus.tournaments.export-prereg');
     Route::delete('/campus-tournaments/{id}', [\App\Http\Controllers\CampusTournamentController::class, 'destroy'])->name('campus.tournaments.destroy');
     Route::get('/api/team-invite-link/{teamId}', [\App\Http\Controllers\CampusTournamentController::class, 'generateInviteLink'])->name('team.invite.link');
+    
+    // Solo Matchmaking Routes
+    Route::get('/Tournament/SoloPlayer', [\App\Http\Controllers\CampusTournamentController::class, 'soloDashboard'])->name('campus.tournament.solo.player');
+    Route::post('/api/solo/create', [\App\Http\Controllers\CampusTournamentController::class, 'createSoloTeam'])->name('campus.solo.create');
+    Route::post('/api/solo/join', [\App\Http\Controllers\CampusTournamentController::class, 'joinSoloTeam'])->name('campus.solo.join');
+    Route::post('/api/solo/leave', [\App\Http\Controllers\CampusTournamentController::class, 'leaveSoloTeam'])->name('campus.solo.leave');
     
     // Team Invite Routes
     // Team Invite Routes - MOVED OUTSIDE AUTH
@@ -191,7 +193,6 @@ Route::get('/approved-tournaments', function () {
     // Only return approved tournaments that are active (results not submitted and within registration period)
     $tournaments = \App\Models\CampusTournament::where('status', 'approved')
         ->where('results_submitted', false)
-        ->whereDate('start_date', '<=', now())
         ->whereDate('end_date', '>=', now())
         ->get();
     return response()->json($tournaments);
@@ -216,7 +217,8 @@ Route::get('/team-check', function (\Illuminate\Http\Request $request) {
     
     return response()->json([
         'isInTeam' => $teamMember ? true : false,
-        'isCaptain' => $teamMember ? $teamMember->role === 'captain' : false
+        'isCaptain' => $teamMember ? $teamMember->role === 'captain' : false,
+        'team_type' => $teamMember ? $teamMember->team->type : null
     ]);
 });
 
@@ -902,7 +904,6 @@ Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
     $tournament = \App\Models\CampusTournament::where('school_name', $captain['university'])
         ->where('status', 'approved')
         ->where('results_submitted', false)
-        ->whereDate('start_date', '<=', now())
         ->whereDate('end_date', '>=', now())
         ->first();
     

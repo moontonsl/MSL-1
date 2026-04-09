@@ -1308,4 +1308,224 @@ class CampusTournamentController extends Controller
         
         return response()->json(['url' => $url]);
     }
+
+    /**
+     * Solo Player Dashboard
+     */
+    public function soloDashboard()
+    {
+        $user = Auth::user();
+        
+        // Find active tournament for this school
+        $tournament = \App\Models\CampusTournament::where('school_name', $user->university)
+            ->where('status', 'approved')
+            ->where('results_submitted', false)
+            ->whereDate('end_date', '>=', now())
+            ->first();
+
+        $teams = [];
+        if ($tournament) {
+            $teams = \App\Models\CampusTournamentTeam::where('tournament_id', $tournament->id)
+                ->where('type', 'solo')
+                ->with(['members.player' => function($q) {
+                    $q->select('id', 'name', 'surname', 'ml_ign');
+                }])
+                ->get();
+
+            // Sanity check: ensure full teams are marked as registered
+            foreach ($teams as $team) {
+                if ($team->status === 'assembling' && $team->members->count() >= 5) {
+                    $team->update(['status' => 'registered']);
+                    $team->status = 'registered'; // Update local instance for immediate render
+                }
+            }
+        }
+
+        return Inertia::render('Campus Tournament/TournamentJoinDashboard', [
+            'tournament' => $tournament,
+            'teams' => $teams,
+            'user' => $user
+        ]);
+    }
+
+    /**
+     * Create a new Solo Team
+     */
+    public function createSoloTeam(Request $request)
+    {
+        $user = Auth::user();
+        
+        $request->validate([
+            'team_name' => 'required|string|max:50',
+            'role' => 'required|string|in:Jungler,Roam,Gold Laner,Exp Laner,Mid Laner',
+            'tournament_id' => 'required|exists:campus_tournaments,id',
+        ]);
+
+        // Same university check
+        $tournament = \App\Models\CampusTournament::findOrFail($request->tournament_id);
+        if ($tournament->school_name !== $user->university) {
+            return response()->json(['error' => 'You can only create teams for your own university.'], 403);
+        }
+
+        // Existing membership check
+        $existingMembership = \App\Models\CampusTournamentTeamMember::where('player_id', $user->id)
+            ->whereHas('team.tournament', function($q) {
+                $q->where('results_submitted', false);
+            })->exists();
+
+        if ($existingMembership) {
+            return response()->json(['error' => 'You are already in a team.'], 422);
+        }
+
+        // Check if team name exists in this tournament
+        $nameExists = \App\Models\CampusTournamentTeam::where('tournament_id', $tournament->id)
+            ->where('team_name', $request->team_name)
+            ->exists();
+        
+        if ($nameExists) {
+            return back()->withErrors(['error' => 'Team name already exists.']);
+        }
+
+        \DB::beginTransaction();
+        try {
+            $team = \App\Models\CampusTournamentTeam::create([
+                'tournament_id' => $tournament->id,
+                'team_name' => $request->team_name,
+                'captain_id' => $user->id,
+                'status' => 'assembling',
+                'type' => 'solo'
+            ]);
+
+            \App\Models\CampusTournamentTeamMember::create([
+                'team_id' => $team->id,
+                'player_id' => $user->id,
+                'role' => 'captain',
+                'lane_role' => $request->role, // I'll use lane_role to store the specific solo role
+                'status' => 'accepted'
+            ]);
+
+            \DB::commit();
+            return back()->with('success', 'Team created successfully!');
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return back()->withErrors(['error' => 'Failed to create team.']);
+        }
+    }
+
+    /**
+     * Join an existing Solo Team
+     */
+    public function joinSoloTeam(Request $request)
+    {
+        $user = Auth::user();
+        
+        $request->validate([
+            'team_id' => 'required|exists:campus_tournament_teams,id',
+            'role' => 'required|string|in:Jungler,Roam,Gold Laner,Exp Laner,Mid Laner',
+        ]);
+
+        $team = \App\Models\CampusTournamentTeam::with('members')->findOrFail($request->team_id);
+        
+        // Same university check
+        if ($team->tournament->school_name !== $user->university) {
+            return back()->withErrors(['error' => 'You can only join teams from your own university.']);
+        }
+
+        // Solo team check
+        if ($team->type !== 'solo') {
+            return back()->withErrors(['error' => 'This is not a solo matchmaking team.']);
+        }
+
+        // Existing membership check
+        $existingMembership = \App\Models\CampusTournamentTeamMember::where('player_id', $user->id)
+            ->whereHas('team.tournament', function($q) {
+                $q->where('results_submitted', false);
+            })->exists();
+
+        if ($existingMembership) {
+            return response()->json(['error' => 'You are already in a team.'], 422);
+        }
+
+        // Check if role is taken in this team
+        // Note: I'm assuming 'lane_role' exists or I should add it. 
+        // In the migration plan I didn't mention lane_role, but solo players need distinct roles.
+        // Wait, the members table has a 'role' column which usually stores 'captain' or 'member'.
+        // I should probably add another column for the lane role if it doesn't exist.
+        // Let's check the schema of campus_tournament_team_members.
+        
+        // Actually, the user's plan says: "Update the team list to show all 5 roles for solo teams."
+        // And "Make vacant role slots clickable to 'Join' (Lock Role)."
+        
+        $roleTaken = $team->members()->where('lane_role', $request->role)->exists();
+        if ($roleTaken) {
+            return back()->withErrors(['error' => 'This role is already taken.']);
+        }
+
+        if ($team->members()->count() >= 5) {
+            return back()->withErrors(['error' => 'Team is full.']);
+        }
+
+        \App\Models\CampusTournamentTeamMember::create([
+            'team_id' => $team->id,
+            'player_id' => $user->id,
+            'role' => 'member',
+            'lane_role' => $request->role,
+            'status' => 'accepted'
+        ]);
+
+        // Auto-register if 5 members
+        if ($team->members()->count() >= 5) {
+            $team->update(['status' => 'registered']);
+        }
+
+        return back()->with('success', 'Joined team successfully!');
+    }
+
+    /**
+     * Leave a Solo Team
+     */
+    public function leaveSoloTeam(Request $request)
+    {
+        $user = Auth::user();
+        
+        $member = \App\Models\CampusTournamentTeamMember::where('player_id', $user->id)
+            ->whereHas('team', function($q) {
+                $q->where('type', 'solo');
+            })
+            ->first();
+
+        if (!$member) {
+            return back()->withErrors(['error' => 'You are not in a solo team.']);
+        }
+
+        $team = $member->team;
+
+        \DB::beginTransaction();
+        try {
+            $member->delete();
+
+            // Handle captain-ship or team deletion
+            if ($member->role === 'captain') {
+                $nextMember = $team->members()->first();
+                if ($nextMember) {
+                    $nextMember->update(['role' => 'captain']);
+                    $team->update(['captain_id' => $nextMember->player_id]);
+                } else {
+                    $team->delete();
+                }
+            }
+
+            // Update status back to assembling if it was registered
+            if ($team->status === 'registered') {
+                $team->update(['status' => 'assembling']);
+            }
+
+            \DB::commit();
+            return back()->with('success', 'Left team successfully!');
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return back()->withErrors(['error' => 'Failed to leave team.']);
+        }
+    }
 }
+

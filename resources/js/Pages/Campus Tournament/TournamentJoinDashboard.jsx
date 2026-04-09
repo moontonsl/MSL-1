@@ -1,12 +1,11 @@
+
 import React, { useState, useRef, useLayoutEffect, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
+import axios from 'axios';
 import MainLayout from '@/Layouts/MainLayout.jsx';
 import RosterLockNotice from '@/Components/RosterLockNotice.jsx';
-import { ChevronDown, User } from 'lucide-react';
-
-const UNIVERSITY_TITLE = 'BATANGAS STATE UNIVERSITY-LIPA CITY';
-const EVENT_DATE = 'Mar 12, 2026 – Mar 23, 2026';
+import { ChevronDown, User, Plus } from 'lucide-react';
 
 const ROLE_IMAGE_MAP = {
   Jungler: 'zxq_icon_jgl.png',
@@ -16,8 +15,9 @@ const ROLE_IMAGE_MAP = {
   'Mid Laner': 'zxq_icon_mid.png',
 };
 
+const SOLO_ROLES = ['Jungler', 'Roam', 'Gold Laner', 'Exp Laner', 'Mid Laner'];
+
 function getVacantRoleLabel(role) {
-  // Punchy labels to avoid truncation in the tight grid.
   if (role === 'Gold Laner') return 'Gold';
   if (role === 'Exp Laner') return 'Exp';
   if (role === 'Mid Laner') return 'Mid';
@@ -31,93 +31,13 @@ function RoleIcon({ role }) {
     <img
       src={`/images/Campus Tournament/Roles/${file}`}
       alt={role}
-      className="w-5 h-5 object-contain"
+      className="w-4 h-4 md:w-5 md:h-5 object-contain"
       aria-hidden
     />
   );
 }
 
-/** Roles open for new joins (vacant slots only). */
-function getAvailableRolesForJoin(team) {
-  if (!team?.slots) return [];
-  return team.slots.filter((s) => !s.isFilled).map((s) => s.role);
-}
-
-/** Current user's role when `playerName === 'You'` (demo). */
-function getCurrentUserRole(team) {
-  const slot = team?.slots?.find((s) => s.isFilled && s.playerName === 'You');
-  return slot?.role ?? null;
-}
-
-/** Edit: vacant roles plus current role (can stay or move to an open lane). */
-function getAvailableRolesForEdit(team) {
-  const vacant = getAvailableRolesForJoin(team);
-  const current = getCurrentUserRole(team);
-  const set = new Set(vacant);
-  if (current) set.add(current);
-  return Array.from(set);
-}
-
-/** @type {{ id: string, teamName: string, type: 'solo' | 'team', status?: 'Confirmed' | 'Pending', slots: Array<{ isFilled: boolean, playerName?: string, role: string, accepted?: boolean, ign?: string, avatarUrl?: string, facebook_link?: string }>, userOnTeam?: boolean, registrationStatus?: 'confirmed' | 'pending' }[]} */
-const DUMMY_TEAMS = [
-  {
-    id: 'team-1',
-    teamName: 'Solo Team 1',
-    type: 'solo',
-    status: 'Confirmed',
-    slots: [
-      { isFilled: true, playerName: 'Miya Tan', role: 'Gold Laner', accepted: true, ign: 'MiyaIGN' },
-      { isFilled: false, role: 'Jungler' },
-      { isFilled: false, role: 'Roam' },
-      { isFilled: true, playerName: 'John Doe', role: 'Mid Laner', accepted: true, ign: 'JohnIGN' },
-      { isFilled: false, role: 'Exp Laner' },
-    ],
-  },
-  {
-    id: 'team-2',
-    teamName: 'Solo Team 2',
-    type: 'solo',
-    status: 'Confirmed',
-    userOnTeam: true,
-    slots: [
-      { isFilled: true, playerName: 'You', role: 'Jungler', accepted: true, ign: 'YouIGN' },
-      { isFilled: false, role: 'Roam' },
-      { isFilled: true, playerName: 'Alex Rivera', role: 'Gold Laner', accepted: true, ign: 'AlexIGN' },
-      { isFilled: false, role: 'Mid Laner' },
-      { isFilled: false, role: 'Exp Laner' },
-    ],
-  },
-  {
-    id: 'team-3',
-    teamName: 'Campus Squad Alpha',
-    type: 'team',
-    status: 'Confirmed',
-    registrationStatus: 'confirmed',
-    slots: [
-      { isFilled: true, playerName: 'Chris Lee', role: 'Exp Laner', accepted: true, ign: 'ChrisIGN' },
-      { isFilled: true, playerName: 'Sam Cruz', role: 'Jungler', accepted: true, ign: 'SamIGN' },
-      { isFilled: true, playerName: 'Pat Santos', role: 'Roam', accepted: true, ign: 'PatIGN' },
-      { isFilled: true, playerName: 'Kim Park', role: 'Gold Laner', accepted: true, ign: 'KimIGN' },
-      { isFilled: true, playerName: 'Lee Wong', role: 'Mid Laner', accepted: true, ign: 'LeeIGN' },
-    ],
-  },
-  {
-    id: 'team-4',
-    teamName: 'Night Owls',
-    type: 'team',
-    status: 'Pending',
-    registrationStatus: 'pending',
-    slots: [
-      { isFilled: true, playerName: 'Rhea M.', role: 'Mid Laner', accepted: true, ign: 'RheaIGN' },
-      { isFilled: true, playerName: 'Ezra Jung', role: 'Jungler', accepted: true, ign: 'EzraIGN' },
-      { isFilled: true, playerName: 'Dino K.', role: 'Roam', accepted: true, ign: 'DinoIGN' },
-      { isFilled: true, playerName: 'Noah Gold', role: 'Gold Laner', accepted: true, ign: 'NoahIGN' },
-      { isFilled: true, playerName: 'Olivia Exp', role: 'Exp Laner', accepted: true, ign: 'OliviaIGN' },
-    ],
-  },
-];
-
-function SlotCell({ slot, onEmptyClick }) {
+function SlotCell({ slot, onEmptyClick, isUserOnTeam }) {
   if (slot.isFilled) {
     return (
       <div className="flex items-center gap-2 min-w-0">
@@ -127,12 +47,18 @@ function SlotCell({ slot, onEmptyClick }) {
         </div>
 
         <div className="flex flex-col items-start min-w-0">
-          <span className="text-sm text-white font-medium truncate w-full" title={slot?.playerName || 'Player'}>
-            {slot?.playerName || 'Player'}
+          <span className={`text-sm ${slot.isYou ? 'text-[#FFC107] font-bold' : 'text-white font-medium'} truncate w-full`} title={slot.playerName}>
+            {slot.playerName}
           </span>
-          <span className="text-xs text-gray-500 truncate w-full" title={slot?.ign || '-'}>
-            {slot?.ign || '-'}
-          </span>
+          <div className="flex items-center gap-1.5 leading-none">
+            <span className="text-[10px] uppercase font-bold text-red-500 tracking-tight shrink-0">
+              {getVacantRoleLabel(slot.role)}
+            </span>
+            <span className="text-white/20 text-[10px] shrink-0">|</span>
+            <span className="text-[10px] text-gray-500 truncate" title={slot.ign}>
+              {slot.ign || '-'}
+            </span>
+          </div>
         </div>
       </div>
     );
@@ -142,19 +68,17 @@ function SlotCell({ slot, onEmptyClick }) {
   return (
     <button
       type="button"
-      onClick={() => onEmptyClick?.(slot.role)}
-      className="min-w-0 flex items-center gap-2"
+      onClick={() => !isUserOnTeam && onEmptyClick?.(slot.role)}
+      disabled={isUserOnTeam}
+      className={`min-w-0 flex items-center gap-2 ${isUserOnTeam ? 'cursor-default opacity-80' : 'hover:opacity-80 transition-opacity'}`}
     >
       <div className="flex items-center gap-2 min-w-0">
-        {/* Icon Box */}
         <div className="h-8 w-8 rounded bg-neutral-800 border border-neutral-700 flex items-center justify-center shrink-0">
-          {/* Role Icon */}
-          <RoleIcon role={slot.role} size={16} />
+          <RoleIcon role={slot.role} />
         </div>
-        {/* Stacked Text Column */}
         <div className="flex flex-col items-start leading-tight min-w-0">
-          <span className="text-sm text-red-500 font-medium uppercase tracking-wider truncate">{roleName}</span>
-          <span className="text-[11px] text-gray-500 truncate">Vacant</span>
+          <span className="text-[11px] md:text-xs text-red-500 font-medium uppercase tracking-wider truncate">{roleName}</span>
+          <span className="text-[10px] text-gray-500 truncate">Vacant</span>
         </div>
       </div>
     </button>
@@ -196,26 +120,22 @@ function ModalRoleSelect({ value, onChange, options, isOpen, onToggle, triggerRe
     return () => document.removeEventListener('mousedown', down);
   }, [isOpen, onToggle, triggerRef, menuRef]);
 
-  const list = options?.length ? options : [];
-
   return (
     <>
-      <div className="relative z-50 w-full" ref={triggerRef}>
+      <div className="relative z-[1000] w-full" ref={triggerRef}>
         <button
           type="button"
           onClick={() => onToggle(!isOpen)}
-          disabled={list.length === 0}
-          className="w-full rounded-xl border border-neutral-600 bg-white px-4 py-3 flex items-center justify-between text-left text-black disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full rounded-xl border border-neutral-700 bg-[#222] px-4 py-3 flex items-center justify-between text-left text-white"
         >
-          <span className={value ? 'text-black' : 'text-gray-500'}>
-            {list.length === 0 ? 'No roles available' : value || 'Select Role'}
+          <span className={value ? 'text-white' : 'text-gray-500'}>
+            {value || 'Select Role'}
           </span>
-          <ChevronDown className={`w-4 h-4 text-black/60 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`w-4 h-4 text-white/60 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
       </div>
       {isOpen &&
         pos &&
-        list.length > 0 &&
         typeof document !== 'undefined' &&
         createPortal(
           <div
@@ -226,11 +146,11 @@ function ModalRoleSelect({ value, onChange, options, isOpen, onToggle, triggerRe
               top: pos.top,
               left: pos.left,
               width: pos.width,
-              zIndex: 10000,
+              zIndex: 10001,
             }}
-            className="bg-white border border-neutral-300 rounded-xl max-h-[220px] overflow-y-auto shadow-2xl custom-scrollbar"
+            className="bg-[#2a2a2a] border border-neutral-700 rounded-xl max-h-[220px] overflow-y-auto shadow-2xl custom-scrollbar"
           >
-            {list.map((role) => (
+            {options.map((role) => (
               <button
                 key={role}
                 type="button"
@@ -238,9 +158,8 @@ function ModalRoleSelect({ value, onChange, options, isOpen, onToggle, triggerRe
                   onChange(role);
                   onToggle(false);
                 }}
-                className={`w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-neutral-100 ${
-                  value === role ? 'text-[#FFC107] font-semibold' : 'text-neutral-900'
-                }`}
+                className={`w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-neutral-800 ${value === role ? 'text-[#FFC107] font-semibold' : 'text-white/90'
+                  }`}
               >
                 {role}
               </button>
@@ -252,137 +171,147 @@ function ModalRoleSelect({ value, onChange, options, isOpen, onToggle, triggerRe
   );
 }
 
-export default function TournamentJoinDashboard() {
-  const [filter, setFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('All');
+export default function TournamentJoinDashboard({ tournament, teams = [], user }) {
   const [activeModal, setActiveModal] = useState(null);
   const [selectedTeam, setSelectedTeam] = useState(null);
+  const [newTeamName, setNewTeamName] = useState('');
   const [modalRole, setModalRole] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [userIntendedRole, setUserIntendedRole] = useState(sessionStorage.getItem('soloMatchmakingRole') || '');
+
   const [roleMenuOpen, setRoleMenuOpen] = useState(false);
   const modalRoleTriggerRef = useRef(null);
   const modalRoleMenuRef = useRef(null);
 
-  const filteredTeams = useMemo(() => {
-    const allFilled = (team) => team.slots.every((s) => Boolean(s.isFilled));
-    const hasVacant = (team) => team.slots.some((s) => !s.isFilled);
+  const processedTeams = useMemo(() => {
+    return teams.map(team => {
+      const slots = SOLO_ROLES.map(role => {
+        const member = team.members.find(m => m.lane_role === role);
+        return {
+          role,
+          isFilled: !!member,
+          playerName: member ? member.player.username : null,
+          ign: member ? member.player.ml_ign : null,
+          isYou: member ? member.player.id === user.id : false
+        };
+      });
+      const userOnTeam = slots.some(s => s.isYou);
+      return { ...team, slots, userOnTeam };
+    });
+  }, [teams, user.id]);
 
-    if (filter === 'all') {
-      if (statusFilter === 'All') return DUMMY_TEAMS;
-      return DUMMY_TEAMS.filter((t) => t.status === statusFilter);
+  const isUserOnAnyTeam = useMemo(() => {
+    return processedTeams.some(t => t.userOnTeam);
+  }, [processedTeams]);
+
+  const openJoinModal = (team, role) => {
+    if (isUserOnAnyTeam) return;
+    
+    const selectedRole = role || userIntendedRole;
+    
+    if (!selectedRole) {
+      setError("Please select a role first. You will be redirected to the role selection page.");
+      setTimeout(() => {
+        window.location.href = "/Tournament/CampusTournament?view=solo";
+      }, 1500);
+      return;
     }
 
-    if (filter === 'solo') {
-      // Solo players need at least one vacant lane, or they can see their own team.
-      return DUMMY_TEAMS.filter((t) => t.userOnTeam || hasVacant(t));
+    const isRoleTaken = team.members.some(m => m.lane_role === selectedRole);
+    if (isRoleTaken) {
+      if (!role) {
+        setError(`The role '${selectedRole}' is already taken in this team. Please change your role or pick another team.`);
+        return;
+      }
     }
 
-    // Team registration context: only show teams with NO vacant lanes.
-    return DUMMY_TEAMS.filter((t) => t.type === 'team' && allFilled(t));
-  }, [filter, statusFilter]);
-
-  const roleOptionsForModal = useMemo(() => {
-    if (!selectedTeam) return [];
-    if (activeModal === 'join') return getAvailableRolesForJoin(selectedTeam);
-    if (activeModal === 'edit') return getAvailableRolesForEdit(selectedTeam);
-    return [];
-  }, [selectedTeam, activeModal]);
-
-  const closeModal = () => {
-    setActiveModal(null);
-    setSelectedTeam(null);
-    setModalRole('');
-    setRoleMenuOpen(false);
-  };
-
-  const openJoinModal = (team, roleHint) => {
-    const available = getAvailableRolesForJoin(team);
     setSelectedTeam(team);
+    setModalRole(selectedRole);
     setActiveModal('join');
-    setRoleMenuOpen(false);
-    const hint = roleHint && available.includes(roleHint) ? roleHint : '';
-    setModalRole(hint);
   };
 
-  const openEditModal = (team) => {
-    setSelectedTeam(team);
-    setActiveModal('edit');
-    setRoleMenuOpen(false);
-    setModalRole(getCurrentUserRole(team) || '');
+  const openCreateModal = () => {
+    if (isUserOnAnyTeam) return;
+    setActiveModal('create');
   };
 
   const openLeaveModal = (team) => {
     setSelectedTeam(team);
     setActiveModal('leave');
-    setRoleMenuOpen(false);
   };
 
-  const openRandomModal = () => {
+  const closeModal = () => {
+    setActiveModal(null);
     setSelectedTeam(null);
-    setActiveModal('random');
-    setRoleMenuOpen(false);
+    setError('');
+    setIsLoading(false);
   };
 
-  useEffect(() => {
-    if (activeModal !== 'join' && activeModal !== 'edit') return;
-    if (!selectedTeam || roleOptionsForModal.length === 0) return;
-    if (modalRole && !roleOptionsForModal.includes(modalRole)) {
-      setModalRole(roleOptionsForModal[0] || '');
-    }
-  }, [activeModal, selectedTeam, roleOptionsForModal, modalRole]);
 
-  const rowAction = (team) => {
-    const openSlots = team.slots.filter((s) => !s.isFilled).length;
-    const full = openSlots === 0;
+  const handleCreateTeam = async () => {
+    if (!newTeamName || !modalRole) {
+      setError('Please provide a team name and select your role.');
+      return;
+    }
+    setIsLoading(true);
+    setError('');
 
-    if (team.userOnTeam) {
-      return (
-        <>
-          <button
-            type="button"
-            onClick={() => openEditModal(team)}
-            className="w-fit px-5 py-1.5 text-sm h-[32px] flex items-center justify-center rounded-full font-medium bg-[#FFC107]/15 text-[#FFC107] border border-[#FFC107]/50 hover:bg-[#FFC107]/25 transition-colors"
-          >
-            Edit
-          </button>
-          <button
-            type="button"
-            onClick={() => openLeaveModal(team)}
-            className="w-fit px-5 py-1.5 text-sm h-[32px] flex items-center justify-center rounded-full font-medium bg-red-600 hover:bg-red-500 text-white transition-colors"
-          >
-            Leave
-          </button>
-        </>
-      );
-    }
-    if (full) {
-      const status = team.registrationStatus ?? 'confirmed';
-      if (status === 'pending') {
-        return (
-          <span className="inline-flex rounded-full px-3 py-1 text-xs font-semibold bg-yellow-500/20 text-yellow-400 border border-yellow-500/50">
-            Pending
-          </span>
-        );
-      }
-      return (
-        <span className="inline-flex rounded-full px-3 py-1 text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/50">
-          Confirmed
-        </span>
-      );
-    }
-    return (
-      <button
-        type="button"
-        onClick={() => openJoinModal(team)}
-        className="w-fit px-5 py-1.5 text-sm h-[32px] flex items-center justify-center rounded-full font-medium bg-green-600 hover:bg-green-500 text-white transition-colors"
-      >
-        Join Team
-      </button>
-    );
+    axios.post('/api/solo/create', {
+      team_name: newTeamName,
+      role: modalRole,
+      tournament_id: tournament.id
+    })
+      .then(() => {
+        closeModal();
+        router.reload();
+      })
+      .catch(err => {
+        const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to create team.';
+        setError(errorMsg);
+      })
+      .finally(() => setIsLoading(false));
+  };
+
+  const handleJoinTeam = async () => {
+    if (!modalRole || !selectedTeam) return;
+    setIsLoading(true);
+    setError('');
+
+    axios.post('/api/solo/join', {
+      team_id: selectedTeam.id,
+      role: modalRole
+    })
+      .then(() => {
+        closeModal();
+        router.reload();
+      })
+      .catch(err => {
+        const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to join team.';
+        setError(errorMsg);
+      })
+      .finally(() => setIsLoading(false));
+  };
+
+  const handleLeaveTeam = async () => {
+    setIsLoading(true);
+    setError('');
+
+    axios.post('/api/solo/leave')
+      .then(() => {
+        closeModal();
+        router.reload();
+      })
+      .catch(err => {
+        const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to leave team.';
+        setError(errorMsg);
+      })
+      .finally(() => setIsLoading(false));
   };
 
   return (
     <MainLayout>
-      <Head title="Tournament Join" />
+      <Head title="Solo Matchmaking Dashboard" />
       <section
         className="relative min-h-[calc(100vh-120px)] py-8 md:py-12 overflow-visible"
         style={{
@@ -394,111 +323,109 @@ export default function TournamentJoinDashboard() {
         <div className="absolute inset-0 bg-black/45" />
         <div className="relative z-10 w-[95%] max-w-[1600px] mx-auto px-4 font-['Montserrat']">
           <div className="bg-[#111111] rounded-3xl p-6 md:p-8 border border-white/10 shadow-2xl">
-            <div className="relative flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-8 md:mb-10">
-              <div className="flex-1 text-center md:text-left md:pr-8">
-                <h1 className="text-white font-bold text-lg md:text-2xl tracking-tight uppercase leading-snug">
-                  {UNIVERSITY_TITLE}
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-8">
+              <div className="flex-1 text-center md:text-left">
+                <h1 className="text-[#FFC107] font-bold text-lg md:text-2xl tracking-tight uppercase leading-snug">
+                  Solo Matchmaking - {tournament?.school_name || 'My Campus'}
                 </h1>
-                <p className="mt-2 text-white/70 text-sm md:text-base">{EVENT_DATE}</p>
+                <p className="mt-2 text-white/70 text-sm">
+                  Teams will be formally registered once all 5 roles are locked. Until then, the status remains <span className="text-yellow-400 font-bold">Assembling</span>.
+                </p>
               </div>
-              <div className="flex justify-center md:justify-end md:absolute md:top-0 md:right-0 w-full md:w-auto">
-                <RosterLockNotice />
+              <div className="flex justify-center md:justify-end shrink-0">
+                <RosterLockNotice
+                  title={tournament?.end_date ? `Roster Lock: ${new Date(tournament.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : undefined}
+                />
               </div>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-4 lg:gap-6 items-start">
-              <aside className="w-full md:w-32 lg:w-36 shrink-0 flex flex-col gap-3">
-                <p className="text-[11px] uppercase tracking-widest text-gray-500 font-semibold">Join team</p>
-                <div className="block md:hidden w-full mb-4">
-                  <select
-                    className="w-full bg-[#1A1A1A] border border-neutral-700 text-white text-sm rounded-lg px-4 py-3 appearance-none focus:outline-none focus:border-[#FFC107]"
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                  >
-                    <option value="all">All</option>
-                    <option value="solo">Solo</option>
-                    <option value="team">Team</option>
-                  </select>
-                </div>
-
-                <div className="hidden md:flex md:flex-col w-full md:w-36 shrink-0 gap-2">
-                  {[
-                    { id: 'all', label: 'All' },
-                    { id: 'solo', label: 'Solo' },
-                    { id: 'team', label: 'Team' },
-                  ].map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setFilter(item.id)}
-                      className={`w-full shrink-0 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm text-left transition-colors ${
-                        filter === item.id
-                          ? 'bg-[#FFC107] text-black font-semibold shadow'
-                          : 'bg-neutral-800 text-gray-400 hover:text-white/90'
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </aside>
-
-              <div className="flex-1 min-w-0 w-full">
-                {filter === 'all' && (
-                  <div className="flex items-center gap-2 mb-4">
-                    {['All', 'Confirmed', 'Pending'].map((pill) => (
-                      <button
-                        key={pill}
-                        type="button"
-                        onClick={() => setStatusFilter(pill)}
-                        className={`${
-                          statusFilter === pill
-                            ? 'bg-[#FFC107] text-black font-medium px-4 py-1.5 rounded-full text-sm transition-colors'
-                            : 'bg-neutral-800 text-gray-400 hover:text-white hover:bg-neutral-700 px-4 py-1.5 rounded-full text-sm transition-colors'
-                        }`}
-                      >
-                        {pill}
-                      </button>
-                    ))}
+            <div className="flex flex-col gap-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-white font-bold text-lg">Join an active team</h2>
+                    <p className="text-white/40 text-sm mt-1">Look for teams needing your specific role.</p>
                   </div>
-                )}
-                <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
-                  {filteredTeams.map((team) => (
+                  
+                  {!isUserOnAnyTeam && (
+                    <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2 rounded-xl">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider">Your Intended Role</span>
+                        <span className="text-[#FFC107] font-bold text-sm">{userIntendedRole || 'None Selected'}</span>
+                      </div>
+                      <button 
+                        onClick={() => window.location.href = "/Tournament/CampusTournament?view=solo"}
+                        className="text-[10px] bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg font-bold transition-colors"
+                      >
+                        Change Role
+                      </button>
+                    </div>
+                  )}
+
+                  {!isUserOnAnyTeam && (
+                    <button
+                      onClick={openCreateModal}
+                      className="bg-[#FFC107] hover:bg-[#d9ae17] text-black font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 transition-all transform hover:scale-[1.02] active:scale-95 shadow-lg shadow-yellow-500/10"
+                    >
+                      <Plus className="w-5 h-5" />
+                      <span>Create New Team</span>
+                    </button>
+                  )}
+                </div>
+
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-2 md:p-4 min-h-[400px]">
+                {processedTeams.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-20 text-center">
+                    <p className="text-white/40 mb-2">No teams assembling yet.</p>
+                    <p className="text-xs text-white/20">Be the first to start a team for your school!</p>
+                  </div>
+                ) : (
+                  processedTeams.map((team) => (
                     <div
                       key={team.id}
-                      className="w-full bg-[#1A1A1A] border border-neutral-800 rounded-xl p-4 mb-3 transition-colors flex flex-col gap-4 lg:grid lg:grid-cols-[160px_repeat(5,minmax(0,1fr))_120px] lg:gap-3 lg:items-center hover:bg-[#222222]"
+                      className={`w-full bg-[#1A1A1A] border ${team.userOnTeam ? 'border-yellow-500/50' : 'border-neutral-800'} rounded-xl p-4 mb-4 flex flex-col gap-4 lg:grid lg:grid-cols-[160px_repeat(5,minmax(0,1fr))_120px] lg:gap-4 lg:items-center hover:bg-[#222222] transition-colors`}
                     >
-                      <div className="w-full lg:w-[160px] text-lg lg:text-sm mb-2 lg:mb-0 shrink-0 font-semibold text-white truncate">
-                        {team.teamName}
+                      <div className="shrink-0 flex flex-col lg:items-start">
+                        <span className="text-white font-bold truncate text-sm md:text-base mb-1" title={team.team_name}>
+                          {team.team_name}
+                        </span>
+                        <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded ${team.status === 'registered' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                          {team.status === 'registered' ? 'Registered' : 'Assembling'}
+                        </span>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3 w-full lg:contents">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:contents gap-4">
                         {team.slots.map((slot, idx) => (
                           <SlotCell
                             key={idx}
                             slot={slot}
+                            isUserOnTeam={isUserOnAnyTeam}
                             onEmptyClick={(role) => openJoinModal(team, role)}
                           />
                         ))}
                       </div>
 
-                      <div className="flex flex-row justify-center lg:justify-end items-center gap-2 w-full lg:w-[120px] mt-3 lg:mt-0 pt-3 lg:pt-0 border-t border-neutral-800 lg:border-t-0">
-                        {rowAction(team)}
+                      <div className="flex justify-center lg:justify-end shrink-0 pt-3 lg:pt-0 border-t border-white/5 lg:border-t-0">
+                        {team.userOnTeam && (
+                          <button
+                            type="button"
+                            onClick={() => openLeaveModal(team)}
+                            className="bg-red-600 hover:bg-red-700 text-white px-5 py-1.5 rounded-full text-xs font-bold transition-colors"
+                          >
+                            Leave
+                          </button>
+                        )}
+                        {!team.userOnTeam && team.status !== 'registered' && !isUserOnAnyTeam && (
+                          <button
+                            type="button"
+                            onClick={() => openJoinModal(team)}
+                            className="bg-[#FFC107] hover:bg-[#d9ae17] text-black px-5 py-1.5 rounded-full text-xs font-bold transition-colors"
+                          >
+                            Join Team
+                          </button>
+                        )}
                       </div>
                     </div>
-                  ))}
-                </div>
-
-                {filter === 'solo' && (
-                  <div className="flex justify-center">
-                    <button
-                      type="button"
-                      onClick={openRandomModal}
-                      className="w-full max-w-[250px] mx-auto bg-green-500 hover:bg-green-600 text-white font-bold py-2.5 rounded-full transition-colors mt-4"
-                    >
-                      Join Randomly
-                    </button>
-                  </div>
+                  ))
                 )}
               </div>
             </div>
@@ -507,113 +434,114 @@ export default function TournamentJoinDashboard() {
       </section>
 
       {activeModal !== null && (
-        <div
-          className="fixed inset-0 z-[999] flex items-center justify-center backdrop-blur-sm p-4 bg-black/80"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="tournament-modal-title"
-        >
-          <div className="bg-[#1A1A1A] border border-neutral-800 rounded-2xl p-8 max-w-sm w-full text-center flex flex-col items-center gap-6 shadow-2xl relative">
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center backdrop-blur-sm p-4 bg-black/80">
+          <div className="bg-[#1A1A1A] border border-neutral-800 rounded-2xl p-6 md:p-8 max-w-sm w-full shadow-2xl relative">
             <button
-              type="button"
               onClick={closeModal}
-              className="absolute top-4 right-4 text-white/50 hover:text-white text-xl leading-none w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10"
-              aria-label="Close"
+              className="absolute top-4 right-4 text-white/50 hover:text-white w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10"
             >
               ×
             </button>
 
-            {activeModal === 'join' && selectedTeam && (
-              <>
-                <h2 id="tournament-modal-title" className="text-base text-white leading-relaxed px-1">
-                  You are about to join{' '}
-                  <span className="text-[#FFC107] font-bold">&apos;{selectedTeam.teamName}&apos;</span>
-                </h2>
-                <div className="w-full flex flex-col gap-2 text-left">
-                  <label className="text-xs text-white/60">Select Role</label>
-                  <ModalRoleSelect
-                    value={modalRole}
-                    onChange={setModalRole}
-                    options={roleOptionsForModal}
-                    isOpen={roleMenuOpen}
-                    onToggle={setRoleMenuOpen}
-                    triggerRef={modalRoleTriggerRef}
-                    menuRef={modalRoleMenuRef}
-                  />
-                  <p className="text-[11px] text-red-400/90 leading-snug">
-                    Once you take a role, it becomes unavailable for others: Jungler, Roam, Gold Laner, Exp Laner, Mid Laner.
-                  </p>
+            {activeModal === 'create' && (
+              <div className="flex flex-col gap-5">
+                <div className="text-center">
+                  <h2 className="text-white font-bold text-xl uppercase tracking-tight">Create Solo Team</h2>
+                  <p className="text-xs text-white/40 mt-1">Start a new matchmaking team for your school</p>
                 </div>
+
+                {error && <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-200 text-xs">{error}</div>}
+
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-xs text-white/60 ml-2 font-medium">Team Name</label>
+                    <input
+                      type="text"
+                      value={newTeamName}
+                      onChange={(e) => setNewTeamName(e.target.value)}
+                      placeholder="Enter a cool team name"
+                      className="w-full bg-[#222] border border-neutral-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FFC107]"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs text-white/60 ml-2 font-medium">My Role</label>
+                    <ModalRoleSelect
+                      value={modalRole}
+                      onChange={setModalRole}
+                      options={SOLO_ROLES}
+                      isOpen={roleMenuOpen}
+                      onToggle={setRoleMenuOpen}
+                      triggerRef={modalRoleTriggerRef}
+                      menuRef={modalRoleMenuRef}
+                    />
+                  </div>
+                </div>
+
                 <button
-                  type="button"
-                  disabled={!modalRole || roleOptionsForModal.length === 0}
-                  onClick={closeModal}
-                  className="bg-[#FFC107] text-black font-bold w-full rounded-full py-2.5 hover:bg-yellow-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  disabled={isLoading || !newTeamName || !modalRole}
+                  onClick={handleCreateTeam}
+                  className="w-full bg-[#FFC107] hover:bg-[#d9ae17] text-black font-bold py-3 rounded-full transition-colors disabled:opacity-50"
                 >
-                  Join
+                  {isLoading ? 'Creating...' : 'Create Team'}
                 </button>
-              </>
+              </div>
             )}
 
-            {activeModal === 'edit' && selectedTeam && (
-              <>
-                <h2 id="tournament-modal-title" className="text-lg font-bold text-white">
-                  Edit your role
-                </h2>
-                <div className="w-full flex flex-col gap-2 text-left">
-                  <label className="text-xs text-white/60">Select Role</label>
-                  <ModalRoleSelect
-                    value={modalRole}
-                    onChange={setModalRole}
-                    options={roleOptionsForModal}
-                    isOpen={roleMenuOpen}
-                    onToggle={setRoleMenuOpen}
-                    triggerRef={modalRoleTriggerRef}
-                    menuRef={modalRoleMenuRef}
-                  />
-                  <p className="text-[11px] text-red-400/90 leading-snug">
-                    Once you take a role, it becomes unavailable for others: Jungler, Roam, Gold Laner, Exp Laner, Mid Laner.
+            {activeModal === 'join' && selectedTeam && (
+              <div className="flex flex-col gap-6">
+                <div className="text-center">
+                  <h2 className="text-white font-bold text-base leading-relaxed">
+                    Lock role in <span className="text-[#FFC107]">&apos;{selectedTeam.team_name}&apos;</span>
+                  </h2>
+                </div>
+
+                {error && <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-200 text-xs">{error}</div>}
+
+                <div className="space-y-4 bg-white/5 p-4 rounded-xl border border-white/10">
+                  <div className="flex justify-between items-center">
+                    <span className="text-white/50 text-xs uppercase font-semibold">Your Selected Role</span>
+                    <span className="text-yellow-400 font-bold text-sm tracking-wide">{modalRole}</span>
+                  </div>
+                  <p className="text-[10px] text-white/30 italic leading-relaxed">
+                    Note: You cannot change your role once locked. Registered teams cannot be edited.
                   </p>
                 </div>
+
                 <button
-                  type="button"
-                  disabled={!modalRole || roleOptionsForModal.length === 0}
-                  onClick={closeModal}
-                  className="bg-[#FFC107] text-black font-bold w-full rounded-full py-2.5 hover:bg-yellow-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  disabled={isLoading || !modalRole}
+                  onClick={handleJoinTeam}
+                  className="w-full bg-[#FFC107] hover:bg-[#d9ae17] text-black font-bold py-3 rounded-full transition-colors disabled:opacity-50"
                 >
-                  Submit
+                  {isLoading ? 'Joining...' : 'Lock Role & Join'}
                 </button>
-              </>
+              </div>
             )}
 
             {activeModal === 'leave' && selectedTeam && (
-              <>
-                <h2 id="tournament-modal-title" className="text-lg font-bold text-white leading-snug">
-                  Are you sure you want to leave this team?
-                </h2>
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="bg-red-500 text-white font-bold w-full rounded-full py-2.5 hover:bg-red-600 transition-colors"
-                >
-                  Leave
-                </button>
-              </>
-            )}
+              <div className="flex flex-col gap-6 text-center">
+                <div className="space-y-2">
+                  <h2 className="text-white font-bold text-lg">Leave Team?</h2>
+                  <p className="text-sm text-white/50 px-4 leading-relaxed">
+                    You are currently locked as <span className="text-yellow-400 font-bold">{processedTeams.find(t => t.id === selectedTeam.id)?.slots.find(s => s.isYou)?.role}</span> in &apos;{selectedTeam.team_name}&apos;.
+                  </p>
+                </div>
 
-            {activeModal === 'random' && (
-              <>
-                <h2 id="tournament-modal-title" className="text-sm text-gray-400 leading-relaxed">
-                  You will be assigned to a random solo team based on your preferred role.
-                </h2>
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="bg-green-500 text-white font-bold w-full rounded-full py-2.5 hover:bg-green-600 transition-colors"
-                >
-                  Accept
-                </button>
-              </>
+                {error && <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-200 text-xs">{error}</div>}
+
+                <div className="flex flex-col gap-3 mt-2">
+                  <button
+                    disabled={isLoading}
+                    onClick={handleLeaveTeam}
+                    className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-full transition-colors"
+                  >
+                    {isLoading ? 'Leaving...' : 'Confirm Leave'}
+                  </button>
+                  <button onClick={closeModal} className="text-white/40 hover:text-white text-xs font-medium py-2">
+                    Cancel
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>
