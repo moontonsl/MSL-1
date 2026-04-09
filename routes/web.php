@@ -1344,6 +1344,19 @@ Route::get('/MPLS17Battletrips', [\App\Http\Controllers\MPLS17BattletripsControl
 Route::get('/MPLS17Battletrips/update', [\App\Http\Controllers\MPLS17BattletripsController::class, 'update'])->name('MPLS17Battletrips.update');
 Route::post('/MPLS17Battletrips/update', [\App\Http\Controllers\MPLS17BattletripsController::class, 'store'])->name('MPLS17Battletrips.store');
 
+//GetGetAw PAGE ROUTES
+Route::get('/GetGetAw', function () {
+    return Inertia::render('ExternalEvents/GetGetAw/Pages/GetGetAw');
+})->name('GetGetAw');
+
+//LabanOBawi PAGE ROUTES
+Route::get('/LabanOBawi', function () {
+    return Inertia::render('ExternalEvents/LabanOBawi/Pages/LabanOBawi');
+})->name('LabanOBawi');
+
+
+
+
 
 
 //SL ADMIN APPROVAL ROUTES - Only SL role can access
@@ -1402,6 +1415,8 @@ Route::get('/FAQsResult', function () {
 Route::get('/MPLS16Battletrips', function () {
     return Inertia::render('BattleTrips/MPLS16Battletrips');
 })->name('MPLS16Battletrips');
+
+
 
 //EVENT  ROUTES - MCC WATCHFEST REG
 Route::get('/MCCWatchFestReg', function () {
@@ -2277,7 +2292,6 @@ Route::get('/{canonical}', function ($canonical) {
     // If no event found, return 404
     abort(404, 'Event not found');
 })->where('canonical', '^[a-zA-Z0-9\-_]+$'); // Only match alphanumeric, hyphens, underscores
-
 
 
 
