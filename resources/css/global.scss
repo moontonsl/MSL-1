@@ -95,6 +95,16 @@
         background-color: lightgray; /* fallback color */
       }
 
+      .labanOBawiBG {
+        position: absolute;
+        inset: 0;
+        background-image: url(/BGSB.png);
+        background-repeat: no-repeat;
+        background-size: cover; /* fill without distortion, may crop */
+        background-position: center;
+        background-color: lightgray; /* fallback color */
+      }
+
       
       .mcc2_calendarBG {
           position: absolute;
