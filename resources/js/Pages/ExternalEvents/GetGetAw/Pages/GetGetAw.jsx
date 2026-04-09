@@ -116,9 +116,9 @@ export default function GetGetAw() {
 
     return (
         <AuthenticatedLayout>
-            <Head title="GerGetAw Dance Battle" />
+            <Head title="GetGetAw Dance Battle" />
             <Helmet>
-                <title>GerGetAw Dance Battle</title>
+                <title>GetGetAw Dance Battle</title>
             </Helmet>
 
             <div
@@ -128,13 +128,13 @@ export default function GetGetAw() {
                 <img src={Emote} alt="SexBomb emote" className="w-64 sm:w-80 mb-4" />
 
                 <div className="text-black text-center mb-4 text-sm md:text-3xl lg:text-4xl font-bold tracking-normal [text-shadow:_0_0_6px_#fff,_0_0_12px_rgba(255,255,255,.85)]">
-                    GerGetAw Dance Battle
+                    GetGetAw Dance Battle
                 </div>
 
                 <div className="p-8 w-full max-w-3xl rounded-xl border border-[#a855f7] shadow-xl bg-white text-black">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="text-center mb-4">
-                            <h2 className="text-xl font-bold mb-2">GerGetAw Submission</h2>
+                            <h2 className="text-xl font-bold mb-2">GetGetAw Submission</h2>
 
                             <div className="border border-[#a855f7] p-4 rounded-lg bg-gray-50">
                                 Please fill out the submission details below.
@@ -332,7 +332,7 @@ export default function GetGetAw() {
                                 Game Mechanics
                             </p>
                             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
-                                GerGetAw Dance Battle
+                                GetGetAw Dance Battle
                             </h2>
                             <p className="mt-1.5 text-sm text-gray-600 max-w-3xl">
                                 A quick guide on what to post and submit.
@@ -433,7 +433,7 @@ export default function GetGetAw() {
                         </h2>
 
                         <p className="text-gray-600 text-sm mb-6">
-                            Thank you for submitting your GerGetAw Dance Battle submission details.
+                            Thank you for submitting your GetGetAw Dance Battle submission details.
                         </p>
 
                         <button
