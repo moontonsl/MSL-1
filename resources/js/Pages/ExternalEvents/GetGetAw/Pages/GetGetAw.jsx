@@ -4,20 +4,36 @@ import { Helmet } from "react-helmet";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutEventsBTS17.jsx";
 import { User, School, Hash, Globe, Link2 } from "lucide-react";
 
-import BG from "../../MPLS17BattleTrips/Assets/Images/BTMPLS17-BG.png";
-import Logo from "../../MPLS17BattleTrips/Assets/Images/BTLogo.png";
-
-/* ================= TOOLTIP ================= */
+const BG = "/BGSB.png";
+const Emote = "/SB%20Girlsm%20emote%20latest.png";
 
 const Tooltip = ({ text }) => (
     <div className="relative group ml-auto">
-        <span className="text-[#e59639] cursor-pointer font-bold text-sm">?</span>
+        <span className="text-[#a855f7] cursor-pointer font-bold text-sm">?</span>
 
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 hidden group-hover:block bg-white text-black text-xs px-3 py-2 rounded-lg shadow-lg w-56 z-50 border border-[#e59639]">
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 hidden group-hover:block bg-white text-black text-xs px-3 py-2 rounded-lg shadow-lg w-56 z-50 border border-[#a855f7]">
             {text}
         </div>
     </div>
 );
+
+const checkboxStyle = (checked) => ({
+    appearance: "none",
+    WebkitAppearance: "none",
+    width: "16px",
+    height: "16px",
+    marginTop: "4px",
+    borderRadius: "4px",
+    border: "2px solid #a855f7",
+    backgroundColor: checked ? "#a855f7" : "#ffffff",
+    backgroundImage: checked
+        ? 'url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 20 20%27 fill=%27none%27 stroke=%27white%27 stroke-width=%273%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%273 11 8 16 17 5%27/%3E%3C/svg%3E")'
+        : "none",
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "center",
+    backgroundSize: "12px 12px",
+    cursor: "pointer",
+});
 
 export default function GetGetAw() {
     const initialForm = {
@@ -32,7 +48,9 @@ export default function GetGetAw() {
     const [form, setForm] = useState(initialForm);
     const [errors, setErrors] = useState({});
     const [agreed, setAgreed] = useState(false);
+    const [agreedMechanics, setAgreedMechanics] = useState(false);
     const [showTerms, setShowTerms] = useState(false);
+    const [showMechanics, setShowMechanics] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [showVerifyModal, setShowVerifyModal] = useState(true);
     const [mlbbUid, setMlbbUid] = useState("");
@@ -63,6 +81,9 @@ export default function GetGetAw() {
         else if (!isValidUrl(form.postLink))
             nextErrors.postLink = "Enter a valid post link.";
 
+        if (!agreedMechanics)
+            nextErrors.mechanics = "Please agree to the game mechanics.";
+
         if (!agreed) nextErrors.consent = "Please agree to the Terms and Conditions.";
 
         setErrors(nextErrors);
@@ -90,38 +111,32 @@ export default function GetGetAw() {
 
         if (!validate()) return;
 
-            setShowModal(true);
-        };
+        setShowModal(true);
+    };
 
     return (
         <AuthenticatedLayout>
-            <Head title="GetGetAw" />
+            <Head title="GetGetAw Dance Battle" />
             <Helmet>
-                <title>GetGetAw</title>
+                <title>GetGetAw Dance Battle</title>
             </Helmet>
 
             <div
-                className="relative z-50 min-h-screen flex flex-col items-center justify-center text-white p-4 pt-5 sm:pt-5 font-['Montserrat'] bg-cover bg-top bg-no-repeat"
+                className="relative z-50 min-h-screen flex flex-col items-center justify-center text-white p-4 pt-5 sm:pt-5 font-['Montserrat'] bg-cover bg-center bg-no-repeat"
                 style={{ backgroundImage: `url(${BG})`, backgroundAttachment: "fixed" }}
             >
-                <img src={Logo} alt="Event Logo" className="w-64 sm:w-80 mb-4" />
+                <img src={Emote} alt="SexBomb emote" className="w-64 sm:w-80 mb-4" />
 
-                <div className="text-black text-center max-w-2xl mt-4 mb-6 text-[11px] md:text-lg font-medium leading-tight md:leading-normal [text-shadow:_0_0_6px_#fff,_0_0_12px_rgba(255,255,255,.85)]">
-                    GetGetAw registration uses the same event structure and styling for now.
-                    We will update the assets and copy later, so this page is a direct visual
-                    baseline for the new submission flow.
+                <div className="text-black text-center mb-4 text-sm md:text-3xl lg:text-4xl font-bold tracking-normal [text-shadow:_0_0_6px_#fff,_0_0_12px_rgba(255,255,255,.85)]">
+                    GetGetAw Dance Battle
                 </div>
 
-                <div className="text-black text-center mb-4 text-sm md:text-3xl lg:text-4xl font-bold tracking-widest [text-shadow:_0_0_6px_#fff,_0_0_12px_rgba(255,255,255,.85)]">
-                    GETGETAW
-                </div>
-
-                <div className="p-8 w-full max-w-3xl rounded-xl border border-[#e59639] shadow-xl bg-white text-black">
+                <div className="p-8 w-full max-w-3xl rounded-xl border border-[#a855f7] shadow-xl bg-white text-black">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="text-center mb-4">
                             <h2 className="text-xl font-bold mb-2">GetGetAw Submission</h2>
 
-                            <div className="border border-[#e59639] p-4 rounded-lg bg-gray-50">
+                            <div className="border border-[#a855f7] p-4 rounded-lg bg-gray-50">
                                 Please fill out the submission details below.
                             </div>
                         </div>
@@ -198,12 +213,40 @@ export default function GetGetAw() {
                             <label className="flex items-start gap-3">
                                 <input
                                     type="checkbox"
+                                    checked={agreedMechanics}
+                                    onChange={() => {
+                                        setShowMechanics(true);
+                                        setErrors((prev) => ({ ...prev, mechanics: "" }));
+                                    }}
+                                    style={checkboxStyle(agreedMechanics)}
+                                />
+                                <span>
+                                    By clicking this box, I agree with the game mechanics.
+                                    <button
+                                        type="button"
+                                        className="underline ml-1"
+                                        onClick={() => setShowMechanics(true)}
+                                    >
+                                        View Mechanics
+                                    </button>
+                                </span>
+                            </label>
+
+                            {errors.mechanics && (
+                                <p className="text-red-500 text-sm">{errors.mechanics}</p>
+                            )}
+                        </div>
+
+                        <div className="border p-4 rounded-lg bg-gray-50">
+                            <label className="flex items-start gap-3">
+                                <input
+                                    type="checkbox"
                                     checked={agreed}
                                     onChange={() => {
                                         setShowTerms(true);
                                         setErrors((prev) => ({ ...prev, consent: "" }));
                                     }}
-                                    className="mt-1"
+                                    style={checkboxStyle(agreed)}
                                 />
                                 <span>
                                     By clicking this box, I agree to the Terms and Conditions.
@@ -224,7 +267,7 @@ export default function GetGetAw() {
 
                         <button
                             type="submit"
-                            className="w-full py-3 rounded-lg font-bold text-white bg-[#e59639] hover:bg-[#d47f20]"
+                            className="w-full py-3 rounded-lg font-bold text-white bg-[#a855f7] hover:bg-[#9333ea]"
                         >
                             Submit
                         </button>
@@ -233,10 +276,10 @@ export default function GetGetAw() {
             </div>
 
             {showTerms && (
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[10000]">
                     <div
                         className="bg-white p-6 rounded-2xl max-w-lg w-full text-black shadow-xl border-2"
-                        style={{ borderColor: "#e59639" }}
+                        style={{ borderColor: "#a855f7" }}
                     >
                         <h2 className="text-lg font-bold mb-3">Terms and Conditions</h2>
 
@@ -269,7 +312,106 @@ export default function GetGetAw() {
                                     setErrors((prev) => ({ ...prev, consent: "" }));
                                 }}
                                 className="px-6 py-2 rounded-lg font-bold text-white"
-                                style={{ backgroundColor: "#e59639" }}
+                                style={{ backgroundColor: "#a855f7" }}
+                            >
+                                I Agree
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showMechanics && (
+                <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-start justify-center p-4 pt-16 sm:pt-24 z-[10000]">
+                    <div
+                        className="w-full max-w-4xl overflow-hidden rounded-2xl bg-white text-black shadow-2xl border border-[#a855f7]"
+                        style={{ borderColor: "#a855f7" }}
+                    >
+                        <div className="px-5 py-4 border-b border-[#ead7ff] bg-[#f8f1ff]">
+                            <p className="text-[11px] uppercase tracking-[0.25em] text-[#9333ea] font-semibold">
+                                Game Mechanics
+                            </p>
+                            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
+                                GetGetAw Dance Battle
+                            </h2>
+                            <p className="mt-1.5 text-sm text-gray-600 max-w-3xl">
+                                A quick guide on what to post and submit.
+                            </p>
+                        </div>
+
+                        <div className="max-h-[60vh] overflow-y-auto p-4 sm:p-6 space-y-4">
+                            <div className="grid gap-3 sm:grid-cols-2">
+                                <MechanicCard
+                                    num="1"
+                                    title="Open to all ages"
+                                    body="Individual or squad. Teachers vs students is encouraged."
+                                />
+                                <MechanicCard
+                                    num="2"
+                                    title="Win a match"
+                                    body={<>
+                                        Win an MLBB match and show the <strong>Victory Screen</strong> on your phone.
+                                    </>}
+                                />
+                                <MechanicCard
+                                    num="3"
+                                    title="Record the dance"
+                                    body={<>
+                                        Hold your phone with the <strong>Victory Screen</strong> and dance the <strong>Sexbombs&apos; Halukay Ube or Spaghetti Dance</strong> when the &quot;Get Get Aw&quot; audio hits.
+                                    </>}
+                                />
+                                <MechanicCard
+                                    num="4"
+                                    title="Editing allowed"
+                                    body="Video editing and visual effects are allowed, but remixing of music is prohibited."
+                                />
+                                <MechanicCard
+                                    num="5"
+                                    title="Keep it clean"
+                                    body="No offensive gestures or visuals. Bonus points for featuring your teacher, coach, or barkada."
+                                />
+                                <MechanicCard
+                                    num="6"
+                                    title="Post publicly"
+                                    body="Upload on Facebook or TikTok using the official hashtags below."
+                                />
+                                <MechanicCard
+                                    num="7"
+                                    title="Tag the pages"
+                                    body="Tag Mobile Legends: Bang Bang and Moonton Student Leader Philippines in every post."
+                                />
+                                <MechanicCard
+                                    num="8"
+                                    title="Submit here"
+                                    body="Paste your post link on this page together with your in-game info."
+                                />
+                            </div>
+
+                            <div className="rounded-xl border border-[#ead7ff] bg-[#f8f1ff] p-4">
+                                <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                                    Official hashtags
+                                </h3>
+                                <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">
+                                    #MSLPhilippines #MSLSBDanceChallenge #MLBBGetGetAw #MLBBxSexBomb #MLBBTagArAW #MLBB
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3 border-t border-[#ead7ff] bg-[#f8f1ff] px-5 py-4">
+                            <button
+                                onClick={() => setShowMechanics(false)}
+                                className="px-4 py-2 rounded-lg border border-gray-300 bg-white font-semibold text-gray-700 transition hover:bg-gray-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setAgreedMechanics(true);
+                                    setShowMechanics(false);
+                                    setErrors((prev) => ({ ...prev, mechanics: "" }));
+                                }}
+                                className="px-6 py-2 rounded-lg font-bold text-white transition hover:scale-[1.02]"
+                                style={{ backgroundColor: "#a855f7" }}
                             >
                                 I Agree
                             </button>
@@ -279,17 +421,19 @@ export default function GetGetAw() {
             )}
 
             {showModal && (
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[10000] p-4">
                     <div
                         className="bg-white rounded-2xl p-8 text-center w-full max-w-md shadow-2xl border-2"
-                        style={{ borderColor: "#e59639" }}
+                        style={{ borderColor: "#a855f7" }}
                     >
-                        <div className="text-5xl mb-3">SUCCESS</div>
+                        <div className="text-5xl mb-3">🎉</div>
 
-                        <h2 className="text-xl font-bold mb-2">Submission Successful!</h2>
+                        <h2 className="text-black text-xl font-bold mb-2">
+                        Submission Successful!
+                        </h2>
 
                         <p className="text-gray-600 text-sm mb-6">
-                            Thank you for submitting your GetGetAw registration details.
+                            Thank you for submitting your GetGetAw Dance Battle submission details.
                         </p>
 
                         <button
@@ -297,12 +441,13 @@ export default function GetGetAw() {
                                 setShowModal(false);
                                 setForm(initialForm);
                                 setAgreed(false);
+                                setAgreedMechanics(false);
                                 setMlbbUid("");
                                 setMlbbServer("");
                                 setShowVerifyModal(true);
                             }}
                             className="px-6 py-3 rounded-lg font-bold text-white transition hover:scale-105"
-                            style={{ backgroundColor: "#e59639" }}
+                            style={{ backgroundColor: "#a855f7" }}
                         >
                             Close
                         </button>
@@ -311,11 +456,10 @@ export default function GetGetAw() {
             )}
 
             {showVerifyModal && (
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-                
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[10000]">
                     <div
                         className="bg-white rounded-2xl p-8 w-full max-w-md text-center shadow-2xl border-2"
-                        style={{ borderColor: "#e59639" }}
+                        style={{ borderColor: "#a855f7" }}
                     >
                         <div className="text-5xl mb-3">🎮</div>
 
@@ -351,7 +495,7 @@ export default function GetGetAw() {
                                     }));
                                 }}
                                 className="px-6 py-2 rounded-lg font-bold text-white"
-                                style={{ backgroundColor: "#e59639" }}
+                                style={{ backgroundColor: "#a855f7" }}
                             >
                                 Continue
                             </button>
@@ -360,6 +504,22 @@ export default function GetGetAw() {
                 </div>
             )}
         </AuthenticatedLayout>
+    );
+}
+
+function MechanicCard({ num, title, body }) {
+    return (
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <div className="flex items-start gap-3">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#a855f7] text-white text-xs font-bold mt-0.5">
+                    {num}
+                </span>
+                <div className="min-w-0">
+                    <h3 className="font-semibold text-gray-900 text-sm leading-snug">{title}</h3>
+                    <p className="mt-1 text-xs sm:text-sm text-gray-700 leading-relaxed">{body}</p>
+                </div>
+            </div>
+        </div>
     );
 }
 
@@ -381,8 +541,8 @@ function FormInput({
         <div>
             <label className="font-semibold mb-1 block">{label}</label>
 
-            <div className="flex items-center gap-3 border border-[#e59639] px-4 py-3 rounded-md bg-white">
-                <div className="text-[#e59639]">{icon}</div>
+            <div className="flex items-center gap-3 border border-[#a855f7] px-4 py-3 rounded-md bg-white">
+                <div className="text-[#a855f7]">{icon}</div>
 
                 <input
                     type={type}
