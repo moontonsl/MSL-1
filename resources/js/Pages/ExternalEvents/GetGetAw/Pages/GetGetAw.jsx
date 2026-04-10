@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Head, Link } from "@inertiajs/react";
+import MLLogin from "@/Pages/MLLoginApi/MLLogin";
 import { Helmet } from "react-helmet";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutEventsBTS17.jsx";
 import { User, School, Hash, Globe, Link2 } from "lucide-react";
@@ -52,9 +53,16 @@ export default function GetGetAw() {
     const [showTerms, setShowTerms] = useState(false);
     const [showMechanics, setShowMechanics] = useState(false);
     const [showModal, setShowModal] = useState(false);
+    const [showStatusModal, setShowStatusModal] = useState(false);
+    const [verificationStatus, setVerificationStatus] = useState(null); // 'success', 'error'
+    const [tempMlData, setTempMlData] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [verified, setVerified] = useState(false);
     const [showVerifyModal, setShowVerifyModal] = useState(true);
     const [mlbbUid, setMlbbUid] = useState("");
     const [mlbbServer, setMlbbServer] = useState("");
+
+    const mlLoginRef = useRef(null);
 
     const isValidUrl = (value) => /^https?:\/\/\S+/i.test(value);
 
@@ -64,13 +72,13 @@ export default function GetGetAw() {
         if (!form.name.trim()) nextErrors.name = "Name is required.";
         if (!form.school.trim()) nextErrors.school = "School is required.";
 
-        if (!mlbbUid.trim()) nextErrors.uid = "MLBB UID is required.";
-        else if (!/^\d{7,12}$/.test(mlbbUid))
-            nextErrors.uid = "UID must be 7-12 digits.";
+        // if (!mlbbUid.trim()) nextErrors.uid = "MLBB UID is required.";
+        // else if (!/^\d{7,12}$/.test(mlbbUid))
+        //     nextErrors.uid = "UID must be 7-12 digits.";
 
-        if (!mlbbServer.trim()) nextErrors.server = "MLBB Server is required.";
-        else if (!/^\d{3,6}$/.test(mlbbServer))
-            nextErrors.server = "Server must be 3-6 digits.";
+        // if (!mlbbServer.trim()) nextErrors.server = "MLBB Server is required.";
+        // else if (!/^\d{3,6}$/.test(mlbbServer))
+        //     nextErrors.server = "Server must be 3-6 digits.";
 
         if (!form.facebookProfileLink.trim())
             nextErrors.facebookProfileLink = "Facebook profile link is required.";
@@ -94,24 +102,90 @@ export default function GetGetAw() {
         const { name, value } = e.target;
         let nextValue = value;
 
-        if (name === "uid" || name === "server") {
-            nextValue = value.replace(/\D/g, "");
-        }
+        // if (name === "uid" || name === "server") {
+        //     nextValue = value.replace(/\D/g, "");
+        // }
 
-        if (name === "uid" || name === "server") {
-            return;
-        }
+        // if (name === "uid" || name === "server") {
+        //     return;
+        // }
 
         setForm((prev) => ({ ...prev, [name]: nextValue }));
         setErrors((prev) => ({ ...prev, [name]: "" }));
     };
 
-    const handleSubmit = (e) => {
+    const handleLoginInfo = (info) => {
+        console.log("MLBB Login Info:", info);
+        const data = info.data || info;
+
+        if (info && (data.uid || data.roleId)) {
+            const uid = data.uid || data.roleId;
+            const server = data.server_id || data.zoneId;
+            const ign = data.nick_name || data.name || "Player";
+
+            setTempMlData({ uid, server, ign });
+            setVerificationStatus('success');
+            setShowStatusModal(true);
+        } else {
+            setVerificationStatus('error');
+            setShowStatusModal(true);
+        }
+    };
+
+    const confirmVerification = () => {
+        if (tempMlData) {
+            setMlbbUid(tempMlData.uid);
+            setMlbbServer(tempMlData.server);
+            setVerified(true);
+            setShowVerifyModal(false);
+            setShowStatusModal(false);
+            setErrors((prev) => ({ ...prev, uid: "", server: "" }));
+        }
+    };
+
+    const getFormattedDate = () => {
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const d = new Date();
+        const month = months[d.getMonth()];
+        const day = String(d.getDate()).padStart(2, '0');
+        const year = d.getFullYear();
+        return `${month} ${day} ${year}`;
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!validate()) return;
 
-        setShowModal(true);
+        setIsSubmitting(true);
+
+        const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/1K39nfr5Zd9PHp-MC4_0zqmZfkh-oUNHr3nPg3QFXWTA/formResponse";
+
+        const formBody = new FormData();
+        formBody.append("entry.667666584", form.name);
+        formBody.append("entry.2058193001", form.school);
+        formBody.append("entry.1280932662", mlbbUid);
+        formBody.append("entry.107469135", mlbbServer);
+        formBody.append("entry.290976084", form.facebookProfileLink);
+        formBody.append("entry.1456806184", form.postLink);
+        formBody.append("entry.1180864", "Yes");
+        formBody.append("entry.1483156473", "Yes");
+        formBody.append("entry.1267887881", getFormattedDate());
+
+        try {
+            await fetch(GOOGLE_FORM_ACTION_URL, {
+                method: "POST",
+                body: formBody,
+                mode: "no-cors",
+            });
+
+            setShowModal(true);
+        } catch (error) {
+            console.error("Error submitting to Google Form:", error);
+            alert("There was an error submitting your entry. Please try again.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -131,12 +205,12 @@ export default function GetGetAw() {
                     GetGetAw Dance Battle
                 </div>
 
-                <div className="p-8 w-full max-w-3xl rounded-xl border border-[#a855f7] shadow-xl bg-white text-black">
+                <div className="p-8 w-full max-w-3xl rounded-xl border border-[#a855f7] shadow-xl bg-white text-black border-solid">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="text-center mb-4">
                             <h2 className="text-xl font-bold mb-2">GetGetAw Submission</h2>
 
-                            <div className="border border-[#a855f7] p-4 rounded-lg bg-gray-50">
+                            <div className="border border-solid border-[#a855f7] p-4 rounded-lg bg-gray-50">
                                 Please fill out the submission details below.
                             </div>
                         </div>
@@ -162,27 +236,23 @@ export default function GetGetAw() {
                         />
 
                         <FormInput
+                            verified={verified}
                             icon={<Hash />}
                             label="MLBB UID"
                             name="uid"
-                            placeholder="Backend verified UID"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
+                            placeholder="Verified UID"
                             value={mlbbUid}
-                            onChange={handleChange}
                             disabled={true}
                             error={errors.uid}
                         />
 
                         <FormInput
+                            verified={verified}
                             icon={<Globe />}
                             label="MLBB Server"
                             name="server"
-                            placeholder="Backend verified server"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
+                            placeholder="Verified server"
                             value={mlbbServer}
-                            onChange={handleChange}
                             disabled={true}
                             error={errors.server}
                         />
@@ -267,9 +337,13 @@ export default function GetGetAw() {
 
                         <button
                             type="submit"
-                            className="w-full py-3 rounded-lg font-bold text-white bg-[#a855f7] hover:bg-[#9333ea]"
+                            disabled={isSubmitting}
+                            className={`w-full py-3 rounded-lg font-bold text-white transition-all flex items-center justify-center gap-2 ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#a855f7] hover:bg-[#9333ea]'}`}
                         >
-                            Submit
+                            {isSubmitting && (
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            )}
+                            {isSubmitting ? "Submitting..." : "Submit"}
                         </button>
                     </form>
                 </div>
@@ -429,7 +503,7 @@ export default function GetGetAw() {
                         <div className="text-5xl mb-3">🎉</div>
 
                         <h2 className="text-black text-xl font-bold mb-2">
-                        Submission Successful!
+                            Submission Successful!
                         </h2>
 
                         <p className="text-gray-600 text-sm mb-6">
@@ -442,6 +516,7 @@ export default function GetGetAw() {
                                 setForm(initialForm);
                                 setAgreed(false);
                                 setAgreedMechanics(false);
+                                setVerified(false);
                                 setMlbbUid("");
                                 setMlbbServer("");
                                 setShowVerifyModal(true);
@@ -457,6 +532,7 @@ export default function GetGetAw() {
 
             {showVerifyModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[10000]">
+
                     <div
                         className="bg-white rounded-2xl p-8 w-full max-w-md text-center shadow-2xl border-2"
                         style={{ borderColor: "#a855f7" }}
@@ -482,24 +558,75 @@ export default function GetGetAw() {
 
                             <button
                                 onClick={() => {
-                                    const sampleUID = "123456789";
-                                    const sampleServer = "3024";
-
-                                    setMlbbUid(sampleUID);
-                                    setMlbbServer(sampleServer);
                                     setShowVerifyModal(false);
-                                    setErrors((prev) => ({
-                                        ...prev,
-                                        uid: "",
-                                        server: "",
-                                    }));
+                                    mlLoginRef.current?.triggerLogin();
                                 }}
-                                className="px-6 py-2 rounded-lg font-bold text-white"
+                                className="px-6 py-2 rounded-lg font-bold text-white shadow-md transition-all hover:scale-105"
                                 style={{ backgroundColor: "#a855f7" }}
                             >
                                 Continue
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            <MLLogin
+                ref={mlLoginRef}
+                onLoginInfo={handleLoginInfo}
+            />
+
+            {/* VERIFICATION STATUS MODAL */}
+            {showStatusModal && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[11000]">
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-sm text-center shadow-2xl border-t-8 border-[#a855f7]">
+                        {verificationStatus === 'success' ? (
+                            <>
+                                <div className="text-4xl mb-4 text-green-500">✅</div>
+                                <h2 className="text-xl font-bold mb-2">Account Linked!</h2>
+                                <p className="text-gray-600 text-sm mb-6">
+                                    We found your account: <br />
+                                    <span className="font-bold text-black text-base">{tempMlData?.ign}</span>
+                                </p>
+
+                                <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-dashed border-gray-300">
+                                    <div className="flex justify-between text-sm mb-1">
+                                        <span className="text-gray-500 font-semibold">UID:</span>
+                                        <span className="font-mono text-black">{tempMlData?.uid}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-500 font-semibold">Server:</span>
+                                        <span className="font-mono text-black">{tempMlData?.server}</span>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={confirmVerification}
+                                    className="w-full py-3 rounded-lg font-bold text-white shadow-lg transition-transform hover:scale-[1.02]"
+                                    style={{ backgroundColor: "#a855f7" }}
+                                >
+                                    Confirm Account
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <div className="text-4xl mb-4 text-red-500">❌</div>
+                                <h2 className="text-xl font-bold mb-2 text-black">Verification Failed</h2>
+                                <p className="text-gray-600 text-sm mb-6">
+                                    We couldn't retrieve your MLBB profile. Please try logging in again.
+                                </p>
+                                <button
+                                    onClick={() => {
+                                        setShowStatusModal(false);
+                                        setShowVerifyModal(true);
+                                    }}
+                                    className="w-full py-3 rounded-lg font-bold text-white"
+                                    style={{ backgroundColor: "#a855f7" }}
+                                >
+                                    Retry
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
@@ -534,15 +661,23 @@ function FormInput({
     tooltip,
     type = "text",
     disabled = false,
+    verified = false,
     inputMode,
     pattern,
 }) {
     return (
-        <div>
-            <label className="font-semibold mb-1 block">{label}</label>
+        <div className="w-full">
+            <div className="flex items-center justify-between mb-1">
+                <label className="font-semibold block">{label}</label>
+                {verified && (
+                    <span className="text-green-600 text-xs font-bold flex items-center gap-1">
+                        Verified Account
+                    </span>
+                )}
+            </div>
 
-            <div className="flex items-center gap-3 border border-[#a855f7] px-4 py-3 rounded-md bg-white">
-                <div className="text-[#a855f7]">{icon}</div>
+            <div className={`flex items-center gap-3 border border-solid px-4 py-3 rounded-md bg-white transition-all ${verified ? 'border-green-500 bg-green-50' : 'border-[#a855f7]'}`}>
+                <div className={`${verified ? 'text-green-500' : 'text-[#a855f7]'}`}>{icon}</div>
 
                 <input
                     type={type}
@@ -554,8 +689,14 @@ function FormInput({
                     readOnly={disabled}
                     inputMode={inputMode}
                     pattern={pattern}
-                    className="w-full outline-none text-black disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    className="w-full outline-none text-black disabled:bg-transparent disabled:cursor-not-allowed"
                 />
+
+                {verified && (
+                    <div className="text-green-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                )}
 
                 {tooltip && <Tooltip text={tooltip} />}
             </div>
