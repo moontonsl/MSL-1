@@ -78,11 +78,11 @@ export default function LabanOBawi() {
         if (!form.name.trim()) nextErrors.name = "Name is required.";
         if (!form.school.trim()) nextErrors.school = "School is required.";
 
-        if (!mlbbUid.trim()) nextErrors.uid = "MLBB UID is required.";
+        if (!String(mlbbUid).trim()) nextErrors.uid = "MLBB UID is required.";
         // else if (!/^\d{7,12}$/.test(mlbbUid))
         //     nextErrors.uid = "UID must be 7-12 digits.";
 
-        if (!mlbbServer.trim()) nextErrors.server = "MLBB Server is required.";
+        if (!String(mlbbServer).trim()) nextErrors.server = "MLBB Server is required.";
         // else if (!/^\d{3,6}$/.test(mlbbServer))
         //     nextErrors.server = "Server must be 3-6 digits.";
 
@@ -140,8 +140,11 @@ export default function LabanOBawi() {
 
     const confirmVerification = () => {
         if (tempMlData) {
-            setMlbbUid(tempMlData.uid);
-            setMlbbServer(tempMlData.server);
+            const uidStr = String(tempMlData.uid);
+            const serverStr = String(tempMlData.server);
+            setMlbbUid(uidStr);
+            setMlbbServer(serverStr);
+            setForm((prev) => ({ ...prev, uid: uidStr, server: serverStr }));
             setVerified(true);
             setShowVerifyModal(false);
             setShowStatusModal(false);
@@ -163,7 +166,7 @@ export default function LabanOBawi() {
 
         const isValid = validate();
 
-        if (!mlbbUid.trim() || !mlbbServer.trim()) {
+        if (!String(mlbbUid).trim() || !String(mlbbServer).trim()) {
             setShowVerifyModal(true);
             return;
         }
