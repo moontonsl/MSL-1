@@ -78,11 +78,11 @@ export default function LabanOBawi() {
         if (!form.name.trim()) nextErrors.name = "Name is required.";
         if (!form.school.trim()) nextErrors.school = "School is required.";
 
-        // if (!mlbbUid.trim()) nextErrors.uid = "MLBB UID is required.";
+        if (!mlbbUid.trim()) nextErrors.uid = "MLBB UID is required.";
         // else if (!/^\d{7,12}$/.test(mlbbUid))
         //     nextErrors.uid = "UID must be 7-12 digits.";
 
-        // if (!mlbbServer.trim()) nextErrors.server = "MLBB Server is required.";
+        if (!mlbbServer.trim()) nextErrors.server = "MLBB Server is required.";
         // else if (!/^\d{3,6}$/.test(mlbbServer))
         //     nextErrors.server = "Server must be 3-6 digits.";
 
@@ -161,7 +161,14 @@ export default function LabanOBawi() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!validate()) return;
+        const isValid = validate();
+
+        if (!mlbbUid.trim() || !mlbbServer.trim()) {
+            setShowVerifyModal(true);
+            return;
+        }
+
+        if (!isValid) return;
         
         setIsSubmitting(true);
 
@@ -560,19 +567,21 @@ export default function LabanOBawi() {
                         </p>
 
                         <div className="flex justify-center gap-3">
-                            <Link
-                                href="/"
-                                className="px-4 py-2 rounded-lg border text-gray-600 border-gray-300"
+                            <button
+                                type="button"
+                                onClick={() => setShowVerifyModal(false)}
+                                className="px-4 py-2 rounded-lg border text-gray-600 border-gray-300 transition-colors hover:bg-gray-50"
                             >
                                 Cancel
-                            </Link>
+                            </button>
 
                             <button
+                                type="button"
                                 onClick={() => {
                                     setShowVerifyModal(false);
                                     mlLoginRef.current?.triggerLogin();
                                 }}
-                                className="px-6 py-2 rounded-lg font-bold text-white shadow-md transition-all hover:scale-105"
+                                className="px-6 py-2 rounded-lg font-bold text-white shadow-md transition-all hover:scale-105 active:scale-95"
                                 style={{ backgroundColor: "#ff6fa8" }}
                             >
                                 Continue
