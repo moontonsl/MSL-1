@@ -11,7 +11,6 @@ const Emote = "/SB%20Girlsm%20emote%20latest.png";
 const Tooltip = ({ text }) => (
     <div className="relative group ml-auto">
         <span className="text-[#a855f7] cursor-pointer font-bold text-sm">?</span>
-
         <div className="absolute right-0 top-1/2 -translate-y-1/2 hidden group-hover:block bg-white text-black text-xs px-3 py-2 rounded-lg shadow-lg w-56 z-50 border border-[#a855f7]">
             {text}
         </div>
@@ -40,8 +39,6 @@ export default function GetGetAw() {
     const initialForm = {
         name: "",
         school: "",
-        uid: "",
-        server: "",
         facebookProfileLink: "",
         postLink: "",
     };
@@ -54,7 +51,7 @@ export default function GetGetAw() {
     const [showMechanics, setShowMechanics] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [showStatusModal, setShowStatusModal] = useState(false);
-    const [verificationStatus, setVerificationStatus] = useState(null); // 'success', 'error'
+    const [verificationStatus, setVerificationStatus] = useState(null);
     const [tempMlData, setTempMlData] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [verified, setVerified] = useState(false);
@@ -72,13 +69,8 @@ export default function GetGetAw() {
         if (!form.name.trim()) nextErrors.name = "Name is required.";
         if (!form.school.trim()) nextErrors.school = "School is required.";
 
-        // if (!mlbbUid.trim()) nextErrors.uid = "MLBB UID is required.";
-        // else if (!/^\d{7,12}$/.test(mlbbUid))
-        //     nextErrors.uid = "UID must be 7-12 digits.";
-
-        // if (!mlbbServer.trim()) nextErrors.server = "MLBB Server is required.";
-        // else if (!/^\d{3,6}$/.test(mlbbServer))
-        //     nextErrors.server = "Server must be 3-6 digits.";
+        if (!mlbbUid.trim()) nextErrors.uid = "MLBB UID is required. Please verify your account.";
+        if (!mlbbServer.trim()) nextErrors.server = "MLBB Server is required. Please verify your account.";
 
         if (!form.facebookProfileLink.trim())
             nextErrors.facebookProfileLink = "Facebook profile link is required.";
@@ -100,17 +92,7 @@ export default function GetGetAw() {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        let nextValue = value;
-
-        // if (name === "uid" || name === "server") {
-        //     nextValue = value.replace(/\D/g, "");
-        // }
-
-        // if (name === "uid" || name === "server") {
-        //     return;
-        // }
-
-        setForm((prev) => ({ ...prev, [name]: nextValue }));
+        setForm((prev) => ({ ...prev, [name]: value }));
         setErrors((prev) => ({ ...prev, [name]: "" }));
     };
 
@@ -124,10 +106,10 @@ export default function GetGetAw() {
             const ign = data.nick_name || data.name || "Player";
 
             setTempMlData({ uid, server, ign });
-            setVerificationStatus('success');
+            setVerificationStatus("success");
             setShowStatusModal(true);
         } else {
-            setVerificationStatus('error');
+            setVerificationStatus("error");
             setShowStatusModal(true);
         }
     };
@@ -146,16 +128,20 @@ export default function GetGetAw() {
     const getFormattedDate = () => {
         const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         const d = new Date();
-        const month = months[d.getMonth()];
-        const day = String(d.getDate()).padStart(2, '0');
-        const year = d.getFullYear();
-        return `${month} ${day} ${year}`;
+        return `${months[d.getMonth()]} ${String(d.getDate()).padStart(2, "0")} ${d.getFullYear()}`;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!validate()) return;
+        const isValid = validate();
+
+        if (!mlbbUid.trim() || !mlbbServer.trim() || !verified) {
+            setShowVerifyModal(true);
+            return;
+        }
+
+        if (!isValid) return;
 
         setIsSubmitting(true);
 
@@ -178,7 +164,6 @@ export default function GetGetAw() {
                 body: formBody,
                 mode: "no-cors",
             });
-
             setShowModal(true);
         } catch (error) {
             console.error("Error submitting to Google Form:", error);
@@ -205,11 +190,10 @@ export default function GetGetAw() {
                     GetGetAw Dance Battle
                 </div>
 
-                <div className="p-8 w-full max-w-3xl rounded-xl border border-[#a855f7] shadow-xl bg-white text-black border-solid">
+                <div className="p-8 w-full max-w-3xl rounded-xl border border-solid border-[#a855f7] shadow-xl bg-white text-black">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="text-center mb-4">
                             <h2 className="text-xl font-bold mb-2">GetGetAw Submission</h2>
-
                             <div className="border border-solid border-[#a855f7] p-4 rounded-lg bg-gray-50">
                                 Please fill out the submission details below.
                             </div>
@@ -240,7 +224,7 @@ export default function GetGetAw() {
                             icon={<Hash />}
                             label="MLBB UID"
                             name="uid"
-                            placeholder="Verified UID"
+                            placeholder="MLBB UID"
                             value={mlbbUid}
                             disabled={true}
                             error={errors.uid}
@@ -251,11 +235,12 @@ export default function GetGetAw() {
                             icon={<Globe />}
                             label="MLBB Server"
                             name="server"
-                            placeholder="Verified server"
+                            placeholder="MLBB Server"
                             value={mlbbServer}
                             disabled={true}
                             error={errors.server}
                         />
+
 
                         <FormInput
                             icon={<Globe />}
@@ -301,7 +286,6 @@ export default function GetGetAw() {
                                     </button>
                                 </span>
                             </label>
-
                             {errors.mechanics && (
                                 <p className="text-red-500 text-sm">{errors.mechanics}</p>
                             )}
@@ -329,7 +313,6 @@ export default function GetGetAw() {
                                     </button>
                                 </span>
                             </label>
-
                             {errors.consent && (
                                 <p className="text-red-500 text-sm">{errors.consent}</p>
                             )}
@@ -338,7 +321,7 @@ export default function GetGetAw() {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className={`w-full py-3 rounded-lg font-bold text-white transition-all flex items-center justify-center gap-2 ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#a855f7] hover:bg-[#9333ea]'}`}
+                            className={`w-full py-3 rounded-lg font-bold text-white transition-all flex items-center justify-center gap-2 ${isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-[#a855f7] hover:bg-[#9333ea]"}`}
                         >
                             {isSubmitting && (
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -349,6 +332,7 @@ export default function GetGetAw() {
                 </div>
             </div>
 
+            {/* TERMS MODAL */}
             {showTerms && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[10000]">
                     <div
@@ -356,7 +340,6 @@ export default function GetGetAw() {
                         style={{ borderColor: "#a855f7" }}
                     >
                         <h2 className="text-lg font-bold mb-3">Terms and Conditions</h2>
-
                         <div className="text-sm text-gray-700 space-y-3 max-h-[250px] overflow-y-auto pr-2">
                             <p>
                                 By clicking this box, I hereby grant my free, prior, and informed consent
@@ -371,7 +354,6 @@ export default function GetGetAw() {
                                 the Data Privacy Act of 2012 and the organization&apos;s privacy policy.
                             </p>
                         </div>
-
                         <div className="flex justify-end gap-3 mt-6">
                             <button
                                 onClick={() => setShowTerms(false)}
@@ -395,11 +377,11 @@ export default function GetGetAw() {
                 </div>
             )}
 
+            {/* MECHANICS MODAL */}
             {showMechanics && (
                 <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-start justify-center p-4 pt-16 sm:pt-24 z-[10000]">
                     <div
                         className="w-full max-w-4xl overflow-hidden rounded-2xl bg-white text-black shadow-2xl border border-[#a855f7]"
-                        style={{ borderColor: "#a855f7" }}
                     >
                         <div className="px-5 py-4 border-b border-[#ead7ff] bg-[#f8f1ff]">
                             <p className="text-[11px] uppercase tracking-[0.25em] text-[#9333ea] font-semibold">
@@ -415,56 +397,18 @@ export default function GetGetAw() {
 
                         <div className="max-h-[60vh] overflow-y-auto p-4 sm:p-6 space-y-4">
                             <div className="grid gap-3 sm:grid-cols-2">
-                                <MechanicCard
-                                    num="1"
-                                    title="Open to all ages"
-                                    body="Individual or squad. Teachers vs students is encouraged."
-                                />
-                                <MechanicCard
-                                    num="2"
-                                    title="Win a match"
-                                    body={<>
-                                        Win an MLBB match and show the <strong>Victory Screen</strong> on your phone.
-                                    </>}
-                                />
-                                <MechanicCard
-                                    num="3"
-                                    title="Record the dance"
-                                    body={<>
-                                        Hold your phone with the <strong>Victory Screen</strong> and dance the <strong>Sexbombs&apos; Halukay Ube or Spaghetti Dance</strong> when the &quot;Get Get Aw&quot; audio hits.
-                                    </>}
-                                />
-                                <MechanicCard
-                                    num="4"
-                                    title="Editing allowed"
-                                    body="Video editing and visual effects are allowed, but remixing of music is prohibited."
-                                />
-                                <MechanicCard
-                                    num="5"
-                                    title="Keep it clean"
-                                    body="No offensive gestures or visuals. Bonus points for featuring your teacher, coach, or barkada."
-                                />
-                                <MechanicCard
-                                    num="6"
-                                    title="Post publicly"
-                                    body="Upload on Facebook or TikTok using the official hashtags below."
-                                />
-                                <MechanicCard
-                                    num="7"
-                                    title="Tag the pages"
-                                    body="Tag Mobile Legends: Bang Bang and Moonton Student Leader Philippines in every post."
-                                />
-                                <MechanicCard
-                                    num="8"
-                                    title="Submit here"
-                                    body="Paste your post link on this page together with your in-game info."
-                                />
+                                <MechanicCard num="1" title="Open to all ages" body="Individual or squad. Teachers vs students is encouraged." />
+                                <MechanicCard num="2" title="Win a match" body={<>Win an MLBB match and show the <strong>Victory Screen</strong> on your phone.</>} />
+                                <MechanicCard num="3" title="Record the dance" body={<>Hold your phone with the <strong>Victory Screen</strong> and dance the <strong>Sexbombs&apos; Halukay Ube or Spaghetti Dance</strong> when the &quot;Get Get Aw&quot; audio hits.</>} />
+                                <MechanicCard num="4" title="Editing allowed" body="Video editing and visual effects are allowed, but remixing of music is prohibited." />
+                                <MechanicCard num="5" title="Keep it clean" body="No offensive gestures or visuals. Bonus points for featuring your teacher, coach, or barkada." />
+                                <MechanicCard num="6" title="Post publicly" body="Upload on Facebook or TikTok using the official hashtags below." />
+                                <MechanicCard num="7" title="Tag the pages" body="Tag Mobile Legends: Bang Bang and Moonton Student Leader Philippines in every post." />
+                                <MechanicCard num="8" title="Submit here" body="Paste your post link on this page together with your in-game info." />
                             </div>
 
                             <div className="rounded-xl border border-[#ead7ff] bg-[#f8f1ff] p-4">
-                                <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                                    Official hashtags
-                                </h3>
+                                <h3 className="text-sm font-semibold text-gray-900 mb-2">Official hashtags</h3>
                                 <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">
                                     #MSLPhilippines #MSLSBDanceChallenge #MLBBGetGetAw #MLBBxSexBomb #MLBBTagArAW #MLBB
                                 </p>
@@ -494,6 +438,7 @@ export default function GetGetAw() {
                 </div>
             )}
 
+            {/* SUCCESS MODAL */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[10000] p-4">
                     <div
@@ -501,15 +446,10 @@ export default function GetGetAw() {
                         style={{ borderColor: "#a855f7" }}
                     >
                         <div className="text-5xl mb-3">🎉</div>
-
-                        <h2 className="text-black text-xl font-bold mb-2">
-                            Submission Successful!
-                        </h2>
-
+                        <h2 className="text-black text-xl font-bold mb-2">Submission Successful!</h2>
                         <p className="text-gray-600 text-sm mb-6">
-                            Thank you for submitting your GetGetAw Dance Battle submission details.
+                            Thank you for submitting your GetGetAw Dance Battle entry.
                         </p>
-
                         <button
                             onClick={() => {
                                 setShowModal(false);
@@ -530,32 +470,27 @@ export default function GetGetAw() {
                 </div>
             )}
 
+            {/* VERIFY MODAL */}
             {showVerifyModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[10000]">
-
                     <div
                         className="bg-white rounded-2xl p-8 w-full max-w-md text-center shadow-2xl border-2"
                         style={{ borderColor: "#a855f7" }}
                     >
                         <div className="text-5xl mb-3">🎮</div>
-
-                        <h2 className="text-gray-600 text-xl font-bold mb-2">
-                            Verify MLBB Account
-                        </h2>
-
+                        <h2 className="text-gray-600 text-xl font-bold mb-2">Verify MLBB Account</h2>
                         <p className="text-gray-600 text-sm mb-6">
                             You will be redirected to log in and verify your Mobile Legends account.
                             This step confirms your MLBB profile before submitting your entry.
                         </p>
-
                         <div className="flex justify-center gap-3">
-                            <Link
-                                href="/"
-                                className="px-4 py-2 rounded-lg border text-gray-600 border-gray-300"
+                            <button
+                                type="button"
+                                onClick={() => setShowVerifyModal(false)}
+                                className="px-4 py-2 rounded-lg border text-gray-600 border-gray-300 transition-colors hover:bg-gray-50"
                             >
                                 Cancel
-                            </Link>
-
+                            </button>
                             <button
                                 onClick={() => {
                                     setShowVerifyModal(false);
@@ -571,16 +506,13 @@ export default function GetGetAw() {
                 </div>
             )}
 
-            <MLLogin
-                ref={mlLoginRef}
-                onLoginInfo={handleLoginInfo}
-            />
+            <MLLogin ref={mlLoginRef} onLoginInfo={handleLoginInfo} />
 
             {/* VERIFICATION STATUS MODAL */}
             {showStatusModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[11000]">
                     <div className="bg-white rounded-2xl p-6 w-full max-w-sm text-center shadow-2xl border-t-8 border-[#a855f7]">
-                        {verificationStatus === 'success' ? (
+                        {verificationStatus === "success" ? (
                             <>
                                 <div className="text-4xl mb-4 text-green-500">✅</div>
                                 <h2 className="text-xl font-bold mb-2">Account Linked!</h2>
@@ -588,7 +520,6 @@ export default function GetGetAw() {
                                     We found your account: <br />
                                     <span className="font-bold text-black text-base">{tempMlData?.ign}</span>
                                 </p>
-
                                 <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-dashed border-gray-300">
                                     <div className="flex justify-between text-sm mb-1">
                                         <span className="text-gray-500 font-semibold">UID:</span>
@@ -599,7 +530,6 @@ export default function GetGetAw() {
                                         <span className="font-mono text-black">{tempMlData?.server}</span>
                                     </div>
                                 </div>
-
                                 <button
                                     onClick={confirmVerification}
                                     className="w-full py-3 rounded-lg font-bold text-white shadow-lg transition-transform hover:scale-[1.02]"
@@ -613,7 +543,7 @@ export default function GetGetAw() {
                                 <div className="text-4xl mb-4 text-red-500">❌</div>
                                 <h2 className="text-xl font-bold mb-2 text-black">Verification Failed</h2>
                                 <p className="text-gray-600 text-sm mb-6">
-                                    We couldn't retrieve your MLBB profile. Please try logging in again.
+                                    We couldn&apos;t retrieve your MLBB profile. Please try logging in again.
                                 </p>
                                 <button
                                     onClick={() => {
@@ -662,8 +592,7 @@ function FormInput({
     type = "text",
     disabled = false,
     verified = false,
-    inputMode,
-    pattern,
+    clickable = false,
 }) {
     return (
         <div className="w-full">
@@ -676,8 +605,8 @@ function FormInput({
                 )}
             </div>
 
-            <div className={`flex items-center gap-3 border border-solid px-4 py-3 rounded-md bg-white transition-all ${verified ? 'border-green-500 bg-green-50' : 'border-[#a855f7]'}`}>
-                <div className={`${verified ? 'text-green-500' : 'text-[#a855f7]'}`}>{icon}</div>
+            <div className={`flex items-center gap-3 border border-solid px-4 py-3 rounded-md bg-white transition-all ${verified ? "border-green-500 bg-green-50" : "border-[#a855f7]"} ${clickable ? "cursor-pointer group-hover:bg-purple-50" : ""}`}>
+                <div className={`${verified ? "text-green-500" : "text-[#a855f7]"}`}>{icon}</div>
 
                 <input
                     type={type}
@@ -687,14 +616,14 @@ function FormInput({
                     onChange={onChange}
                     disabled={disabled}
                     readOnly={disabled}
-                    inputMode={inputMode}
-                    pattern={pattern}
-                    className="w-full outline-none text-black disabled:bg-transparent disabled:cursor-not-allowed"
+                    className={`w-full outline-none text-black disabled:bg-transparent ${clickable ? "cursor-pointer" : "disabled:cursor-not-allowed"}`}
                 />
 
                 {verified && (
                     <div className="text-green-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
                     </div>
                 )}
 
