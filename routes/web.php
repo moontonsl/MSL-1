@@ -1354,6 +1354,15 @@ Route::get('/LabanOBawi', function () {
     return Inertia::render('ExternalEvents/LabanOBawi/Pages/LabanOBawi');
 })->name('LabanOBawi');
 
+Route::get('/naruto', function () {
+    return Inertia::render('ExternalEvents/NarutoFanArtChallenge/Pages/NarutoFanArtChallenge');
+})->name('naruto');
+
+// Aliases (old path / different casing) → canonical URL
+Route::redirect('/NarutoFanArtChallenge', '/naruto', 302);
+Route::redirect('/Naruto', '/naruto', 302);
+Route::redirect('/NARUTO', '/naruto', 302);
+
 
 
 
