@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { Head, Link } from "@inertiajs/react";
 import MLLogin from "@/Pages/MLLoginApi/MLLogin";
 import { Helmet } from "react-helmet";
-import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutEventsBTS17.jsx";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutEventsLabanOBawi.jsx";
 import {
     User,
     School,
