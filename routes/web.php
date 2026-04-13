@@ -1357,6 +1357,8 @@ Route::get('/LabanOBawi', function () {
 Route::get('/naruto', function () {
     return Inertia::render('ExternalEvents/NarutoFanArtChallenge/Pages/NarutoFanArtChallenge');
 })->name('naruto');
+Route::post('/naruto-fan-art/submit', [\App\Http\Controllers\NarutoFanArtController::class, 'store'])->name('naruto-fan-art.submit');
+Route::get('/google-sheet-naruto', [\App\Http\Controllers\GoogleSheetNarutoController::class, 'exportToGoogleSheet'])->name('google-sheet-naruto.export');
 
 // Aliases (old path / different casing) → canonical URL
 Route::redirect('/NarutoFanArtChallenge', '/naruto', 302);

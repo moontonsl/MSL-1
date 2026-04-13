@@ -4,6 +4,7 @@ import MLLogin from "@/Pages/MLLoginApi/MLLogin";
 import { Helmet } from "react-helmet";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutEventsLabanOBawi.jsx";
 import { Globe, Hash, Link2, School, User } from "lucide-react";
+import axios from "axios";
 
 const BG = "/images/Naruto/BGNARUTO.png";
 const Logo = "/images/Naruto/SPD-logo.png";
@@ -165,38 +166,23 @@ export default function NarutoFanArtChallenge() {
 
     setIsSubmitting(true);
 
-    const GOOGLE_FORM_ACTION_URL =
-      import.meta.env.VITE_NARUTO_FAN_ART_GOOGLE_FORM_URL || "";
-
-    if (!GOOGLE_FORM_ACTION_URL) {
-      alert(
-        "Naruto Fan Art Challenge form URL is not configured yet (VITE_NARUTO_FAN_ART_GOOGLE_FORM_URL)."
-      );
-      setIsSubmitting(false);
-      return;
-    }
-
-    const formBody = new FormData();
-    formBody.append("entry.1262416561", form.name);
-    formBody.append("entry.148736703", form.school);
-    formBody.append("entry.1764312379", mlbbUid);
-    formBody.append("entry.719871319", mlbbServer);
-    formBody.append("entry.1070165291", form.facebookProfileLink);
-    formBody.append("entry.1570730642", form.postLink);
-    formBody.append("entry.2141797676", "Yes");
-    formBody.append("entry.260699065", "Yes");
-    formBody.append("entry.532413128", getFormattedDate());
-
     try {
-      await fetch(GOOGLE_FORM_ACTION_URL, {
-        method: "POST",
-        body: formBody,
-        mode: "no-cors",
+      const response = await axios.post('/naruto-fan-art/submit', {
+        name: form.name,
+        school: form.school,
+        uid: mlbbUid,
+        server: mlbbServer,
+        facebookProfileLink: form.facebookProfileLink,
+        postLink: form.postLink,
       });
 
-      setShowModal(true);
+      if (response.data.success) {
+        setShowModal(true);
+      } else {
+        alert("There was an error submitting your entry. Please try again.");
+      }
     } catch (error) {
-      console.error("Error submitting to Google Form:", error);
+      console.error("Error submitting to backend:", error);
       alert("There was an error submitting your entry. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -293,11 +279,10 @@ export default function NarutoFanArtChallenge() {
                 <Tooltip text="Paste the full URL to your public post featuring your fan art." />
               </div>
               <div
-                className={`group flex items-center gap-3 w-full bg-white/5 border rounded-xl px-4 py-3 transition-all duration-300 focus-within:bg-white/10 focus-within:border-[#F97316] focus-within:ring-1 focus-within:ring-[#F97316] outline-none ${
-                  errors.postLink
+                className={`group flex items-center gap-3 w-full bg-white/5 border rounded-xl px-4 py-3 transition-all duration-300 focus-within:bg-white/10 focus-within:border-[#F97316] focus-within:ring-1 focus-within:ring-[#F97316] outline-none ${errors.postLink
                     ? "border-red-400/45 ring-1 ring-red-400/30"
                     : "border-white/10"
-                }`}
+                  }`}
               >
                 <Link2 className="w-5 h-5 shrink-0 text-gray-400 transition-colors duration-300 group-focus-within:text-[#F97316]" />
                 <input
@@ -396,11 +381,10 @@ export default function NarutoFanArtChallenge() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`w-full font-bold text-lg py-4 rounded-xl transition-all duration-200 mt-8 flex items-center justify-center gap-2 ${
-                isSubmitting
+              className={`w-full font-bold text-lg py-4 rounded-xl transition-all duration-200 mt-8 flex items-center justify-center gap-2 ${isSubmitting
                   ? "bg-white/10 text-gray-400 cursor-not-allowed opacity-60"
                   : "bg-gradient-to-r from-[#F97316] to-[#EAB308] text-white hover:opacity-90 active:scale-[0.98] shadow-[0_0_20px_rgba(249,115,22,0.3)]"
-              }`}
+                }`}
             >
               {isSubmitting && (
                 <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
@@ -747,9 +731,8 @@ function GlassFormField({
       </div>
 
       <div
-        className={`group flex items-center gap-3 rounded-xl border px-4 py-3 transition-all duration-300 outline-none ${shellClass} ${
-          error && !verified ? "border-red-400/45 ring-1 ring-red-400/30" : ""
-        }`}
+        className={`group flex items-center gap-3 rounded-xl border px-4 py-3 transition-all duration-300 outline-none ${shellClass} ${error && !verified ? "border-red-400/45 ring-1 ring-red-400/30" : ""
+          }`}
       >
         {icon && (
           <span
