@@ -852,7 +852,10 @@ Route::post('/validate-credentials', function (\Illuminate\Http\Request $request
     Auth::login($user);
     $request->session()->regenerate();
 
-    return response()->json(['user' => $user]);
+    return response()->json([
+        'user' => $user,
+        'csrf_token' => csrf_token()
+    ]);
 });
 
 // Faulty Username Update Route (Signed)
@@ -1160,7 +1163,8 @@ Route::middleware(['auth:admin', 'admin'])->group(function () {
 });
 
 Route::get('/notfound', function () {
-    return Inertia::render('Errors/NotFound'); })->name('notfound');
+    return Inertia::render('Errors/NotFound');
+})->name('notfound');
 
 // SL ADMIN ROUTES
 Route::middleware(['auth', 'verified'])->group(function () {

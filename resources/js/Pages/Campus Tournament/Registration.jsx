@@ -153,6 +153,10 @@ export default function Registration({ inviteTeamId }) {
           const redirected = await checkTeamAndRedirect(userData.user);
           if (redirected) return;
 
+          if (userData.csrf_token) {
+            document.querySelector('meta[name="csrf-token"]')?.setAttribute("content", userData.csrf_token);
+          }
+
           setAuthUser(userData.user);
           sessionStorage.setItem("campusTournamentCaptain", JSON.stringify(userData.user));
           setCurrentView("selection");
@@ -591,13 +595,12 @@ export default function Registration({ inviteTeamId }) {
                           <button
                             type="button"
                             onClick={() => setIsRoleOpen((v) => !v)}
-                            className={`w-full rounded-full border px-4 py-3 flex items-center justify-between transition-colors ${
-                              rolesError
+                            className={`w-full rounded-full border px-4 py-3 flex items-center justify-between transition-colors ${rolesError
                                 ? "border-red-400/70"
                                 : selectedRoles.length > 0
                                   ? "border-yellow-400/60"
                                   : "border-neutral-700"
-                            } bg-transparent text-white`}
+                              } bg-transparent text-white`}
                             aria-haspopup="listbox"
                             aria-expanded={isRoleOpen}
                           >
@@ -633,14 +636,12 @@ export default function Registration({ inviteTeamId }) {
                                     key={role}
                                     type="button"
                                     onClick={() => toggleRole(role)}
-                                    className={`w-full px-4 py-3 flex items-center gap-3 text-left text-[14px] sm:text-sm transition-colors ${
-                                      active ? "text-[#FFC107]" : "text-white/90"
-                                    } hover:bg-white/5`}
+                                    className={`w-full px-4 py-3 flex items-center gap-3 text-left text-[14px] sm:text-sm transition-colors ${active ? "text-[#FFC107]" : "text-white/90"
+                                      } hover:bg-white/5`}
                                   >
                                     <span
-                                      className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 ${
-                                        active ? "border-[#FFC107]" : "border-white/40"
-                                      }`}
+                                      className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 ${active ? "border-[#FFC107]" : "border-white/40"
+                                        }`}
                                     >
                                       {active ? <span className="w-2.5 h-2.5 rounded-full bg-[#FFC107]" /> : null}
                                     </span>
@@ -653,9 +654,9 @@ export default function Registration({ inviteTeamId }) {
                           )}
 
                         {rolesError && <div className="mt-2 text-[11px] text-red-300/90">{rolesError}</div>}
-                          <div className="mt-2 text-[11px] text-white/60">
-                            Select one role for matchmaking.
-                          </div>
+                        <div className="mt-2 text-[11px] text-white/60">
+                          Select one role for matchmaking.
+                        </div>
                       </div>
 
                       <div className="pt-2 flex justify-center">
