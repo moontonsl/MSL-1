@@ -49,31 +49,39 @@ jobs:
             set -e
             cd /home/moontonslph.org/laravel-app
 
+            # Put application in maintenance mode
+            php artisan down || true
+
+            # Update code
             git reset --hard
             git clean -fd
             git pull origin main
 
-            rm -rf node_modules package-lock.json
-
+            # Clean and install dependencies
+            rm -rf node_modules
             composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
-            npm install
+            
+            # Use npm ci for clean, reliable installation from package-lock.json
+            npm ci
             npm run build
 
-            php artisan down
-            echo "Application in maintenance mode: Deploying new version..."
-
+            echo "Deploying new version..."
             php artisan migrate --force
+            
+            # Optimize caches
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
-
             php artisan cache:clear
             php artisan config:clear
             php artisan view:clear
 
+            # Set permissions
             chmod -R 775 storage bootstrap/cache
             chown -R daemon:daemon storage bootstrap/cache
             chmod -R 777 /home/moontonslph.org/laravel-app/storage /home/moontonslph.org/laravel-app/bootstrap/cache
+            
+            # Bring application back up
             php artisan up
             
             # Restart PM2 process

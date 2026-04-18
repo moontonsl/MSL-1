@@ -41,14 +41,18 @@ const BuffsAndSupport = ({ eventPhotos = [] }) => {
                             <div className="flex gap-4 justify-center">
                                 <a
                                     //href="https://forms.gle/eBXzXTcySNgdtjRj6"
-                                    href="/MSLBuffsAndSupportApplicationForm"
+                                    // href="/MSLBuffsAndSupportApplicationForm"
+                                    target="_blank"
+                                    href="https://forms.gle/fpaS8gRR61VgTdY26"
                                     className="px-6 py-3 bg-black text-[#F2C21A] font-bold rounded-xl"
                                 >
                                     Apply Now
                                 </a>
                                 <a
                                     //href="bit.ly/2025BuffAndSupport"
-                                    href="https://docs.google.com/document/d/1Nn3yrCn3qAMdxmEz9Tvo4xACrUIv1pukZ9tJVA1p7ak/edit?tab=t.0"
+                                    // href="https://docs.google.com/document/d/1Nn3yrCn3qAMdxmEz9Tvo4xACrUIv1pukZ9tJVA1p7ak/edit?tab=t.0"
+                                    target="_blank"
+                                    href="https://docs.google.com/document/d/14rAnSyb5goYr2nAfe10RtGE5k_rNQ2AA3yow0UEncS8/edit?usp=sharing"
                                     className="px-6 py-3 border border-black text-black font-bold rounded-xl"
                                 >
                                     Learn More →
@@ -215,7 +219,8 @@ const BuffsAndSupport = ({ eventPhotos = [] }) => {
                         <div className="flex flex-col sm:flex-row gap-3 text-center sm:text-left">
                             <a
                             //href="https://forms.gle/MZkMwxs5KCnrPLEw9"
-                            href="/MSLTournamentLobbyApplicationForm"
+                            // href="/MSLTournamentLobbyApplicationForm"
+                            href="https://forms.gle/uT3v5bU2zxK6mTjMA"
                             className="px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-300 text-black rounded-xl font-bold font-['Montserrat'] shadow-md hover:scale-105 transition"
                             >
                             Request Access
@@ -242,7 +247,8 @@ const BuffsAndSupport = ({ eventPhotos = [] }) => {
                             </div>
                             <h4 className="text-lg font-semibold mb-2 font-['Montserrat']">Application Process</h4>
                             <p className="text-sm text-gray-400 font-['Montserrat'] font-medium">
-                                Submit proposals and pitch decks (2–3 weeks before for diamonds, 45 days for monetary, 1 month for Tournament Lobby).
+                                {/* Submit proposals and pitch decks (2–3 weeks before for diamonds, 45 days for monetary, 1 month for Tournament Lobby). */}
+                                Submit event proposals and pitch decks 1–2 weeks before for diamonds and tournament lobby, and 2 months before for merchandise and monetary support.
                             </p>
                             </div>
                             <div className="flex flex-col items-center md:items-start text-center md:text-left">

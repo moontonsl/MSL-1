@@ -60,6 +60,22 @@ class User extends Authenticatable
     ];
 
     /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function ($user) {
+            // Define roles to exclude
+            $excludedRoles = ['student', 'user'];
+            
+            // Check if user role is not in the excluded list (case-insensitive)
+            if (!in_array(strtolower($user->role), $excludedRoles)) {
+                \App\Jobs\SyncUserToGoogleSheet::dispatch($user);
+            }
+        });
+    }
+
+    /**
      * The attributes that should be hidden for serialization.
      *
      * @var list<string>

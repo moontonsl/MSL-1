@@ -4,14 +4,11 @@
 require __DIR__ . '/admin.php';
 require __DIR__ . '/auth.php';
 
-// User Management Panel (No Auth Required) jabu usermanagement
-Route::get('/user-management', [\App\Http\Controllers\UserManagementController::class, 'index'])->name('user-management');
-Route::post('/user-management/verify', [\App\Http\Controllers\UserManagementController::class, 'verifyCode'])->name('user-management.verify');
-Route::get('/user-management/api', [\App\Http\Controllers\UserManagementController::class, 'getUsers'])->name('user-management.api');
-Route::post('/user-management/delete', [\App\Http\Controllers\UserManagementController::class, 'bulkDeleteUsers'])->name('user-management.delete');
+
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\JabuSyncController;
 use App\Http\Controllers\SchoolUploadController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\NewsController;
@@ -50,6 +47,19 @@ Route::get('/', function () {
         'phpVersion' => PHP_VERSION,
     ]);
 });
+
+// User Management Panel (No Auth Required) jabu usermanagement
+Route::get('/user-management', [\App\Http\Controllers\UserManagementController::class, 'index'])->name('user-management');
+Route::post('/user-management/verify', [\App\Http\Controllers\UserManagementController::class, 'verifyCode'])->name('user-management.verify');
+Route::get('/user-management/api', [\App\Http\Controllers\UserManagementController::class, 'getUsers'])->name('user-management.api');
+Route::post('/user-management/delete', [\App\Http\Controllers\UserManagementController::class, 'bulkDeleteUsers'])->name('user-management.delete');
+
+// Jabu Sync Dashboard userrole
+Route::get('/jabu-sync-userrole', [JabuSyncController::class, 'index'])->name('jabu.sync.index');
+Route::post('/jabu-sync-userrole/verify', [JabuSyncController::class, 'verify'])->name('jabu.sync.verify');
+Route::post('/jabu-sync-userrole/sync', [JabuSyncController::class, 'sync'])->name('jabu.sync.run');
+Route::post('/jabu-sync-userrole/process-queue', [JabuSyncController::class, 'processQueue'])->name('jabu.sync.queue');
+Route::post('/jabu-sync-userrole/logout', [JabuSyncController::class, 'logout'])->name('jabu.sync.logout');
 
 // About Page Route
 Route::get('/about', function () {
