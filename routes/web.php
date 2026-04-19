@@ -1183,8 +1183,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         if ($user->role !== 'SL' && $user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
             return redirect()->route('dashboard')->with('error', 'Access denied. Only Student Leaders, Regional Admins, and Super Admins can access this page.');
         }
-
-        $query = User::query();
+        $query = User::query()->where('status', 'active');
 
         if ($user->role === 'SL') {
             $query->where('university', $user->university);
@@ -1734,7 +1733,7 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
         return response()->json(['error' => 'Access denied. Only Student Leaders, Regional Admins, and Super Admins can access this resource.'], 403);
     }
     $perPage = $request->query('per_page', 20);
-    $query = \App\Models\User::select(
+    $query = \App\Models\User::where('users.status', 'active')->select(
         'users.id',
         'users.name',
         'users.surname',
@@ -1993,7 +1992,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'verified_by' => null,
             'verified_date' => null,
             'proofOfEnrollment' => null,
-            'year_level' => null
+            'year_level' => null,
+            'renew_date' => now()
         ]);
 
         // Send renewal email to the user

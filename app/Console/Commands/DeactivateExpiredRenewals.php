@@ -27,10 +27,11 @@ class DeactivateExpiredRenewals extends Command
      */
     public function handle()
     {
-        // Find users in 'Renew' state where the last updated_at is older than 6 months
+        // Find users in 'Renew' state where the renew_date is older than 6 months
         $expiredUsers = User::where('state', 'Renew')
             ->where('status', 'active') // Only target currently active users
-            ->where('updated_at', '<=', Carbon::now()->subMonths(6))
+            ->whereNotNull('renew_date')
+            ->where('renew_date', '<=', Carbon::now()->subMonths(6))
             ->get();
 
         $count = $expiredUsers->count();

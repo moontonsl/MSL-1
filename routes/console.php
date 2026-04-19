@@ -34,3 +34,9 @@ Schedule::command('users:deactivate-expired-renewals')
     ->at('01:00')
     ->withoutOverlapping()
     ->runInBackground();
+
+Schedule::command('users:delete-expired-proofs')
+    ->daily()
+    ->at('03:00')
+    ->withoutOverlapping()
+    ->runInBackground();
