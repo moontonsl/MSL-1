@@ -42,7 +42,7 @@ class SyncExistingUsersToGoogleSheet extends Command
 
             $service = new Google_Service_Sheets($client);
             $spreadsheetId = '1Q-rCwxccHiQClbROJkRzg5XK6_mtKm_5AwQDdaHAPBI';
-            $range = 'Users Role';
+            $range = 'Role Monitoring';
 
             // 1. Clear existing data and EVERYTHING (Values + Formatting)
             $this->info('🧹 Clearing existing data and formatting...');
@@ -62,13 +62,20 @@ class SyncExistingUsersToGoogleSheet extends Command
             $service->spreadsheets->batchUpdate($spreadsheetId, $clearFormatRequest);
 
             // 2. Add headers
-            $headers = [['Username', 'First Name', 'Last Name', 'Email', 'Role', 'Sync Date']];
+            $headers = [['Username', 'First Name', 'Last Name', 'Email', 'Role', 'Date Created']];
             $headerBody = new \Google_Service_Sheets_ValueRange(['values' => $headers]);
             $service->spreadsheets_values->update($spreadsheetId, $range . '!A1', $headerBody, ['valueInputOption' => 'RAW']);
 
             $excludedRoles = ['student', 'user'];
             $query = User::whereNotNull('role')
-                ->whereRaw('LOWER(role) NOT IN ("' . implode('", "', $excludedRoles) . '")');
+                ->whereRaw('LOWER(role) NOT IN ("' . implode('", "', $excludedRoles) . '")')
+                ->orderByRaw("CASE 
+                    WHEN role = 'Super Admin' THEN 1 
+                    WHEN role = 'Regional Admin' THEN 2 
+                    WHEN role = 'SL' THEN 3 
+                    ELSE 4 
+                END")
+                ->orderBy('role', 'asc');
 
             $total = $query->count();
             $this->info("Total users to sync: {$total}");
