@@ -68,6 +68,7 @@ class SyncExistingUsersToGoogleSheet extends Command
 
             $excludedRoles = ['student', 'user'];
             $query = User::whereNotNull('role')
+                ->where('role', '!=', '')
                 ->whereRaw('LOWER(role) NOT IN ("' . implode('", "', $excludedRoles) . '")')
                 ->orderByRaw("CASE 
                     WHEN role = 'Super Admin' THEN 1 

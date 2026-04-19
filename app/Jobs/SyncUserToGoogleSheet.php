@@ -31,6 +31,13 @@ class SyncUserToGoogleSheet implements ShouldQueue
     public function handle(): void
     {
         try {
+            $role = strtolower($this->user->role ?? '');
+            $excludedRoles = ['student', 'user'];
+            
+            if (empty($role) || in_array($role, $excludedRoles)) {
+                return; // Silently skip
+            }
+
             $client = new Google_Client();
             $client->setApplicationName('Laravel Google Sheets User Sync');
             $client->setScopes([Google_Service_Sheets::SPREADSHEETS]);
