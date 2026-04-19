@@ -69,8 +69,9 @@ class User extends Authenticatable
             // Define roles to exclude
             $excludedRoles = ['student', 'user'];
             
-            // Check if user role is not in the excluded list (case-insensitive)
-            if (!in_array(strtolower($user->role), $excludedRoles)) {
+            // Check if user has a valid role and it's not in the excluded list
+            $role = strtolower($user->role ?? '');
+            if (!empty($role) && !in_array($role, $excludedRoles)) {
                 \App\Jobs\SyncUserToGoogleSheet::dispatch($user);
             }
         });
