@@ -56,7 +56,8 @@ class User extends Authenticatable
         'squad_name_last_changed',
         'year_level_last_changed',
         'ml_account_last_changed',
-        'promotion_expires_at'
+        'promotion_expires_at',
+        'renew_date'
     ];
 
     /**
@@ -100,6 +101,7 @@ class User extends Authenticatable
             'year_level_last_changed' => 'datetime',
             'ml_account_last_changed' => 'datetime',
             'promotion_expires_at' => 'datetime',
+            'renew_date' => 'datetime',
             'password' => 'hashed',
         ];
     }
