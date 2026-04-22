@@ -125,7 +125,7 @@ export default function JBFlex() {
                 <img src={Hero} alt="Jollibee Joy mascot" className="w-48 sm:w-64 mb-4 drop-shadow-xl" />
 
                 <div className="text-black text-center mb-4 text-sm md:text-3xl lg:text-4xl font-bold tracking-normal [text-shadow:_0_0_6px_#fff,_0_0_12px_rgba(255,255,255,.85)]">
-                    Flex your Pabida Emote
+                    #FlexYourWowBida Challenge
                 </div>
 
                 <div className="p-8 w-full max-w-3xl rounded-xl border border-[#d71920] shadow-xl bg-[#d71920] text-white">
@@ -265,10 +265,15 @@ export default function JBFlex() {
                                 <p className="text-red-500 text-sm">{errors.consent}</p>
                             )}
                         </div>
-
+                        
                         <button
                             type="submit"
-                            className="w-full py-3 rounded-xl font-bold text-[#d71920] bg-white hover:bg-[#fff4f4]"
+                            disabled={!mlbbUid || !mlbbServer}
+                            className={`w-full py-3 rounded-2xl font-bold ${
+                                !mlbbUid || !mlbbServer
+                                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                    : "bg-white text-[#d71920] hover:bg-[#fff4f4]"
+                            }`}
                         >
                             Submit
                         </button>
@@ -322,103 +327,76 @@ export default function JBFlex() {
                 </div>
             )}
 
+            {/* Updated Mechanics Modal - Aligned Style */}
             {showMechanics && (
-                <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-start justify-center p-4 pt-16 sm:pt-24 z-[10000]">
-                    <div
-                        className="w-full max-w-4xl overflow-hidden rounded-xl bg-white text-black shadow-2xl border border-[#d71920]"
-                        style={{ borderColor: PRIMARY }}
-                    >
-                        <div className="px-5 py-4 border-b border-[#ffe8a6] bg-[#fff7dd]">
-                            <p className="text-[11px] uppercase tracking-[0.25em] text-[#d71920] font-semibold">
-                                Game Mechanics
-                            </p>
-                            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
-                                MLBB x Jollibee
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-[10000]">
+                    <div className="w-full max-w-2xl overflow-hidden rounded-3xl bg-gray-50 text-black shadow-2xl animate-in fade-in zoom-in duration-200">
+                        
+                        {/* Header Section */}
+                        <div className="px-6 py-6 bg-white border-b border-gray-100 flex flex-col items-center text-center relative">
+                            <div className="inline-block px-3 py-1 rounded-full bg-[#fff4f4] text-[#d71920] text-[10px] font-bold uppercase tracking-wider mb-2">
+                                Event Guidelines
+                            </div>
+
+                            <h2 className="text-2xl font-black text-gray-900">
+                                How to Join #FlexYourWowBida Challenge
                             </h2>
-                            <p className="mt-1.5 text-sm text-gray-600 max-w-3xl">
-                                A quick guide on what to post and submit for the Jollibee activation.
+
+                            <p className="w-full text-gray-500 text-sm mt-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                                Follow these steps to qualify for the MLBB x Jollibee event
                             </p>
                         </div>
 
-                        <div className="max-h-[60vh] overflow-y-auto p-4 sm:p-6 space-y-4">
-                            <div className="grid gap-3 sm:grid-cols-2">
+                        {/* Body */}
+                        <div className="max-h-[60vh] overflow-y-auto p-6 space-y-4">
+                            <div className="grid gap-4">
                                 <MechanicCard
                                     num="1"
-                                    title="Open to all ages"
-                                    body="Individual or squad. Teachers vs students are welcome."
+                                    title="Claim the Emote"
+                                    body="Claim the official 'Wow Bida' emote in-game through the Jollibee event interface."
                                 />
                                 <MechanicCard
                                     num="2"
-                                    title="Win a match"
-                                    body={
-                                        <>
-                                            Win an MLBB match and show the <strong>Victory Screen</strong> on your phone.
-                                        </>
-                                    }
+                                    title="Record Gameplay"
+                                    body="Record a video using the emote during a match (e.g., after a kill, a clutch escape, or a victory)."
                                 />
                                 <MechanicCard
                                     num="3"
-                                    title="Record your clip"
-                                    body={
-                                        <>
-                                            Hold your phone with the <strong>Victory Screen</strong> and record your best Jollibee-inspired dance or emote clip.
-                                        </>
-                                    }
-                                />
-                                <MechanicCard
-                                    num="4"
-                                    title="Editing allowed"
-                                    body="Video editing and visual effects are allowed, but remixing of music is prohibited."
-                                />
-                                <MechanicCard
-                                    num="5"
-                                    title="Keep it clean"
-                                    body="No offensive gestures or visuals. Bonus points for featuring your teacher, coach, or barkada."
-                                />
-                                <MechanicCard
-                                    num="6"
-                                    title="Post publicly"
-                                    body="Upload on Facebook or TikTok using the official hashtags below."
-                                />
-                                <MechanicCard
-                                    num="7"
-                                    title="Tag the pages"
-                                    body="Tag Mobile Legends: Bang Bang, Jollibee, and Moonton Student Leader Philippines in every post."
-                                />
-                                <MechanicCard
-                                    num="8"
-                                    title="Submit here"
-                                    body="Paste your post link on this page together with your in-game info."
+                                    title="Upload Socials"
+                                    body="Post your video on Facebook or TikTok. Ensure your post privacy is set to Public."
                                 />
                             </div>
 
-                            <div className="rounded-xl border border-[#ffe8a6] bg-[#fff7dd] p-4">
-                                <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                                    Official hashtags
+                            {/* Hashtags Section */}
+                            <div className="rounded-2xl bg-[#d71920] p-4 text-white text-center shadow-inner">
+                                <h3 className="text-xs font-bold uppercase tracking-widest opacity-80 mb-2">
+                                    Required Hashtags
                                 </h3>
-                                <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">
-                                    #MLBBxJollibee #JollibeePH #MLBB #MSLPhilippines
+                                <p className="font-mono text-sm sm:text-base font-bold">
+                                    #MSLPhilippines #MLBBWowBida #MLBBxJollibee #MSLFlexYourWowBida
                                 </p>
                             </div>
                         </div>
 
-                        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3 border-t border-[#ffe8a6] bg-[#fff7dd] px-5 py-4">
+                        {/* Footer */}
+                        <div className="flex gap-3 p-6 bg-white border-t border-gray-100">
                             <button
                                 onClick={() => setShowMechanics(false)}
-                                className="px-4 py-2 rounded-xl border border-gray-300 bg-white font-semibold text-gray-700 transition hover:bg-gray-50"
+                                className="flex-1 px-4 py-3 rounded-2xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 transition-colors"
                             >
-                                Cancel
+                                Back
                             </button>
+
                             <button
                                 onClick={() => {
                                     setAgreedMechanics(true);
                                     setShowMechanics(false);
                                     setErrors((prev) => ({ ...prev, mechanics: "" }));
                                 }}
-                                className="px-6 py-2 rounded-xl font-bold text-white transition hover:scale-[1.02]"
+                                className="flex-[2] px-6 py-3 rounded-2xl font-bold text-white shadow-lg shadow-red-200 hover:scale-[1.02] active:scale-[0.98] transition-all"
                                 style={{ backgroundColor: PRIMARY }}
                             >
-                                I Agree
+                                Accept & Continue
                             </button>
                         </div>
                     </div>
@@ -488,7 +466,7 @@ export default function JBFlex() {
                             <button
                                 onClick={() => {
                                     const sampleUID = "123456789";
-                                    const sampleServer = "3024";
+                                    const sampleServer = "1234";
 
                                     setMlbbUid(sampleUID);
                                     setMlbbServer(sampleServer);
@@ -514,14 +492,23 @@ export default function JBFlex() {
 
 function MechanicCard({ num, title, body }) {
     return (
-        <div className="rounded-xl border border-[#ffd0d2] bg-[#b1141a] p-4">
-            <div className="flex items-start gap-3">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#d71920] text-white text-xs font-bold mt-0.5">
+        <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div className="flex items-start gap-4">
+                {/* Clean Red Badge Style for Number */}
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#fff4f4] text-[#d71920] text-[10px] font-bold mt-0.5 border border-[#ffd0d2]">
                     {num}
                 </span>
+                
                 <div className="min-w-0">
-                    <h3 className="font-semibold text-white text-sm leading-snug">{title}</h3>
-                    <p className="mt-1 text-xs sm:text-sm text-white/90 leading-relaxed">{body}</p>
+                    {/* Darker header text to match h2 style */}
+                    <h3 className="font-black text-gray-900 text-sm sm:text-base leading-snug uppercase tracking-wide">
+                        {title}
+                    </h3>
+                    
+                    {/* Muted gray text to match the "Follow these steps" style */}
+                    <div className="mt-1 text-xs sm:text-sm text-gray-500 leading-relaxed">
+                        {body}
+                    </div>
                 </div>
             </div>
         </div>
@@ -565,7 +552,7 @@ function FormInput({
                 {tooltip && <Tooltip text={tooltip} />}
             </div>
 
-            {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+            {error && <p className="text-white text-sm mt-1">{error}</p>}
         </div>
     );
 }
