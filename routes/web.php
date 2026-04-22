@@ -1374,6 +1374,15 @@ Route::get('/GetGetAw', function () {
     return Inertia::render('ExternalEvents/GetGetAw/Pages/GetGetAw');
 })->name('GetGetAw');
 
+//MLBBxJollibee PAGE ROUTES
+Route::get('/JBFlex', function () {
+    return Inertia::render('ExternalEvents/MLBBxJollibee/Pages/JBFlex');
+})->name('JBFlex');
+
+Route::get('/JBEmote', function () {
+    return Inertia::render('ExternalEvents/MLBBxJollibee/Pages/JBEmote');
+})->name('JBEmote');
+
 //LabanOBawi PAGE ROUTES
 Route::get('/LabanOBawi', function () {
     return Inertia::render('ExternalEvents/LabanOBawi/Pages/LabanOBawi');
@@ -2329,6 +2338,5 @@ Route::get('/{canonical}', function ($canonical) {
     // If no event found, return 404
     abort(404, 'Event not found');
 })->where('canonical', '^[a-zA-Z0-9\-_]+$'); // Only match alphanumeric, hyphens, underscores
-
 
 
