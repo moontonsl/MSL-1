@@ -11,7 +11,7 @@ const Tooltip = ({ text }) => (
     <div className="relative group ml-auto">
         <span className="text-[#d71920] cursor-pointer font-bold text-sm">?</span>
 
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 hidden group-hover:block bg-white text-black text-xs px-3 py-2 rounded-2xl shadow-lg w-56 z-50 border border-[#d71920]">
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 hidden group-hover:block bg-white text-black text-xs px-3 py-2 rounded-2xl shadow-lg w-48 sm:w-56 z-50 border border-[#d71920]">
             {text}
         </div>
     </div>
@@ -121,27 +121,27 @@ export default function JBEmote() {
                 <title>MLBB x Jollibee</title>
             </Helmet>
 
-            <div className="relative z-50 min-h-screen flex flex-col items-center justify-center text-white p-4 pt-5 sm:pt-5 font-['Montserrat'] bg-white">
-                <img src={Hero} alt="Jollibee Joy mascot" className="w-48 sm:w-64 mb-4 drop-shadow-xl" />
+            <div className="relative z-50 min-h-screen flex flex-col items-center justify-center text-white p-4 py-8 sm:p-6 font-['Montserrat'] bg-white">
+                <img src={Hero} alt="Jollibee Joy mascot" className="w-32 sm:w-52 md:w-64 mb-4 drop-shadow-xl" />
 
-                <div className="text-black text-center mb-4 text-sm md:text-3xl lg:text-4xl font-bold tracking-normal [text-shadow:_0_0_6px_#fff,_0_0_12px_rgba(255,255,255,.85)]">
+                <div className="text-black text-center mb-6 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight [text-shadow:_0_0_6px_#fff,_0_0_12px_rgba(255,255,255,.85)]">
                     #BidaAngTropa Challenge
                 </div>
 
-                <div className="p-8 w-full max-w-3xl rounded-2xl border border-[#d71920] shadow-xl bg-[#d71920] text-white">
+                <div className="p-5 sm:p-8 w-full max-w-3xl rounded-xl border border-[#d71920] shadow-xl bg-[#d71920] text-white">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="text-center mb-6 flex flex-col items-center">
-                            <h2 className="text-xl font-bold mb-2">
+                            <h2 className="text-lg sm:text-xl font-bold mb-2">
                                 #BidaAngTropa Submission
                             </h2>
 
-                            <p className="text-[#ffd0d2] text-sm whitespace-nowrap">
+                            <p className="text-[#ffd0d2] text-xs sm:text-sm">
                                 Please fill out the submission details below for the MLBB x Jollibee event.
                             </p>
                         </div>
 
                         <FormInput
-                            icon={<User />}
+                            icon={<User size={20} />}
                             label="Name"
                             name="name"
                             placeholder="Enter your name"
@@ -151,7 +151,7 @@ export default function JBEmote() {
                         />
 
                         <FormInput
-                            icon={<School />}
+                            icon={<School size={20} />}
                             label="School"
                             name="school"
                             placeholder="Enter your school"
@@ -161,7 +161,7 @@ export default function JBEmote() {
                         />
 
                         <FormInput
-                            icon={<Hash />}
+                            icon={<Hash size={20} />}
                             label="MLBB UID"
                             name="uid"
                             placeholder="Backend verified UID"
@@ -174,7 +174,7 @@ export default function JBEmote() {
                         />
 
                         <FormInput
-                            icon={<Globe />}
+                            icon={<Globe size={20} />}
                             label="MLBB Server"
                             name="server"
                             placeholder="Backend verified server"
@@ -187,7 +187,7 @@ export default function JBEmote() {
                         />
 
                         <FormInput
-                            icon={<Globe />}
+                            icon={<Globe size={20} />}
                             label="Facebook Profile Link"
                             name="facebookProfileLink"
                             placeholder="https://facebook.com/yourprofile"
@@ -198,7 +198,7 @@ export default function JBEmote() {
                         />
 
                         <FormInput
-                            icon={<Link2 />}
+                            icon={<Link2 size={20} />}
                             label="Post link"
                             name="postLink"
                             placeholder="https://facebook.com/your-post"
@@ -220,11 +220,11 @@ export default function JBEmote() {
                                     className="shrink-0 mt-1"
                                     style={checkboxStyle(agreedMechanics)}
                                 />
-                                <span className="leading-relaxed">
+                                <span className="leading-relaxed text-sm">
                                     By clicking this box, I agree with the game mechanics.
                                     <button
                                         type="button"
-                                        className="underline ml-1 text-[#d71920]"
+                                        className="underline ml-1 text-[#d71920] font-semibold"
                                         onClick={() => setShowMechanics(true)}
                                     >
                                         View Mechanics
@@ -233,7 +233,7 @@ export default function JBEmote() {
                             </label>
 
                             {errors.mechanics && (
-                                <p className="text-red-500 text-sm mt-1">{errors.mechanics}</p>
+                                <p className="text-red-500 text-xs mt-1 font-medium">{errors.mechanics}</p>
                             )}
                         </div>
 
@@ -249,11 +249,11 @@ export default function JBEmote() {
                                     className="shrink-0 mt-1"
                                     style={checkboxStyle(agreed)}
                                 />
-                                <span className="leading-relaxed">
+                                <span className="leading-relaxed text-sm">
                                     By clicking this box, I agree to the Terms and Conditions.
                                     <button
                                         type="button"
-                                        className="underline ml-1 text-[#d71920]"
+                                        className="underline ml-1 text-[#d71920] font-semibold"
                                         onClick={() => setShowTerms(true)}
                                     >
                                         View Terms
@@ -262,20 +262,20 @@ export default function JBEmote() {
                             </label>
 
                             {errors.consent && (
-                                <p className="text-red-500 text-sm mt-1">{errors.consent}</p>
+                                <p className="text-red-500 text-xs mt-1 font-medium">{errors.consent}</p>
                             )}
                         </div>
 
                         <button
                             type="submit"
                             disabled={!mlbbUid || !mlbbServer}
-                            className={`w-full py-3 rounded-2xl font-bold ${
+                            className={`w-full py-4 rounded-2xl font-bold text-base transition-all ${
                                 !mlbbUid || !mlbbServer
                                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                    : "bg-white text-[#d71920] hover:bg-[#fff4f4]"
+                                    : "bg-white text-[#d71920] hover:bg-[#fff4f4] active:scale-[0.98]"
                             }`}
                         >
-                            Submit
+                            Submit Entry
                         </button>
                     </form>
                 </div>
@@ -284,12 +284,12 @@ export default function JBEmote() {
             {showTerms && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[10000]">
                     <div
-                        className="bg-white p-6 rounded-2xl max-w-lg w-full text-black shadow-xl border-2"
+                        className="bg-white p-6 rounded-3xl max-w-lg w-full text-black shadow-xl border-2"
                         style={{ borderColor: PRIMARY }}
                     >
                         <h2 className="text-lg font-bold mb-3">Terms and Conditions</h2>
 
-                        <div className="text-sm text-gray-700 space-y-3 max-h-[250px] overflow-y-auto pr-2">
+                        <div className="text-sm text-gray-700 space-y-3 max-h-[300px] overflow-y-auto pr-2">
                             <p>
                                 By clicking this box, I hereby grant my free, prior, and informed consent
                                 to the event organizers to collect, store, and process my personal data.
@@ -304,10 +304,10 @@ export default function JBEmote() {
                             </p>
                         </div>
 
-                        <div className="flex justify-end gap-3 mt-6">
+                        <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6">
                             <button
                                 onClick={() => setShowTerms(false)}
-                                className="px-4 py-2 rounded-2xl border border-gray-300"
+                                className="px-4 py-2 rounded-2xl border border-gray-300 text-sm font-bold"
                             >
                                 Cancel
                             </button>
@@ -317,7 +317,7 @@ export default function JBEmote() {
                                     setShowTerms(false);
                                     setErrors((prev) => ({ ...prev, consent: "" }));
                                 }}
-                                className="px-6 py-2 rounded-2xl font-bold text-white"
+                                className="px-6 py-2 rounded-2xl font-bold text-white text-sm"
                                 style={{ backgroundColor: PRIMARY }}
                             >
                                 I Agree
@@ -335,18 +335,17 @@ export default function JBEmote() {
                             <div className="inline-block px-3 py-1 rounded-full bg-[#fff4f4] text-[#d71920] text-[10px] font-bold uppercase tracking-wider mb-2">
                                 Event Guidelines
                             </div>
-                            <h2 className="text-2xl font-black text-gray-900">
+                            <h2 className="text-xl sm:text-2xl font-black text-gray-900 leading-tight">
                                 How to Join #BidaAngTropa
                             </h2>
-                            {/* Centered single-line text */}
-                            <p className="w-full text-gray-500 text-sm mt-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                            <p className="w-full text-gray-500 text-xs sm:text-sm mt-1 text-center">
                                 Follow these steps to qualify for the MLBB x Jollibee event
                             </p>
                         </div>
 
                         {/* Mechanics Content */}
-                        <div className="max-h-[60vh] overflow-y-auto p-6 space-y-4">
-                            <div className="grid gap-4">
+                        <div className="max-h-[50vh] sm:max-h-[60vh] overflow-y-auto p-4 sm:p-6 space-y-4">
+                            <div className="grid gap-3 sm:gap-4">
                                 <MechanicCard
                                     num="1"
                                     title="Form Your Tropa"
@@ -380,20 +379,20 @@ export default function JBEmote() {
 
                             {/* Hashtags Section */}
                             <div className="rounded-2xl bg-[#d71920] p-4 text-white text-center shadow-inner">
-                                <h3 className="text-xs font-bold uppercase tracking-widest opacity-80 mb-2">
+                                <h3 className="text-[10px] font-bold uppercase tracking-widest opacity-80 mb-2">
                                     Required Hashtags
                                 </h3>
-                                <p className="font-mono text-sm sm:text-base font-bold">
+                                <p className="font-mono text-xs sm:text-sm font-bold break-words">
                                     #MSLPhilippines #MLBBWowBida #MLBBxJollibee #MSLBidaAngTropa
                                 </p>
                             </div>
                         </div>
 
                         {/* Footer Actions */}
-                        <div className="flex gap-3 p-6 bg-white border-t border-gray-100">
+                        <div className="flex flex-col sm:flex-row gap-3 p-6 bg-white border-t border-gray-100">
                             <button
                                 onClick={() => setShowMechanics(false)}
-                                className="flex-1 px-4 py-3 rounded-2xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 transition-colors"
+                                className="order-2 sm:order-1 flex-1 px-4 py-3 rounded-2xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 transition-colors text-sm"
                             >
                                 Back
                             </button>
@@ -403,7 +402,7 @@ export default function JBEmote() {
                                     setShowMechanics(false);
                                     setErrors((prev) => ({ ...prev, mechanics: "" }));
                                 }}
-                                className="flex-[2] px-6 py-3 rounded-2xl font-bold text-white shadow-lg shadow-red-200 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                className="order-1 sm:order-2 flex-[2] px-6 py-3 rounded-2xl font-bold text-white shadow-lg shadow-red-200 hover:scale-[1.02] active:scale-[0.98] transition-all text-sm"
                                 style={{ backgroundColor: PRIMARY }}
                             >
                                 Accept & Continue
@@ -416,13 +415,13 @@ export default function JBEmote() {
             {showModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[10000] p-4">
                     <div
-                        className="bg-white rounded-2xl p-8 text-center w-full max-w-md shadow-2xl border-2"
+                        className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-sm text-center shadow-2xl border-2"
                         style={{ borderColor: PRIMARY }}
                     >
-                        <div className="text-5xl mb-3">🎉</div>
+                        <div className="text-5xl mb-4">🎉</div>
 
                         <h2 className="text-black text-xl font-bold mb-2">
-                        Submission Successful!
+                            Submission Successful!
                         </h2>
 
                         <p className="text-gray-600 text-sm mb-6">
@@ -439,7 +438,7 @@ export default function JBEmote() {
                                 setMlbbServer("");
                                 setShowVerifyModal(true);
                             }}
-                            className="px-6 py-3 rounded-2xl font-bold text-white transition hover:scale-105"
+                            className="w-full px-6 py-3 rounded-2xl font-bold text-white transition hover:scale-105"
                             style={{ backgroundColor: PRIMARY }}
                         >
                             Close
@@ -451,24 +450,24 @@ export default function JBEmote() {
             {showVerifyModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[10000]">
                     <div
-                        className="bg-white rounded-2xl p-8 w-full max-w-md text-center shadow-2xl border-2"
+                        className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md text-center shadow-2xl border-2"
                         style={{ borderColor: PRIMARY }}
                     >
-                        <div className="text-5xl mb-3">🎮</div>
+                        <div className="text-5xl mb-4">🎮</div>
 
-                        <h2 className="text-gray-600 text-xl font-bold mb-2">
+                        <h2 className="text-gray-800 text-xl font-bold mb-2">
                             Verify MLBB Account
                         </h2>
 
-                        <p className="text-gray-600 text-sm mb-6">
+                        <p className="text-gray-600 text-sm mb-6 leading-relaxed">
                             You will be redirected to log in and verify your Mobile Legends account.
                             This step confirms your MLBB profile before submitting your entry.
                         </p>
 
-                        <div className="flex justify-center gap-3">
+                        <div className="flex flex-col sm:flex-row justify-center gap-3">
                             <Link
                                 href="/"
-                                className="px-4 py-2 rounded-2xl border text-gray-600 border-gray-300"
+                                className="order-2 sm:order-1 px-4 py-3 rounded-2xl border text-gray-600 border-gray-300 font-bold text-sm"
                             >
                                 Cancel
                             </Link>
@@ -487,7 +486,7 @@ export default function JBEmote() {
                                         server: "",
                                     }));
                                 }}
-                                className="px-6 py-2 rounded-2xl font-bold text-white"
+                                className="order-1 sm:order-2 px-8 py-3 rounded-2xl font-bold text-white text-sm"
                                 style={{ backgroundColor: PRIMARY }}
                             >
                                 Continue
@@ -502,14 +501,14 @@ export default function JBEmote() {
 
 function MechanicCard({ num, title, body }) {
     return (
-        <div className="relative rounded-2xl border border-gray-100 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+        <div className="relative rounded-2xl border border-gray-100 bg-white p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-start gap-4">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#d71920] text-white text-xs font-black shadow-sm">
+                <span className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-[#d71920] text-white text-[10px] sm:text-xs font-black shadow-sm">
                     {num}
                 </span>
                 <div className="min-w-0">
-                    <h3 className="font-bold text-gray-900 text-base leading-tight mb-1">{title}</h3>
-                    <div className="text-sm text-gray-600 leading-relaxed">{body}</div>
+                    <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-tight mb-1">{title}</h3>
+                    <div className="text-xs sm:text-sm text-gray-600 leading-relaxed">{body}</div>
                 </div>
             </div>
         </div>
@@ -532,10 +531,10 @@ function FormInput({
 }) {
     return (
         <div>
-            <label className="font-semibold mb-1 block text-white">{label}</label>
+            <label className="font-semibold mb-1 block text-white text-sm sm:text-base">{label}</label>
 
-            <div className="flex items-center gap-3 border border-[#ffd0d2] px-4 py-3 rounded-2xl bg-white">
-                <div className="text-[#d71920]">{icon}</div>
+            <div className="flex items-center gap-2 sm:gap-3 border border-[#ffd0d2] px-4 py-3 rounded-2xl bg-white shadow-sm focus-within:ring-2 focus-within:ring-white/20 transition-all">
+                <div className="text-[#d71920] shrink-0">{icon}</div>
 
                 <input
                     type={type}
@@ -547,13 +546,13 @@ function FormInput({
                     readOnly={disabled}
                     inputMode={inputMode}
                     pattern={pattern}
-                    className="w-full outline-none text-black placeholder:text-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    className="w-full outline-none text-sm sm:text-base text-black placeholder:text-gray-400 disabled:bg-gray-50 disabled:cursor-not-allowed bg-transparent"
                 />
 
                 {tooltip && <Tooltip text={tooltip} />}
             </div>
 
-            {error && <p className="text-white text-sm mt-1">{error}</p>}
+            {error && <p className="text-white text-xs mt-1.5 font-medium ml-1">{error}</p>}
         </div>
     );
 }
