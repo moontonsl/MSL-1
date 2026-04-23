@@ -1383,6 +1383,7 @@ Route::get('/JBWowBida', function () {
     return Inertia::render('ExternalEvents/MLBBxJollibee/Pages/JBEmote');
 })->name('JBWowBida');
 Route::post('/jollibee/submit', [\App\Http\Controllers\JollibeeController::class, 'store'])->name('jollibee.submit');
+Route::post('/jbflex/submit', [\App\Http\Controllers\JBFlexController::class, 'store'])->name('jbflex.submit');
 
 //LabanOBawi PAGE ROUTES
 Route::get('/LabanOBawi', function () {
