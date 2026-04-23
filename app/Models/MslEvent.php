@@ -22,7 +22,8 @@ class MslEvent extends Model
         'event_img03',
         'event_img04',
         'event_img05',
-        'is_featured'
+        'is_featured',
+        'redirect_url'
     ];
 
     protected $casts = [
