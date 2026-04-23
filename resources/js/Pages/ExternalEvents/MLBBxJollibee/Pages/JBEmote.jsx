@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Head, Link } from "@inertiajs/react";
+import MLLogin from "@/Pages/MLLoginApi/MLLogin";
 import { Helmet } from "react-helmet";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutEventsBTS17.jsx";
 import { User, School, Hash, Globe, Link2 } from "lucide-react";
@@ -55,8 +56,20 @@ export default function JBEmote() {
     const [showVerifyModal, setShowVerifyModal] = useState(true);
     const [mlbbUid, setMlbbUid] = useState("");
     const [mlbbServer, setMlbbServer] = useState("");
+    const [verified, setVerified] = useState(false);
+    const [showStatusModal, setShowStatusModal] = useState(false);
+    const [verificationStatus, setVerificationStatus] = useState(null);
+    const [tempMlData, setTempMlData] = useState(null);
+    const mlLoginRef = useRef(null);
 
-    const isValidUrl = (value) => /^https?:\/\/\S+/i.test(value);
+    const isValidUrl = (value) => {
+        try {
+            const url = new URL(value);
+            return url.protocol === "http:" || url.protocol === "https:";
+        } catch (_) {
+            return false;
+        }
+    };
 
     const validate = () => {
         const nextErrors = {};
@@ -64,12 +77,14 @@ export default function JBEmote() {
         if (!form.name.trim()) nextErrors.name = "Name is required.";
         if (!form.school.trim()) nextErrors.school = "School is required.";
 
-        if (!mlbbUid.trim()) nextErrors.uid = "MLBB UID is required.";
-        else if (!/^\d{7,12}$/.test(mlbbUid))
+        const uidStr = String(mlbbUid || "");
+        if (!uidStr.trim()) nextErrors.uid = "MLBB UID is required.";
+        else if (!/^\d{7,12}$/.test(uidStr))
             nextErrors.uid = "UID must be 7-12 digits.";
 
-        if (!mlbbServer.trim()) nextErrors.server = "MLBB Server is required.";
-        else if (!/^\d{3,6}$/.test(mlbbServer))
+        const serverStr = String(mlbbServer || "");
+        if (!serverStr.trim()) nextErrors.server = "MLBB Server is required.";
+        else if (!/^\d{3,6}$/.test(serverStr))
             nextErrors.server = "Server must be 3-6 digits.";
 
         if (!form.facebookProfileLink.trim())
@@ -98,7 +113,15 @@ export default function JBEmote() {
             nextValue = value.replace(/\D/g, "");
         }
 
-        if (name === "uid" || name === "server") {
+        if (name === "uid") {
+            setMlbbUid(nextValue);
+            setErrors((prev) => ({ ...prev, uid: "" }));
+            return;
+        }
+
+        if (name === "server") {
+            setMlbbServer(nextValue);
+            setErrors((prev) => ({ ...prev, server: "" }));
             return;
         }
 
@@ -106,12 +129,104 @@ export default function JBEmote() {
         setErrors((prev) => ({ ...prev, [name]: "" }));
     };
 
-    const handleSubmit = (e) => {
+    const handleLoginInfo = (info) => {
+        const data = info.data || info;
+
+        if (info && (data.uid || data.roleId)) {
+            const uid = data.uid || data.roleId;
+            const server = data.server_id || data.zoneId;
+            const ign = data.nick_name || data.name || "Player";
+
+            setTempMlData({ uid, server, ign });
+            setVerificationStatus("success");
+            setShowStatusModal(true);
+        } else {
+            setVerificationStatus("error");
+            setShowStatusModal(true);
+        }
+    };
+
+    const confirmVerification = () => {
+        if (tempMlData) {
+            setMlbbUid(tempMlData.uid);
+            setMlbbServer(tempMlData.server);
+            setVerified(true);
+            setShowVerifyModal(false);
+            setShowStatusModal(false);
+            setErrors((prev) => ({ ...prev, uid: "", server: "" }));
+        }
+    };
+
+    const getFormattedDate = () => {
+        const d = new Date();
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        const year = d.getFullYear();
+        return `${month}/${day}/${year}`;
+    };
+
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!validate()) return;
+        const isValid = validate();
+        if (!isValid) return;
 
-        setShowModal(true);
+        if (!String(mlbbUid || "").trim() || !String(mlbbServer || "").trim() || !verified) {
+            setShowVerifyModal(true);
+            return;
+        }
+        setIsSubmitting(true);
+
+        try {
+            // 1. Submit to local database
+            const response = await fetch(route('jollibee.submit'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                },
+                body: JSON.stringify({
+                    ...form,
+                    uid: String(mlbbUid),
+                    server: String(mlbbServer),
+                }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // 2. Double-record to Google Forms
+                const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/e/1FAIpQLScH0Umg-k-RdVmoJB7jlmc9AHuusvBq8pklVQKxEo_rNCU_tQ/formResponse";
+                if (GOOGLE_FORM_ACTION_URL) {
+                    const googleFormData = new FormData();
+                    googleFormData.append("entry.667666584", form.name);
+                    googleFormData.append("entry.2058193001", form.school);
+                    googleFormData.append("entry.1280932662", String(mlbbUid));
+                    googleFormData.append("entry.107469135", String(mlbbServer));
+                    googleFormData.append("entry.290976084", form.facebookProfileLink);
+                    googleFormData.append("entry.1456806184", form.postLink);
+                    googleFormData.append("entry.1180864", "Yes");
+                    googleFormData.append("entry.1483156473", "Yes");
+                    googleFormData.append("entry.1267887881", getFormattedDate());
+
+                    await fetch(GOOGLE_FORM_ACTION_URL, {
+                        method: "POST",
+                        body: googleFormData,
+                        mode: "no-cors",
+                    });
+                }
+
+                setShowModal(true);
+            } else {
+                alert(result.message || "Something went wrong.");
+            }
+        } catch (error) {
+            alert("An error occurred while submitting. Please try again.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -164,12 +279,12 @@ export default function JBEmote() {
                             icon={<Hash size={20} />}
                             label="MLBB UID"
                             name="uid"
-                            placeholder="Backend verified UID"
+                            placeholder="MLBB UID"
                             inputMode="numeric"
                             pattern="[0-9]*"
                             value={mlbbUid}
                             onChange={handleChange}
-                            disabled={true}
+                            verified={verified}
                             error={errors.uid}
                         />
 
@@ -177,12 +292,12 @@ export default function JBEmote() {
                             icon={<Globe size={20} />}
                             label="MLBB Server"
                             name="server"
-                            placeholder="Backend verified server"
+                            placeholder="MLBB Server"
                             inputMode="numeric"
                             pattern="[0-9]*"
                             value={mlbbServer}
                             onChange={handleChange}
-                            disabled={true}
+                            verified={verified}
                             error={errors.server}
                         />
 
@@ -220,20 +335,19 @@ export default function JBEmote() {
                                     className="shrink-0 mt-1"
                                     style={checkboxStyle(agreedMechanics)}
                                 />
-                                <span className="leading-relaxed text-sm">
-                                    By clicking this box, I agree with the game mechanics.
+                                <span className="text-xs sm:text-sm leading-relaxed">
+                                    By clicking this box, I agree with the game mechanics.{" "}
                                     <button
                                         type="button"
-                                        className="underline ml-1 text-[#d71920] font-semibold"
                                         onClick={() => setShowMechanics(true)}
+                                        className="text-[#d71920] font-bold underline"
                                     >
                                         View Mechanics
                                     </button>
                                 </span>
                             </label>
-
                             {errors.mechanics && (
-                                <p className="text-red-500 text-xs mt-1 font-medium">{errors.mechanics}</p>
+                                <p className="text-[#facc15] text-[10px] mt-1.5 font-bold ml-1">{errors.mechanics}</p>
                             )}
                         </div>
 
@@ -249,33 +363,31 @@ export default function JBEmote() {
                                     className="shrink-0 mt-1"
                                     style={checkboxStyle(agreed)}
                                 />
-                                <span className="leading-relaxed text-sm">
-                                    By clicking this box, I agree to the Terms and Conditions.
+                                <span className="text-xs sm:text-sm leading-relaxed">
+                                    By clicking this box, I agree to the Terms and Conditions.{" "}
                                     <button
                                         type="button"
-                                        className="underline ml-1 text-[#d71920] font-semibold"
                                         onClick={() => setShowTerms(true)}
+                                        className="text-[#d71920] font-bold underline"
                                     >
                                         View Terms
                                     </button>
                                 </span>
                             </label>
-
                             {errors.consent && (
-                                <p className="text-red-500 text-xs mt-1 font-medium">{errors.consent}</p>
+                                <p className="text-[#facc15] text-[10px] mt-1.5 font-bold ml-1">{errors.consent}</p>
                             )}
                         </div>
 
                         <button
                             type="submit"
-                            disabled={!mlbbUid || !mlbbServer}
-                            className={`w-full py-4 rounded-2xl font-bold text-base transition-all ${
-                                !mlbbUid || !mlbbServer
-                                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                    : "bg-white text-[#d71920] hover:bg-[#fff4f4] active:scale-[0.98]"
-                            }`}
+                            disabled={!mlbbUid || !mlbbServer || isSubmitting}
+                            className={`w-full py-4 rounded-2xl font-bold text-base transition-all ${!mlbbUid || !mlbbServer || isSubmitting
+                                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                : "bg-white text-[#d71920] hover:bg-[#fff4f4] active:scale-[0.98]"
+                                }`}
                         >
-                            Submit Entry
+                            {isSubmitting ? "Submitting..." : "Submit Entry"}
                         </button>
                     </form>
                 </div>
@@ -474,17 +586,8 @@ export default function JBEmote() {
 
                             <button
                                 onClick={() => {
-                                    const sampleUID = "123456789";
-                                    const sampleServer = "1234";
-
-                                    setMlbbUid(sampleUID);
-                                    setMlbbServer(sampleServer);
                                     setShowVerifyModal(false);
-                                    setErrors((prev) => ({
-                                        ...prev,
-                                        uid: "",
-                                        server: "",
-                                    }));
+                                    mlLoginRef.current?.triggerLogin();
                                 }}
                                 className="order-1 sm:order-2 px-8 py-3 rounded-2xl font-bold text-white text-sm"
                                 style={{ backgroundColor: PRIMARY }}
@@ -492,6 +595,61 @@ export default function JBEmote() {
                                 Continue
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            <MLLogin ref={mlLoginRef} onLoginInfo={handleLoginInfo} />
+
+            {/* VERIFICATION STATUS MODAL */}
+            {showStatusModal && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[11000]">
+                    <div className="bg-white rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl border-t-8" style={{ borderColor: PRIMARY }}>
+                        {verificationStatus === "success" ? (
+                            <>
+                                <div className="text-4xl mb-4 text-green-500">✅</div>
+                                <h2 className="text-xl font-bold mb-2 text-black">Account Linked!</h2>
+                                <p className="text-gray-600 text-sm mb-6">
+                                    We found your account: <br />
+                                    <span className="font-bold text-black text-base">{tempMlData?.ign}</span>
+                                </p>
+                                <div className="bg-gray-50 rounded-2xl p-4 mb-6 border border-dashed border-gray-300">
+                                    <div className="flex justify-between text-sm mb-1">
+                                        <span className="text-gray-500 font-semibold">UID:</span>
+                                        <span className="font-mono text-black">{tempMlData?.uid}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-500 font-semibold">Server:</span>
+                                        <span className="font-mono text-black">{tempMlData?.server}</span>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={confirmVerification}
+                                    className="w-full py-3 rounded-2xl font-bold text-white shadow-lg transition-transform hover:scale-[1.02]"
+                                    style={{ backgroundColor: PRIMARY }}
+                                >
+                                    Confirm Account
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <div className="text-4xl mb-4 text-red-500">❌</div>
+                                <h2 className="text-xl font-bold mb-2 text-black">Verification Failed</h2>
+                                <p className="text-gray-600 text-sm mb-6">
+                                    We couldn&apos;t retrieve your MLBB profile. Please try logging in again.
+                                </p>
+                                <button
+                                    onClick={() => {
+                                        setShowStatusModal(false);
+                                        setShowVerifyModal(true);
+                                    }}
+                                    className="w-full py-3 rounded-2xl font-bold text-white"
+                                    style={{ backgroundColor: PRIMARY }}
+                                >
+                                    Retry
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
@@ -526,15 +684,23 @@ function FormInput({
     tooltip,
     type = "text",
     disabled = false,
+    verified = false,
     inputMode,
     pattern,
 }) {
     return (
         <div>
-            <label className="font-semibold mb-1 block text-white text-sm sm:text-base">{label}</label>
+            <div className="flex items-center justify-between mb-1">
+                <label className="font-semibold block text-white text-sm sm:text-base">{label}</label>
+                {verified && (
+                    <span className="text-green-400 text-[10px] sm:text-xs font-bold flex items-center gap-1">
+                        Verified Account
+                    </span>
+                )}
+            </div>
 
-            <div className="flex items-center gap-2 sm:gap-3 border border-[#ffd0d2] px-4 py-3 rounded-2xl bg-white shadow-sm focus-within:ring-2 focus-within:ring-white/20 transition-all">
-                <div className="text-[#d71920] shrink-0">{icon}</div>
+            <div className={`flex items-center gap-2 sm:gap-3 border px-4 py-3 rounded-2xl bg-white shadow-sm focus-within:ring-2 focus-within:ring-white/20 transition-all ${verified ? "border-green-500 bg-green-50" : "border-[#ffd0d2]"}`}>
+                <div className={`${verified ? "text-green-500" : "text-[#d71920]"} shrink-0`}>{icon}</div>
 
                 <input
                     type={type}
@@ -546,13 +712,21 @@ function FormInput({
                     readOnly={disabled}
                     inputMode={inputMode}
                     pattern={pattern}
-                    className="w-full outline-none text-sm sm:text-base text-black placeholder:text-gray-400 disabled:bg-gray-50 disabled:cursor-not-allowed bg-transparent"
+                    className="w-full outline-none text-sm sm:text-base text-black placeholder:text-gray-400 disabled:bg-transparent disabled:cursor-not-allowed bg-transparent"
                 />
+
+                {verified && (
+                    <div className="text-green-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                )}
 
                 {tooltip && <Tooltip text={tooltip} />}
             </div>
 
-            {error && <p className="text-white text-xs mt-1.5 font-medium ml-1">{error}</p>}
+            {error && <p className="text-yellow-300 text-xs mt-1.5 font-bold ml-1">{error}</p>}
         </div>
     );
 }

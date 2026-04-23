@@ -206,9 +206,12 @@ function Events({ events = [], activeMccSeason }) {
                         {/* Cards Grid: 2 columns on mobile, 3 columns on desktop with centering for odd last card */}
                         <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-4 lg:gap-y-5 justify-items-center w-full px-2 md:px-0 pt-4">
                             {events.map((event, index) => {
-                                // Handle canonical URL - ensure it starts with /
-                                let eventUrl = event.event_canonical || `/Events/${event.id}`;
-                                if (eventUrl && !eventUrl.startsWith('/')) {
+                                // Construct the URL to point to the controller's show method
+                                // This allows the controller to handle dynamic redirects
+                                let eventUrl = `/Events/${event.event_canonical || event.id}`;
+                                
+                                // Ensure the URL starts with / if it's internal and not a full URL
+                                if (eventUrl && !eventUrl.startsWith('/') && !eventUrl.startsWith('http')) {
                                     eventUrl = '/' + eventUrl;
                                 }
 

@@ -41,14 +41,14 @@ class EventsController extends Controller
             $event = $mslEvent;
         }
         
-        // Check if this is a specific event type and redirect accordingly
-        if ($event->event_canonical === 'BattleTrips' || $event->event_name === 'MPL S16 Battletrips') {
-            return redirect('/MPLS16Battletrips');
-        }
-        
-        // Redirect Campus Tournament S1 to the Campus Tournament page
-        if ($event->event_canonical === 'CampusTournament' || $event->event_name === 'Campus Tournament S1') {
-            return redirect('/Tournament/CampusTournament');
+        // Check if this event has a dynamic redirect URL configured
+        if ($event->redirect_url) {
+            $redirectUrl = $event->redirect_url;
+            // Ensure the URL starts with / if it's internal and not a full URL
+            if (!str_starts_with($redirectUrl, '/') && !str_starts_with($redirectUrl, 'http')) {
+                $redirectUrl = '/' . $redirectUrl;
+            }
+            return redirect($redirectUrl);
         }
         
         // For all other events, redirect to the custom canonical URL
