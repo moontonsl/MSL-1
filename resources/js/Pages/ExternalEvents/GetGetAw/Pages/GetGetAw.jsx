@@ -69,8 +69,8 @@ export default function GetGetAw() {
         if (!form.name.trim()) nextErrors.name = "Name is required.";
         if (!form.school.trim()) nextErrors.school = "School is required.";
 
-        if (!mlbbUid.trim()) nextErrors.uid = "MLBB UID is required. Please verify your account.";
-        if (!mlbbServer.trim()) nextErrors.server = "MLBB Server is required. Please verify your account.";
+        if (!String(mlbbUid).trim()) nextErrors.uid = "MLBB UID is required. Please verify your account.";
+        if (!String(mlbbServer).trim()) nextErrors.server = "MLBB Server is required. Please verify your account.";
 
         if (!form.facebookProfileLink.trim())
             nextErrors.facebookProfileLink = "Facebook profile link is required.";
@@ -116,8 +116,8 @@ export default function GetGetAw() {
 
     const confirmVerification = () => {
         if (tempMlData) {
-            setMlbbUid(tempMlData.uid);
-            setMlbbServer(tempMlData.server);
+            setMlbbUid(String(tempMlData.uid));
+            setMlbbServer(String(tempMlData.server));
             setVerified(true);
             setShowVerifyModal(false);
             setShowStatusModal(false);
@@ -136,7 +136,7 @@ export default function GetGetAw() {
 
         const isValid = validate();
 
-        if (!mlbbUid.trim() || !mlbbServer.trim() || !verified) {
+        if (!String(mlbbUid).trim() || !String(mlbbServer).trim() || !verified) {
             setShowVerifyModal(true);
             return;
         }
