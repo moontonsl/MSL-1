@@ -29,7 +29,7 @@ class CampusTournamentController extends Controller
             ->with(['teams' => function($query) {
                 $query->whereIn('status', ['registered', 'assembling']);
             }, 'teams.members' => function($query) {
-                $query->select('id', 'team_id', 'player_id', 'role', 'status')
+                $query->select('id', 'team_id', 'player_id', 'role', 'lane_role', 'status')
                       ->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END")
                       ->orderBy('id', 'asc');
             }, 'teams.members.player'])
@@ -82,7 +82,7 @@ class CampusTournamentController extends Controller
                 $query->whereIn('status', ['registered', 'assembling']);
             },
             'teams.members' => function($query) {
-                $query->select('id', 'team_id', 'player_id', 'role', 'status')
+                $query->select('id', 'team_id', 'player_id', 'role', 'lane_role', 'status')
                       ->orderByRaw("CASE WHEN role = 'captain' THEN 1 ELSE 2 END")
                       ->orderBy('id', 'asc');
             },
@@ -1328,7 +1328,7 @@ class CampusTournamentController extends Controller
             $teams = \App\Models\CampusTournamentTeam::where('tournament_id', $tournament->id)
                 ->where('type', 'solo')
                 ->with(['members.player' => function($q) {
-                    $q->select('id', 'name', 'surname', 'ml_ign');
+                    $q->select('id', 'name', 'surname', 'username', 'ml_ign');
                 }])
                 ->get();
 
