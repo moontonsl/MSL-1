@@ -66,6 +66,31 @@ Route::get('/about', function () {
     return Inertia::render('About Page/index');
 })->name('about');
 
+// MSL Network Awards
+Route::get('/NetworkAwards', function () {
+    return Inertia::render('Awards/NetworkAwards');
+})->name('network.awards');
+
+Route::get('/NetworkAwards/Organization', function () {
+    return Inertia::render('Awards/OrganizationAwards');
+})->name('network.awards.organization');
+
+Route::get('/NetworkAwards/Individual', function () {
+    return Inertia::render('Awards/IndividualAwards');
+})->name('network.awards.individual');
+
+Route::get('/NetworkAwards/Nominate/{awardId}', function (string $awardId) {
+    return Inertia::render('Awards/AwardNominationForm', [
+        'awardId' => $awardId,
+    ]);
+})->name('network.awards.nominate');
+
+Route::get('/NetworkAwards/NominateStudent/{awardId}', function (string $awardId) {
+    return Inertia::render('Awards/StudentAwardNominationForm', [
+        'awardId' => $awardId,
+    ]);
+})->name('network.awards.nominate.student');
+
 // Report Violation Page
 Route::get('/report-violation', function () {
     return Inertia::render('ReportViolation/ReportViolation');
