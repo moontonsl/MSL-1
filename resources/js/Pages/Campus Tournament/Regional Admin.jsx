@@ -4,6 +4,31 @@ import MainLayout from "@/Layouts/MainLayout.jsx";
 
 // Mock data removed
 
+const SOLO_ROLES = ['Jungler', 'Roam', 'Gold Laner', 'Exp Laner', 'Mid Laner'];
+const ROLE_IMAGE_MAP = {
+  Jungler: 'zxq_icon_jgl.png',
+  Roam: 'zxq_icon_roam.png',
+  'Gold Laner': 'zxq_icon_gold.png',
+  'Exp Laner': 'zxq_icon_exp.png',
+  'Mid Laner': 'zxq_icon_mid.png',
+};
+
+function RoleIcon({ role }) {
+  const file = ROLE_IMAGE_MAP[role];
+  if (!file) return null;
+  return (
+    <img
+      src={`/images/Campus Tournament/Roles/${file}`}
+      alt={role}
+      className="w-4 h-4 md:w-5 md:h-5 object-contain"
+      aria-hidden
+    />
+  );
+}
+
+const SOLO_POOL_GRID =
+  'grid grid-cols-[120px_repeat(5,minmax(0,1fr))] lg:grid-cols-[150px_repeat(5,minmax(0,1fr))] gap-4';
+
 
 const RegionalAdmin = () => {
   const { tournaments, approvedTournaments, user } = usePage().props;
@@ -31,6 +56,7 @@ const RegionalAdmin = () => {
 
   // Ongoing Teams View Modal State
   const [viewingTeamsTournament, setViewingTeamsTournament] = useState(null); // tournament being viewed (ongoing section)
+  const [viewingTeamsTab, setViewingTeamsTab] = useState('teams'); // 'teams' | 'solo'
 
   // Pre-Reg Export Modal State
   const [showPreRegModal, setShowPreRegModal] = useState(false);
@@ -110,6 +136,7 @@ const RegionalAdmin = () => {
         .map(team => ({
           id: team.id,
           name: team.team_name,
+          type: team.type || 'team',
           status: team.status,
           result: team.result,
           players: team.members ? team.members.map(member => ({
@@ -121,6 +148,7 @@ const RegionalAdmin = () => {
             accepted: member.status === 'accepted',
             ign: member.player?.ml_ign ?? member.player?.ign ?? null,
             role: member.role,
+            lane_role: member.lane_role ?? null,
             facebook_link: member.player?.facebook_link ?? null
           })) : []
         })) : []
@@ -412,11 +440,15 @@ const RegionalAdmin = () => {
   // Modal-specific player cell:
   // - Name + IGN stack on the left
   // - Avatar/icon on the right
-  const PlayerCellModal = ({ player }) => {
+  const PlayerCellModal = ({ player, align = 'start' }) => {
     const verified = Boolean(player?.verified);
     const nameDisplay = player?.name || 'Player';
     return (
-      <div className="w-full flex items-center gap-3 justify-start min-w-0">
+      <div
+        className={`w-full flex items-center gap-3 min-w-0 ${
+          align === 'center' ? 'justify-center' : 'justify-start'
+        }`}
+      >
         <div className="relative w-9 h-9 rounded-full flex-shrink-0">
           {/* Keep the image clipped, but allow the verification dot to overflow outside the avatar. */}
           <div className="relative w-full h-full overflow-hidden rounded-full border border-white/20 bg-white/10">
@@ -446,7 +478,7 @@ const RegionalAdmin = () => {
           />
         </div>
 
-        <div className="flex flex-col min-w-0 items-start">
+        <div className={`flex flex-col min-w-0 ${align === 'center' ? 'items-center text-center' : 'items-start'}`}>
           <div className="flex items-center gap-2 min-w-0">
             {player?.facebook_link ? (
               <a
@@ -459,12 +491,12 @@ const RegionalAdmin = () => {
                 {nameDisplay}
               </a>
             ) : (
-              <span className="truncate max-w-[100px] text-white/90 text-sm font-montserrat leading-tight">
+              <span className={`truncate max-w-[100px] text-white/90 text-sm font-montserrat leading-tight ${align === 'center' ? 'text-center' : ''}`}>
                 {nameDisplay}
               </span>
             )}
           </div>
-          <span className="truncate max-w-[100px] text-white/60 text-xs font-montserrat leading-tight">
+          <span className={`truncate max-w-[100px] text-white/60 text-xs font-montserrat leading-tight ${align === 'center' ? 'text-center' : ''}`}>
             {player?.ign || '—'}
           </span>
         </div>
@@ -923,7 +955,7 @@ const RegionalAdmin = () => {
                                 <div className="flex items-center justify-end gap-2">
                                   <button
                                     type="button"
-                                    onClick={() => setViewingTeamsTournament(item)}
+                                    onClick={() => { setViewingTeamsTournament(item); setViewingTeamsTab('teams'); }}
                                     className="px-4 py-1.5 rounded-lg border border-white/20 bg-neutral-800/40 hover:bg-neutral-700/50 text-white/90 text-xs font-montserrat transition-colors"
                                   >
                                     View
@@ -968,7 +1000,7 @@ const RegionalAdmin = () => {
                                 <div className="flex items-center gap-2 justify-end flex-wrap">
                                   <button
                                     type="button"
-                                    onClick={() => setViewingTeamsTournament(item)}
+                                    onClick={() => { setViewingTeamsTournament(item); setViewingTeamsTab('teams'); }}
                                     className="px-2 py-1.5 rounded-lg border border-white/20 bg-neutral-800/40 hover:bg-neutral-700/50 text-white/90 text-[11px] font-montserrat transition-colors"
                                   >
                                     View
@@ -1469,96 +1501,233 @@ const RegionalAdmin = () => {
               </button>
             </div>
 
-            <div className="max-h-[70vh] overflow-y-auto overflow-x-auto custom-scrollbar pr-2">
-              {/* Table Header - Desktop */}
-              <div className="hidden md:grid [grid-template-columns:minmax(180px,1.3fr)_repeat(5,minmax(140px,1.2fr))_minmax(170px,1.2fr)] gap-2 px-6 md:px-10 py-2 text-white/70 text-xs md:text-sm border-b border-white/10 font-montserrat bg-neutral-900/30 min-w-[1200px] justify-items-start">
-                <div className="self-center w-full">Team name</div>
-                <div className="text-center">Captain</div>
-                <div className="text-center">Player 2</div>
-                <div className="text-center">Player 3</div>
-                <div className="text-center">Player 4</div>
-                <div className="text-center">Player 5</div>
-                <div className="grid place-items-center">Status</div>
-              </div>
+            {(() => {
+              const all = Array.isArray(viewingTeamsTournament?.teams) ? viewingTeamsTournament.teams : [];
+              const teamsOnly = all.filter(t => (t?.type || 'team') !== 'solo');
+              const soloOnly = all.filter(t => (t?.type || 'team') === 'solo');
 
-              {/* Table Header - Mobile (Team + Status) */}
-              <div className="md:hidden grid [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-5 px-4 py-2 text-white/70 text-xs border-b border-white/10 font-montserrat bg-neutral-900/30">
-                <div className="self-center">Team name</div>
-                <div className="justify-self-start text-left">Status</div>
-                <div className="text-right"></div>
-              </div>
+              const tabBtn = (id, label, count) => (
+                <button
+                  type="button"
+                  onClick={() => setViewingTeamsTab(id)}
+                  className={`px-3 py-1.5 rounded-md border font-montserrat text-xs md:text-sm transition ${
+                    viewingTeamsTab === id
+                      ? 'border-white/30 bg-white/15 text-white'
+                      : 'border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  {label} <span className="text-white/60">({count})</span>
+                </button>
+              );
 
-              {/* Team Rows */}
-              {Array.isArray(viewingTeamsTournament.teams) && viewingTeamsTournament.teams.length > 0 ? (
-                viewingTeamsTournament.teams.map((team) => (
-                  <React.Fragment key={team.id}>
-                    {/* Desktop Row */}
-                    <div
-                      className="hidden md:grid [grid-template-columns:minmax(180px,1.3fr)_repeat(5,minmax(140px,1.2fr))_minmax(170px,1.2fr)] gap-2 items-center px-6 md:px-10 py-3 border-t border-white/10 bg-neutral-900/20 hover:bg-neutral-900/40 transition min-w-[1200px] justify-items-start"
-                    >
-                      <div className="text-white/90 font-montserrat md:truncate whitespace-normal w-full text-left">{team.name}</div>
+              return (
+                <>
+                  <div className="mb-3 flex flex-wrap items-center gap-2">
+                    {tabBtn('all', 'All', all.length)}
+                    {tabBtn('teams', 'Teams', teamsOnly.length)}
+                    {tabBtn('solo', 'Solo', soloOnly.length)}
+                  </div>
 
-                      {(() => {
-                        const players = Array.isArray(team?.players) ? team.players.slice(0, 5) : [];
-                        const captain = players[0];
-                        const p2 = players[1];
-                        const p3 = players[2];
-                        const p4 = players[3];
-                        const p5 = players[4];
-                        const { label, pillClassName } = getTeamConfirmation(team);
+                  <div className="max-h-[70vh] overflow-y-auto overflow-x-auto custom-scrollbar pr-2">
+                    {(viewingTeamsTab === 'teams' || viewingTeamsTab === 'all') && (
+                      <>
+                        {viewingTeamsTab === 'all' && (
+                          <div className="px-6 md:px-10 pt-6 pb-2 text-xs md:text-sm font-montserrat text-white/70">
+                            5-Man Teams
+                          </div>
+                        )}
+                        {/* Table Header - Desktop */}
+                        <div className="hidden md:grid [grid-template-columns:minmax(180px,1.3fr)_repeat(5,minmax(140px,1.2fr))_minmax(170px,1.2fr)] gap-2 px-6 md:px-10 py-2 text-white/70 text-xs md:text-sm border-b border-white/10 font-montserrat bg-neutral-900/30 min-w-[1200px] justify-items-start">
+                          <div className="self-center w-full">Team name</div>
+                          <div className="text-center">Captain</div>
+                          <div className="text-center">Player 2</div>
+                          <div className="text-center">Player 3</div>
+                          <div className="text-center">Player 4</div>
+                          <div className="text-center">Player 5</div>
+                          <div className="grid place-items-center">Status</div>
+                        </div>
 
-                        const renderPlayer = (player) => (player ? <PlayerCellModal player={player} /> : null);
+                        {/* Table Header - Mobile (Team + Status) */}
+                        <div className="md:hidden grid [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-5 px-4 py-2 text-white/70 text-xs border-b border-white/10 font-montserrat bg-neutral-900/30">
+                          <div className="self-center">Team name</div>
+                          <div className="justify-self-start text-left">Status</div>
+                          <div className="text-right"></div>
+                        </div>
 
-                        return (
-                          <>
-                            {renderPlayer(captain)}
-                            {renderPlayer(p2)}
-                            {renderPlayer(p3)}
-                            {renderPlayer(p4)}
-                            {renderPlayer(p5)}
-                            <div className="flex justify-center">
-                              <span className={`rounded-md px-2 py-1 text-xs md:text-sm min-w-[128px] text-center font-montserrat ${pillClassName}`}>
-                                {label}
-                              </span>
-                            </div>
-                          </>
-                        );
-                      })()}
-                    </div>
-
-                    {/* Mobile Row */}
-                    <div className="grid md:hidden [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-2 items-center px-4 py-3 border-t border-white/10 bg-neutral-900/20 hover:bg-neutral-900/40 transition">
-                      <div className="text-white/90 font-montserrat truncate">{team.name}</div>
-                      {(() => {
-                        const { label, pillClassName } = getTeamConfirmation(team);
-                        return (
-                          <>
-                            <div className="flex justify-start">
-                              <span className={`rounded-md px-2 py-1 text-xs min-w-[112px] text-center font-montserrat ${pillClassName}`}>
-                                {label}
-                              </span>
-                            </div>
-                            <div className="flex justify-end">
-                              <button
-                                type="button"
-                                onClick={() => setMobileViewTeam(team)}
-                                className="px-3 py-1 rounded-md border border-white/30 text-white/90 text-xs bg-white/10 hover:bg-white/20"
+                        {/* Team Rows */}
+                        {teamsOnly.length > 0 ? (
+                          teamsOnly.map((team) => (
+                            <React.Fragment key={team.id}>
+                              {/* Desktop Row */}
+                              <div
+                                className="hidden md:grid [grid-template-columns:minmax(180px,1.3fr)_repeat(5,minmax(140px,1.2fr))_minmax(170px,1.2fr)] gap-2 items-center px-6 md:px-10 py-3 border-t border-white/10 bg-neutral-900/20 hover:bg-neutral-900/40 transition min-w-[1200px] justify-items-start"
                               >
-                                View
-                              </button>
+                                <div className="text-white/90 font-montserrat md:truncate whitespace-normal w-full text-left">{team.name}</div>
+
+                                {(() => {
+                                  const players = Array.isArray(team?.players) ? team.players.slice(0, 5) : [];
+                                  const captain = players[0];
+                                  const p2 = players[1];
+                                  const p3 = players[2];
+                                  const p4 = players[3];
+                                  const p5 = players[4];
+                                  const { label, pillClassName } = getTeamConfirmation(team);
+
+                                  const renderPlayer = (player) => (player ? <PlayerCellModal player={player} /> : null);
+
+                                  return (
+                                    <>
+                                      {renderPlayer(captain)}
+                                      {renderPlayer(p2)}
+                                      {renderPlayer(p3)}
+                                      {renderPlayer(p4)}
+                                      {renderPlayer(p5)}
+                                      <div className="flex justify-center">
+                                        <span className={`rounded-md px-2 py-1 text-xs md:text-sm min-w-[128px] text-center font-montserrat ${pillClassName}`}>
+                                          {label}
+                                        </span>
+                                      </div>
+                                    </>
+                                  );
+                                })()}
+                              </div>
+
+                              {/* Mobile Row */}
+                              <div className="grid md:hidden [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-2 items-center px-4 py-3 border-t border-white/10 bg-neutral-900/20 hover:bg-neutral-900/40 transition">
+                                <div className="text-white/90 font-montserrat truncate">{team.name}</div>
+                                {(() => {
+                                  const { label, pillClassName } = getTeamConfirmation(team);
+                                  return (
+                                    <>
+                                      <div className="flex justify-start">
+                                        <span className={`rounded-md px-2 py-1 text-xs min-w-[112px] text-center font-montserrat ${pillClassName}`}>
+                                          {label}
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-end">
+                                        <button
+                                          type="button"
+                                          onClick={() => setMobileViewTeam(team)}
+                                          className="px-3 py-1 rounded-md border border-white/30 text-white/90 text-xs bg-white/10 hover:bg-white/20"
+                                        >
+                                          View
+                                        </button>
+                                      </div>
+                                    </>
+                                  );
+                                })()}
+                              </div>
+                            </React.Fragment>
+                          ))
+                        ) : (
+                          <div className="px-4 py-10 text-center text-white/60 font-montserrat">
+                            No 5-man teams registered yet.
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {viewingTeamsTab === 'solo' || viewingTeamsTab === 'all' ? (
+                      <>
+                        {viewingTeamsTab === 'all' && (
+                          <div className="px-6 md:px-10 pt-6 pb-2 text-xs md:text-sm font-montserrat text-white/70">
+                            Solo Registrations
+                          </div>
+                        )}
+                        {/* Solo Header - Desktop */}
+                        <div
+                          className={`hidden md:${SOLO_POOL_GRID} w-full px-4 pb-3 text-sm font-semibold text-gray-400 border-b border-neutral-800 min-w-[900px]`}
+                        >
+                          <div className="min-w-0">Solo pool</div>
+                          {SOLO_ROLES.map((r) => (
+                            <div key={r} className="min-w-0 text-center">
+                              {r}
                             </div>
-                          </>
-                        );
-                      })()}
-                    </div>
-                  </React.Fragment>
-                ))
-              ) : (
-                <div className="px-4 py-10 text-center text-white/60 font-montserrat">
-                  No teams registered yet.
-                </div>
-              )}
-            </div>
+                          ))}
+                        </div>
+
+                        {/* Solo Header - Mobile */}
+                        <div className="md:hidden grid [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-5 px-4 py-2 text-white/70 text-xs border-b border-white/10 font-montserrat bg-neutral-900/30">
+                          <div className="self-center">Solo pool</div>
+                          <div className="justify-self-start text-left">Status</div>
+                          <div className="text-right"></div>
+                        </div>
+
+                        {soloOnly.length > 0 ? (
+                          soloOnly.map((team) => {
+                            const byRole = new Map(
+                              (Array.isArray(team?.players) ? team.players : [])
+                                .filter(p => p?.lane_role)
+                                .map(p => [p.lane_role, p])
+                            );
+                            const { label, pillClassName } = getTeamConfirmation(team);
+
+                            const renderSoloCell = (role) => {
+                              const player = byRole.get(role);
+                              if (!player) {
+                                return (
+                                  <div className="flex items-center justify-center gap-2 w-full min-w-0">
+                                    <RoleIcon role={role} />
+                                    <span className="font-montserrat text-xs text-white/50 truncate">Vacant</span>
+                                  </div>
+                                );
+                              }
+                              return <PlayerCellModal player={player} align="center" />;
+                            };
+
+                            return (
+                              <React.Fragment key={team.id}>
+                                {/* Desktop Row */}
+                                <div
+                                  className={`hidden md:${SOLO_POOL_GRID} w-full bg-[#1A1A1A] border border-neutral-800 rounded-xl p-4 mb-3 items-center hover:bg-[#222222] transition-colors min-w-[900px]`}
+                                >
+                                  <div className="min-w-0">
+                                    <div className="text-white/90 font-montserrat truncate">{team.name}</div>
+                                    <div className="mt-2">
+                                      <span className={`rounded-md px-2 py-1 text-xs min-w-[128px] inline-block text-center font-montserrat ${pillClassName}`}>
+                                        {label}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  {SOLO_ROLES.map((role) => (
+                                    <div key={role} className="min-w-0">
+                                      {renderSoloCell(role)}
+                                    </div>
+                                  ))}
+                                </div>
+
+                                {/* Mobile Row */}
+                                <div className="grid md:hidden [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-2 items-center px-4 py-3 border-t border-white/10 bg-neutral-900/20 hover:bg-neutral-900/40 transition">
+                                  <div className="text-white/90 font-montserrat truncate">{team.name}</div>
+                                  <div className="flex justify-start">
+                                    <span className={`rounded-md px-2 py-1 text-xs min-w-[112px] text-center font-montserrat ${pillClassName}`}>
+                                      {label}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-end">
+                                    <button
+                                      type="button"
+                                      onClick={() => setMobileViewTeam(team)}
+                                      className="px-3 py-1 rounded-md border border-white/30 text-white/90 text-xs bg-white/10 hover:bg-white/20"
+                                    >
+                                      View
+                                    </button>
+                                  </div>
+                                </div>
+                              </React.Fragment>
+                            );
+                          })
+                        ) : (
+                          <div className="px-4 py-10 text-center text-white/60 font-montserrat">
+                            No solo registrations yet.
+                          </div>
+                        )}
+                      </>
+                    ) : null}
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -1582,27 +1751,58 @@ const RegionalAdmin = () => {
               </button>
             </div>
             <div className="space-y-3">
-              {mobileViewTeam.players.slice(0, 5).map((player, idx) => (
-                <div key={idx} className="flex items-center justify-between border border-white/10 rounded-lg px-3 py-2 bg-white/5">
-                  <div className="flex items-center gap-3">
-                    <div className="relative w-9 h-9 rounded-full overflow-hidden border border-white/20 bg-white/10">
-                      <svg className="absolute inset-0 m-auto w-5 h-5 text-white/50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
-                        <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                      </svg>
-                    </div>
-                    <div className="flex flex-col min-w-0">
-                      <div className="font-montserrat text-sm leading-tight text-white/90">
-                        {player.name}
+              {(mobileViewTeam?.type || 'team') === 'solo'
+                ? (() => {
+                  const byRole = new Map(
+                    (Array.isArray(mobileViewTeam?.players) ? mobileViewTeam.players : [])
+                      .filter(p => p?.lane_role)
+                      .map(p => [p.lane_role, p])
+                  );
+
+                  return SOLO_ROLES.map((role) => {
+                    const player = byRole.get(role);
+                    return (
+                      <div key={role} className="flex items-center justify-between border border-white/10 rounded-lg px-3 py-2 bg-white/5">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <RoleIcon role={role} />
+                            <div className="font-montserrat text-xs text-white/60 shrink-0">{role}</div>
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <div className="font-montserrat text-sm leading-tight text-white/90 truncate">
+                              {player?.name || 'Vacant'}
+                            </div>
+                            <div className="font-montserrat text-xs leading-tight text-white/60 truncate max-w-[18ch]">
+                              {player?.ign || '—'}
+                            </div>
+                          </div>
+                        </div>
+                        <span className={`w-2.5 h-2.5 rounded-full ${player?.verified ? 'bg-green-400' : 'bg-white/20'}`} />
                       </div>
-                      <div className="font-montserrat text-xs leading-tight text-white/60 truncate max-w-[10ch]">
-                        {player?.ign || '—'}
+                    );
+                  });
+                })()
+                : mobileViewTeam.players.slice(0, 5).map((player, idx) => (
+                  <div key={idx} className="flex items-center justify-between border border-white/10 rounded-lg px-3 py-2 bg-white/5">
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-9 h-9 rounded-full overflow-hidden border border-white/20 bg-white/10">
+                        <svg className="absolute inset-0 m-auto w-5 h-5 text-white/50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
+                          <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                        </svg>
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <div className="font-montserrat text-sm leading-tight text-white/90">
+                          {player.name}
+                        </div>
+                        <div className="font-montserrat text-xs leading-tight text-white/60 truncate max-w-[10ch]">
+                          {player?.ign || '—'}
+                        </div>
                       </div>
                     </div>
+                    <span className={`w-2.5 h-2.5 rounded-full ${player.verified ? 'bg-green-400' : 'bg-red-500'}`} />
                   </div>
-                  <span className={`w-2.5 h-2.5 rounded-full ${player.verified ? 'bg-green-400' : 'bg-red-500'}`} />
-                </div>
-              ))}
+                ))}
             </div>
           </div>
         </div>
