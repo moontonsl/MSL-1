@@ -40,6 +40,9 @@ npm-debug.log
 yarn-error.log
 pnpm-lock.yaml
 
+# Local-only dev/sandbox pages
+resources/js/Pages/Campus Tournament/soloplayerSL.jsx
+
 # Homestead
 Homestead.json
 Homestead.yaml

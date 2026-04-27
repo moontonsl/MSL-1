@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { usePage, router } from '@inertiajs/react';
 import MainLayout from "@/Layouts/MainLayout.jsx";
+import TournamentCard from '@/Components/CampusTournament/TournamentCard.jsx';
 
 // Temporary mock data generator until backend is wired
 const generateMockTeams = () => [
@@ -846,198 +847,22 @@ const CampusTournament = () => {
                     filteredActiveTournaments
                       .slice((tournamentPage - 1) * itemsPerPage, tournamentPage * itemsPerPage)
                       .map((item) => (
-                        <div
+                        <TournamentCard
                           key={item.id}
-                          className="relative w-full max-w-7xl mx-auto text-white rounded-2xl overflow-hidden transition-all duration-300 shadow-2xl bg-gradient-to-br from-neutral-800/80 to-neutral-900/80 backdrop-blur-sm border border-neutral-700/50"
-                        >
-                          {/* Tournament Card Header */}
-                          <div className="relative z-10 w-full h-16 md:h-20 flex items-center justify-between bg-neutral-900/70 px-4 md:px-6">
-                            <div className="flex-1 text-center">
-                              <div className="font-montserrat text-lg md:text-2xl tracking-wide uppercase">{(item.school_name || '').toUpperCase()} TOURNAMENT</div>
-                              <div className="font-montserrat text-xs md:text-sm text-white/70">
-                                {formatDate(item.start_date)} - {formatDate(item.end_date)} • {item.tournament_type || 'Online'}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {item.status === 'pending' && (
-                                <button
-                                  type="button"
-                                  onClick={() => openDeleteModal(item)}
-                                  className="bg-red-500 hover:bg-red-600 text-white font-montserrat text-xs font-semibold rounded-lg px-3 py-1.5"
-                                >
-                                  Delete
-                                </button>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() => toggleExpand(item.id)}
-                                className="grid place-items-center w-9 h-9 rounded-lg border border-white/20 hover:bg-white/10 transition"
-                              >
-                                <svg
-                                  className={`w-5 h-5 transition-transform duration-300 ${expanded[item.id] ? 'rotate-180' : ''}`}
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Dropdown Content */}
-                          <div
-                            className={`transition-all duration-700 ease-in-out ${expanded[item.id] ? 'max-h-[5000px] opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}
-                          >
-                            <div className="px-0 pb-0">
-                              <div className="mt-0 rounded-b-2xl bg-neutral-800/70 backdrop-blur-sm border-t border-neutral-700/40">
-                                {/* Table Header - Desktop */}
-                                <div className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 px-6 md:px-10 py-2 text-white/70 text-xs md:text-sm border-b border-white/10 font-montserrat">
-                                  <div className="self-center">Team name</div>
-                                  <div className="text-center">Player 1</div>
-                                  <div className="text-center">Player 2</div>
-                                  <div className="text-center">Player 3</div>
-                                  <div className="text-center">Player 4</div>
-                                  <div className="text-center">Player 5</div>
-                                  <div className="grid place-items-center">Status</div>
-                                </div>
-                                {/* Mobile Row Header */}
-                                <div className="md:hidden grid [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-5 px-4 py-2 text-white/70 text-xs border-b border-white/10 font-montserrat">
-                                  <div className="self-center">Team name</div>
-                                  <div className="justify-self-start text-left">Status</div>
-                                  <div className="text-right"></div>
-                                </div>
-
-                                {/* Team Rows */}
-                                <div className="">
-                                  {Array.isArray(item.teams) && item.teams.length > 0 ? (
-                                    (() => {
-                                      const registeredCount = item.teams.filter(t => t.status === 'registered').length;
-                                      const counts = getBracketCounts(registeredCount, item.tournament_type);
-                                      const show3rd = counts.maxThird > 0;
-                                      const show4th = counts.maxFourth > 0;
-                                      
-                                      return item.teams.map((team) => (
-                                      <React.Fragment key={team.id}>
-                                        {/* Desktop Row */}
-                                        <div className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3 border-t border-white/10 hover:bg-white/5 transition">
-                                          <div className="text-white/90 font-montserrat md:truncate">{team.name}</div>
-                                          {team.players.slice(0, 5).map((player, idx) => (
-                                            <div
-                                              className="flex items-center justify-start w-full min-w-0"
-                                              key={idx}
-                                            >
-                                              <PlayerCell player={player} />
-                                            </div>
-                                          ))}
-                                          <div className="flex justify-center">
-                                            <select
-                                              value={team.result || 'participant'}
-                                              onChange={(e) => handleSetResult(item.id, team.id, e.target.value)}
-                                              disabled={item.results_submitted && !isEditingResults}
-                                              className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[128px] ${item.results_submitted && !isEditingResults ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            >
-                                              <option className="text-black" value="participant">Participant</option>
-                                              <option className="text-black" value="1st">1st</option>
-                                              <option className="text-black" value="2nd">2nd</option>
-                                              {show3rd && <option className="text-black" value="3rd">3rd</option>}
-                                              {show4th && <option className="text-black" value="4th">4th</option>}
-                                            </select>
-                                          </div>
-                                        </div>
-                                        {/* Mobile Row */}
-                                        <div className="grid md:hidden [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-2 items-center px-4 py-3 border-t border-white/10 hover:bg-white/5 transition">
-                                          <div className="text-white/90 font-montserrat truncate">{team.name}</div>
-                                          <div className="flex justify-start">
-                                            <select
-                                              value={team.result || 'participant'}
-                                              onChange={(e) => handleSetResult(item.id, team.id, e.target.value)}
-                                              disabled={item.results_submitted && !isEditingResults}
-                                              className={`rounded-md px-2 py-1 ${getStatusClasses(team.result || 'participant')} focus:text-black text-xs focus:outline-none focus:ring-2 focus:ring-[#F2C21A] min-w-[112px] ${item.results_submitted && !isEditingResults ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            >
-                                              <option className="text-black" value="participant">Participant</option>
-                                              <option className="text-black" value="1st">1st</option>
-                                              <option className="text-black" value="2nd">2nd</option>
-                                              {show3rd && <option className="text-black" value="3rd">3rd</option>}
-                                              {show4th && <option className="text-black" value="4th">4th</option>}
-                                            </select>
-                                          </div>
-                                          <div className="flex justify-end">
-                                            <button
-                                              type="button"
-                                              onClick={() => setMobileViewTeam(team)}
-                                              className="px-3 py-1 rounded-md border border-white/30 text-white/90 text-xs bg-white/10 hover:bg-white/20"
-                                            >
-                                              View
-                                            </button>
-                                          </div>
-                                        </div>
-                                      </React.Fragment>
-                                    ));
-                                    })()
-                                  ) : (
-                                    <div className="px-4 py-6 text-center text-white/60 font-montserrat">No teams registered yet.</div>
-                                  )}
-                                </div>
-
-                                {/* Submit/Edit Results Section */}
-                                <div className="px-4 md:px-10 py-4 border-t border-white/10 flex flex-wrap justify-center gap-4 bg-neutral-900/70">
-                                  {item.results_submitted ? (
-                                    <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4">
-                                      <div className="bg-green-500/20 text-green-400 font-montserrat text-sm px-4 py-2 rounded-lg border border-green-400/30">
-                                        ✓ Results Submitted
-                                      </div>
-                                      {item.results_submitted_at && (
-                                        <div className="text-white/60 font-montserrat text-xs">
-                                          Submitted on {new Date(item.results_submitted_at).toLocaleDateString()}
-                                        </div>
-                                      )}
-                                      <a
-                                        href={`/campus-tournaments/${item.id}/export`}
-                                        className="bg-[#F2C21A] text-black font-montserrat font-semibold rounded-lg px-5 py-2 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] hover:bg-[#d4a817] transition-colors flex items-center gap-2"
-                                      >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                        </svg>
-                                        Excel
-                                      </a>
-                                      {isEditingResults ? (
-                                        <div className="flex gap-2">
-                                          <button
-                                            onClick={() => handleSubmitResults(item.id)}
-                                            className="bg-[#F2C21A] text-black font-montserrat text-xs font-semibold rounded-lg px-4 py-2"
-                                          >
-                                            Save
-                                          </button>
-                                          <button
-                                            onClick={() => setIsEditingResults(false)}
-                                            className="bg-neutral-700 text-white font-montserrat text-xs font-semibold rounded-lg px-4 py-2"
-                                          >
-                                            Cancel
-                                          </button>
-                                        </div>
-                                      ) : (
-                                        <button
-                                          onClick={() => setIsEditingResults(true)}
-                                          className="bg-blue-600 text-white font-montserrat text-xs font-semibold rounded-lg px-4 py-2"
-                                        >
-                                          Edit
-                                        </button>
-                                      )}
-                                    </div>
-                                  ) : (
-                                    <button
-                                      onClick={() => handleSubmitResults(item.id)}
-                                      className="bg-[#F2C21A] text-black font-montserrat font-semibold rounded-lg px-6 py-2 shadow-[0_0_8px_-3px_rgba(242,194,26,1)]"
-                                    >
-                                      Submit Results
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                          tournament={item}
+                          isExpanded={!!expanded[item.id]}
+                          onToggleExpand={toggleExpand}
+                          formatDate={formatDate}
+                          openDeleteModal={openDeleteModal}
+                          PlayerCell={PlayerCell}
+                          setMobileViewTeam={setMobileViewTeam}
+                          getBracketCounts={getBracketCounts}
+                          getStatusClasses={getStatusClasses}
+                          handleSetResult={handleSetResult}
+                          handleSubmitResults={handleSubmitResults}
+                          isEditingResults={isEditingResults}
+                          setIsEditingResults={setIsEditingResults}
+                        />
                       ))
                   ) : (
                     <div className="text-white/60 text-center py-8 font-montserrat italic">
