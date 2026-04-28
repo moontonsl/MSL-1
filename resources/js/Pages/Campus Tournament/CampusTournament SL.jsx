@@ -84,6 +84,7 @@ const CampusTournament = () => {
         .map(team => ({
           id: team.id,
           name: team.team_name,
+          type: team.type || 'team',
           status: team.status,
           result: team.result || 'participant', // Include result field
           players: team.members ? team.members.map(member => ({
@@ -93,6 +94,7 @@ const CampusTournament = () => {
             verified: member.player ? !!member.player.email_verified_at : false,
             accepted: member.status === 'accepted',
             role: member.role,
+            lane_role: member.lane_role ?? null,
             facebook_link: member.player ? member.player.facebook_link : null
           })) : []
         })) : []
