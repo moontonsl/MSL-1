@@ -108,7 +108,8 @@ Route::get('/Tournament/CampusTournamentReg', function (\Illuminate\Http\Request
         $hasTeam = \App\Models\CampusTournamentTeamMember::where('player_id', $user->id)
             ->whereHas('team.tournament', function ($query) {
                 $query->where('status', 'approved')
-                    ->where('results_submitted', false);
+                    ->where('results_submitted', false)
+                    ->whereDate('end_date', '>=', now());
             })->exists();
 
         if ($hasTeam && !$request->has('edit')) {
@@ -223,7 +224,8 @@ Route::get('/team-check', function (\Illuminate\Http\Request $request) {
     // AND prioritize the LATEST created team to avoid showing old/done records
     $teamMember = \App\Models\CampusTournamentTeamMember::whereHas('team.tournament', function ($query) {
         $query->where('status', 'approved')
-            ->where('results_submitted', false);
+            ->where('results_submitted', false)
+            ->whereDate('end_date', '>=', now());
     })->where('player_id', $userId)
         ->where('status', 'accepted')
         ->latest() // Important: Get the most recent team membership
@@ -1031,7 +1033,8 @@ Route::post('/join-by-code', function (\Illuminate\Http\Request $request) {
         ->where('status', 'accepted')
         ->whereHas('team.tournament', function ($query) {
             $query->where('status', 'approved')
-                ->where('results_submitted', false);
+                ->where('results_submitted', false)
+                ->whereDate('end_date', '>=', now());
         })
         ->first();
 
