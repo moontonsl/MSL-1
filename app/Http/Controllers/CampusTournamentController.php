@@ -1328,7 +1328,7 @@ class CampusTournamentController extends Controller
             $teams = \App\Models\CampusTournamentTeam::where('tournament_id', $tournament->id)
                 ->where('type', 'solo')
                 ->with(['members.player' => function($q) {
-                    $q->select('id', 'name', 'surname', 'username', 'ml_ign');
+                    $q->select('id', 'name', 'surname', 'username', 'ml_ign', 'facebook_link');
                 }])
                 ->get();
 
@@ -1370,7 +1370,8 @@ class CampusTournamentController extends Controller
         // Existing membership check
         $existingMembership = \App\Models\CampusTournamentTeamMember::where('player_id', $user->id)
             ->whereHas('team.tournament', function($q) {
-                $q->where('results_submitted', false);
+                $q->where('results_submitted', false)
+                  ->whereDate('end_date', '>=', now());
             })->exists();
 
         if ($existingMembership) {
@@ -1383,7 +1384,7 @@ class CampusTournamentController extends Controller
             ->exists();
         
         if ($nameExists) {
-            return back()->withErrors(['error' => 'Team name already exists.']);
+            return response()->json(['error' => 'Team name already exists.'], 422);
         }
 
         \DB::beginTransaction();
@@ -1405,10 +1406,10 @@ class CampusTournamentController extends Controller
             ]);
 
             \DB::commit();
-            return back()->with('success', 'Team created successfully!');
+            return response()->json(['success' => true, 'message' => 'Team created successfully!']);
         } catch (\Exception $e) {
             \DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to create team.']);
+            return response()->json(['error' => 'Failed to create team.'], 500);
         }
     }
 
@@ -1439,7 +1440,8 @@ class CampusTournamentController extends Controller
         // Existing membership check
         $existingMembership = \App\Models\CampusTournamentTeamMember::where('player_id', $user->id)
             ->whereHas('team.tournament', function($q) {
-                $q->where('results_submitted', false);
+                $q->where('results_submitted', false)
+                  ->whereDate('end_date', '>=', now());
             })->exists();
 
         if ($existingMembership) {

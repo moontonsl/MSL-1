@@ -47,9 +47,16 @@ function SlotCell({ slot, onEmptyClick, isUserOnTeam }) {
         </div>
 
         <div className="flex flex-col items-start min-w-0">
-          <span className={`text-sm ${slot.isYou ? 'text-[#FFC107] font-bold' : 'text-white font-medium'} truncate w-full`} title={slot.playerName}>
+          <a 
+            href={slot.facebook_link || '#'} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className={`text-sm ${slot.isYou ? 'text-[#FFC107] font-bold' : 'text-white font-medium'} truncate w-full hover:underline`} 
+            title={slot.playerName}
+            onClick={(e) => !slot.facebook_link && e.preventDefault()}
+          >
             {slot.playerName}
-          </span>
+          </a>
           <div className="flex items-center gap-1.5 leading-none">
             <span className="text-[10px] uppercase font-bold text-red-500 tracking-tight shrink-0">
               {getVacantRoleLabel(slot.role)}
@@ -193,6 +200,7 @@ export default function TournamentJoinDashboard({ tournament, teams = [], user }
           isFilled: !!member,
           playerName: member ? member.player.username : null,
           ign: member ? member.player.ml_ign : null,
+          facebook_link: member ? member.player.facebook_link : null,
           isYou: member ? member.player.id === user.id : false
         };
       });
@@ -233,6 +241,16 @@ export default function TournamentJoinDashboard({ tournament, teams = [], user }
 
   const openCreateModal = () => {
     if (isUserOnAnyTeam) return;
+    
+    if (!userIntendedRole) {
+      setError("Please select a role first. You will be redirected to the role selection page.");
+      setTimeout(() => {
+        window.location.href = "/Tournament/CampusTournament?view=solo";
+      }, 1500);
+      return;
+    }
+
+    setModalRole(userIntendedRole);
     setActiveModal('create');
   };
 
@@ -353,7 +371,7 @@ export default function TournamentJoinDashboard({ tournament, teams = [], user }
                         <span className="text-[#FFC107] font-bold text-sm">{userIntendedRole || 'None Selected'}</span>
                       </div>
                       <button 
-                        onClick={() => window.location.href = "/Tournament/CampusTournament?view=solo"}
+                        onClick={() => setActiveModal('change_role')}
                         className="text-[10px] bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg font-bold transition-colors"
                       >
                         Change Role
@@ -464,17 +482,11 @@ export default function TournamentJoinDashboard({ tournament, teams = [], user }
                     />
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-xs text-white/60 ml-2 font-medium">My Role</label>
-                    <ModalRoleSelect
-                      value={modalRole}
-                      onChange={setModalRole}
-                      options={SOLO_ROLES}
-                      isOpen={roleMenuOpen}
-                      onToggle={setRoleMenuOpen}
-                      triggerRef={modalRoleTriggerRef}
-                      menuRef={modalRoleMenuRef}
-                    />
+                  <div className="space-y-4 bg-white/5 p-4 rounded-xl border border-white/10">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/50 text-xs uppercase font-semibold">Your Selected Role</span>
+                      <span className="text-yellow-400 font-bold text-sm tracking-wide">{modalRole}</span>
+                    </div>
                   </div>
                 </div>
 
@@ -536,6 +548,28 @@ export default function TournamentJoinDashboard({ tournament, teams = [], user }
                     className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-full transition-colors"
                   >
                     {isLoading ? 'Leaving...' : 'Confirm Leave'}
+                  </button>
+                  <button onClick={closeModal} className="text-white/40 hover:text-white text-xs font-medium py-2">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {activeModal === 'change_role' && (
+              <div className="flex flex-col gap-5 text-center">
+                <div className="space-y-2">
+                  <h2 className="text-[#FFC107] font-bold text-xl uppercase tracking-tight">Change Role?</h2>
+                  <p className="text-sm text-white/70 px-2 leading-relaxed">
+                    Changing your role requires you to re-authenticate. You will be logged out and redirected to the login page.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-3 mt-2">
+                  <button
+                    onClick={() => window.location.href = "/Tournament/CampusTournament?view=solo"}
+                    className="w-full bg-[#FFC107] hover:bg-[#d9ae17] text-black font-bold py-3 rounded-full transition-colors"
+                  >
+                    Confirm & Logout
                   </button>
                   <button onClick={closeModal} className="text-white/40 hover:text-white text-xs font-medium py-2">
                     Cancel
