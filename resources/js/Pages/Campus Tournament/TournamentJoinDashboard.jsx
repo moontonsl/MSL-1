@@ -236,12 +236,18 @@ export default function TournamentJoinDashboard({ tournament, teams = [], user }
       return;
     }
 
+    // Check if user clicked a specific slot that doesn't match their intended role
+    if (role && role !== userIntendedRole) {
+      setError(`Your intended role is ${userIntendedRole}. To join as ${role}, please change your role first.`);
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
     const isRoleTaken = team.members.some(m => m.lane_role === selectedRole);
     if (isRoleTaken) {
-      if (!role) {
-        setError(`The role '${selectedRole}' is already taken in this team. Please change your role or pick another team.`);
-        return;
-      }
+      setError(`The role '${selectedRole}' is already taken in this team. Please change your role or pick another team.`);
+      setTimeout(() => setError(''), 3000);
+      return;
     }
 
     setSelectedTeam(team);
