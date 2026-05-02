@@ -937,13 +937,13 @@ Route::post('/team-registration', function (\Illuminate\Http\Request $request) {
         return redirect()->back()->withErrors(['message' => 'No active tournament found for your school.']);
     }
 
-    // Check if team name already exists
-    $existingTeam = \App\Models\CampusTournamentTeam::where('team_name', $request->teamName)
+    // Check if team name already exists (Case-Insensitive)
+    $existingTeam = \App\Models\CampusTournamentTeam::whereRaw('LOWER(team_name) = ?', [strtolower($request->teamName)])
         ->where('tournament_id', $tournament->id)
         ->first();
 
     if ($existingTeam) {
-        return redirect()->back()->withErrors(['message' => 'Team name already exists']);
+        return redirect()->back()->withErrors(['message' => 'Team Name Already Taken']);
     }
 
     \DB::beginTransaction();

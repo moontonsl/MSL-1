@@ -862,14 +862,14 @@ class CampusTournamentController extends Controller
              return redirect()->back()->withErrors(['message' => 'Team cannot be updated after the registration period has ended.']);
         }
 
-        // 5. Check if team name already exists
-        $existingTeamName = \App\Models\CampusTournamentTeam::where('team_name', $request->teamName)
+        // 5. Check if team name already exists (Case-Insensitive)
+        $existingTeamName = \App\Models\CampusTournamentTeam::whereRaw('LOWER(team_name) = ?', [strtolower($request->teamName)])
             ->where('tournament_id', $team->tournament_id)
             ->where('id', '!=', $teamId)
             ->first();
         
         if ($existingTeamName) {
-            return redirect()->back()->withErrors(['message' => 'Team name already exists']);
+            return redirect()->back()->withErrors(['message' => 'Team Name Already Taken']);
         }
         
         \DB::beginTransaction();
