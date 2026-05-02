@@ -68,7 +68,7 @@ const CampusTournamentTeam = () => {
     return `${player.name || ''} ${player.surname || ''}`.trim() || player.username || 'Player';
   };
 
-  const PlayerCell = ({ member }) => {
+  const PlayerCell = ({ member, isCurrentUserMember }) => {
     const player = member?.player;
     const status = member?.status || 'accepted'; // Default for existing data
 
@@ -86,7 +86,9 @@ const CampusTournamentTeam = () => {
       statusText = 'Empty';
     }
 
-    const nameElement = player?.facebook_link ? (
+    const showFbLink = player?.facebook_link && (isCurrentUserMember || teamFromProps?.status === 'registered');
+
+    const nameElement = showFbLink ? (
       <a
         href={player.facebook_link}
         target="_blank"
@@ -335,7 +337,7 @@ const CampusTournamentTeam = () => {
                     <div className="grid [grid-template-columns:repeat(5,minmax(140px,1fr))_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3">
                       {sortedMembers.slice(0, 5).map((member, idx) => (
                         <div className="flex justify-center" key={idx}>
-                          <PlayerCell member={member} />
+                          <PlayerCell member={member} isCurrentUserMember={!!currentUserMember} />
                         </div>
                       ))}
                       <div className="flex flex-col items-center gap-2">

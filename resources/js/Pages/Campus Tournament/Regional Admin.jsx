@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { usePage } from '@inertiajs/react';
+import { usePage, router } from '@inertiajs/react';
 import MainLayout from "@/Layouts/MainLayout.jsx";
 
 // Mock data removed
@@ -112,6 +112,9 @@ const RegionalAdmin = () => {
   const [activeTab, setActiveTab] = useState('requests'); // 'requests' | 'ongoing' | 'completed'
   const [showOnline, setShowOnline] = useState(true);
   const [showOnsite, setShowOnsite] = useState(true);
+  const [searchSchool, setSearchSchool] = useState('');
+  const [filterMonth, setFilterMonth] = useState('');
+  const [filterYear, setFilterYear] = useState('');
 
   // Pagination State
   const [requestPage, setRequestPage] = useState(1);
@@ -162,9 +165,22 @@ const RegionalAdmin = () => {
       const type = (t.tournament_type || 'Online').toLowerCase();
       if (type === 'online' && !showOnline) return false;
       if (type === 'onsite' && !showOnsite) return false;
+
+      // School search filter
+      if (searchSchool && !t.schoolName?.toLowerCase().includes(searchSchool.toLowerCase())) return false;
+
+      // Date filter (month and year of start_date)
+      if ((filterMonth || filterYear) && t.startDate) {
+        const tDate = new Date(t.startDate);
+        if (!isNaN(tDate.getTime())) {
+          if (filterMonth && String(tDate.getMonth() + 1).padStart(2, '0') !== filterMonth) return false;
+          if (filterYear && String(tDate.getFullYear()) !== filterYear) return false;
+        }
+      }
+
       return true;
     });
-  }, [transformedTournaments, showOnline, showOnsite]);
+  }, [transformedTournaments, showOnline, showOnsite, searchSchool, filterMonth, filterYear]);
 
   const completedTournaments = useMemo(() => {
     return transformedTournaments.filter(t => {
@@ -172,9 +188,22 @@ const RegionalAdmin = () => {
       const type = (t.tournament_type || 'Online').toLowerCase();
       if (type === 'online' && !showOnline) return false;
       if (type === 'onsite' && !showOnsite) return false;
+
+      // School search filter
+      if (searchSchool && !t.schoolName?.toLowerCase().includes(searchSchool.toLowerCase())) return false;
+
+      // Date filter (month and year of start_date)
+      if ((filterMonth || filterYear) && t.startDate) {
+        const tDate = new Date(t.startDate);
+        if (!isNaN(tDate.getTime())) {
+          if (filterMonth && String(tDate.getMonth() + 1).padStart(2, '0') !== filterMonth) return false;
+          if (filterYear && String(tDate.getFullYear()) !== filterYear) return false;
+        }
+      }
+
       return true;
     });
-  }, [transformedTournaments, showOnline, showOnsite]);
+  }, [transformedTournaments, showOnline, showOnsite, searchSchool, filterMonth, filterYear]);
 
 
 
@@ -190,7 +219,7 @@ const RegionalAdmin = () => {
     setRequestPage(1);
     setOngoingPage(1);
     setCompletedPage(1);
-  }, [showOnline, showOnsite, filterStatus]);
+  }, [showOnline, showOnsite, filterStatus, activeTab, searchSchool, filterMonth, filterYear]);
 
   const handleTournamentChange = (tournamentId) => {
     setSelectedTournamentId(tournamentId);
@@ -351,15 +380,42 @@ const RegionalAdmin = () => {
         // Update the staticTournaments/transformedTournaments locally to reflect change
         // Since transformedTournaments is derived from staticTournaments, we can just reload the page or update state if we had a setter for staticTournaments (which we don't really have exposed easily for partial updates without refetching, but we can try to force a reload or just use Inertia reload).
         // Better: use Inertia reload, but for now simple alert and reload
-        alert('Tournament registration extended successfully!');
+        // Better: use Inertia reload, but for now simple alert and reload
+        setSubmitModalData({
+          type: 'success',
+          title: 'Success',
+          message: 'Tournament registration extended successfully!',
+          showCancel: false
+        });
+        setShowSubmitModal(true);
         setExtendingTournament(null);
-        window.location.reload();
+        router.reload({
+          only: ['tournaments', 'approvedTournaments'],
+          preserveState: true,
+          preserveScroll: true,
+          onSuccess: (page) => {
+            setLocalTournaments(page.props.tournaments || []);
+            setStaticTournaments(page.props.approvedTournaments || []);
+          }
+        });
       } else {
-        alert('Error extending tournament: ' + (data.error || JSON.stringify(data.errors) || 'Unknown error'));
+        setSubmitModalData({
+          type: 'error',
+          title: 'Error',
+          message: 'Error extending tournament: ' + (data.error || JSON.stringify(data.errors) || 'Unknown error'),
+          showCancel: false
+        });
+        setShowSubmitModal(true);
       }
     } catch (error) {
       console.error('Error extending tournament:', error);
-      alert('Error extending tournament. Please try again.');
+      setSubmitModalData({
+        type: 'error',
+        title: 'Error',
+        message: 'Error extending tournament. Please try again.',
+        showCancel: false
+      });
+      setShowSubmitModal(true);
     } finally {
       setIsExtending(false);
     }
@@ -382,14 +438,40 @@ const RegionalAdmin = () => {
       const data = await response.json();
 
       if (data.success) {
-        alert('Tournament deleted successfully');
-        window.location.reload();
+        setSubmitModalData({
+          type: 'success',
+          title: 'Success',
+          message: 'Tournament deleted successfully',
+          showCancel: false
+        });
+        setShowSubmitModal(true);
+        router.reload({
+          only: ['tournaments', 'approvedTournaments'],
+          preserveState: true,
+          preserveScroll: true,
+          onSuccess: (page) => {
+            setLocalTournaments(page.props.tournaments || []);
+            setStaticTournaments(page.props.approvedTournaments || []);
+          }
+        });
       } else {
-        alert('Error deleting tournament: ' + (data.error || 'Unknown error'));
+        setSubmitModalData({
+          type: 'error',
+          title: 'Error',
+          message: 'Error deleting tournament: ' + (data.error || 'Unknown error'),
+          showCancel: false
+        });
+        setShowSubmitModal(true);
       }
     } catch (error) {
       console.error('Error deleting tournament:', error);
-      alert('Error deleting tournament. Please try again.');
+      setSubmitModalData({
+        type: 'error',
+        title: 'Error',
+        message: 'Error deleting tournament. Please try again.',
+        showCancel: false
+      });
+      setShowSubmitModal(true);
     }
   };
 
@@ -738,40 +820,93 @@ const RegionalAdmin = () => {
                 </button>
               </div>
 
-              {/* Only show Online/Onsite filters for Ongoing/Completed tabs */}
+              {/* Only show filters for Ongoing/Completed tabs */}
               {activeTab !== 'requests' && (
-                <div className="flex items-center gap-6 px-4 pb-2 md:pb-0">
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <div className="relative flex items-center justify-center">
-                      <input
-                        type="checkbox"
-                        checked={showOnline}
-                        onChange={(e) => setShowOnline(e.target.checked)}
-                        className="sr-only peer"
-                      />
-                      <div className="w-5 h-5 border-2 border-white/30 rounded-md peer-checked:bg-[#F2C21A] peer-checked:border-[#F2C21A] transition-all duration-200 group-hover:border-[#F2C21A]/50"></div>
-                      <svg className="absolute w-3 h-3 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <span className="font-montserrat text-sm text-white/80 group-hover:text-white transition-colors">Online</span>
-                  </label>
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-4 px-4 pb-2 md:pb-0">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="Search School..."
+                      value={searchSchool}
+                      onChange={(e) => setSearchSchool(e.target.value)}
+                      className="bg-black/30 border border-white/20 text-white text-sm rounded-lg focus:ring-[#F2C21A] focus:border-[#F2C21A] block w-full px-3 py-1.5 font-montserrat placeholder-white/40"
+                    />
+                    <select
+                      value={filterMonth}
+                      onChange={(e) => setFilterMonth(e.target.value)}
+                      className="bg-black/30 border border-white/20 text-white text-sm rounded-lg focus:ring-[#F2C21A] focus:border-[#F2C21A] block px-3 py-1.5 font-montserrat min-w-[110px]"
+                    >
+                      <option value="">Month</option>
+                      <option value="01">January</option>
+                      <option value="02">February</option>
+                      <option value="03">March</option>
+                      <option value="04">April</option>
+                      <option value="05">May</option>
+                      <option value="06">June</option>
+                      <option value="07">July</option>
+                      <option value="08">August</option>
+                      <option value="09">September</option>
+                      <option value="10">October</option>
+                      <option value="11">November</option>
+                      <option value="12">December</option>
+                    </select>
+                    <select
+                      value={filterYear}
+                      onChange={(e) => setFilterYear(e.target.value)}
+                      className="bg-black/30 border border-white/20 text-white text-sm rounded-lg focus:ring-[#F2C21A] focus:border-[#F2C21A] block px-3 py-1.5 font-montserrat min-w-[80px]"
+                    >
+                      <option value="">Year</option>
+                      <option value="2024">2024</option>
+                      <option value="2025">2025</option>
+                      <option value="2026">2026</option>
+                      <option value="2027">2027</option>
+                      <option value="2028">2028</option>
+                    </select>
+                    {(searchSchool || filterMonth || filterYear) && (
+                      <button
+                        onClick={() => { setSearchSchool(''); setFilterMonth(''); setFilterYear(''); }}
+                        className="text-white/50 hover:text-white p-1"
+                        title="Clear Filters"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-6">
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <div className="relative flex items-center justify-center">
+                        <input
+                          type="checkbox"
+                          checked={showOnline}
+                          onChange={(e) => setShowOnline(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-5 h-5 border-2 border-white/30 rounded-md peer-checked:bg-[#F2C21A] peer-checked:border-[#F2C21A] transition-all duration-200 group-hover:border-[#F2C21A]/50"></div>
+                        <svg className="absolute w-3 h-3 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <span className="font-montserrat text-sm text-white/80 group-hover:text-white transition-colors">Online</span>
+                    </label>
 
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <div className="relative flex items-center justify-center">
-                      <input
-                        type="checkbox"
-                        checked={showOnsite}
-                        onChange={(e) => setShowOnsite(e.target.checked)}
-                        className="sr-only peer"
-                      />
-                      <div className="w-5 h-5 border-2 border-white/30 rounded-md peer-checked:bg-[#F2C21A] peer-checked:border-[#F2C21A] transition-all duration-200 group-hover:border-[#F2C21A]/50"></div>
-                      <svg className="absolute w-3 h-3 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <span className="font-montserrat text-sm text-white/80 group-hover:text-white transition-colors">Onsite</span>
-                  </label>
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <div className="relative flex items-center justify-center">
+                        <input
+                          type="checkbox"
+                          checked={showOnsite}
+                          onChange={(e) => setShowOnsite(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-5 h-5 border-2 border-white/30 rounded-md peer-checked:bg-[#F2C21A] peer-checked:border-[#F2C21A] transition-all duration-200 group-hover:border-[#F2C21A]/50"></div>
+                        <svg className="absolute w-3 h-3 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <span className="font-montserrat text-sm text-white/80 group-hover:text-white transition-colors">Onsite</span>
+                    </label>
+                  </div>
                 </div>
               )}
             </div>

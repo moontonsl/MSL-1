@@ -224,6 +224,13 @@ export default function TeamRegistration() {
         }));
     };
 
+    const handlePlayerChange = (field, value) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+        if (selectedPlayers[field] && selectedPlayers[field].username !== value) {
+            handlePlayerSelect(field, null);
+        }
+    };
+
     const getExcludeIds = () => {
         return Object.values(selectedPlayers)
             .filter(player => player !== null)
@@ -237,6 +244,18 @@ export default function TeamRegistration() {
         const playerIds = Object.values(selectedPlayers)
             .filter(p => p !== null)
             .map(p => p.id);
+
+        // Check if all players are selected
+        const requiredPlayers = ['player2', 'player3', 'player4', 'player5'];
+        for (const field of requiredPlayers) {
+            if (!selectedPlayers[field]) {
+                const playerNum = field.replace('player', '');
+                setModalMessage(`Player ${playerNum} is required. Please search and select a valid player from the dropdown. If they don't appear, they might already be in an active team.`);
+                setShowErrorModal(true);
+                setIsSubmitting(false);
+                return;
+            }
+        }
 
         const hasDuplicates = new Set(playerIds).size !== playerIds.length;
         if (hasDuplicates) {
@@ -424,7 +443,7 @@ export default function TeamRegistration() {
                                         placeholder="Search the MSL Username of your teammate"
                                         subtext="* Player must be from your school, verified, and have an MSL account"
                                         value={formData.player2}
-                                        onChange={(value) => setFormData(prev => ({ ...prev, player2: value }))}
+                                        onChange={(value) => handlePlayerChange('player2', value)}
                                         onSelect={(player) => handlePlayerSelect('player2', player)}
                                         excludeIds={getExcludeIds()}
                                         university={captain?.university || user?.university}
@@ -437,7 +456,7 @@ export default function TeamRegistration() {
                                         placeholder="Search the MSL Username of your teammate"
                                         subtext="* Player must be from your school, verified, and have an MSL account"
                                         value={formData.player3}
-                                        onChange={(value) => setFormData(prev => ({ ...prev, player3: value }))}
+                                        onChange={(value) => handlePlayerChange('player3', value)}
                                         onSelect={(player) => handlePlayerSelect('player3', player)}
                                         excludeIds={getExcludeIds()}
                                         university={captain?.university || user?.university}
@@ -450,7 +469,7 @@ export default function TeamRegistration() {
                                         placeholder="Search the MSL Username of your teammate"
                                         subtext="* Player must be from your school, verified, and have an MSL account"
                                         value={formData.player4}
-                                        onChange={(value) => setFormData(prev => ({ ...prev, player4: value }))}
+                                        onChange={(value) => handlePlayerChange('player4', value)}
                                         onSelect={(player) => handlePlayerSelect('player4', player)}
                                         excludeIds={getExcludeIds()}
                                         university={captain?.university || user?.university}
@@ -463,7 +482,7 @@ export default function TeamRegistration() {
                                         placeholder="Search the MSL Username of your teammate"
                                         subtext="* Player must be from your school, verified, and have an MSL account"
                                         value={formData.player5}
-                                        onChange={(value) => setFormData(prev => ({ ...prev, player5: value }))}
+                                        onChange={(value) => handlePlayerChange('player5', value)}
                                         onSelect={(player) => handlePlayerSelect('player5', player)}
                                         excludeIds={getExcludeIds()}
                                         university={captain?.university || user?.university}

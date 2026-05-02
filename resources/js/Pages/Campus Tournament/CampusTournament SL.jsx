@@ -60,6 +60,9 @@ const CampusTournament = () => {
   const [filterStatus, setFilterStatus] = useState('ongoing'); // 'ongoing' or 'completed'
   const [showOnline, setShowOnline] = useState(true);
   const [showOnsite, setShowOnsite] = useState(true);
+  const [searchSchool, setSearchSchool] = useState('');
+  const [filterMonth, setFilterMonth] = useState('');
+  const [filterYear, setFilterYear] = useState('');
 
   // Pagination State
   const [pendingPage, setPendingPage] = useState(1);
@@ -115,9 +118,21 @@ const CampusTournament = () => {
       if (type === 'online' && !showOnline) return false;
       if (type === 'onsite' && !showOnsite) return false;
 
+      // School search filter
+      if (searchSchool && !t.school_name?.toLowerCase().includes(searchSchool.toLowerCase())) return false;
+
+      // Date filter (month and year of start_date)
+      if ((filterMonth || filterYear) && t.start_date) {
+        const tDate = new Date(t.start_date);
+        if (!isNaN(tDate.getTime())) {
+          if (filterMonth && String(tDate.getMonth() + 1).padStart(2, '0') !== filterMonth) return false;
+          if (filterYear && String(tDate.getFullYear()) !== filterYear) return false;
+        }
+      }
+
       return true;
     });
-  }, [transformedTournaments, filterStatus, showOnline, showOnsite]);
+  }, [transformedTournaments, filterStatus, showOnline, showOnsite, searchSchool, filterMonth, filterYear]);
 
   const formatDate = (value) => {
     try {
@@ -311,7 +326,7 @@ const CampusTournament = () => {
     setPendingPage(1);
     setRejectedPage(1);
     setTournamentPage(1);
-  }, [showOnline, showOnsite, filterStatus]);
+  }, [showOnline, showOnsite, filterStatus, searchSchool, filterMonth, filterYear]);
 
   const handleSetResult = (tournamentId, teamId, result) => {
     setLocalTournaments((prev) =>
@@ -808,7 +823,59 @@ const CampusTournament = () => {
                     </button>
                   </div>
 
-                  <div className="flex items-center gap-6 px-2">
+                  <div className="flex flex-col md:flex-row items-start md:items-center gap-4 px-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        placeholder="Search School..."
+                        value={searchSchool}
+                        onChange={(e) => setSearchSchool(e.target.value)}
+                        className="bg-black/30 border border-white/20 text-white text-sm rounded-lg focus:ring-[#F2C21A] focus:border-[#F2C21A] block w-full px-3 py-1.5 font-montserrat placeholder-white/40"
+                      />
+                      <select
+                        value={filterMonth}
+                        onChange={(e) => setFilterMonth(e.target.value)}
+                        className="bg-black/30 border border-white/20 text-white text-sm rounded-lg focus:ring-[#F2C21A] focus:border-[#F2C21A] block px-3 py-1.5 font-montserrat min-w-[110px]"
+                      >
+                        <option value="">Month</option>
+                        <option value="01">January</option>
+                        <option value="02">February</option>
+                        <option value="03">March</option>
+                        <option value="04">April</option>
+                        <option value="05">May</option>
+                        <option value="06">June</option>
+                        <option value="07">July</option>
+                        <option value="08">August</option>
+                        <option value="09">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                      </select>
+                      <select
+                        value={filterYear}
+                        onChange={(e) => setFilterYear(e.target.value)}
+                        className="bg-black/30 border border-white/20 text-white text-sm rounded-lg focus:ring-[#F2C21A] focus:border-[#F2C21A] block px-3 py-1.5 font-montserrat min-w-[80px]"
+                      >
+                        <option value="">Year</option>
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                        <option value="2028">2028</option>
+                      </select>
+                      {(searchSchool || filterMonth || filterYear) && (
+                        <button
+                          onClick={() => { setSearchSchool(''); setFilterMonth(''); setFilterYear(''); }}
+                          className="text-white/50 hover:text-white p-1"
+                          title="Clear Filters"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-6">
                     <label className="flex items-center gap-2 cursor-pointer group">
                       <div className="relative flex items-center justify-center">
                         <input
@@ -840,6 +907,7 @@ const CampusTournament = () => {
                       </div>
                       <span className="font-montserrat text-sm text-white/80 group-hover:text-white transition-colors">Onsite</span>
                     </label>
+                    </div>
                   </div>
                 </div>
 

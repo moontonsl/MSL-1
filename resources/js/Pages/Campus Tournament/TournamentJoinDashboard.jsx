@@ -37,8 +37,10 @@ function RoleIcon({ role }) {
   );
 }
 
-function SlotCell({ slot, onEmptyClick, isUserOnTeam }) {
+function SlotCell({ slot, onEmptyClick, isUserOnTeam, isUserOnThisTeam, teamStatus }) {
   if (slot.isFilled) {
+    const showFbLink = slot.facebook_link && (isUserOnThisTeam || teamStatus === 'registered');
+
     return (
       <div className="flex items-center gap-2 min-w-0">
         <div className="relative h-8 w-8 rounded-full border border-neutral-600 bg-neutral-800 flex items-center justify-center shrink-0">
@@ -47,16 +49,24 @@ function SlotCell({ slot, onEmptyClick, isUserOnTeam }) {
         </div>
 
         <div className="flex flex-col items-start min-w-0">
-          <a 
-            href={slot.facebook_link || '#'} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className={`text-sm ${slot.isYou ? 'text-[#FFC107] font-bold' : 'text-white font-medium'} truncate w-full hover:underline`} 
-            title={slot.playerName}
-            onClick={(e) => !slot.facebook_link && e.preventDefault()}
-          >
-            {slot.playerName}
-          </a>
+          {showFbLink ? (
+            <a 
+              href={slot.facebook_link} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className={`text-sm ${slot.isYou ? 'text-[#FFC107] font-bold' : 'text-white font-medium'} truncate w-full hover:underline`} 
+              title={slot.playerName}
+            >
+              {slot.playerName}
+            </a>
+          ) : (
+            <span 
+              className={`text-sm ${slot.isYou ? 'text-[#FFC107] font-bold' : 'text-white font-medium'} truncate w-full`} 
+              title={slot.playerName}
+            >
+              {slot.playerName}
+            </span>
+          )}
           <div className="flex items-center gap-1.5 leading-none">
             <span className="text-[10px] uppercase font-bold text-red-500 tracking-tight shrink-0">
               {getVacantRoleLabel(slot.role)}
@@ -417,6 +427,8 @@ export default function TournamentJoinDashboard({ tournament, teams = [], user }
                             key={idx}
                             slot={slot}
                             isUserOnTeam={isUserOnAnyTeam}
+                            isUserOnThisTeam={team.userOnTeam}
+                            teamStatus={team.status}
                             onEmptyClick={(role) => openJoinModal(team, role)}
                           />
                         ))}
