@@ -756,7 +756,7 @@ class CampusTournamentController extends Controller
         // Auto-register: if all members have accepted, set team status to registered
         if ($team->status === 'assembling') {
             $allAccepted = $team->members->every(fn($m) => $m->status === 'accepted');
-            if ($allAccepted && $team->members->count() === 5) {
+            if ($allAccepted && $team->members->count() >= 5) {
                 $team->update(['status' => 'registered']);
                 $team->refresh();
             }

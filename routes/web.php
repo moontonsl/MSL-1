@@ -1044,8 +1044,8 @@ Route::post('/join-by-code', function (\Illuminate\Http\Request $request) {
     }
 
     // Check if team is full (max 5 players including captain)
+    // Count ALL members (accepted + pending) to prevent over-filling via code join
     $currentMembersCount = \App\Models\CampusTournamentTeamMember::where('team_id', $team->id)
-        ->where('status', 'accepted')
         ->count();
 
     if ($currentMembersCount >= 5) {
@@ -1136,8 +1136,8 @@ Route::post('/team-invite/{teamId}/reject', function (\Illuminate\Http\Request $
         return response()->json(['message' => 'Invite not found'], 404);
     }
 
-    $member->update(['status' => 'rejected']);
-    return response()->json(['message' => 'Invite rejected']);
+    $member->delete();
+    return response()->json(['message' => 'Invite rejected and member removed']);
 })->name('team.invite.reject');
 
 Route::post('/team-submit/{id}', [\App\Http\Controllers\CampusTournamentController::class, 'submitTeam'])->name('team.submit');
