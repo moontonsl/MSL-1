@@ -53,6 +53,7 @@ const RegionalAdmin = () => {
   const [extendingTournament, setExtendingTournament] = useState(null);
   const [newEndDate, setNewEndDate] = useState('');
   const [isExtending, setIsExtending] = useState(false);
+  const [isBulkExtend, setIsBulkExtend] = useState(false);
 
   // Ongoing Teams View Modal State
   const [viewingTeamsTournament, setViewingTeamsTournament] = useState(null); // tournament being viewed (ongoing section)
@@ -344,6 +345,7 @@ const RegionalAdmin = () => {
 
 
   const handleExtendClick = (tournament) => {
+    setIsBulkExtend(false);
     setExtendingTournament(tournament);
     // Set default date to current end date (formatted for input)
     if (tournament.endDate) {
@@ -357,13 +359,24 @@ const RegionalAdmin = () => {
     }
   };
 
+  const handleBulkExtendClick = () => {
+    setIsBulkExtend(true);
+    setExtendingTournament({ id: 'bulk', schoolName: 'All Ongoing Tournaments' });
+    setNewEndDate('');
+  };
+
   const handleExtendSubmit = async () => {
     if (!extendingTournament || !newEndDate) return;
 
     setIsExtending(true);
 
     try {
-      const response = await fetch(`/campus-tournaments/${extendingTournament.id}/extend`, {
+      const isBulk = extendingTournament.id === 'bulk';
+      const url = isBulk
+        ? '/campus-tournaments/bulk-extend'
+        : `/campus-tournaments/${extendingTournament.id}/extend`;
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -384,7 +397,9 @@ const RegionalAdmin = () => {
         setSubmitModalData({
           type: 'success',
           title: 'Success',
-          message: 'Tournament registration extended successfully!',
+          message: isBulk
+            ? 'All ongoing tournaments extended successfully!'
+            : 'Tournament registration extended successfully!',
           showCancel: false
         });
         setShowSubmitModal(true);
@@ -527,9 +542,8 @@ const RegionalAdmin = () => {
     const nameDisplay = player?.name || 'Player';
     return (
       <div
-        className={`w-full flex items-center gap-3 min-w-0 ${
-          align === 'center' ? 'justify-center' : 'justify-start'
-        }`}
+        className={`w-full flex items-center gap-3 min-w-0 ${align === 'center' ? 'justify-center' : 'justify-start'
+          }`}
       >
         <div className="relative w-9 h-9 rounded-full flex-shrink-0">
           {/* Keep the image clipped, but allow the verification dot to overflow outside the avatar. */}
@@ -554,9 +568,8 @@ const RegionalAdmin = () => {
 
           {/* Verification indicator (dot) OVER avatar */}
           <span
-            className={`absolute bottom-[-3px] right-[-3px] z-20 w-4 h-4 rounded-full border border-black/60 shadow-[0_0_8px_rgba(0,0,0,0.5)] ${
-              player?.accepted ? 'bg-green-400' : 'bg-red-500'
-            }`}
+            className={`absolute bottom-[-3px] right-[-3px] z-20 w-4 h-4 rounded-full border border-black/60 shadow-[0_0_8px_rgba(0,0,0,0.5)] ${player?.accepted ? 'bg-green-400' : 'bg-red-500'
+              }`}
           />
         </div>
 
@@ -1035,10 +1048,23 @@ const RegionalAdmin = () => {
 
                 {/* Ongoing Tournaments (Active Only) */}
                 <div className="mt-10">
-                  <div className="flex items-center gap-3 md:gap-4">
-                    <div className="text-white font-montserrat font-extrabold text-[22px] md:text-[28px] leading-tight">
-                      Ongoing Tournaments
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 md:gap-4">
+                      <div className="text-white font-montserrat font-extrabold text-[22px] md:text-[28px] leading-tight">
+                        Ongoing Tournaments
+                      </div>
                     </div>
+                    {user?.role === 'Super Admin' && (
+                      <button
+                        onClick={handleBulkExtendClick}
+                        className="px-6 py-2 rounded-full bg-[#F2C21A] hover:bg-[#d4a817] text-black font-bold text-sm font-montserrat transition-all shadow-lg shadow-yellow-500/20 flex items-center gap-2 w-fit"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Reschedule All
+                      </button>
+                    )}
                   </div>
 
                   <div className="mt-4 flex flex-col gap-4 pr-2">
@@ -1062,56 +1088,56 @@ const RegionalAdmin = () => {
 
                                   return (
                                     <>
-                                <div className="text-left">
-                                  <div className="text-[11px] font-montserrat text-white/60">School Name</div>
-                                  <div className="font-montserrat text-lg tracking-wide uppercase text-white/95">
-                                    {item.schoolName ? `${item.schoolName.toUpperCase()} TOURNAMENT` : 'TOURNAMENT'}
-                                  </div>
-                                  <div className="font-montserrat text-xs text-white/70">
-                                    {formatDate(item.startDate)} - {formatDate(item.endDate)}
-                                  </div>
-                                </div>
+                                      <div className="text-left">
+                                        <div className="text-[11px] font-montserrat text-white/60">School Name</div>
+                                        <div className="font-montserrat text-lg tracking-wide uppercase text-white/95">
+                                          {item.schoolName ? `${item.schoolName.toUpperCase()} TOURNAMENT` : 'TOURNAMENT'}
+                                        </div>
+                                        <div className="font-montserrat text-xs text-white/70">
+                                          {formatDate(item.startDate)} - {formatDate(item.endDate)}
+                                        </div>
+                                      </div>
 
-                                <div className="text-center font-montserrat">
-                                  <div className="text-[11px] text-white/60">Verified Teams</div>
-                                  <div className="text-base text-white/90">{verifiedCount}</div>
-                                </div>
+                                      <div className="text-center font-montserrat">
+                                        <div className="text-[11px] text-white/60">Verified Teams</div>
+                                        <div className="text-base text-white/90">{verifiedCount}</div>
+                                      </div>
 
-                                <div className="text-center font-montserrat">
-                                  <div className="text-[11px] text-white/60">Pending Teams</div>
-                                  <div className="text-base text-white/90">{pendingCount}</div>
-                                </div>
+                                      <div className="text-center font-montserrat">
+                                        <div className="text-[11px] text-white/60">Pending Teams</div>
+                                        <div className="text-base text-white/90">{pendingCount}</div>
+                                      </div>
 
-                                <div className="text-center font-montserrat">
-                                  <div className="text-[11px] text-white/60">Total Registration</div>
-                                  <div className="text-base text-white/90">{totalRegistration}</div>
-                                </div>
+                                      <div className="text-center font-montserrat">
+                                        <div className="text-[11px] text-white/60">Total Registration</div>
+                                        <div className="text-base text-white/90">{totalRegistration}</div>
+                                      </div>
 
-                                <div className="flex items-center justify-end gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => { setViewingTeamsTournament(item); setViewingTeamsTab('teams'); }}
-                                    className="px-4 py-1.5 rounded-lg border border-white/20 bg-neutral-800/40 hover:bg-neutral-700/50 text-white/90 text-xs font-montserrat transition-colors"
-                                  >
-                                    View
-                                  </button>
+                                      <div className="flex items-center justify-end gap-2">
+                                        <button
+                                          type="button"
+                                          onClick={() => { setViewingTeamsTournament(item); setViewingTeamsTab('teams'); }}
+                                          className="px-4 py-1.5 rounded-lg border border-white/20 bg-neutral-800/40 hover:bg-neutral-700/50 text-white/90 text-xs font-montserrat transition-colors"
+                                        >
+                                          View
+                                        </button>
 
-                                  <button
-                                    type="button"
-                                    onClick={(e) => { e.stopPropagation(); handleExtendClick(item); }}
-                                    className="px-4 py-1.5 rounded-lg border border-[#F2C21A]/60 bg-[#F2C21A]/90 hover:bg-[#d4a817] text-black text-xs font-montserrat transition-colors"
-                                  >
-                                    Resched
-                                  </button>
+                                        <button
+                                          type="button"
+                                          onClick={(e) => { e.stopPropagation(); handleExtendClick(item); }}
+                                          className="px-4 py-1.5 rounded-lg border border-[#F2C21A]/60 bg-[#F2C21A]/90 hover:bg-[#d4a817] text-black text-xs font-montserrat transition-colors"
+                                        >
+                                          Resched
+                                        </button>
 
-                                  <button
-                                    type="button"
-                                    onClick={(e) => { e.stopPropagation(); handleDeleteTournament(item); }}
-                                    className="px-4 py-1.5 rounded-lg border border-red-500/50 bg-red-500/20 hover:bg-red-500/30 text-white/90 text-xs font-montserrat transition-colors"
-                                  >
-                                    Delete
-                                  </button>
-                                </div>
+                                        <button
+                                          type="button"
+                                          onClick={(e) => { e.stopPropagation(); handleDeleteTournament(item); }}
+                                          className="px-4 py-1.5 rounded-lg border border-red-500/50 bg-red-500/20 hover:bg-red-500/30 text-white/90 text-xs font-montserrat transition-colors"
+                                        >
+                                          Delete
+                                        </button>
+                                      </div>
                                     </>
                                   );
                                 })()}
@@ -1191,7 +1217,7 @@ const RegionalAdmin = () => {
                                           {Array.from({ length: 5 }).map((_, idx) => {
                                             const player = team.players[idx];
                                             return (
-                                              <div className="flex justify-center w-full min-w-0" key={idx}>
+                                              <div className="flex w-full min-w-0" key={idx}>
                                                 {player ? <PlayerCell player={player} /> : <span className="text-white/20 text-xs italic font-montserrat">Empty</span>}
                                               </div>
                                             );
@@ -1651,11 +1677,10 @@ const RegionalAdmin = () => {
                 <button
                   type="button"
                   onClick={() => setViewingTeamsTab(id)}
-                  className={`px-3 py-1.5 rounded-md border font-montserrat text-xs md:text-sm transition ${
-                    viewingTeamsTab === id
+                  className={`px-3 py-1.5 rounded-md border font-montserrat text-xs md:text-sm transition ${viewingTeamsTab === id
                       ? 'border-white/30 bg-white/15 text-white'
                       : 'border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white'
-                  }`}
+                    }`}
                 >
                   {label} <span className="text-white/60">({count})</span>
                 </button>
@@ -2080,11 +2105,11 @@ const RegionalAdmin = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10" onClick={() => setExtendingTournament(null)} />
             <div className="relative z-20 w-full max-w-md bg-neutral-900 border border-white/20 rounded-2xl p-6 shadow-2xl text-white">
-              <h3 className="font-montserrat text-xl font-bold mb-1">Extend Registration</h3>
+              <h3 className="font-montserrat text-xl font-bold mb-1">{isBulkExtend ? 'Bulk Reschedule' : 'Extend Registration'}</h3>
               <p className="text-white/60 text-sm font-montserrat mb-6">
-                Update the registration end date for <span className="text-white font-semibold">{extendingTournament.schoolName}</span>.
+                Update the registration end date for <span className="text-white font-semibold">{isBulkExtend ? 'All Ongoing Tournaments' : extendingTournament.schoolName}</span>.
                 <br />
-                <span className="text-yellow-500 text-xs mt-1 block">Note: This will overwrite the current end date.</span>
+                <span className="text-yellow-500 text-xs mt-1 block">Note: This will overwrite the current end date{isBulkExtend ? ` for ${activeTournaments.length} tournament(s)` : ''}.</span>
               </p>
 
               <div className="mb-6">

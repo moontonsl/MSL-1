@@ -334,6 +334,39 @@ class CampusTournamentController extends Controller
     }
 
     /**
+     * Extend registration deadline for ALL ongoing tournaments
+     */
+    public function bulkExtendRegistration(Request $request)
+    {
+        $user = Auth::user();
+        
+        // Only Super Admin can bulk extend
+        if ($user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Only Super Admins can bulk extend tournaments'], 403);
+        }
+        
+        $validator = Validator::make($request->all(), [
+            'end_date' => 'required|date|after_or_equal:today',
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+        
+        // Update all "approved" tournaments that are not yet "completed" (results submitted)
+        $affectedRows = CampusTournament::where('status', 'approved')
+            ->where('results_submitted', false)
+            ->update([
+                'end_date' => $request->end_date,
+            ]);
+            
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully updated {$affectedRows} tournament(s) end date.",
+        ]);
+    }
+
+    /**
      * Delete a tournament (only SL who created it)
      */
     public function destroy($id)
