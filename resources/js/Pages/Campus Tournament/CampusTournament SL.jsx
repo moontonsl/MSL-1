@@ -395,13 +395,14 @@ const CampusTournament = () => {
       return;
     }
 
-    const registeredCount = tournament.teams.filter(t => t.status === 'registered').length;
+    const registeredTeams = tournament.teams.filter(t => t.status === 'registered');
+    const registeredCount = registeredTeams.length;
     const { maxFirst, maxSecond, maxThird, maxFourth } = getBracketCounts(registeredCount, tournament.tournament_type);
     const show3rd = maxThird > 0;
     const show4th = maxFourth > 0;
 
     // Check 1st place
-    const firstPlaceTeams = tournament.teams.filter(team => team.result === '1st');
+    const firstPlaceTeams = registeredTeams.filter(team => team.result === '1st');
     if (firstPlaceTeams.length !== maxFirst) {
       setSubmitModalData({
         type: 'error',
@@ -414,7 +415,7 @@ const CampusTournament = () => {
     }
 
     // Check 2nd place
-    const secondPlaceTeams = tournament.teams.filter(team => team.result === '2nd');
+    const secondPlaceTeams = registeredTeams.filter(team => team.result === '2nd');
     if (secondPlaceTeams.length !== maxSecond) {
       setSubmitModalData({
         type: 'error',
@@ -427,7 +428,7 @@ const CampusTournament = () => {
     }
 
     // Check 3rd place
-    const thirdPlaceTeams = tournament.teams.filter(team => team.result === '3rd');
+    const thirdPlaceTeams = registeredTeams.filter(team => team.result === '3rd');
     if (show3rd && thirdPlaceTeams.length !== maxThird) {
       setSubmitModalData({
         type: 'error',
@@ -449,7 +450,7 @@ const CampusTournament = () => {
     }
 
     // Check 4th place
-    const fourthPlaceTeams = tournament.teams.filter(team => team.result === '4th');
+    const fourthPlaceTeams = registeredTeams.filter(team => team.result === '4th');
     if (show4th && fourthPlaceTeams.length !== maxFourth) {
       setSubmitModalData({
         type: 'error',
@@ -471,7 +472,7 @@ const CampusTournament = () => {
     }
 
     // Check if all teams have results set
-    const teamsWithoutResults = tournament.teams.filter(team => !team.result || team.result === '');
+    const teamsWithoutResults = registeredTeams.filter(team => !team.result || team.result === '');
     if (teamsWithoutResults.length > 0) {
       setSubmitModalData({
         type: 'error',
@@ -497,7 +498,8 @@ const CampusTournament = () => {
       message: messageStr,
       showCancel: true,
       tournamentId: tournamentId,
-      tournament: tournament
+      tournament: tournament,
+      registeredTeams: registeredTeams
     });
     setShowSubmitModal(true);
   };
@@ -510,9 +512,9 @@ const CampusTournament = () => {
 
     try {
       // Prepare results data
-      const results = submitModalData.tournament.teams.map(team => ({
+      const results = submitModalData.registeredTeams.map(team => ({
         team_id: team.id,
-        result: team.result
+        result: team.result || 'participant'
       }));
 
       // Determine endpoint based on whether we are editing or submitting new

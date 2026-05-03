@@ -11,7 +11,8 @@ export default function MatchManager({
   isEditingResults,
   setIsEditingResults,
 }) {
-  const teams = Array.isArray(tournament?.teams) ? tournament.teams : [];
+  const allTeams = Array.isArray(tournament?.teams) ? tournament.teams : [];
+  const teams = allTeams.filter((t) => t.status === 'registered');
   const registeredCount = teams.filter((t) => t.status === 'registered').length;
   const counts = getBracketCounts?.(registeredCount, tournament?.tournament_type);
   const show3rd = (counts?.maxThird ?? 0) > 0;
@@ -41,11 +42,14 @@ export default function MatchManager({
             <React.Fragment key={team.id}>
               <div className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3 border-t border-white/10 hover:bg-white/5 transition">
                 <div className="text-white/90 font-montserrat md:truncate">{team.name}</div>
-                {team.players.slice(0, 5).map((player, idx) => (
-                  <div className="flex items-center justify-start w-full min-w-0" key={idx}>
-                    <PlayerCell player={player} />
-                  </div>
-                ))}
+                {Array.from({ length: 5 }).map((_, idx) => {
+                  const player = team.players[idx];
+                  return (
+                    <div className="flex items-center justify-start w-full min-w-0" key={idx}>
+                      {player ? <PlayerCell player={player} /> : <span className="text-white/20 text-xs italic font-montserrat">Empty</span>}
+                    </div>
+                  );
+                })}
                 <div className="flex justify-center">
                   <select
                     value={team.result || 'participant'}
