@@ -1188,11 +1188,14 @@ const RegionalAdmin = () => {
                                         {/* Desktop Row */}
                                         <div className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3 border-t border-white/10 hover:bg-white/5 transition">
                                           <div className="text-white/90 font-montserrat md:truncate">{team.name}</div>
-                                          {team.players.slice(0, 5).map((player, idx) => (
-                                            <div className="flex justify-center" key={idx}>
-                                              <PlayerCell player={player} />
-                                            </div>
-                                          ))}
+                                          {Array.from({ length: 5 }).map((_, idx) => {
+                                            const player = team.players[idx];
+                                            return (
+                                              <div className="flex justify-center w-full min-w-0" key={idx}>
+                                                {player ? <PlayerCell player={player} /> : <span className="text-white/20 text-xs italic font-montserrat">Empty</span>}
+                                              </div>
+                                            );
+                                          })}
                                           <div className="flex justify-center">
                                             {(team.status === 'assembling' || team.players.length < 5 || team.players.slice(0, 5).some(p => !p.accepted)) ? (
                                               <span className="rounded-md px-2 py-1 text-xs md:text-sm min-w-[128px] text-center bg-red-500/20 text-red-400 border border-red-500/30 font-montserrat font-semibold">
@@ -1335,11 +1338,14 @@ const RegionalAdmin = () => {
                                     {/* Desktop Row */}
                                     <div className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3 border-t border-white/10 hover:bg-white/5 transition">
                                       <div className="text-white/90 font-montserrat md:truncate">{team.name}</div>
-                                      {team.players.slice(0, 5).map((player, idx) => (
-                                        <div className="flex justify-center" key={idx}>
-                                          <PlayerCell player={player} />
-                                        </div>
-                                      ))}
+                                      {Array.from({ length: 5 }).map((_, idx) => {
+                                        const player = team.players[idx];
+                                        return (
+                                          <div className="flex justify-center w-full min-w-0" key={idx}>
+                                            {player ? <PlayerCell player={player} /> : <span className="text-white/20 text-xs italic font-montserrat">Empty</span>}
+                                          </div>
+                                        );
+                                      })}
                                       <div className="flex justify-center">
                                         {isEditingResults ? (
                                           <select
@@ -1708,7 +1714,11 @@ const RegionalAdmin = () => {
                                   const p5 = players[4];
                                   const { label, pillClassName } = getTeamConfirmation(team);
 
-                                  const renderPlayer = (player) => (player ? <PlayerCellModal player={player} /> : null);
+                                  const renderPlayer = (player) => (
+                                    <div className="flex justify-center w-full min-w-0">
+                                      {player ? <PlayerCellModal player={player} /> : <span className="text-white/20 text-xs italic font-montserrat">Empty</span>}
+                                    </div>
+                                  );
 
                                   return (
                                     <>

@@ -335,11 +335,14 @@ const CampusTournamentTeam = () => {
                     </div>
 
                     <div className="grid [grid-template-columns:repeat(5,minmax(140px,1fr))_minmax(120px,1fr)] gap-3 items-center px-6 md:px-10 py-3">
-                      {sortedMembers.slice(0, 5).map((member, idx) => (
-                        <div className="flex justify-center" key={idx}>
-                          <PlayerCell member={member} isCurrentUserMember={!!currentUserMember} />
-                        </div>
-                      ))}
+                      {Array.from({ length: 5 }).map((_, idx) => {
+                        const member = sortedMembers[idx];
+                        return (
+                          <div className="flex justify-center" key={idx}>
+                            <PlayerCell member={member} isCurrentUserMember={!!currentUserMember} />
+                          </div>
+                        );
+                      })}
                       <div className="flex flex-col items-center gap-2">
                         {/* Generate Code Section */}
                         {isCaptainFromProps && (
