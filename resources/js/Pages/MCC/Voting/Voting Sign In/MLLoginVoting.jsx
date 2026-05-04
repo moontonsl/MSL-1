@@ -71,9 +71,12 @@ const MLLoginVoting = forwardRef(({ onLoginSuccess }, ref) => {
             
             if (response.data.success) {
               toast.success('Login successful!');
-              if (onLoginSuccess) onLoginSuccess();
-              // Redirect to predictions page
-              window.location.href = response.data.redirect;
+              if (onLoginSuccess) {
+                onLoginSuccess(response.data);
+              } else {
+                // Redirect to predictions page
+                window.location.href = response.data.redirect;
+              }
             } else {
               toast.error(response.data.message || 'Login failed');
             }

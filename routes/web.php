@@ -34,10 +34,14 @@ use App\Http\Controllers\SpreadSheetAutomationController;
 use App\Http\Controllers\FF25AttendanceController;
 use App\Http\Controllers\Mccs2PredictionsController;
 use App\Http\Controllers\GoogleSheetMCCS2Controller;
+use App\Http\Controllers\GoogleSheetAwardNominationsController;
 use App\Http\Controllers\Admin\DuplicateUsernameController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\CodashopController;
 use App\Http\Controllers\EventRegistrationController;
+use App\Http\Controllers\AwardNominationController;
+
+Route::post('/api/awards/nominate', [AwardNominationController::class, 'store'])->name('api.awards.nominate');
 
 Route::get('/', function () {
     return Inertia::render('Home/Home', [
@@ -65,6 +69,31 @@ Route::post('/jabu-sync-userrole/logout', [JabuSyncController::class, 'logout'])
 Route::get('/about', function () {
     return Inertia::render('About Page/index');
 })->name('about');
+
+// MSL Network Awards
+Route::get('/NetworkAwards', function () {
+    return Inertia::render('Awards/NetworkAwards');
+})->name('network.awards');
+
+Route::get('/NetworkAwards/Organization', function () {
+    return Inertia::render('Awards/OrganizationAwards');
+})->name('network.awards.organization');
+
+Route::get('/NetworkAwards/Individual', function () {
+    return Inertia::render('Awards/IndividualAwards');
+})->name('network.awards.individual');
+
+Route::get('/NetworkAwards/Nominate/{awardId}', function (string $awardId) {
+    return Inertia::render('Awards/AwardNominationForm', [
+        'awardId' => $awardId,
+    ]);
+})->name('network.awards.nominate');
+
+Route::get('/NetworkAwards/NominateStudent/{awardId}', function (string $awardId) {
+    return Inertia::render('Awards/StudentAwardNominationForm', [
+        'awardId' => $awardId,
+    ]);
+})->name('network.awards.nominate.student');
 
 // Report Violation Page
 Route::get('/report-violation', function () {
@@ -1693,6 +1722,7 @@ Route::get('/soon', function () {
 // Google Sheet Routes
 Route::get('/google-sheet', [GoogleSheetController::class, 'exportToGoogleSheet'])->name('google-sheet.export');
 Route::get('/google-sheet-mccs2', [GoogleSheetMCCS2Controller::class, 'exportMCCS2PredictionsToGoogleSheet'])->name('google-sheet-mccs2.export');
+Route::get('/google-sheet-award-nominations', [GoogleSheetAwardNominationsController::class, 'exportToGoogleSheet'])->name('google-sheet-award-nominations.export');
 
 //SpreadSheet Automation Routes
 Route::get('/import-from-spreadsheet', [SpreadSheetAutomationController::class, 'importFromSpreadsheet'])->name('import-from-spreadsheet');
