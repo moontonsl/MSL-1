@@ -3,6 +3,9 @@ import MainLayout from '@/Layouts/MainLayout.jsx';
 import { Head } from '@inertiajs/react';
 import { ChevronDown } from 'lucide-react';
 import VerificationModal from '@/Components/VerificationModal.jsx';
+import MLLoginVoting from '@/Pages/MCC/Voting/Voting Sign In/MLLoginVoting.jsx';
+import { Toaster } from 'react-hot-toast';
+import { useRef } from 'react';
 
 const HERO_BANNER_SRC = '/images/Awards/Top%20Image.png';
 const INDIVIDUAL_BTN_SRC = '/images/Awards/Individual%20Button.png';
@@ -43,6 +46,7 @@ export default function NetworkAwards() {
   const [openId, setOpenId] = useState(null);
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [pendingHref, setPendingHref] = useState(null);
+  const mlLoginRef = useRef(null);
 
   const openVerifyThenGo = (href) => {
     setPendingHref(href);
@@ -160,11 +164,22 @@ export default function NetworkAwards() {
             setPendingHref(null);
           }}
           onContinue={() => {
-            if (pendingHref) window.location.assign(pendingHref);
             setVerifyOpen(false);
-            setPendingHref(null);
+            if (mlLoginRef.current) {
+              mlLoginRef.current.triggerLogin();
+            }
           }}
         />
+
+        <MLLoginVoting 
+          ref={mlLoginRef} 
+          onLoginSuccess={(data) => {
+            if (pendingHref) {
+              window.location.assign(pendingHref);
+            }
+          }} 
+        />
+        <Toaster position="top-center" />
       </div>
     </MainLayout>
   );

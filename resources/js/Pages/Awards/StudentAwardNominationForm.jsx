@@ -3,6 +3,8 @@ import MainLayout from '@/Layouts/MainLayout.jsx';
 import { Head, usePage } from '@inertiajs/react';
 import { ChevronLeft } from 'lucide-react';
 import { studentAwardsData } from '@/Data/awardsData.js';
+import axios from 'axios';
+import { Toaster, toast } from 'react-hot-toast';
 
 const HERO_BANNER_SRC = '/images/Awards/Top%20Image.png';
 
@@ -18,6 +20,44 @@ export default function StudentAwardNominationForm() {
   const [fullName, setFullName] = useState('');
   const [nomineeName, setNomineeName] = useState('');
   const [reason, setReason] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isReady = Boolean(fullName.trim() && nomineeName.trim() && reason.trim());
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!isReady || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      const response = await axios.post('/api/awards/nominate', {
+        award_id: awardId,
+        award_type: 'student',
+        nominator_name: fullName,
+        nominee_name: nomineeName,
+        reason: reason,
+      });
+
+      if (response.data.success) {
+        toast.success(response.data.message);
+        // Clear form
+        setFullName('');
+        setNomineeName('');
+        setReason('');
+      }
+    } catch (error) {
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+        if (error.response.data.needs_verification) {
+            // Optional: redirect to verification flow or show message
+        }
+      } else {
+        toast.error('Failed to submit nomination. Please try again.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <MainLayout>
@@ -80,12 +120,7 @@ export default function StudentAwardNominationForm() {
           {/* Right column (student form) */}
           <div className="w-full">
             <div className="bg-[#111111] border border-[#FBBF24] rounded-2xl p-6 md:p-8 shadow-2xl h-fit w-full">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  // TODO: wire submission endpoint for student awards.
-                }}
-              >
+              <form onSubmit={handleSubmit}>
                 <div className="space-y-4">
                   <label className={LABEL_CLASS}>
                     Fullname
@@ -123,14 +158,20 @@ export default function StudentAwardNominationForm() {
 
                 <button
                   type="submit"
-                  className="w-full bg-[#FBBF24] text-black font-bold font-sans py-3.5 rounded-lg hover:brightness-110 active:scale-[0.98] transition-all mt-6"
+                  disabled={!isReady || isSubmitting}
+                  className={`w-full font-bold font-sans py-3.5 rounded-lg transition-all mt-6 ${
+                    isReady && !isSubmitting
+                      ? 'bg-[#FBBF24] text-black hover:brightness-110 active:scale-[0.98]'
+                      : 'bg-[#333333] text-gray-500 cursor-not-allowed'
+                  }`}
                 >
-                  Submit
+                  {isSubmitting ? 'Submitting...' : 'Submit'}
                 </button>
               </form>
             </div>
           </div>
         </div>
+        <Toaster position="top-center" />
       </div>
     </MainLayout>
   );
