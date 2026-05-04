@@ -66,6 +66,11 @@ Route::get('/about', function () {
     return Inertia::render('About Page/index');
 })->name('about');
 
+// Color the Tide: MLBB All-Star Edition (AS26CT)
+Route::get('/AS26CT', function () {
+    return Inertia::render('ExternalEvents/AS26CT/Pages/AS26CT');
+})->name('as26ct');
+
 // Report Violation Page
 Route::get('/report-violation', function () {
     return Inertia::render('ReportViolation/ReportViolation');
