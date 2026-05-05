@@ -70,6 +70,10 @@ Route::get('/about', function () {
     return Inertia::render('About Page/index');
 })->name('about');
 
+// Color the Tide: MLBB All-Star Edition (AS26CT)
+Route::get('/AS26CT', function () {
+    return Inertia::render('ExternalEvents/AS26CT/Pages/AS26CT');
+})->name('as26ct');
 // MSL Network Awards
 Route::get('/NetworkAwards', function () {
     return Inertia::render('Awards/NetworkAwards');
@@ -1417,6 +1421,7 @@ Route::get('/JBWowBida', function () {
 })->name('JBWowBida');
 Route::post('/jollibee/submit', [\App\Http\Controllers\JollibeeController::class, 'store'])->name('jollibee.submit');
 Route::post('/jbflex/submit', [\App\Http\Controllers\JBFlexController::class, 'store'])->name('jbflex.submit');
+Route::post('/all-star-color/submit', [\App\Http\Controllers\AllStarColorController::class, 'store'])->name('all-star-color.submit');
 
 //LabanOBawi PAGE ROUTES
 Route::get('/LabanOBawi', function () {
