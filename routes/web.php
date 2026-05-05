@@ -1421,6 +1421,7 @@ Route::get('/JBWowBida', function () {
 })->name('JBWowBida');
 Route::post('/jollibee/submit', [\App\Http\Controllers\JollibeeController::class, 'store'])->name('jollibee.submit');
 Route::post('/jbflex/submit', [\App\Http\Controllers\JBFlexController::class, 'store'])->name('jbflex.submit');
+Route::post('/all-star-color/submit', [\App\Http\Controllers\AllStarColorController::class, 'store'])->name('all-star-color.submit');
 
 //LabanOBawi PAGE ROUTES
 Route::get('/LabanOBawi', function () {

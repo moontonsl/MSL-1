@@ -81,6 +81,7 @@ function FormInput({
   verified = false,
   inputMode,
   pattern,
+  ...props
 }) {
   return (
     <div>
@@ -109,11 +110,11 @@ function FormInput({
           value={value}
           placeholder={placeholder}
           onChange={onChange}
-          disabled={disabled}
           readOnly={disabled}
           inputMode={inputMode}
           pattern={pattern}
-          className="w-full py-1 text-sm sm:text-base outline-none text-black placeholder:text-gray-400 bg-transparent disabled:bg-transparent disabled:cursor-not-allowed"
+          {...props}
+          className={`w-full py-1 text-sm sm:text-base outline-none text-black placeholder:text-gray-400 bg-transparent cursor-pointer ${props.className || ''}`}
         />
 
         {verified && (
@@ -168,6 +169,14 @@ export default function AS26CT() {
   const [tempMlData, setTempMlData] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const mlLoginRef = useRef(null);
+
+  const getFormattedDate = () => {
+    const d = new Date();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${month}/${day}/${year}`;
+  };
 
   const validate = () => {
     const nextErrors = {};
@@ -265,6 +274,7 @@ export default function AS26CT() {
     setIsSubmitting(true);
 
     try {
+      // 1. Submit to local database
       const response = await axios.post('/all-star-color/submit', {
         ...form,
         uid: String(mlbbUid),
@@ -272,12 +282,33 @@ export default function AS26CT() {
       });
 
       if (response?.data?.success) {
+        // 2. Double-record to Google Forms
+        const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfrjIrg1KEycbR5TTKAgpe84w-cu6ly9SPpUKtGS0V3TkJTBw/formResponse";
+        if (GOOGLE_FORM_ACTION_URL) {
+          const googleFormData = new FormData();
+          googleFormData.append("entry.667666584", form.name);
+          googleFormData.append("entry.2058193001", form.school);
+          googleFormData.append("entry.1280932662", String(mlbbUid));
+          googleFormData.append("entry.107469135", String(mlbbServer));
+          googleFormData.append("entry.290976084", form.facebookProfileLink);
+          googleFormData.append("entry.1456806184", form.postLink);
+          googleFormData.append("entry.1180864", "Yes");
+          googleFormData.append("entry.1483156473", "Yes");
+          googleFormData.append("entry.1267887881", getFormattedDate());
+
+          await fetch(GOOGLE_FORM_ACTION_URL, {
+            method: "POST",
+            body: googleFormData,
+            mode: "no-cors",
+          });
+        }
+
         setShowModal(true);
       } else {
         alert(response?.data?.message || 'Something went wrong.');
       }
     } catch (error) {
-      console.error('Error submitting to backend:', error);
+      console.error('Error submitting:', error);
       alert('An error occurred while submitting. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -353,31 +384,39 @@ export default function AS26CT() {
                 error={errors.school}
               />
 
-              <FormInput
-                icon={<Hash size={20} />}
-                label="MLBB UID"
-                name="uid"
-                placeholder="MLBB UID"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={mlbbUid}
-                onChange={handleChange}
-                verified={verified}
-                error={errors.uid}
-              />
+              <div onClick={() => !verified && setShowVerifyModal(true)} className="cursor-pointer">
+                <FormInput
+                  icon={<Hash size={20} />}
+                  label="MLBB UID"
+                  name="uid"
+                  placeholder={verified ? "MLBB UID" : "Click to Verify MLBB Account"}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={mlbbUid}
+                  onChange={handleChange}
+                  verified={verified}
+                  error={errors.uid}
+                  disabled={!verified}
+                  className={!verified ? "pointer-events-none" : ""}
+                />
+              </div>
 
-              <FormInput
-                icon={<Globe size={20} />}
-                label="MLBB Server"
-                name="server"
-                placeholder="MLBB Server"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={mlbbServer}
-                onChange={handleChange}
-                verified={verified}
-                error={errors.server}
-              />
+              <div onClick={() => !verified && setShowVerifyModal(true)} className="cursor-pointer">
+                <FormInput
+                  icon={<Globe size={20} />}
+                  label="MLBB Server"
+                  name="server"
+                  placeholder={verified ? "MLBB Server" : "Click to Verify MLBB Account"}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={mlbbServer}
+                  onChange={handleChange}
+                  verified={verified}
+                  error={errors.server}
+                  disabled={!verified}
+                  className={!verified ? "pointer-events-none" : ""}
+                />
+              </div>
 
               <FormInput
                 icon={<Globe size={20} />}
@@ -470,9 +509,9 @@ export default function AS26CT() {
 
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={!mlbbUid || !mlbbServer || isSubmitting}
                 className={`w-full py-4 rounded-2xl font-bold text-base transition-all ${
-                  isSubmitting
+                  !mlbbUid || !mlbbServer || isSubmitting
                     ? 'bg-white/20 text-white/60 cursor-not-allowed'
                     : 'bg-white text-teal-700 hover:bg-teal-50 active:scale-[0.98]'
                 }`}
