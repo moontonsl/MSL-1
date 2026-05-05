@@ -52,7 +52,7 @@ export default function OrganizationAwards() {
           {orgAwards.map((award) => (
             <a
               key={award.id}
-              href={`/NetworkAwards/Nominate/${award.id}`}
+              href={`/MSLNetworkAwards/Nominate/${award.id}`}
               className="relative w-[calc(50%-0.375rem)] sm:w-[calc(50%-0.75rem)] md:w-[calc(33.333%-1rem)] lg:w-[calc(25%-1.5rem)] max-w-[280px] shrink-0 rounded-xl md:rounded-2xl overflow-hidden block transition-all duration-300 hover:-translate-y-1 md:hover:-translate-y-2 hover:shadow-2xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#FFC107]/50"
               aria-label={award.title}
               title={award.title}
