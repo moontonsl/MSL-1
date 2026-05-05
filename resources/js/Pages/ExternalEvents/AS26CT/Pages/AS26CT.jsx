@@ -433,7 +433,7 @@ export default function AS26CT() {
                 icon={<Link2 size={20} />}
                 label="Post Link"
                 name="postLink"
-                placeholder="https://"
+                placeholder="https://facebook.com/your-post"
                 value={form.postLink}
                 onChange={handleChange}
                 tooltip="Paste the link to your post."
