@@ -999,9 +999,9 @@ class CampusTournamentController extends Controller
 
             // Check permissions
             if ($user->role === 'SL') {
-                // Check if user owns this tournament
-                if ($tournament->sl_id !== $user->id) {
-                    return response()->json(['error' => 'You can only export your own tournaments'], 403);
+                // SL's school must match the tournament's school
+                if ($tournament->school_name !== $user->university) {
+                    return response()->json(['error' => 'You can only export results for tournaments in your school'], 403);
                 }
             }
 
