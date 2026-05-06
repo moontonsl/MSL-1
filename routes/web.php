@@ -80,14 +80,23 @@ Route::get('/MSLNetworkAwards', function () {
 })->name('network.awards');
 
 Route::get('/MSLNetworkAwards/Organization', function () {
+    if (!session()->has('ml_user')) {
+        return redirect()->route('ml.login')->with('error', 'Please verify your MLBB account first.');
+    }
     return Inertia::render('Awards/OrganizationAwards');
 })->name('network.awards.organization');
 
 Route::get('/MSLNetworkAwards/Individual', function () {
+    if (!session()->has('ml_user')) {
+        return redirect()->route('ml.login')->with('error', 'Please verify your MLBB account first.');
+    }
     return Inertia::render('Awards/IndividualAwards');
 })->name('network.awards.individual');
 
 Route::get('/MSLNetworkAwards/Nominate/{awardId}', function (string $awardId) {
+    if (!session()->has('ml_user')) {
+        return redirect()->route('ml.login')->with('error', 'Please verify your MLBB account first.');
+    }
     $fullName = '';
     $isReadOnly = false;
     
@@ -108,6 +117,9 @@ Route::get('/MSLNetworkAwards/Nominate/{awardId}', function (string $awardId) {
 })->name('network.awards.nominate');
 
 Route::get('/MSLNetworkAwards/NominateStudent/{awardId}', function (string $awardId) {
+    if (!session()->has('ml_user')) {
+        return redirect()->route('ml.login')->with('error', 'Please verify your MLBB account first.');
+    }
     $fullName = '';
     $isReadOnly = false;
     
