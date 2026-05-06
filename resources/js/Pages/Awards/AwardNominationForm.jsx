@@ -14,7 +14,7 @@ const LABEL_CLASS = 'block text-sm font-bold text-[#FBBF24] mb-2';
 const INPUT_CLASS =
   'w-full bg-[#1A1A1A] border border-[#FBBF24] text-[#FBBF24] placeholder:text-[#FBBF24]/60 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-[#FBBF24] transition-all';
 
-function TextField({ label, value, onChange, placeholder, type = 'text' }) {
+function TextField({ label, value, onChange, placeholder, type = 'text', readOnly = false }) {
   return (
     <label className={LABEL_CLASS}>
       {label}
@@ -23,7 +23,8 @@ function TextField({ label, value, onChange, placeholder, type = 'text' }) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={INPUT_CLASS}
+        readOnly={readOnly}
+        className={`${INPUT_CLASS} ${readOnly ? 'opacity-70 cursor-not-allowed' : ''}`}
       />
     </label>
   );
@@ -49,7 +50,7 @@ function SelectField({ label, value, onChange, options }) {
 }
 
 export default function AwardNominationForm() {
-  const { awardId: pageAwardId } = usePage().props;
+  const { awardId: pageAwardId, prefilledName = '', isNameReadOnly = false } = usePage().props;
   const awardId = String(pageAwardId || '');
   const currentAward = orgAwardsData[awardId];
 
@@ -63,7 +64,7 @@ export default function AwardNominationForm() {
     []
   );
 
-  const [fullName, setFullName] = useState('');
+  const [fullName, setFullName] = useState(prefilledName);
   const [orgName, setOrgName] = useState('');
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -110,14 +111,14 @@ export default function AwardNominationForm() {
         <SubmissionSuccessModal
           isOpen={showSuccessModal}
           onYes={() => {
+            setShowSuccessModal(false);
+            router.visit('/MSLNetworkAwards');
+          }}
+          onNo={() => {
             setFullName('');
             setOrgName('');
             setReason('');
             setShowSuccessModal(false);
-          }}
-          onNo={() => {
-            setShowSuccessModal(false);
-            router.visit('/MSLNetworkAwards');
           }}
         />
 
@@ -184,6 +185,7 @@ export default function AwardNominationForm() {
                     value={fullName}
                     onChange={setFullName}
                     placeholder="e.g. Crisostomo Ibarra"
+                    readOnly={isNameReadOnly}
                   />
 
                   <SelectField

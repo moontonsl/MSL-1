@@ -163,18 +163,6 @@ const MLLoginVoting = forwardRef(({ onLoginSuccess }, ref) => {
         mtTitle[0].style.marginBottom = '20px';
       }
 
-      if (loginTypeOuter.length > 0) {
-        const signInImage = document.createElement('img');
-        signInImage.className = 'signmlbb';
-        signInImage.src = '/images/MCC/MCCLOGO.png'; 
-        signInImage.alt = 'Sign in with Mobile Legends';
-        signInImage.style.cursor = 'pointer';
-        signInImage.style.width = '50px';
-        signInImage.style.position = 'absolute';
-        signInImage.style.left = '35px';
-        signInImage.style.top = '20px';  
-        loginTypeOuter[0].appendChild(signInImage);
-      }
 
 
       if (signmlbb.length > 0) {

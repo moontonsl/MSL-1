@@ -14,11 +14,11 @@ const INPUT_CLASS =
   'w-full bg-[#1A1A1A] border border-[#FBBF24] text-[#FBBF24] placeholder:text-[#FBBF24]/60 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-[#FBBF24] transition-all';
 
 export default function StudentAwardNominationForm() {
-  const { awardId: pageAwardId } = usePage().props;
+  const { awardId: pageAwardId, prefilledName = '', isNameReadOnly = false } = usePage().props;
   const awardId = String(pageAwardId || '');
   const currentAward = studentAwardsData[awardId];
 
-  const [fullName, setFullName] = useState('');
+  const [fullName, setFullName] = useState(prefilledName);
   const [nomineeName, setNomineeName] = useState('');
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -65,14 +65,14 @@ export default function StudentAwardNominationForm() {
         <SubmissionSuccessModal
           isOpen={showSuccessModal}
           onYes={() => {
+            setShowSuccessModal(false);
+            router.visit('/MSLNetworkAwards');
+          }}
+          onNo={() => {
             setFullName('');
             setNomineeName('');
             setReason('');
             setShowSuccessModal(false);
-          }}
-          onNo={() => {
-            setShowSuccessModal(false);
-            router.visit('/MSLNetworkAwards');
           }}
         />
 
@@ -141,7 +141,8 @@ export default function StudentAwardNominationForm() {
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="Crisostomo Ibarra"
-                      className={INPUT_CLASS}
+                      readOnly={isNameReadOnly}
+                      className={`${INPUT_CLASS} ${isNameReadOnly ? 'opacity-70 cursor-not-allowed' : ''}`}
                     />
                   </label>
 
