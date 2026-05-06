@@ -75,29 +75,36 @@ Route::get('/AS26CT', function () {
     return Inertia::render('ExternalEvents/AS26CT/Pages/AS26CT');
 })->name('as26ct');
 // MSL Network Awards
-Route::get('/NetworkAwards', function () {
+Route::get('/MSLNetworkAwards', function () {
     return Inertia::render('Awards/NetworkAwards');
 })->name('network.awards');
 
-Route::get('/NetworkAwards/Organization', function () {
+Route::get('/MSLNetworkAwards/Organization', function () {
     return Inertia::render('Awards/OrganizationAwards');
 })->name('network.awards.organization');
 
-Route::get('/NetworkAwards/Individual', function () {
+Route::get('/MSLNetworkAwards/Individual', function () {
     return Inertia::render('Awards/IndividualAwards');
 })->name('network.awards.individual');
 
-Route::get('/NetworkAwards/Nominate/{awardId}', function (string $awardId) {
+Route::get('/MSLNetworkAwards/Nominate/{awardId}', function (string $awardId) {
     return Inertia::render('Awards/AwardNominationForm', [
         'awardId' => $awardId,
     ]);
 })->name('network.awards.nominate');
 
-Route::get('/NetworkAwards/NominateStudent/{awardId}', function (string $awardId) {
+Route::get('/MSLNetworkAwards/NominateStudent/{awardId}', function (string $awardId) {
     return Inertia::render('Awards/StudentAwardNominationForm', [
         'awardId' => $awardId,
     ]);
 })->name('network.awards.nominate.student');
+
+// Backwards-compatible redirects (old path -> new path)
+Route::redirect('/NetworkAwards', '/MSLNetworkAwards', 301);
+Route::redirect('/NetworkAwards/Organization', '/MSLNetworkAwards/Organization', 301);
+Route::redirect('/NetworkAwards/Individual', '/MSLNetworkAwards/Individual', 301);
+Route::redirect('/NetworkAwards/Nominate/{awardId}', '/MSLNetworkAwards/Nominate/{awardId}', 301);
+Route::redirect('/NetworkAwards/NominateStudent/{awardId}', '/MSLNetworkAwards/NominateStudent/{awardId}', 301);
 
 // Report Violation Page
 Route::get('/report-violation', function () {

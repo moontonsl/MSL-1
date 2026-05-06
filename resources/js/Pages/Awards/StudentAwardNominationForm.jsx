@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import MainLayout from '@/Layouts/MainLayout.jsx';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { ChevronLeft } from 'lucide-react';
 import { studentAwardsData } from '@/Data/awardsData.js';
 import axios from 'axios';
 import { Toaster, toast } from 'react-hot-toast';
+import SubmissionSuccessModal from '@/Components/SubmissionSuccessModal.jsx';
 
 const HERO_BANNER_SRC = '/images/Awards/Top%20Image.png';
 
@@ -21,6 +22,7 @@ export default function StudentAwardNominationForm() {
   const [nomineeName, setNomineeName] = useState('');
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const isReady = Boolean(fullName.trim() && nomineeName.trim() && reason.trim());
 
@@ -39,11 +41,7 @@ export default function StudentAwardNominationForm() {
       });
 
       if (response.data.success) {
-        toast.success(response.data.message);
-        // Clear form
-        setFullName('');
-        setNomineeName('');
-        setReason('');
+        setShowSuccessModal(true);
       }
     } catch (error) {
       if (error.response?.data?.message) {
@@ -64,6 +62,20 @@ export default function StudentAwardNominationForm() {
       <Head title={`${currentAward?.title || 'Student Award Nomination'} - MSL Network Awards`} />
 
       <div className="w-full min-h-screen bg-[#0A0A0A] text-white flex flex-col items-center pb-24">
+        <SubmissionSuccessModal
+          isOpen={showSuccessModal}
+          onYes={() => {
+            setFullName('');
+            setNomineeName('');
+            setReason('');
+            setShowSuccessModal(false);
+          }}
+          onNo={() => {
+            setShowSuccessModal(false);
+            router.visit('/MSLNetworkAwards');
+          }}
+        />
+
         {/* Hero Banner */}
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 md:mt-8 mb-6">
           <img

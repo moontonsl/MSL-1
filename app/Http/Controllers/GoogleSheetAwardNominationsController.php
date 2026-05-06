@@ -48,11 +48,31 @@ class GoogleSheetAwardNominationsController extends Controller
         ];
 
         foreach ($results as $row) {
+            $mappedAwardCategory = match($row->award_type) {
+                'organization' => 'Organization Award',
+                'individual', 'student' => 'Individual Award',
+                default => $row->award_type,
+            };
+
+            $mappedAwardType = match($row->award_id) {
+                'org-year' => 'Organization of the Year',
+                'best-event' => 'Best Event of the Year',
+                'rising-org' => 'Rising Organization Award',
+                'student-impact' => 'Student Community Impact Award',
+                'collaboration' => 'Collaboration of the Year',
+                'service-esports' => 'Service Through Esports Award',
+                'org-partner' => 'Organization Partner of the Year',
+                'esports-advocate' => 'Esports Advocate of the Year',
+                'student-talent' => 'Student Talent of the Year',
+                'student-creator' => 'Student Creator of the Year',
+                default => $row->award_id,
+            };
+
             $values[] = [
                 $row->id,
                 $row->ml_id,
-                $row->award_id,
-                $row->award_type,
+                $mappedAwardCategory,
+                $mappedAwardType,
                 $row->nominator_name,
                 $row->nominee_name,
                 $row->reason,
