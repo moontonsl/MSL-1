@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import MainLayout from '@/Layouts/MainLayout.jsx';
 import { Head, router, usePage } from '@inertiajs/react';
 import { ChevronLeft } from 'lucide-react';
@@ -6,6 +6,7 @@ import { studentAwardsData } from '@/Data/awardsData.js';
 import axios from 'axios';
 import { Toaster, toast } from 'react-hot-toast';
 import SubmissionSuccessModal from '@/Components/SubmissionSuccessModal.jsx';
+import MLLoginVoting from '@/Pages/MCC/Voting/Voting Sign In/MLLoginVoting.jsx';
 
 const HERO_BANNER_SRC = '/images/Awards/Top%20Image.png';
 
@@ -14,7 +15,7 @@ const INPUT_CLASS =
   'w-full bg-[#1A1A1A] border border-[#FBBF24] text-[#FBBF24] placeholder:text-[#FBBF24]/60 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-[#FBBF24] transition-all';
 
 export default function StudentAwardNominationForm() {
-  const { awardId: pageAwardId, prefilledName = '', isNameReadOnly = false } = usePage().props;
+  const { awardId: pageAwardId, prefilledName = '', isNameReadOnly = false, isMlAuthenticated } = usePage().props;
   const awardId = String(pageAwardId || '');
   const currentAward = studentAwardsData[awardId];
 
@@ -23,6 +24,13 @@ export default function StudentAwardNominationForm() {
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const mlLoginRef = useRef(null);
+
+  useEffect(() => {
+    if (isMlAuthenticated === false && mlLoginRef.current) {
+      mlLoginRef.current.triggerLogin();
+    }
+  }, [isMlAuthenticated]);
 
   const isReady = Boolean(fullName.trim() && nomineeName.trim() && reason.trim());
 
@@ -60,6 +68,7 @@ export default function StudentAwardNominationForm() {
   return (
     <MainLayout>
       <Head title={`${currentAward?.title || 'Student Award Nomination'} - MSL Network Awards`} />
+      <MLLoginVoting ref={mlLoginRef} onLoginSuccess={() => window.location.reload()} />
 
       <div className="w-full min-h-screen bg-[#0A0A0A] text-white flex flex-col items-center pb-24">
         <SubmissionSuccessModal
