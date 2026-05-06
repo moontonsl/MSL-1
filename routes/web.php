@@ -80,23 +80,19 @@ Route::get('/MSLNetworkAwards', function () {
 })->name('network.awards');
 
 Route::get('/MSLNetworkAwards/Organization', function () {
-    if (!session()->has('ml_user')) {
-        return redirect()->route('ml.login')->with('error', 'Please verify your MLBB account first.');
-    }
-    return Inertia::render('Awards/OrganizationAwards');
+    return Inertia::render('Awards/OrganizationAwards', [
+        'isMlAuthenticated' => session()->has('ml_user')
+    ]);
 })->name('network.awards.organization');
 
 Route::get('/MSLNetworkAwards/Individual', function () {
-    if (!session()->has('ml_user')) {
-        return redirect()->route('ml.login')->with('error', 'Please verify your MLBB account first.');
-    }
-    return Inertia::render('Awards/IndividualAwards');
+    return Inertia::render('Awards/IndividualAwards', [
+        'isMlAuthenticated' => session()->has('ml_user')
+    ]);
 })->name('network.awards.individual');
 
 Route::get('/MSLNetworkAwards/Nominate/{awardId}', function (string $awardId) {
-    if (!session()->has('ml_user')) {
-        return redirect()->route('ml.login')->with('error', 'Please verify your MLBB account first.');
-    }
+    $isMlAuthenticated = session()->has('ml_user');
     $fullName = '';
     $isReadOnly = false;
     
@@ -113,13 +109,12 @@ Route::get('/MSLNetworkAwards/Nominate/{awardId}', function (string $awardId) {
         'awardId' => $awardId,
         'prefilledName' => $fullName,
         'isNameReadOnly' => $isReadOnly,
+        'isMlAuthenticated' => $isMlAuthenticated,
     ]);
 })->name('network.awards.nominate');
 
 Route::get('/MSLNetworkAwards/NominateStudent/{awardId}', function (string $awardId) {
-    if (!session()->has('ml_user')) {
-        return redirect()->route('ml.login')->with('error', 'Please verify your MLBB account first.');
-    }
+    $isMlAuthenticated = session()->has('ml_user');
     $fullName = '';
     $isReadOnly = false;
     
@@ -136,6 +131,7 @@ Route::get('/MSLNetworkAwards/NominateStudent/{awardId}', function (string $awar
         'awardId' => $awardId,
         'prefilledName' => $fullName,
         'isNameReadOnly' => $isReadOnly,
+        'isMlAuthenticated' => $isMlAuthenticated,
     ]);
 })->name('network.awards.nominate.student');
 

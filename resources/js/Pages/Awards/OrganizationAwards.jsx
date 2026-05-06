@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import MainLayout from '@/Layouts/MainLayout.jsx';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { ChevronLeft } from 'lucide-react';
+import MLLoginVoting from '@/Pages/MCC/Voting/Voting Sign In/MLLoginVoting.jsx';
 
 const HERO_BANNER_SRC = '/images/Awards/Top%20Image.png';
 
@@ -16,9 +17,19 @@ const orgAwards = [
 ];
 
 export default function OrganizationAwards() {
+  const { isMlAuthenticated } = usePage().props;
+  const mlLoginRef = useRef(null);
+
+  useEffect(() => {
+    if (isMlAuthenticated === false && mlLoginRef.current) {
+      mlLoginRef.current.triggerLogin();
+    }
+  }, [isMlAuthenticated]);
+
   return (
     <MainLayout>
       <Head title="Organization Awards - MSL Network Awards" />
+      <MLLoginVoting ref={mlLoginRef} onLoginSuccess={() => window.location.reload()} />
 
       <div className="w-full min-h-screen bg-[#0A0A0A] text-white flex flex-col items-center pb-24">
         {/* Hero Banner */}

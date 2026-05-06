@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import MainLayout from '@/Layouts/MainLayout.jsx';
 import { Head, router, usePage } from '@inertiajs/react';
 import { ChevronLeft } from 'lucide-react';
@@ -6,6 +6,7 @@ import { orgAwardsData } from '@/Data/awardsData.js';
 import axios from 'axios';
 import { Toaster, toast } from 'react-hot-toast';
 import SubmissionSuccessModal from '@/Components/SubmissionSuccessModal.jsx';
+import MLLoginVoting from '@/Pages/MCC/Voting/Voting Sign In/MLLoginVoting.jsx';
 
 const HERO_BANNER_SRC = '/images/Awards/Top%20Image.png';
 const FORM_GOLD = '#FBBF24';
@@ -50,7 +51,7 @@ function SelectField({ label, value, onChange, options }) {
 }
 
 export default function AwardNominationForm() {
-  const { awardId: pageAwardId, prefilledName = '', isNameReadOnly = false } = usePage().props;
+  const { awardId: pageAwardId, prefilledName = '', isNameReadOnly = false, isMlAuthenticated } = usePage().props;
   const awardId = String(pageAwardId || '');
   const currentAward = orgAwardsData[awardId];
 
@@ -69,6 +70,13 @@ export default function AwardNominationForm() {
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const mlLoginRef = useRef(null);
+
+  useEffect(() => {
+    if (isMlAuthenticated === false && mlLoginRef.current) {
+      mlLoginRef.current.triggerLogin();
+    }
+  }, [isMlAuthenticated]);
 
   const isReady = Boolean(fullName.trim() && orgName && reason.trim());
 
@@ -106,6 +114,7 @@ export default function AwardNominationForm() {
   return (
     <MainLayout>
       <Head title={`${currentAward?.title || 'Award Nomination'} - MSL Network Awards`} />
+      <MLLoginVoting ref={mlLoginRef} onLoginSuccess={() => window.location.reload()} />
 
       <div className="w-full min-h-screen bg-[#0A0A0A] text-white flex flex-col items-center pb-24">
         <SubmissionSuccessModal
