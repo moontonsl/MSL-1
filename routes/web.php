@@ -88,14 +88,42 @@ Route::get('/MSLNetworkAwards/Individual', function () {
 })->name('network.awards.individual');
 
 Route::get('/MSLNetworkAwards/Nominate/{awardId}', function (string $awardId) {
+    $fullName = '';
+    $isReadOnly = false;
+    
+    if (session()->has('ml_user')) {
+        $mlUser = session('ml_user');
+        $user = \App\Models\User::where('ml_id', $mlUser->ml_id)->first();
+        if ($user) {
+            $fullName = trim($user->name . ' ' . $user->surname);
+            $isReadOnly = true;
+        }
+    }
+
     return Inertia::render('Awards/AwardNominationForm', [
         'awardId' => $awardId,
+        'prefilledName' => $fullName,
+        'isNameReadOnly' => $isReadOnly,
     ]);
 })->name('network.awards.nominate');
 
 Route::get('/MSLNetworkAwards/NominateStudent/{awardId}', function (string $awardId) {
+    $fullName = '';
+    $isReadOnly = false;
+    
+    if (session()->has('ml_user')) {
+        $mlUser = session('ml_user');
+        $user = \App\Models\User::where('ml_id', $mlUser->ml_id)->first();
+        if ($user) {
+            $fullName = trim($user->name . ' ' . $user->surname);
+            $isReadOnly = true;
+        }
+    }
+
     return Inertia::render('Awards/StudentAwardNominationForm', [
         'awardId' => $awardId,
+        'prefilledName' => $fullName,
+        'isNameReadOnly' => $isReadOnly,
     ]);
 })->name('network.awards.nominate.student');
 
