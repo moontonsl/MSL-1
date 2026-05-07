@@ -1695,205 +1695,117 @@ const RegionalAdmin = () => {
                   </div>
 
                   <div className="max-h-[70vh] overflow-y-auto overflow-x-auto custom-scrollbar pr-2">
-                    {(viewingTeamsTab === 'teams' || viewingTeamsTab === 'all') && (
-                      <>
-                        {viewingTeamsTab === 'all' && (
-                          <div className="px-6 md:px-10 pt-6 pb-2 text-xs md:text-sm font-montserrat text-white/70">
-                            5-Man Teams
+                    {(() => {
+                      const activeList =
+                        viewingTeamsTab === 'teams'
+                          ? teamsOnly
+                          : viewingTeamsTab === 'solo'
+                            ? soloOnly
+                            : all.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+                      return (
+                        <>
+                          {/* Table Header - Desktop */}
+                          <div className="hidden md:grid [grid-template-columns:minmax(180px,1.3fr)_repeat(5,minmax(140px,1.2fr))_minmax(170px,1.2fr)] gap-2 px-6 md:px-10 py-2 text-white/70 text-xs md:text-sm border-b border-white/10 font-montserrat bg-neutral-900/30 min-w-[1200px] justify-items-start">
+                            <div className="self-center w-full">{viewingTeamsTab === 'solo' ? 'Solo pool' : 'Team name'}</div>
+                            <div className="w-full">{viewingTeamsTab === 'solo' ? 'Jungler' : 'Captain'}</div>
+                            <div className="w-full">{viewingTeamsTab === 'solo' ? 'Roam' : 'Player 2'}</div>
+                            <div className="w-full">{viewingTeamsTab === 'solo' ? 'Gold Laner' : 'Player 3'}</div>
+                            <div className="w-full">{viewingTeamsTab === 'solo' ? 'Exp Laner' : 'Player 4'}</div>
+                            <div className="w-full">{viewingTeamsTab === 'solo' ? 'Mid Laner' : 'Player 5'}</div>
+                            <div className="grid place-items-center w-full">Status</div>
                           </div>
-                        )}
-                        {/* Table Header - Desktop */}
-                        <div className="hidden md:grid [grid-template-columns:minmax(180px,1.3fr)_repeat(5,minmax(140px,1.2fr))_minmax(170px,1.2fr)] gap-2 px-6 md:px-10 py-2 text-white/70 text-xs md:text-sm border-b border-white/10 font-montserrat bg-neutral-900/30 min-w-[1200px] justify-items-start">
-                          <div className="self-center w-full">Team name</div>
-                          <div className="text-center">Captain</div>
-                          <div className="text-center">Player 2</div>
-                          <div className="text-center">Player 3</div>
-                          <div className="text-center">Player 4</div>
-                          <div className="text-center">Player 5</div>
-                          <div className="grid place-items-center">Status</div>
-                        </div>
 
-                        {/* Table Header - Mobile (Team + Status) */}
-                        <div className="md:hidden grid [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-5 px-4 py-2 text-white/70 text-xs border-b border-white/10 font-montserrat bg-neutral-900/30">
-                          <div className="self-center">Team name</div>
-                          <div className="justify-self-start text-left">Status</div>
-                          <div className="text-right"></div>
-                        </div>
-
-                        {/* Team Rows */}
-                        {teamsOnly.length > 0 ? (
-                          teamsOnly.map((team) => (
-                            <React.Fragment key={team.id}>
-                              {/* Desktop Row */}
-                              <div
-                                className="hidden md:grid [grid-template-columns:minmax(180px,1.3fr)_repeat(5,minmax(140px,1.2fr))_minmax(170px,1.2fr)] gap-2 items-center px-6 md:px-10 py-3 border-t border-white/10 bg-neutral-900/20 hover:bg-neutral-900/40 transition min-w-[1200px] justify-items-start"
-                              >
-                                <div className="text-white/90 font-montserrat md:truncate whitespace-normal w-full text-left">{team.name}</div>
-
-                                {(() => {
-                                  const players = Array.isArray(team?.players) ? team.players.slice(0, 5) : [];
-                                  const captain = players[0];
-                                  const p2 = players[1];
-                                  const p3 = players[2];
-                                  const p4 = players[3];
-                                  const p5 = players[4];
-                                  const { label, pillClassName } = getTeamConfirmation(team);
-
-                                  const renderPlayer = (player) => (
-                                    <div className="flex justify-center w-full min-w-0">
-                                      {player ? <PlayerCellModal player={player} /> : <span className="text-white/20 text-xs italic font-montserrat">Empty</span>}
-                                    </div>
-                                  );
-
-                                  return (
-                                    <>
-                                      {renderPlayer(captain)}
-                                      {renderPlayer(p2)}
-                                      {renderPlayer(p3)}
-                                      {renderPlayer(p4)}
-                                      {renderPlayer(p5)}
-                                      <div className="flex justify-center">
-                                        <span className={`rounded-md px-2 py-1 text-xs md:text-sm min-w-[128px] text-center font-montserrat ${pillClassName}`}>
-                                          {label}
-                                        </span>
-                                      </div>
-                                    </>
-                                  );
-                                })()}
-                              </div>
-
-                              {/* Mobile Row */}
-                              <div className="grid md:hidden [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-2 items-center px-4 py-3 border-t border-white/10 bg-neutral-900/20 hover:bg-neutral-900/40 transition">
-                                <div className="text-white/90 font-montserrat truncate">{team.name}</div>
-                                {(() => {
-                                  const { label, pillClassName } = getTeamConfirmation(team);
-                                  return (
-                                    <>
-                                      <div className="flex justify-start">
-                                        <span className={`rounded-md px-2 py-1 text-xs min-w-[112px] text-center font-montserrat ${pillClassName}`}>
-                                          {label}
-                                        </span>
-                                      </div>
-                                      <div className="flex justify-end">
-                                        <button
-                                          type="button"
-                                          onClick={() => setMobileViewTeam(team)}
-                                          className="px-3 py-1 rounded-md border border-white/30 text-white/90 text-xs bg-white/10 hover:bg-white/20"
-                                        >
-                                          View
-                                        </button>
-                                      </div>
-                                    </>
-                                  );
-                                })()}
-                              </div>
-                            </React.Fragment>
-                          ))
-                        ) : (
-                          <div className="px-4 py-10 text-center text-white/60 font-montserrat">
-                            No 5-man teams registered yet.
+                          {/* Table Header - Mobile */}
+                          <div className="md:hidden grid [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-5 px-4 py-2 text-white/70 text-xs border-b border-white/10 font-montserrat bg-neutral-900/30">
+                            <div className="self-center">{viewingTeamsTab === 'solo' ? 'Solo pool' : 'Team name'}</div>
+                            <div className="justify-self-start text-left">Status</div>
+                            <div className="text-right"></div>
                           </div>
-                        )}
-                      </>
-                    )}
 
-                    {viewingTeamsTab === 'solo' || viewingTeamsTab === 'all' ? (
-                      <>
-                        {viewingTeamsTab === 'all' && (
-                          <div className="px-6 md:px-10 pt-6 pb-2 text-xs md:text-sm font-montserrat text-white/70">
-                            Solo Registrations
-                          </div>
-                        )}
-                        {/* Solo Header - Desktop */}
-                        <div
-                          className={`hidden md:${SOLO_POOL_GRID} w-full px-4 pb-3 text-sm font-semibold text-gray-400 border-b border-neutral-800 min-w-[900px]`}
-                        >
-                          <div className="min-w-0">Solo pool</div>
-                          {SOLO_ROLES.map((r) => (
-                            <div key={r} className="min-w-0 text-center">
-                              {r}
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Solo Header - Mobile */}
-                        <div className="md:hidden grid [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-5 px-4 py-2 text-white/70 text-xs border-b border-white/10 font-montserrat bg-neutral-900/30">
-                          <div className="self-center">Solo pool</div>
-                          <div className="justify-self-start text-left">Status</div>
-                          <div className="text-right"></div>
-                        </div>
-
-                        {soloOnly.length > 0 ? (
-                          soloOnly.map((team) => {
-                            const byRole = new Map(
-                              (Array.isArray(team?.players) ? team.players : [])
-                                .filter(p => p?.lane_role)
-                                .map(p => [p.lane_role, p])
-                            );
-                            const { label, pillClassName } = getTeamConfirmation(team);
-
-                            const renderSoloCell = (role) => {
-                              const player = byRole.get(role);
-                              if (!player) {
-                                return (
-                                  <div className="flex items-center justify-center gap-2 w-full min-w-0">
-                                    <RoleIcon role={role} />
-                                    <span className="font-montserrat text-xs text-white/50 truncate">Vacant</span>
-                                  </div>
-                                );
+                          {activeList.length > 0 ? (
+                            activeList.map((team) => {
+                              const isSolo = (team?.type || 'team') === 'solo';
+                              const { label, pillClassName } = getTeamConfirmation(team);
+                              
+                              // Combine and sort players such that captain is at index 0
+                              let players = Array.isArray(team?.players) ? [...team.players] : [];
+                              if (team.captain_id) {
+                                players.sort((a, b) => {
+                                  if (a.id === team.captain_id) return -1;
+                                  if (b.id === team.captain_id) return 1;
+                                  return 0;
+                                });
                               }
-                              return <PlayerCellModal player={player} align="center" />;
-                            };
 
-                            return (
-                              <React.Fragment key={team.id}>
-                                {/* Desktop Row */}
-                                <div
-                                  className={`hidden md:${SOLO_POOL_GRID} w-full bg-[#1A1A1A] border border-neutral-800 rounded-xl p-4 mb-3 items-center hover:bg-[#222222] transition-colors min-w-[900px]`}
-                                >
-                                  <div className="min-w-0">
-                                    <div className="text-white/90 font-montserrat truncate">{team.name}</div>
-                                    <div className="mt-2">
-                                      <span className={`rounded-md px-2 py-1 text-xs min-w-[128px] inline-block text-center font-montserrat ${pillClassName}`}>
+                              // Only use role-based mapping if we are specifically in the 'solo' tab
+                              const useRoles = viewingTeamsTab === 'solo';
+                              const byRole = (useRoles && isSolo) ? new Map(players.filter(p => p?.lane_role).map(p => [p.lane_role, p])) : null;
+
+                              return (
+                                <React.Fragment key={team.id}>
+                                  {/* Desktop Row */}
+                                  <div className="hidden md:grid [grid-template-columns:minmax(180px,1.3fr)_repeat(5,minmax(140px,1.2fr))_minmax(170px,1.2fr)] gap-2 items-center px-6 md:px-10 py-3 border-t border-white/10 bg-neutral-900/20 hover:bg-neutral-900/40 transition min-w-[1200px] justify-items-start">
+                                    <div className="text-white/90 font-montserrat md:truncate whitespace-normal w-full text-left">
+                                      {team.name}
+                                    </div>
+
+                                    {[0, 1, 2, 3, 4].map((idx) => {
+                                      const role = SOLO_ROLES[idx];
+                                      const player = useRoles ? byRole.get(role) : players[idx];
+
+                                      return (
+                                        <div className="flex justify-center w-full min-w-0" key={idx}>
+                                          {player ? (
+                                            <PlayerCellModal player={player} />
+                                          ) : (
+                                            <div className="flex items-center justify-center gap-2 opacity-30">
+                                              {useRoles && <RoleIcon role={role} />}
+                                              <span className="text-white/20 text-[10px] italic font-montserrat">
+                                                {useRoles ? 'Vacant' : 'Empty'}
+                                              </span>
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+
+                                    <div className="flex justify-center w-full">
+                                      <span className={`rounded-md px-2 py-1 text-xs md:text-sm min-w-[128px] text-center font-montserrat ${pillClassName}`}>
                                         {label}
                                       </span>
                                     </div>
                                   </div>
-                                  {SOLO_ROLES.map((role) => (
-                                    <div key={role} className="min-w-0">
-                                      {renderSoloCell(role)}
-                                    </div>
-                                  ))}
-                                </div>
 
-                                {/* Mobile Row */}
-                                <div className="grid md:hidden [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-2 items-center px-4 py-3 border-t border-white/10 bg-neutral-900/20 hover:bg-neutral-900/40 transition">
-                                  <div className="text-white/90 font-montserrat truncate">{team.name}</div>
-                                  <div className="flex justify-start">
-                                    <span className={`rounded-md px-2 py-1 text-xs min-w-[112px] text-center font-montserrat ${pillClassName}`}>
-                                      {label}
-                                    </span>
+                                  {/* Mobile Row */}
+                                  <div className="grid md:hidden [grid-template-columns:minmax(120px,1fr)_112px_auto] gap-2 items-center px-4 py-3 border-t border-white/10 bg-neutral-900/20 hover:bg-neutral-900/40 transition">
+                                    <div className="text-white/90 font-montserrat truncate">{team.name}</div>
+                                    <div className="flex justify-start">
+                                      <span className={`rounded-md px-2 py-1 text-xs min-w-[112px] text-center font-montserrat ${pillClassName}`}>
+                                        {label}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-end">
+                                      <button
+                                        type="button"
+                                        onClick={() => setMobileViewTeam(team)}
+                                        className="px-3 py-1 rounded-md border border-white/30 text-white/90 text-xs bg-white/10 hover:bg-white/20"
+                                      >
+                                        View
+                                      </button>
+                                    </div>
                                   </div>
-                                  <div className="flex justify-end">
-                                    <button
-                                      type="button"
-                                      onClick={() => setMobileViewTeam(team)}
-                                      className="px-3 py-1 rounded-md border border-white/30 text-white/90 text-xs bg-white/10 hover:bg-white/20"
-                                    >
-                                      View
-                                    </button>
-                                  </div>
-                                </div>
-                              </React.Fragment>
-                            );
-                          })
-                        ) : (
-                          <div className="px-4 py-10 text-center text-white/60 font-montserrat">
-                            No solo registrations yet.
-                          </div>
-                        )}
-                      </>
-                    ) : null}
+                                </React.Fragment>
+                              );
+                            })
+                          ) : (
+                            <div className="px-4 py-10 text-center text-white/60 font-montserrat">
+                              No registrations found.
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 </>
               );

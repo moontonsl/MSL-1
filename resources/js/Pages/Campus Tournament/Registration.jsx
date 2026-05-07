@@ -159,6 +159,7 @@ export default function Registration({ inviteTeamId }) {
 
           setAuthUser(userData.user);
           sessionStorage.setItem("campusTournamentCaptain", JSON.stringify(userData.user));
+          sessionStorage.removeItem("soloMatchmakingRole");
           setCurrentView("selection");
           return;
         }
@@ -232,6 +233,7 @@ export default function Registration({ inviteTeamId }) {
             return;
           }
 
+          sessionStorage.removeItem("soloMatchmakingRole");
           router.visit("/Tournament/CampusTournamentTeam");
           return;
         }
@@ -310,32 +312,11 @@ export default function Registration({ inviteTeamId }) {
       const hasApprovedTournament = tournaments.some((t) => t.school_name === authUser.university);
 
       if (hasApprovedTournament) {
-        // Only show role selection if NOT already in a team
-        setCurrentView("solo_matchmaking");
+        // Redirect directly to SoloPlayer dashboard
+        window.location.href = "/Tournament/SoloPlayer";
       } else {
         setError("There's no available tournament in your campus");
       }
-    } catch {
-      setError("An error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const submitSoloFlow = async () => {
-    setIsLoading(true);
-    setError("");
-    setRolesError("");
-
-    try {
-      if (selectedRoles.length === 0) {
-        setRolesError("Please select 1 role.");
-        return;
-      }
-
-      // Store selected role in session storage to be picked up by the dashboard
-      sessionStorage.setItem("soloMatchmakingRole", selectedRoles[0]);
-      window.location.href = "/Tournament/SoloPlayer";
     } catch {
       setError("An error occurred. Please try again.");
     } finally {
@@ -353,9 +334,6 @@ export default function Registration({ inviteTeamId }) {
     if (currentView === "join_team") {
       await submitJoinFlow();
       return;
-    }
-    if (currentView === "solo_matchmaking") {
-      await submitSoloFlow();
     }
   };
 
@@ -555,117 +533,6 @@ export default function Registration({ inviteTeamId }) {
                           className="w-full md:w-auto px-10 py-3 rounded-full bg-[#F2C21A] hover:bg-[#d9ae17] text-black font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                         >
                           <span>{isLoading ? "Processing..." : "Join Team"}</span>
-                          {!isLoading && <ArrowRight className="w-4 h-4" />}
-                        </button>
-                      </div>
-                    </form>
-                  </motion.div>
-                )}
-
-                {currentView === "solo_matchmaking" && (
-                  <motion.div key="solo_matchmaking" {...motionProps}>
-                    <button
-                      type="button"
-                      onClick={goBackToSelection}
-                      className="flex items-center gap-1 text-white/60 hover:text-white text-sm mb-4 transition-colors"
-                    >
-                      <ArrowLeft className="w-4 h-4" />
-                      Back
-                    </button>
-
-                    <h2 className="text-white font-bold text-[20px] md:text-[22px] text-center mb-2">
-                      <span className="text-[#FFC107]">Solo</span> Matchmaking
-                    </h2>
-
-                    <p className="text-sm text-gray-300 text-center mb-6">
-                      Connect with solo players from your school and build your dream team.
-                    </p>
-
-                    <form className="space-y-6 overflow-visible min-h-0" onSubmit={handleFormSubmit}>
-                      {error && (
-                        <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-200 text-sm">
-                          {error}
-                        </div>
-                      )}
-
-                      <div className="relative overflow-visible z-50">
-                        <label className="block text-[12px] md:text-sm text-white/70 font-medium mb-1">Role</label>
-
-                        <div className="relative z-50 w-full" ref={roleTriggerRef}>
-                          <button
-                            type="button"
-                            onClick={() => setIsRoleOpen((v) => !v)}
-                            className={`w-full rounded-full border px-4 py-3 flex items-center justify-between transition-colors ${rolesError
-                                ? "border-red-400/70"
-                                : selectedRoles.length > 0
-                                  ? "border-yellow-400/60"
-                                  : "border-neutral-700"
-                              } bg-transparent text-white`}
-                            aria-haspopup="listbox"
-                            aria-expanded={isRoleOpen}
-                          >
-                            <span className={`text-sm ${selectedRoles.length > 0 ? "text-white" : "text-gray-500"}`}>
-                              {soloRoleLabel}
-                            </span>
-                            <ChevronDown
-                              className={`w-4 h-4 text-white/70 transition-transform ${isRoleOpen ? "rotate-180" : ""}`}
-                            />
-                          </button>
-                        </div>
-
-                        {isRoleOpen &&
-                          roleMenuPos &&
-                          typeof document !== "undefined" &&
-                          createPortal(
-                            <div
-                              ref={roleMenuRef}
-                              role="listbox"
-                              style={{
-                                position: "fixed",
-                                top: roleMenuPos.top,
-                                left: roleMenuPos.left,
-                                width: roleMenuPos.width,
-                                zIndex: 9999,
-                              }}
-                              className="bg-[#1A1A1A] border border-neutral-700 rounded-xl max-h-[240px] overflow-y-auto overflow-x-visible shadow-2xl custom-scrollbar"
-                            >
-                              {roleOptions.map((role) => {
-                                const active = selectedRoles.includes(role);
-                                return (
-                                  <button
-                                    key={role}
-                                    type="button"
-                                    onClick={() => toggleRole(role)}
-                                    className={`w-full px-4 py-3 flex items-center gap-3 text-left text-[14px] sm:text-sm transition-colors ${active ? "text-[#FFC107]" : "text-white/90"
-                                      } hover:bg-white/5`}
-                                  >
-                                    <span
-                                      className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 ${active ? "border-[#FFC107]" : "border-white/40"
-                                        }`}
-                                    >
-                                      {active ? <span className="w-2.5 h-2.5 rounded-full bg-[#FFC107]" /> : null}
-                                    </span>
-                                    <span className="flex-1">{role}</span>
-                                  </button>
-                                );
-                              })}
-                            </div>,
-                            document.body
-                          )}
-
-                        {rolesError && <div className="mt-2 text-[11px] text-red-300/90">{rolesError}</div>}
-                        <div className="mt-2 text-[11px] text-white/60">
-                          Select one role for matchmaking.
-                        </div>
-                      </div>
-
-                      <div className="pt-2 flex justify-center">
-                        <button
-                          type="submit"
-                          disabled={isLoading}
-                          className="w-full md:w-auto px-10 py-3 rounded-full bg-[#F2C21A] hover:bg-[#d9ae17] text-black font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                        >
-                          <span>{isLoading ? "Processing..." : "Continue"}</span>
                           {!isLoading && <ArrowRight className="w-4 h-4" />}
                         </button>
                       </div>

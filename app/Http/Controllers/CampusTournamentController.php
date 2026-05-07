@@ -23,7 +23,19 @@ class CampusTournamentController extends Controller
     public function slIndex()
     {
         $user = Auth::user();
-        
+
+        // Automatic Lock Check:
+        // Check for any approved tournaments for this school that have passed their end_date but aren't locked yet.
+        $expiredTournaments = CampusTournament::where('school_name', $user->university)
+            ->where('status', 'approved')
+            ->where('registration_locked', false)
+            ->whereDate('end_date', '<', now())
+            ->get();
+
+        foreach ($expiredTournaments as $et) {
+            $this->performRegistrationLock($et->id);
+        }
+
         // Get tournaments for this SL's school with teams and members
         $tournaments = CampusTournament::where('school_name', $user->university)
             ->with(['teams' => function($query) {
@@ -324,6 +336,7 @@ class CampusTournamentController extends Controller
         // Update the end_date (overwrite existing)
         $tournament->update([
             'end_date' => $request->end_date,
+            'registration_locked' => false, // Unlock if extended
         ]);
         
         return response()->json([
@@ -358,6 +371,7 @@ class CampusTournamentController extends Controller
             ->where('results_submitted', false)
             ->update([
                 'end_date' => $request->end_date,
+                'registration_locked' => false, // Unlock if extended
             ]);
             
         return response()->json([
@@ -1343,6 +1357,106 @@ class CampusTournamentController extends Controller
     }
 
     /**
+     * Lock registration and fuse incomplete rosters
+     */
+    public function lockRegistration(Request $request, $id)
+    {
+        $user = Auth::user();
+        $tournament = CampusTournament::findOrFail($id);
+
+        // Authorization check
+        if ($user->role !== 'Super Admin' && ($user->role !== 'SL' || $tournament->sl_id !== $user->id)) {
+            return response()->json(['error' => 'Unauthorized to lock registration.'], 403);
+        }
+
+        return $this->performRegistrationLock($id);
+    }
+
+    /**
+     * Core logic for locking registration and fusing rosters
+     */
+    protected function performRegistrationLock($id)
+    {
+        $tournament = CampusTournament::with(['teams' => function($q) {
+            $q->where('status', 'assembling');
+        }, 'teams.members'])->findOrFail($id);
+
+        if ($tournament->registration_locked) {
+            return response()->json(['error' => 'Registration is already locked.'], 422);
+        }
+
+        \DB::beginTransaction();
+        try {
+            // 1. Mark as locked
+            $tournament->update(['registration_locked' => true]);
+
+            // 2. Collect members from assembling SOLO teams and delete incomplete teams
+            $assemblingTeams = $tournament->teams;
+            $allMembers = [];
+            foreach ($assemblingTeams as $team) {
+                // Only collect players from 'solo' type teams for shuffling
+                if ($team->type === 'solo') {
+                    foreach ($team->members as $member) {
+                        $allMembers[] = [
+                            'player_id' => $member->player_id,
+                            'lane_role' => $member->lane_role
+                        ];
+                    }
+                }
+                
+                // All assembling teams are deleted to clear the way for fused teams
+                // type=team teams that were incomplete simply lose their spot
+                $team->members()->delete();
+                $team->delete();
+            }
+
+            // 3. Shuffle solo members for random grouping
+            shuffle($allMembers);
+
+            // 4. Form teams of 5 from the solo pool
+            $chunks = array_chunk($allMembers, 5);
+            $fusedCount = 0;
+
+            foreach ($chunks as $index => $chunk) {
+                $teamName = "Fused Team " . ($index + 1) . " - " . date('md');
+                
+                $newTeam = \App\Models\CampusTournamentTeam::create([
+                    'tournament_id' => $tournament->id,
+                    'team_name' => $teamName,
+                    'captain_id' => $chunk[0]['player_id'],
+                    'status' => count($chunk) >= 5 ? 'registered' : 'assembling',
+                    'type' => 'solo'
+                ]);
+
+                foreach ($chunk as $cIndex => $memberData) {
+                    \App\Models\CampusTournamentTeamMember::create([
+                        'team_id' => $newTeam->id,
+                        'player_id' => $memberData['player_id'],
+                        'role' => $cIndex === 0 ? 'captain' : 'member',
+                        'lane_role' => $memberData['lane_role'],
+                        'status' => 'accepted'
+                    ]);
+                }
+                $fusedCount++;
+            }
+
+            // 5. Delete old assembling teams
+            \App\Models\CampusTournamentTeam::whereIn('id', $assemblingTeams->pluck('id'))->delete();
+
+            \DB::commit();
+            return response()->json([
+                'success' => true, 
+                'message' => "Registration locked! {$fusedCount} teams were fused/formed."
+            ]);
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Registration lock error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to lock registration and fuse rosters.'], 500);
+        }
+    }
+
+    /**
      * Solo Player Dashboard
      */
     public function soloDashboard()
@@ -1398,6 +1512,15 @@ class CampusTournamentController extends Controller
         $tournament = \App\Models\CampusTournament::findOrFail($request->tournament_id);
         if ($tournament->school_name !== $user->university) {
             return response()->json(['error' => 'You can only create teams for your own university.'], 403);
+        }
+
+        // Roster Lock Check
+        if ($tournament->registration_locked) {
+            return response()->json(['error' => 'Registration is locked for this tournament.'], 403);
+        }
+
+        if (now()->gt(\Carbon\Carbon::parse($tournament->end_date)->endOfDay())) {
+            return response()->json(['error' => 'Registration period has ended.'], 403);
         }
 
         // Existing membership check
@@ -1458,7 +1581,17 @@ class CampusTournamentController extends Controller
             'role' => 'required|string|in:Jungler,Roam,Gold Laner,Exp Laner,Mid Laner',
         ]);
 
-        $team = \App\Models\CampusTournamentTeam::with('members')->findOrFail($request->team_id);
+        $team = \App\Models\CampusTournamentTeam::with('members', 'tournament')->findOrFail($request->team_id);
+        $tournament = $team->tournament;
+
+        // Roster Lock Check
+        if ($tournament->registration_locked) {
+            return response()->json(['error' => 'Registration is locked for this tournament.'], 403);
+        }
+
+        if (now()->gt(\Carbon\Carbon::parse($tournament->end_date)->endOfDay())) {
+            return response()->json(['error' => 'Registration period has ended.'], 403);
+        }
         
         // Same university check
         if ($team->tournament->school_name !== $user->university) {
@@ -1534,6 +1667,16 @@ class CampusTournamentController extends Controller
         }
 
         $team = $member->team;
+        $tournament = $team->tournament;
+
+        // Roster Lock Check
+        if ($tournament && $tournament->registration_locked) {
+            return response()->json(['error' => 'Registration is locked. You cannot leave the team now.'], 403);
+        }
+
+        if ($tournament && now()->gt(\Carbon\Carbon::parse($tournament->end_date)->endOfDay())) {
+            return response()->json(['error' => 'Registration period has ended. You cannot leave the team now.'], 403);
+        }
 
         \DB::beginTransaction();
         try {

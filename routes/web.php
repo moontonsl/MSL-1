@@ -230,6 +230,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/api/solo/create', [\App\Http\Controllers\CampusTournamentController::class, 'createSoloTeam'])->name('campus.solo.create');
     Route::post('/api/solo/join', [\App\Http\Controllers\CampusTournamentController::class, 'joinSoloTeam'])->name('campus.solo.join');
     Route::post('/api/solo/leave', [\App\Http\Controllers\CampusTournamentController::class, 'leaveSoloTeam'])->name('campus.solo.leave');
+    Route::post('/campus-tournaments/{id}/lock-registration', [\App\Http\Controllers\CampusTournamentController::class, 'lockRegistration'])->name('campus.tournaments.lock-registration');
 
     // Team Invite Routes
     // Team Invite Routes - MOVED OUTSIDE AUTH
