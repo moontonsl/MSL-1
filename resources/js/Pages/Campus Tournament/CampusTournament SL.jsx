@@ -342,6 +342,7 @@ const CampusTournament = () => {
     );
   };
 
+
   const getStatusClasses = (value) => {
     const v = value || 'participant';
     if (v === '1st') return 'bg-yellow-400/60 border border-yellow-300/80 text-white';
@@ -650,9 +651,8 @@ const CampusTournament = () => {
 
           {/* Verification dot that can overflow outside the avatar */}
           <span
-            className={`absolute bottom-[-3px] right-[-3px] z-20 w-4 h-4 rounded-full border border-black/60 shadow-[0_0_8px_rgba(0,0,0,0.5)] ${
-              player?.accepted ? 'bg-green-400' : 'bg-red-500'
-            }`}
+            className={`absolute bottom-[-3px] right-[-3px] z-20 w-4 h-4 rounded-full border border-black/60 shadow-[0_0_8px_rgba(0,0,0,0.5)] ${player?.accepted ? 'bg-green-400' : 'bg-red-500'
+              }`}
           />
         </div>
 
@@ -878,37 +878,37 @@ const CampusTournament = () => {
                       )}
                     </div>
                     <div className="flex items-center gap-6">
-                    <label className="flex items-center gap-2 cursor-pointer group">
-                      <div className="relative flex items-center justify-center">
-                        <input
-                          type="checkbox"
-                          checked={showOnline}
-                          onChange={(e) => setShowOnline(e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-5 h-5 border-2 border-white/30 rounded-md peer-checked:bg-[#F2C21A] peer-checked:border-[#F2C21A] transition-all duration-200 group-hover:border-[#F2C21A]/50"></div>
-                        <svg className="absolute w-3 h-3 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <span className="font-montserrat text-sm text-white/80 group-hover:text-white transition-colors">Online</span>
-                    </label>
+                      <label className="flex items-center gap-2 cursor-pointer group">
+                        <div className="relative flex items-center justify-center">
+                          <input
+                            type="checkbox"
+                            checked={showOnline}
+                            onChange={(e) => setShowOnline(e.target.checked)}
+                            className="sr-only peer"
+                          />
+                          <div className="w-5 h-5 border-2 border-white/30 rounded-md peer-checked:bg-[#F2C21A] peer-checked:border-[#F2C21A] transition-all duration-200 group-hover:border-[#F2C21A]/50"></div>
+                          <svg className="absolute w-3 h-3 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span className="font-montserrat text-sm text-white/80 group-hover:text-white transition-colors">Online</span>
+                      </label>
 
-                    <label className="flex items-center gap-2 cursor-pointer group">
-                      <div className="relative flex items-center justify-center">
-                        <input
-                          type="checkbox"
-                          checked={showOnsite}
-                          onChange={(e) => setShowOnsite(e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-5 h-5 border-2 border-white/30 rounded-md peer-checked:bg-[#F2C21A] peer-checked:border-[#F2C21A] transition-all duration-200 group-hover:border-[#F2C21A]/50"></div>
-                        <svg className="absolute w-3 h-3 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <span className="font-montserrat text-sm text-white/80 group-hover:text-white transition-colors">Onsite</span>
-                    </label>
+                      <label className="flex items-center gap-2 cursor-pointer group">
+                        <div className="relative flex items-center justify-center">
+                          <input
+                            type="checkbox"
+                            checked={showOnsite}
+                            onChange={(e) => setShowOnsite(e.target.checked)}
+                            className="sr-only peer"
+                          />
+                          <div className="w-5 h-5 border-2 border-white/30 rounded-md peer-checked:bg-[#F2C21A] peer-checked:border-[#F2C21A] transition-all duration-200 group-hover:border-[#F2C21A]/50"></div>
+                          <svg className="absolute w-3 h-3 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span className="font-montserrat text-sm text-white/80 group-hover:text-white transition-colors">Onsite</span>
+                      </label>
                     </div>
                   </div>
                 </div>
@@ -934,6 +934,7 @@ const CampusTournament = () => {
                           handleSubmitResults={handleSubmitResults}
                           isEditingResults={isEditingResults}
                           setIsEditingResults={setIsEditingResults}
+                          onLockRegistration={() => {}}
                         />
                       ))
                   ) : (
@@ -942,7 +943,6 @@ const CampusTournament = () => {
                     </div>
                   )}
 
-                  {/* Pagination */}
                   <Pagination
                     currentPage={tournamentPage}
                     totalItems={filteredActiveTournaments.length}
@@ -953,324 +953,325 @@ const CampusTournament = () => {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Modal */}
-        {isCreateOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10" onClick={handleClose} />
-            <div className="relative z-20 w-full max-w-3xl bg-black/40 backdrop-blur-md text-white border border-white/20 rounded-2xl p-6 md:p-10 shadow-2xl">
-              <div className="font-montserrat text-2xl md:text-3xl font-semibold mb-6">Create Tournament</div>
-              <form onSubmit={handleSubmit} className="flex flex-col gap-5 md:gap-6">
-                <label className="flex flex-col gap-2">
-                  <span className="font-montserrat text-lg md:text-xl">Start date</span>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => handleStartDateChange(e.target.value)}
-                    onFocus={(e) => { if (e.target.showPicker) { try { e.target.showPicker(); } catch (_) { } } }}
-                    min={(() => {
-                      const tomorrow = new Date();
-                      tomorrow.setDate(tomorrow.getDate() + 1);
-                      return tomorrow.toISOString().split('T')[0];
-                    })()}
-                    className="bg-transparent border border-white/50 rounded-xl px-4 py-3 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[#F2C21A]"
-                  />
-                </label>
+      {/* Modal */}
+      {isCreateOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10" onClick={handleClose} />
+          <div className="relative z-20 w-full max-w-3xl bg-black/40 backdrop-blur-md text-white border border-white/20 rounded-2xl p-6 md:p-10 shadow-2xl">
+            <div className="font-montserrat text-2xl md:text-3xl font-semibold mb-6">Create Tournament</div>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5 md:gap-6">
+              <label className="flex flex-col gap-2">
+                <span className="font-montserrat text-lg md:text-xl">Start date</span>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => handleStartDateChange(e.target.value)}
+                  onFocus={(e) => { if (e.target.showPicker) { try { e.target.showPicker(); } catch (_) { } } }}
+                  min={(() => {
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    return tomorrow.toISOString().split('T')[0];
+                  })()}
+                  className="bg-transparent border border-white/50 rounded-xl px-4 py-3 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[#F2C21A]"
+                />
+              </label>
 
-                <label className="flex flex-col gap-2">
-                  <span className="font-montserrat text-lg md:text-xl">End date</span>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    onFocus={(e) => { if (e.target.showPicker) { try { e.target.showPicker(); } catch (_) { } } }}
-                    min={(() => {
-                      // If start date is selected, use start date + 1 day as minimum
-                      if (startDate) {
-                        const startDateObj = new Date(startDate);
-                        startDateObj.setDate(startDateObj.getDate() + 1);
-                        return startDateObj.toISOString().split('T')[0];
-                      }
-                      // Otherwise, use tomorrow as minimum
-                      const tomorrow = new Date();
-                      tomorrow.setDate(tomorrow.getDate() + 1);
-                      return tomorrow.toISOString().split('T')[0];
-                    })()}
-                    className="bg-transparent border border-white/50 rounded-xl px-4 py-3 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[#F2C21A]"
-                  />
-                </label>
-                <label className="flex flex-col gap-2">
-                  <span className="font-montserrat text-lg md:text-xl">Tournament Type</span>
-                  <div className="flex gap-4">
-                    <button
-                      type="button"
-                      onClick={() => setTournamentType('Online')}
-                      className={`flex-1 px-4 py-3 rounded-xl border font-montserrat transition-all ${tournamentType === 'Online'
-                        ? 'bg-[#F2C21A] text-black border-[#F2C21A]'
-                        : 'bg-transparent text-white border-white/50 hover:border-[#F2C21A]/50'
-                        }`}
-                    >
-                      Online
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setTournamentType('Onsite')}
-                      className={`flex-1 px-4 py-3 rounded-xl border font-montserrat transition-all ${tournamentType === 'Onsite'
-                        ? 'bg-[#F2C21A] text-black border-[#F2C21A]'
-                        : 'bg-transparent text-white border-white/50 hover:border-[#F2C21A]/50'
-                        }`}
-                    >
-                      Onsite
-                    </button>
-                  </div>
-                </label>
-
-                <div className="pt-2">
+              <label className="flex flex-col gap-2">
+                <span className="font-montserrat text-lg md:text-xl">End date</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  onFocus={(e) => { if (e.target.showPicker) { try { e.target.showPicker(); } catch (_) { } } }}
+                  min={(() => {
+                    // If start date is selected, use start date + 1 day as minimum
+                    if (startDate) {
+                      const startDateObj = new Date(startDate);
+                      startDateObj.setDate(startDateObj.getDate() + 1);
+                      return startDateObj.toISOString().split('T')[0];
+                    }
+                    // Otherwise, use tomorrow as minimum
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    return tomorrow.toISOString().split('T')[0];
+                  })()}
+                  className="bg-transparent border border-white/50 rounded-xl px-4 py-3 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[#F2C21A]"
+                />
+              </label>
+              <label className="flex flex-col gap-2">
+                <span className="font-montserrat text-lg md:text-xl">Tournament Type</span>
+                <div className="flex gap-4">
                   <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="bg-[#F2C21A] text-black font-montserrat font-semibold rounded-xl px-8 py-3 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting ? 'Creating...' : 'Submit'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-        {/* Mobile Players Modal */}
-        {mobileViewTeam && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10" onClick={() => setMobileViewTeam(null)} />
-            <div className="relative z-20 w-[92%] md:max-w-lg bg-neutral-900/90 text-white border border-white/20 rounded-2xl p-4 md:p-6 shadow-2xl">
-              <div className="flex items-center justify-between mb-3">
-                <div className="font-montserrat text-base md:text-lg font-semibold">{mobileViewTeam.name}</div>
-                <button
-                  type="button"
-                  onClick={() => setMobileViewTeam(null)}
-                  className="w-8 h-8 grid place-items-center rounded-md border border-white/20 hover:bg-white/10"
-                  aria-label="Close"
-                >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
-                </button>
-              </div>
-              <div className="space-y-3">
-                {mobileViewTeam.players.slice(0, 5).map((player, idx) => (
-                  <div key={idx} className="flex items-center justify-between border border-white/10 rounded-lg px-3 py-2 bg-white/5">
-                    <div className="flex items-center gap-3">
-                      <div className="relative w-9 h-9 rounded-full">
-                        {/* Image/icon clipped by the inner circle */}
-                        <div className="relative w-full h-full overflow-hidden rounded-full border border-white/20 bg-white/10">
-                          {/* Default icon */}
-                          <svg className="absolute inset-0 m-auto w-5 h-5 text-white/50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
-                            <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                          </svg>
-                        </div>
-
-                        {/* Verification dot that can overflow outside the avatar */}
-                        <span
-                          className={`absolute bottom-[-3px] right-[-3px] z-20 w-4 h-4 rounded-full border border-black/60 shadow-[0_0_8px_rgba(0,0,0,0.5)] ${
-                            player?.verified ? 'bg-green-400' : 'bg-red-500'
-                          }`}
-                        />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="font-montserrat text-sm text-white/90 leading-tight truncate">
-                          {player.name}
-                        </div>
-                        <div className="font-montserrat text-xs text-white/60 leading-tight truncate max-w-[12ch]">
-                          {player?.ign || '—'}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Success Modal */}
-        {isSuccessOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10" onClick={handleSuccessClose} />
-            <div className="relative z-20 w-full max-w-md bg-black/40 backdrop-blur-md text-white border border-white/20 rounded-2xl p-6 md:p-8 shadow-2xl">
-              <div className="text-center">
-                {/* Success Icon */}
-                <div className="w-16 h-16 mx-auto mb-4 bg-green-500/20 rounded-full flex items-center justify-center">
-                  <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-
-                {/* Success Message */}
-                <h3 className="font-montserrat text-xl md:text-2xl font-semibold mb-3 text-green-400">
-                  Tournament Created Successfully!
-                </h3>
-
-                <p className="font-montserrat text-sm md:text-base text-white/80 mb-6 leading-relaxed">
-                  Your tournament request has been created successfully. Please wait for Regional Admin approval.
-                </p>
-
-                {/* Close Button */}
-                <button
-                  onClick={handleSuccessClose}
-                  className="w-full bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-6 py-3 hover:bg-[#F2C21A]/90 transition-colors"
-                >
-                  Got it
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Submit Results Modal */}
-        {showSubmitModal && submitModalData && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-10" onClick={handleCloseSubmitModal} />
-            <div className="relative z-20 w-full max-w-md bg-gradient-to-br from-neutral-800/95 to-neutral-900/95 backdrop-blur-md text-white border border-white/20 rounded-2xl p-6 md:p-8 shadow-2xl">
-              {/* Modal Header */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  {/* Icon based on modal type */}
-                  {submitModalData.type === 'error' && (
-                    <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
-                      <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                      </svg>
-                    </div>
-                  )}
-                  {submitModalData.type === 'success' && (
-                    <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
-                      <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                  )}
-                  {submitModalData.type === 'confirm' && (
-                    <div className="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center">
-                      <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                  )}
-                  <h3 className="font-montserrat text-lg md:text-xl font-semibold">
-                    {submitModalData.title}
-                  </h3>
-                </div>
-                <button
-                  onClick={handleCloseSubmitModal}
-                  className="w-8 h-8 grid place-items-center rounded-lg border border-white/20 hover:bg-white/10 transition-colors"
-                  aria-label="Close"
-                >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Modal Body */}
-              <div className="mb-6">
-                <p className="font-montserrat text-sm md:text-base text-white/80 leading-relaxed whitespace-pre-line">
-                  {submitModalData.message}
-                </p>
-              </div>
-
-              {/* Modal Actions */}
-              <div className="flex gap-3 justify-end">
-                {submitModalData.showCancel && (
-                  <button
-                    onClick={handleCloseSubmitModal}
-                    className="px-4 py-2 bg-neutral-700/50 hover:bg-neutral-600/50 text-white font-montserrat text-sm font-medium rounded-lg border border-white/20 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                )}
-                {submitModalData.type === 'confirm' ? (
-                  <button
-                    onClick={handleConfirmSubmit}
-                    disabled={isSubmitting}
-                    className="px-6 py-2 bg-[#F2C21A] hover:bg-[#F2C21A]/90 text-black font-montserrat text-sm font-semibold rounded-lg shadow-[0_0_8px_-3px_rgba(242,194,26,1)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {isSubmitting ? 'Submitting...' : 'Confirm Submit'}
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleCloseSubmitModal}
-                    className={`px-6 py-2 font-montserrat text-sm font-semibold rounded-lg transition-colors ${submitModalData.type === 'error'
-                      ? 'bg-red-500 hover:bg-red-600 text-white'
-                      : 'bg-green-500 hover:bg-green-600 text-white'
+                    type="button"
+                    onClick={() => setTournamentType('Online')}
+                    className={`flex-1 px-4 py-3 rounded-xl border font-montserrat transition-all ${tournamentType === 'Online'
+                      ? 'bg-[#F2C21A] text-black border-[#F2C21A]'
+                      : 'bg-transparent text-white border-white/50 hover:border-[#F2C21A]/50'
                       }`}
                   >
-                    OK
+                    Online
                   </button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Delete Confirmation Modal */}
-        {showDeleteModal && deleteTarget && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-10" onClick={closeDeleteModal} />
-            <div className="relative z-20 w-full max-w-md bg-gradient-to-br from-neutral-800/95 to-neutral-900/95 backdrop-blur-md text-white border border-white/20 rounded-2xl p-6 md:p-8 shadow-2xl">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </div>
-                  <h3 className="font-montserrat text-lg md:text-xl font-semibold">Delete Tournament</h3>
+                  <button
+                    type="button"
+                    onClick={() => setTournamentType('Onsite')}
+                    className={`flex-1 px-4 py-3 rounded-xl border font-montserrat transition-all ${tournamentType === 'Onsite'
+                      ? 'bg-[#F2C21A] text-black border-[#F2C21A]'
+                      : 'bg-transparent text-white border-white/50 hover:border-[#F2C21A]/50'
+                      }`}
+                  >
+                    Onsite
+                  </button>
                 </div>
+              </label>
+
+              <div className="pt-2">
                 <button
-                  onClick={closeDeleteModal}
-                  className="w-8 h-8 grid place-items-center rounded-lg border border-white/20 hover:bg-white/10 transition-colors"
-                  aria-label="Close"
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="bg-[#F2C21A] text-black font-montserrat font-semibold rounded-xl px-8 py-3 shadow-[0_0_8px_-3px_rgba(242,194,26,1)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
+                  {isSubmitting ? 'Creating...' : 'Submit'}
                 </button>
               </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Mobile Players Modal */}
+      {mobileViewTeam && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10" onClick={() => setMobileViewTeam(null)} />
+          <div className="relative z-20 w-[92%] md:max-w-lg bg-neutral-900/90 text-white border border-white/20 rounded-2xl p-4 md:p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-3">
+              <div className="font-montserrat text-base md:text-lg font-semibold">{mobileViewTeam.name}</div>
+              <button
+                type="button"
+                onClick={() => setMobileViewTeam(null)}
+                className="w-8 h-8 grid place-items-center rounded-md border border-white/20 hover:bg-white/10"
+                aria-label="Close"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+            <div className="space-y-3">
+              {mobileViewTeam.players.slice(0, 5).map((player, idx) => (
+                <div key={idx} className="flex items-center justify-between border border-white/10 rounded-lg px-3 py-2 bg-white/5">
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-9 h-9 rounded-full">
+                      {/* Image/icon clipped by the inner circle */}
+                      <div className="relative w-full h-full overflow-hidden rounded-full border border-white/20 bg-white/10">
+                        {/* Default icon */}
+                        <svg className="absolute inset-0 m-auto w-5 h-5 text-white/50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" strokeWidth="1.5" />
+                          <path d="M3 22c0-3.866 5.373-6 9-6s9 2.134 9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                        </svg>
+                      </div>
 
-              <div className="mb-6">
-                <p className="font-montserrat text-sm md:text-base text-white/80 leading-relaxed">
-                  Are you sure you want to permanently delete
-                  {" "}
-                  <span className="text-white font-semibold">{(deleteTarget.school_name || '').toUpperCase()} Tournament</span>
-                  ? This action cannot be undone.
-                </p>
-                <div className="mt-2 text-white/60 text-sm">
-                  {formatDate(deleteTarget.start_date)} - {formatDate(deleteTarget.end_date)}
+                      {/* Verification dot that can overflow outside the avatar */}
+                      <span
+                        className={`absolute bottom-[-3px] right-[-3px] z-20 w-4 h-4 rounded-full border border-black/60 shadow-[0_0_8px_rgba(0,0,0,0.5)] ${player?.verified ? 'bg-green-400' : 'bg-red-500'
+                          }`}
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-montserrat text-sm text-white/90 leading-tight truncate">
+                        {player.name}
+                      </div>
+                      <div className="font-montserrat text-xs text-white/60 leading-tight truncate max-w-[12ch]">
+                        {player?.ign || '—'}
+                      </div>
+                    </div>
+                  </div>
                 </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
+      {/* Success Modal */}
+      {isSuccessOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10" onClick={handleSuccessClose} />
+          <div className="relative z-20 w-full max-w-md bg-black/40 backdrop-blur-md text-white border border-white/20 rounded-2xl p-6 md:p-8 shadow-2xl">
+            <div className="text-center">
+              {/* Success Icon */}
+              <div className="w-16 h-16 mx-auto mb-4 bg-green-500/20 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                </svg>
               </div>
 
-              <div className="flex gap-3 justify-end">
+              {/* Success Message */}
+              <h3 className="font-montserrat text-xl md:text-2xl font-semibold mb-3 text-green-400">
+                Tournament Created Successfully!
+              </h3>
+
+              <p className="font-montserrat text-sm md:text-base text-white/80 mb-6 leading-relaxed">
+                Your tournament request has been created successfully. Please wait for Regional Admin approval.
+              </p>
+
+              {/* Close Button */}
+              <button
+                onClick={handleSuccessClose}
+                className="w-full bg-[#F2C21A] text-black font-montserrat text-sm font-semibold rounded-lg px-6 py-3 hover:bg-[#F2C21A]/90 transition-colors"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Submit Results Modal */}
+      {showSubmitModal && submitModalData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-10" onClick={handleCloseSubmitModal} />
+          <div className="relative z-20 w-full max-w-md bg-gradient-to-br from-neutral-800/95 to-neutral-900/95 backdrop-blur-md text-white border border-white/20 rounded-2xl p-6 md:p-8 shadow-2xl">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                {/* Icon based on modal type */}
+                {submitModalData.type === 'error' && (
+                  <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                )}
+                {submitModalData.type === 'success' && (
+                  <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                )}
+                {submitModalData.type === 'confirm' && (
+                  <div className="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                )}
+                <h3 className="font-montserrat text-lg md:text-xl font-semibold">
+                  {submitModalData.title}
+                </h3>
+              </div>
+              <button
+                onClick={handleCloseSubmitModal}
+                className="w-8 h-8 grid place-items-center rounded-lg border border-white/20 hover:bg-white/10 transition-colors"
+                aria-label="Close"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="mb-6">
+              <p className="font-montserrat text-sm md:text-base text-white/80 leading-relaxed whitespace-pre-line">
+                {submitModalData.message}
+              </p>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex gap-3 justify-end">
+              {submitModalData.showCancel && (
                 <button
-                  onClick={closeDeleteModal}
-                  disabled={isDeleting}
-                  className="px-4 py-2 bg-neutral-700/50 hover:bg-neutral-600/50 text-white font-montserrat text-sm font-medium rounded-lg border border-white/20 transition-colors disabled:opacity-50"
+                  onClick={handleCloseSubmitModal}
+                  className="px-4 py-2 bg-neutral-700/50 hover:bg-neutral-600/50 text-white font-montserrat text-sm font-medium rounded-lg border border-white/20 transition-colors"
                 >
                   Cancel
                 </button>
+              )}
+              {submitModalData.type === 'confirm' ? (
                 <button
-                  onClick={confirmDelete}
-                  disabled={isDeleting}
-                  className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-montserrat text-sm font-semibold rounded-lg border border-red-400/20 transition-colors disabled:opacity-50"
+                  onClick={handleConfirmSubmit}
+                  disabled={isSubmitting}
+                  className="px-6 py-2 bg-[#F2C21A] hover:bg-[#F2C21A]/90 text-black font-montserrat text-sm font-semibold rounded-lg shadow-[0_0_8px_-3px_rgba(242,194,26,1)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  {isDeleting ? 'Deleting...' : 'Delete'}
+                  {isSubmitting ? 'Submitting...' : 'Confirm Submit'}
                 </button>
-              </div>
+              ) : (
+                <button
+                  onClick={handleCloseSubmitModal}
+                  className={`px-6 py-2 font-montserrat text-sm font-semibold rounded-lg transition-colors ${submitModalData.type === 'error'
+                    ? 'bg-red-500 hover:bg-red-600 text-white'
+                    : 'bg-green-500 hover:bg-green-600 text-white'
+                    }`}
+                >
+                  OK
+                </button>
+              )}
             </div>
           </div>
-        )}
-      </div>
-    </MainLayout >
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-10" onClick={closeDeleteModal} />
+          <div className="relative z-20 w-full max-w-md bg-gradient-to-br from-neutral-800/95 to-neutral-900/95 backdrop-blur-md text-white border border-white/20 rounded-2xl p-6 md:p-8 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+                <h3 className="font-montserrat text-lg md:text-xl font-semibold">Delete Tournament</h3>
+              </div>
+              <button
+                onClick={closeDeleteModal}
+                className="w-8 h-8 grid place-items-center rounded-lg border border-white/20 hover:bg-white/10 transition-colors"
+                aria-label="Close"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <p className="font-montserrat text-sm md:text-base text-white/80 leading-relaxed">
+                Are you sure you want to permanently delete
+                {" "}
+                <span className="text-white font-semibold">{(deleteTarget.school_name || '').toUpperCase()} Tournament</span>
+                ? This action cannot be undone.
+              </p>
+              <div className="mt-2 text-white/60 text-sm">
+                {formatDate(deleteTarget.start_date)} - {formatDate(deleteTarget.end_date)}
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={closeDeleteModal}
+                disabled={isDeleting}
+                className="px-4 py-2 bg-neutral-700/50 hover:bg-neutral-600/50 text-white font-montserrat text-sm font-medium rounded-lg border border-white/20 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={isDeleting}
+                className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-montserrat text-sm font-semibold rounded-lg border border-red-400/20 transition-colors disabled:opacity-50"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </MainLayout>
   );
 };
 

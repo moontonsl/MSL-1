@@ -21,6 +21,7 @@ class CampusTournament extends Model
         'results_submitted',
         'results_submitted_at',
         'tournament_type',
+        'registration_locked',
     ];
 
     protected $casts = [
@@ -29,6 +30,7 @@ class CampusTournament extends Model
         'approved_at' => 'datetime',
         'results_submitted' => 'boolean',
         'results_submitted_at' => 'datetime',
+        'registration_locked' => 'boolean',
     ];
 
     /**

@@ -107,7 +107,9 @@ export default function TournamentCard({
                   setIsEditingResults={setIsEditingResults}
                 />
               ) : (
-                <RosterManager tournament={tournament} />
+                <RosterManager 
+                  tournament={tournament} 
+                />
               )}
             </div>
           </div>
