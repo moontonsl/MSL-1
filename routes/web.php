@@ -74,6 +74,14 @@ Route::get('/about', function () {
 Route::get('/AS26CT', function () {
     return Inertia::render('ExternalEvents/AS26CT/Pages/AS26CT');
 })->name('as26ct');
+
+// Jejemon Emote: PH BACK TO SCHOOL EVENT (AS26Emote)
+Route::get('/AS26Emote', function () {
+    return Inertia::render('ExternalEvents/BTS26JE/Pages/BTS26JE');
+})->name('as26emote');
+
+// Backwards-compatible redirect
+Route::redirect('/BTS26JE', '/AS26Emote', 301);
 // MSL Network Awards
 Route::get('/MSLNetworkAwards', function () {
     return Inertia::render('Awards/NetworkAwards');
