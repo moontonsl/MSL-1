@@ -501,7 +501,7 @@ export default function TournamentJoinDashboard({ tournament, teams = [], user }
 
                   <div className="pt-2 border-t border-white/5 mt-2">
                     <p className="text-[10px] text-yellow-400/80 italic leading-relaxed">
-                      Note: Players in incomplete rosters will be randomly assigned to teams to complete a roster before registration locks.
+                      Note: Incomplete rosters will be merged, and roles will be randomly assigned once registration locks.
                     </p>
                   </div>
                 </div>
@@ -546,7 +546,7 @@ export default function TournamentJoinDashboard({ tournament, teams = [], user }
                     </p>
                     <div className="pt-2 border-t border-white/5">
                       <p className="text-[10px] text-yellow-400/80 italic leading-relaxed">
-                        Warning: Players in incomplete rosters will be randomly assigned to teams to complete a roster before registration locks.
+                        Warning: Incomplete rosters will be merged, and roles will be randomly assigned once registration locks.
                       </p>
                     </div>
                   </div>
