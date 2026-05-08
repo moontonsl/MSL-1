@@ -40,3 +40,11 @@ Schedule::command('users:delete-expired-proofs')
     ->at('03:00')
     ->withoutOverlapping()
     ->runInBackground();
+
+// Automatically lock registration and fuse rosters for expired Campus Tournaments
+// Run daily at midnight
+Schedule::command('teams:lock-expired-tournaments')
+    ->daily()
+    ->at('00:00')
+    ->withoutOverlapping()
+    ->runInBackground();

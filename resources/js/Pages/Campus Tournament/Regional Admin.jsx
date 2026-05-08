@@ -612,7 +612,7 @@ const RegionalAdmin = () => {
   const getTeamConfirmation = (team) => {
     const players = Array.isArray(team?.players) ? team.players : [];
     const firstFive = players.slice(0, 5);
-    const allAccepted = firstFive.length > 0 && firstFive.every((p) => Boolean(p?.accepted));
+    const allAccepted = firstFive.length === 5 && firstFive.every((p) => Boolean(p?.accepted));
 
     if (allAccepted) {
       return {
@@ -1224,8 +1224,8 @@ const RegionalAdmin = () => {
                                           })}
                                           <div className="flex justify-center">
                                             {(team.status === 'assembling' || team.players.length < 5 || team.players.slice(0, 5).some(p => !p.accepted)) ? (
-                                              <span className="rounded-md px-2 py-1 text-xs md:text-sm min-w-[128px] text-center bg-red-500/20 text-red-400 border border-red-500/30 font-montserrat font-semibold">
-                                                Pending
+                                              <span className="rounded-md px-2 py-1 text-xs md:text-sm min-w-[128px] text-center bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 font-montserrat font-semibold">
+                                                Assembling
                                               </span>
                                             ) : (
                                               <span className={`rounded-md px-2 py-1 text-xs md:text-sm min-w-[128px] text-center ${getStatusClasses(team.result || 'participant')}`}>
@@ -1239,8 +1239,8 @@ const RegionalAdmin = () => {
                                           <div className="text-white/90 font-montserrat truncate">{team.name}</div>
                                           <div className="flex justify-start">
                                             {(team.status === 'assembling' || team.players.length < 5 || team.players.slice(0, 5).some(p => !p.accepted)) ? (
-                                              <span className="rounded-md px-2 py-1 text-xs min-w-[112px] text-center bg-red-500/20 text-red-400 border border-red-500/30 font-montserrat font-semibold">
-                                                Pending
+                                              <span className="rounded-md px-2 py-1 text-xs min-w-[112px] text-center bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 font-montserrat font-semibold">
+                                                Assembling
                                               </span>
                                             ) : (
                                               <span className={`rounded-md px-2 py-1 text-xs min-w-[112px] text-center ${getStatusClasses(team.result || 'participant')}`}>
