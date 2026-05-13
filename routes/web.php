@@ -305,7 +305,7 @@ Route::get('/team-check', function (\Illuminate\Http\Request $request) {
             ->where('results_submitted', false)
             ->whereDate('end_date', '>=', now());
     })->where('player_id', $userId)
-        ->where('status', 'accepted')
+        ->whereIn('status', ['accepted', 'pending'])
         ->latest() // Important: Get the most recent team membership
         ->first();
 
@@ -1126,7 +1126,13 @@ Route::post('/join-by-code', function (\Illuminate\Http\Request $request) {
         ->count();
 
     if ($currentMembersCount >= 5) {
-        return response()->json(['message' => 'This team is already full.'], 403);
+        $isAlreadyMember = \App\Models\CampusTournamentTeamMember::where('team_id', $team->id)
+            ->where('player_id', $user->id)
+            ->exists();
+            
+        if (!$isAlreadyMember) {
+            return response()->json(['message' => 'This team is already full.'], 403);
+        }
     }
 
     // Add or update member status

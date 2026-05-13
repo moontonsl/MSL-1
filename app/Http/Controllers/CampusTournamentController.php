@@ -738,6 +738,7 @@ class CampusTournamentController extends Controller
         // Find the team where this user is a member
         // Prioritize teams in active tournaments (results not submitted) and recent teams
         $teamMember = \App\Models\CampusTournamentTeamMember::where('player_id', $user->id)
+            ->whereIn('status', ['accepted', 'pending'])
             ->whereHas('team.tournament', function($query) {
                 $query->where('status', 'approved')
                      // Prefer active tournaments first, so we don't show old ones
