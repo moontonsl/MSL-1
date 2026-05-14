@@ -172,11 +172,9 @@ export default function ASDance() {
   const mlLoginRef = useRef(null);
 
   const getFormattedDate = () => {
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     const d = new Date();
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    const year = d.getFullYear();
-    return `${month}/${day}/${year}`;
+    return `${months[d.getMonth()]} ${String(d.getDate()).padStart(2, "0")} ${d.getFullYear()}`;
   };
 
   const validate = () => {
@@ -275,39 +273,26 @@ export default function ASDance() {
     setIsSubmitting(true);
 
     try {
-      // 1. Submit to local database
-      const response = await axios.post('/all-star-color/submit', {
-        ...form,
-        uid: String(mlbbUid),
-        server: String(mlbbServer),
-      });
+      const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/1xbeccZGFXKIPuJB8ZR9XkbX1U_pgC88O4FGDrAKg0gY/formResponse";
+      if (GOOGLE_FORM_ACTION_URL) {
+        const googleFormData = new FormData();
+        googleFormData.append("entry.1059107868", form.name);
+        googleFormData.append("entry.681259786", form.school);
+        googleFormData.append("entry.1138940218", String(mlbbUid));
+        googleFormData.append("entry.1996968500", String(mlbbServer));
+        googleFormData.append("entry.881608408", form.facebookProfileLink);
+        googleFormData.append("entry.208606164", form.postLink);
+        googleFormData.append("entry.815753817", agreedMechanics ? "Yes" : "No");
+        googleFormData.append("entry.857726815", agreed ? "Yes" : "No");
 
-      if (response?.data?.success) {
-        // 2. Double-record to Google Forms
-        const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfrjIrg1KEycbR5TTKAgpe84w-cu6ly9SPpUKtGS0V3TkJTBw/formResponse";
-        if (GOOGLE_FORM_ACTION_URL) {
-          const googleFormData = new FormData();
-          googleFormData.append("entry.667666584", form.name);
-          googleFormData.append("entry.2058193001", form.school);
-          googleFormData.append("entry.1280932662", String(mlbbUid));
-          googleFormData.append("entry.107469135", String(mlbbServer));
-          googleFormData.append("entry.290976084", form.facebookProfileLink);
-          googleFormData.append("entry.1456806184", form.postLink);
-          googleFormData.append("entry.1180864", "Yes");
-          googleFormData.append("entry.1483156473", "Yes");
-          googleFormData.append("entry.1267887881", getFormattedDate());
-
-          await fetch(GOOGLE_FORM_ACTION_URL, {
-            method: "POST",
-            body: googleFormData,
-            mode: "no-cors",
-          });
-        }
-
-        setShowModal(true);
-      } else {
-        alert(response?.data?.message || 'Something went wrong.');
+        await fetch(GOOGLE_FORM_ACTION_URL, {
+          method: "POST",
+          body: googleFormData,
+          mode: "no-cors",
+        });
       }
+
+      setShowModal(true);
     } catch (error) {
       console.error('Error submitting:', error);
       alert('An error occurred while submitting. Please try again.');
