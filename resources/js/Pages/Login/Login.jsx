@@ -112,13 +112,14 @@ setError('');
                 {/* Video Container */}
                 <div className="video-container-login relative flex items-stretch justify-center w-full md:w-[680px] bg-black rounded-[0_0_15px_15px] md:rounded-[0_15px_15px_0] overflow-hidden h-[250px] min-h-[180px] md:h-auto md:min-h-0">
                     <div className="video-foreground relative w-full h-full flex items-stretch justify-center">
-                        <iframe src="https://player.vimeo.com/video/1091173390?h=b2f78d509b&autoplay=1&loop=1&muted=1&background=1"
+                      <iframe
+                        src="https://player.vimeo.com/video/1091173390?context=Vimeo%5CController%5CApi%5CResources%5CVideoController.&h=b2f78d509b&s=e3ba5b9062fe0eb9a97262a95d7f03fe2cb1c579_1778490740&autoplay=1&loop=1&muted=1"
                         title="MSL Video"
                         frameBorder="0"
                         allow="autoplay; fullscreen; picture-in-picture"
                         allowFullScreen
-                        className="w-full h-full aspect-auto border-none bg-black block"
-                        ></iframe>
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
                     </div>
                 </div>
             </div>
@@ -258,13 +259,13 @@ setError('');
         <div className="video-container-login relative flex items-stretch justify-center w-full md:w-[680px] bg-black rounded-[0_0_15px_15px] md:rounded-[0_15px_15px_0] overflow-hidden h-[250px] min-h-[180px] md:h-auto md:min-h-0">
             <div className="video-foreground relative w-full h-full flex items-stretch justify-center">
                 <iframe
-                    src="https://player.vimeo.com/video/1091173390?h=b2f78d509b&autoplay=1&loop=1&muted=1&background=1"
+                    src="https://player.vimeo.com/video/1091173390?context=Vimeo%5CController%5CApi%5CResources%5CVideoController.&h=b2f78d509b&s=e3ba5b9062fe0eb9a97262a95d7f03fe2cb1c579_1778490740&autoplay=1&loop=1&muted=1"
                     title="MSL Video"
                     frameBorder="0"
                     allow="autoplay; fullscreen; picture-in-picture"
                     allowFullScreen
-                    className="w-full h-full aspect-auto border-none bg-black block"
-                ></iframe>
+                    className="absolute inset-0 w-full h-full object-cover"
+                />
             </div>
         </div>
     </div>

@@ -74,6 +74,12 @@ Route::get('/about', function () {
 Route::get('/AS26CT', function () {
     return Inertia::render('ExternalEvents/AS26CT/Pages/AS26CT');
 })->name('as26ct');
+
+// AS Seapop DANCE CHALLENGE UGC (AS26Dance)
+Route::get('/AS26Dance', function () {
+    return Inertia::render('ExternalEvents/AS26Dance/Pages/AS26Dance');
+})->name('as26dance');
+
 // MSL Network Awards
 Route::get('/MSLNetworkAwards', function () {
     return Inertia::render('Awards/NetworkAwards');
