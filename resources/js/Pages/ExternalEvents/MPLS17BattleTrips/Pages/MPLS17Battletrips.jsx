@@ -25,6 +25,13 @@ const Tooltip = ({ text }) => (
 
 export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
     const COMMUNITIES = ["Moonton Student Leader", "Community Heroes"];
+    const SCHEDULE_DATES = [
+        "May 27 (Day 1)",
+        "May 28 (Day 2)",
+        "May 29 (Day 3)",
+        "May 30 (LB Finals)",
+        "May 31 (Grand Finals)",
+    ];
 
         const initialForm = {
             answer: "",
@@ -35,6 +42,9 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
             facebook: "",
             email: "",
             validId: "",
+            scheduleDate1: "",
+            scheduleDate2: "",
+            scheduleDate3: "",
             community: "",
             smartSubscriber: "",
             likeMPLPage: "",
@@ -50,6 +60,7 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
         const [showTerms, setShowTerms] = useState(false);
         const [showModal, setShowModal] = useState(false);
 
+        // TEMP: bypass MLBB verification for frontend testing
         const [showVerifyModal, setShowVerifyModal] = useState(true);
 
         const [mlbbId, setMlbbId] = useState("");
@@ -108,6 +119,9 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
                 e.email = "Please enter a valid email address.";
             
             if (!form.validId.trim()) e.validId = "Google Drive link required.";
+            if (!form.scheduleDate1) e.scheduleDate1 = "Please select your first schedule choice.";
+            if (!form.scheduleDate2) e.scheduleDate2 = "Please select your second schedule choice.";
+            if (!form.scheduleDate3) e.scheduleDate3 = "Please select your third schedule choice.";
             if (!mlbbId) e.mlbbId = "MLBB UID verification required.";
             if (!mlbbServer) e.mlbbServer = "MLBB Server verification required.";
             if (!form.community) e.community = "Please select a community.";
@@ -181,7 +195,20 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
                 v = "";
             }
 
-            setForm((prev) => ({ ...prev, [name]: v }));
+            setForm((prev) => {
+                const next = { ...prev, [name]: v };
+
+                if (name === "scheduleDate1") {
+                    if (next.scheduleDate2 === v) next.scheduleDate2 = "";
+                    if (next.scheduleDate3 === v || !next.scheduleDate2) next.scheduleDate3 = "";
+                }
+
+                if (name === "scheduleDate2") {
+                    if (next.scheduleDate3 === v) next.scheduleDate3 = "";
+                }
+
+                return next;
+            });
 
             setErrors((prev) => ({ ...prev, [name]: "" }));
         };
@@ -207,6 +234,9 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
                 formBody.append("entry.1332239123", mlbbId);
                 formBody.append("entry.1258292429", mlbbServer);
                 formBody.append("entry.611813938", form.validId);
+                formBody.append("entry.582747042", form.scheduleDate1);
+                formBody.append("entry.911343438", form.scheduleDate2);
+                formBody.append("entry.1584841062", form.scheduleDate3);
                 formBody.append("entry.617516356", form.community);
                 formBody.append("entry.1885783994", form.likeMPLPage);
                 formBody.append("entry.165580188", form.likeMSLPage);
@@ -372,6 +402,37 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
                     {/* VALID ID */}
                     <FormInput icon={<Globe />} label="Valid ID (Google Drive Link)" name="validId" placeholder="Paste Google Drive link here" value={form.validId} onChange={handleChange} tooltip="Set sharing to Anyone with the link" error={errors.validId} />
 
+                    {/* SCHEDULE DATE */}
+                    <div className="grid gap-4">
+                        {[
+                            { name: 'scheduleDate1', label: 'Select Schedule Date (First Choice)', disabled: false, excluded: [] },
+                            { name: 'scheduleDate2', label: 'Select Schedule Date (Second Choice)', disabled: !form.scheduleDate1, excluded: [form.scheduleDate1] },
+                            { name: 'scheduleDate3', label: 'Select Schedule Date (Third Choice)', disabled: !form.scheduleDate2, excluded: [form.scheduleDate1, form.scheduleDate2] },
+                        ].map((field) => (
+                            <div key={field.name}>
+                                <label className="font-semibold mb-1 block">
+                                    {field.label}
+                                </label>
+
+                                <select
+                                    name={field.name}
+                                    value={form[field.name]}
+                                    onChange={handleChange}
+                                    disabled={field.disabled}
+                                    className={`w-full border border-[#e59639] px-4 py-3 rounded-md text-black ${field.disabled ? "bg-gray-100 cursor-not-allowed opacity-70" : "bg-white"}`}
+                                >
+                                    <option disabled value="">{field.label}</option>
+                                    {SCHEDULE_DATES.filter((date) => !field.excluded.includes(date)).map((date) => (
+                                        <option key={date} value={date}>{date}</option>
+                                    ))}
+                                </select>
+                                {errors[field.name] && (
+                                    <p className="text-red-500 text-sm mt-2">{errors[field.name]}</p>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+
                     {/* COMMUNITY */}
                     <div>
                         <label className="font-semibold mb-1 block">
@@ -429,34 +490,34 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
                         )}
                     </div>
 
-                    {/* DATA PRIVACY */}
-                    <div className="border p-4 rounded-lg bg-gray-50">
-                        <label className="flex items-start gap-3">
-                            <input
-                                type="checkbox"
-                                checked={agreed}
-                                onChange={() => {
-                                    setShowTerms(true);
-                                    setErrors((prev) => ({ ...prev, consent: "" }));
-                                }}
-                                className="mt-1"
-                            />
-                            <span>
-                                By clicking this box, I agree to the Data Privacy Consent.
-                                <button
-                                type="button"
-                                className="underline ml-1"
-                                onClick={() => setShowTerms(true)}
-                                >
-                                View Terms
-                                </button>
-                            </span>
-                        </label>
+{/* DATA PRIVACY */}
+<div className="border p-4 rounded-lg bg-gray-200">
+    <label className="flex items-start gap-3 cursor-pointer">
+        <input
+            type="checkbox"
+            checked={agreed}
+            onChange={() => {
+                setShowTerms(true);
+                setErrors((prev) => ({ ...prev, consent: "" }));
+            }}
+            className="mt-1 w-4 h-4 appearance-none border-2 border-black rounded bg-white checked:bg-[#e59639] checked:border-[#e59639] checked:after:content-['✓'] checked:after:text-white checked:after:text-[10px] checked:after:font-bold checked:after:flex checked:after:justify-center checked:after:items-center focus:outline-none focus:ring-2 focus:ring-[#e59639]/50 transition-all"
+        />
+        <span>
+            By clicking this box, I agree to the Data Privacy Consent.
+            <button
+            type="button"
+            className="underline ml-1"
+            onClick={() => setShowTerms(true)}
+            >
+            View Terms
+            </button>
+        </span>
+    </label>
 
-                        {errors.consent && (
-                        <p className="text-red-500 text-sm">{errors.consent}</p>
-                        )}
-                    </div>
+    {errors.consent && (
+    <p className="text-red-500 text-sm">{errors.consent}</p>
+    )}
+</div>
 
                      {/* SUBMIT */}
                     <button
@@ -476,7 +537,7 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
 
             {/* TERMS MODAL */}
             {showTerms && (
-            <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+            <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[9999]">
                 <div className="bg-white p-6 rounded-2xl max-w-lg w-full text-black shadow-xl border-2" style={{ borderColor: "#e59639" }}>
                     <h2 className="text-lg font-bold mb-3">
                         Data Privacy Consent
@@ -523,7 +584,7 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
 
             {/* SUCCESS MODAL */}
             {showModal && (
-            <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[9999] p-4">
                 <div
                     className="bg-white rounded-2xl p-8 text-center w-full max-w-md shadow-2xl border-2"
                     style={{ borderColor: "#e59639" }}
@@ -566,7 +627,7 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
 
             {/* MLBB VERIFY MODAL */}
             {showVerifyModal && (
-            <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+            <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[9999]">
                 
                 <div
                     className="bg-white rounded-2xl p-8 w-full max-w-md text-center shadow-2xl border-2"
@@ -588,7 +649,7 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
 
                         <button
                             onClick={() => window.location.href = '/'}
-                            className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                            className="px-4 py-2 rounded-lg border border-gray-100  hover:bg-gray-300 transition-colors"
                         >
                             Cancel
                         </button>
@@ -615,7 +676,7 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
 
             {/* VERIFICATION STATUS MODAL */}
             {showStatusModal && (
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[60]">
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[9999]">
                     <div className="bg-white rounded-2xl p-6 w-full max-w-sm text-center shadow-2xl border-t-8 border-[#e59639]">
                         {verificationStatus === 'success' ? (
                             <>
@@ -666,7 +727,7 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
             )}
 
             {activeModal && (
-            <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+            <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[9999]">
                 
                 <div
                 className="bg-white rounded-2xl p-8 w-full max-w-md text-center shadow-2xl border-2"
