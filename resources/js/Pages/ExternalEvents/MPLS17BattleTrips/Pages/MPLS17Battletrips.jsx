@@ -61,11 +61,11 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
         const [showModal, setShowModal] = useState(false);
 
         // TEMP: bypass MLBB verification for frontend testing
-        const [showVerifyModal, setShowVerifyModal] = useState(false);
+        const [showVerifyModal, setShowVerifyModal] = useState(true);
 
-        const [mlbbId, setMlbbId] = useState("123456789012");
-        const [mlbbServer, setMlbbServer] = useState("1234");
-        const [verified, setVerified] = useState(true);
+        const [mlbbId, setMlbbId] = useState("");
+        const [mlbbServer, setMlbbServer] = useState("");
+        const [verified, setVerified] = useState(false);
         
         const [activeModal, setActiveModal] = useState(null);
         const mlLoginRef = useRef(null);
@@ -234,6 +234,9 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
                 formBody.append("entry.1332239123", mlbbId);
                 formBody.append("entry.1258292429", mlbbServer);
                 formBody.append("entry.611813938", form.validId);
+                formBody.append("entry.582747042", form.scheduleDate1);
+                formBody.append("entry.911343438", form.scheduleDate2);
+                formBody.append("entry.1584841062", form.scheduleDate3);
                 formBody.append("entry.617516356", form.community);
                 formBody.append("entry.1885783994", form.likeMPLPage);
                 formBody.append("entry.165580188", form.likeMSLPage);
