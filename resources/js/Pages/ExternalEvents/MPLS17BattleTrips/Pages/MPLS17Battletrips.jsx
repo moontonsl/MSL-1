@@ -45,7 +45,7 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
             scheduleDate1: "",
             scheduleDate2: "",
             scheduleDate3: "",
-            community: "",
+            community: "Moonton Student Leader",
             smartSubscriber: "",
             likeMPLPage: "",
             likeMSLPage: "",
@@ -433,29 +433,8 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
                         ))}
                     </div>
 
-                    {/* COMMUNITY */}
-                    <div>
-                        <label className="font-semibold mb-1 block">
-                            Select Community
-                        </label>
-
-                        <select
-                            name="community"
-                            value={form.community}
-                            onChange={handleChange}
-                            className="w-full border border-[#e59639] px-4 py-3 rounded-md bg-white text-black"
-                            >
-                            <option disabled value="">Select Community</option>
-
-                            {COMMUNITIES.map((c) => (
-                                <option key={c}>{c}</option>
-                            ))}
-                        </select>
-
-                        {errors.community && (
-                        <p className="text-red-500 text-sm">{errors.community}</p>
-                        )}
-                    </div>
+                    {/* Hidden input for pre-fixed community value */}
+                    <input type="hidden" name="community" value={form.community} />
 
                     {/* MPL SOCIAL REQUIREMENTS */}
                     <YesNoQuestion label="Have you already followed the MPL Page?" name="likeMPLPage" value={form.likeMPLPage} onChange={handleChange} error={errors.likeMPLPage} />
