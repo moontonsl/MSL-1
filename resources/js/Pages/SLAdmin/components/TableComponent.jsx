@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Facebook } from 'lucide-react';
 import avatar from '../assets/42ca9ea53c9f0acd1d273d2864b58719215b59f4.png';
 import Modal from '@/Components/Modal.jsx';
 import Toast from '@/Components/Toast.jsx';
 import SecurePdfViewer from '@/Components/SecurePdfViewer';
 
-const TableComponent = ({ stateFilter, searchQuery, user }) => {
+const TableComponent = ({ stateFilter, searchQuery, schoolFilter, courseFilter, user }) => {
     const [users, setUsers] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -32,6 +31,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
     const [promoteDurationType, setPromoteDurationType] = useState('permanent');
     const [promoteDays, setPromoteDays] = useState(1);
     const ITEMS_PER_PAGE = 20;
+    const abortControllerRef = useRef(null);
 
     const getRemainingDays = (expiryDate) => {
         if (!expiryDate) return null;
@@ -43,6 +43,11 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
     };
 
     const fetchUsers = async (page = 1, retryCount = 0) => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        abortControllerRef.current = new AbortController();
+        const { signal } = abortControllerRef.current;
         setLoading(true);
         try {
             let url = `/api/sladmin/users?page=${page}&per_page=${ITEMS_PER_PAGE}`;
@@ -52,8 +57,14 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             if (searchQuery && searchQuery.trim()) {
                 url += `&search=${encodeURIComponent(searchQuery.trim())}`;
             }
+            if (schoolFilter && schoolFilter.trim()) {
+                url += `&university=${encodeURIComponent(schoolFilter.trim())}`;
+            }
+            if (courseFilter && courseFilter.trim()) {
+                url += `&course=${encodeURIComponent(courseFilter.trim())}`;
+            }
 
-            const response = await fetch(url);
+            const response = await fetch(url, { signal });
 
             // Check response status first
             if (!response.ok) {
@@ -102,6 +113,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             setTotalUsers(data.total || 0);
 
         } catch (error) {
+            if (error.name === 'AbortError') return;
             // Retry logic for temporary server issues
             if (retryCount < 2 && (
                 error.message.includes('Server error: 500') ||
@@ -139,14 +151,23 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
     };
 
     useEffect(() => {
+        const timer = setTimeout(() => {
+            if (currentPage !== 1) {
+                setCurrentPage(1);
+            } else {
+                fetchUsers(1);
+            }
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchQuery, schoolFilter, courseFilter]);
 
+    useEffect(() => {
         if (currentPage !== 1) {
             setCurrentPage(1);
         } else {
             fetchUsers(1);
         }
-
-    }, [searchQuery, stateFilter]);
+    }, [stateFilter]);
 
     useEffect(() => {
         fetchUsers(currentPage);
@@ -505,7 +526,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                             <tr><td colSpan={6} className="text-center py-8">Loading...</td></tr>
                         ) : users.length === 0 ? (
                             <tr><td colSpan={6} className="text-center py-8">No users found.</td></tr>
-                        ) : users.map((item, index) => (
+                        ) : users.map((item) => (
                             <tr key={item.id} className="hover:bg-[#2f2f2f] transition-colors">
                                 <td className="flex items-center gap-3 px-4 py-3">
                                     <div className="bg-gradient-to-tr from-[#D4AF37] to-[#FFFACD] p-[2px] rounded-full">
