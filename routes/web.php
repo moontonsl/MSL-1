@@ -1437,6 +1437,11 @@ Route::get('/M7WPRegistration', function () {
     return Inertia::render('M7/M7WFRegistration');
 })->name('M7WFRegistration');
 
+// All Star watch party registration
+Route::get('/AS26Registration', function () {
+    return Inertia::render('ExternalEvents/AS26WP/Pages/AS26WPRegistration');
+})->name('as26.registration');
+
 //GM26 PAGE ROUTES
 Route::get('/GM26', function () {
     return Inertia::render('ExternalEvents/GoldenMonth26/Pages/GM26');
