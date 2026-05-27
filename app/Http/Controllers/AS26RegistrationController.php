@@ -9,6 +9,13 @@ use Inertia\Inertia;
 class AS26RegistrationController extends Controller
 {
     const SETTING_KEY = 'as26_venues';
+    const DATES_KEY   = 'as26_event_dates';
+
+    const DEFAULT_DATES = [
+        ['value' => '2026-01-23', 'label' => 'January 23, 2026', 'disabled' => true],
+        ['value' => '2026-01-24', 'label' => 'January 24, 2026', 'disabled' => true],
+        ['value' => '2026-01-25', 'label' => 'January 25, 2026', 'disabled' => false],
+    ];
 
     const DEFAULT_VENUES = [
         'Luzon' => [
@@ -73,10 +80,25 @@ class AS26RegistrationController extends Controller
         Setting::setValue(self::SETTING_KEY, json_encode($venues));
     }
 
+    private function getEventDates(): array
+    {
+        $stored = Setting::getValue(self::DATES_KEY);
+        if ($stored) {
+            return json_decode($stored, true) ?? self::DEFAULT_DATES;
+        }
+        return self::DEFAULT_DATES;
+    }
+
+    private function saveEventDates(array $dates): void
+    {
+        Setting::setValue(self::DATES_KEY, json_encode($dates));
+    }
+
     public function index()
     {
         return Inertia::render('ExternalEvents/AS26WP/Pages/AS26WPRegistration', [
             'regionsData' => $this->getVenues(),
+            'eventDates'  => $this->getEventDates(),
         ]);
     }
 
@@ -85,6 +107,82 @@ class AS26RegistrationController extends Controller
         return Inertia::render('ExternalEvents/AS26WP/Pages/AS26WPSchools', [
             'regionsData' => $this->getVenues(),
         ]);
+    }
+
+    public function dates()
+    {
+        return Inertia::render('ExternalEvents/AS26WP/Pages/AS26WPDates', [
+            'eventDates' => $this->getEventDates(),
+        ]);
+    }
+
+    public function addDate(Request $request)
+    {
+        $request->validate([
+            'value'    => 'required|date_format:Y-m-d',
+            'label'    => 'required|string|max:100',
+            'disabled' => 'required|boolean',
+        ]);
+
+        $dates = $this->getEventDates();
+
+        foreach ($dates as $d) {
+            if ($d['value'] === $request->value) {
+                return back()->withErrors(['value' => 'This date already exists.']);
+            }
+        }
+
+        $dates[] = [
+            'value'    => $request->value,
+            'label'    => trim($request->label),
+            'disabled' => (bool) $request->disabled,
+        ];
+
+        usort($dates, fn($a, $b) => strcmp($a['value'], $b['value']));
+        $this->saveEventDates($dates);
+
+        return back()->with('message', 'Date added successfully.');
+    }
+
+    public function updateDate(Request $request)
+    {
+        $request->validate([
+            'old_value' => 'required|string',
+            'value'     => 'required|date_format:Y-m-d',
+            'label'     => 'required|string|max:100',
+            'disabled'  => 'required|boolean',
+        ]);
+
+        $dates = $this->getEventDates();
+
+        $dates = array_map(function ($d) use ($request) {
+            if ($d['value'] === $request->old_value) {
+                return [
+                    'value'    => $request->value,
+                    'label'    => trim($request->label),
+                    'disabled' => (bool) $request->disabled,
+                ];
+            }
+            return $d;
+        }, $dates);
+
+        usort($dates, fn($a, $b) => strcmp($a['value'], $b['value']));
+        $this->saveEventDates($dates);
+
+        return back()->with('message', 'Date updated successfully.');
+    }
+
+    public function deleteDate(Request $request)
+    {
+        $request->validate(['value' => 'required|string']);
+
+        $dates = array_values(
+            array_filter($this->getEventDates(), fn($d) => $d['value'] !== $request->value)
+        );
+
+        $this->saveEventDates($dates);
+
+        return back()->with('message', 'Date deleted successfully.');
     }
 
     public function searchSchools(Request $request)

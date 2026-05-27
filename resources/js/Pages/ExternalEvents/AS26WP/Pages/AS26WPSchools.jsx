@@ -156,12 +156,14 @@ export default function AS26WPSchools({ regionsData }) {
                 {totalCount} venues across {REGIONS.length} regions
               </p>
             </div>
-            <a
-              href="/AS26Registration"
-              className="text-sm px-4 py-2 rounded-xl border border-white/20 hover:bg-white/10 transition"
-            >
-              View Registration
-            </a>
+            <div className="flex gap-2">
+              <a href="/AS26Registration/Dates" className="text-sm px-4 py-2 rounded-xl border border-white/20 hover:bg-white/10 transition">
+                Event Dates
+              </a>
+              <a href="/AS26Registration" className="text-sm px-4 py-2 rounded-xl border border-white/20 hover:bg-white/10 transition">
+                View Registration
+              </a>
+            </div>
           </div>
 
           {/* Add Form */}
