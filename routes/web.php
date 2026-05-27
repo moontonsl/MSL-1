@@ -75,6 +75,13 @@ Route::get('/AS26CT', function () {
     return Inertia::render('ExternalEvents/AS26CT/Pages/AS26CT');
 })->name('as26ct');
 
+// Jejemon Emote: PH BACK TO SCHOOL EVENT (AS26Emote)
+Route::get('/AS26Emote', function () {
+    return Inertia::render('ExternalEvents/BTS26JE/Pages/BTS26JE');
+})->name('as26emote');
+
+// Backwards-compatible redirect
+Route::redirect('/BTS26JE', '/AS26Emote', 301);
 // AS Seapop DANCE CHALLENGE UGC (AS26Dance)
 Route::get('/AS26Dance', function () {
     return Inertia::render('ExternalEvents/AS26Dance/Pages/AS26Dance');
@@ -1440,6 +1447,11 @@ Route::get('/FFFreedomWall', function () {
 Route::get('/M7WPRegistration', function () {
     return Inertia::render('M7/M7WFRegistration');
 })->name('M7WFRegistration');
+
+// All Star watch party registration
+Route::get('/AS26Registration', function () {
+    return Inertia::render('ExternalEvents/AS26WP/Pages/AS26WPRegistration');
+})->name('as26.registration');
 
 //GM26 PAGE ROUTES
 Route::get('/GM26', function () {
