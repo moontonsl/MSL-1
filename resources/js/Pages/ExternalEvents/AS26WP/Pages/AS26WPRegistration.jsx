@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Head } from "@inertiajs/react";
 import MainLayout from "@/Layouts/MainLayout.jsx";
 import { User, Mail, MapPin, Calendar, Globe, Hash, ChevronDown } from "lucide-react";
-import axios from "axios";
 import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headlessui/react'
 import { Check, ChevronsUpDown } from "lucide-react";
 
@@ -215,44 +214,43 @@ export default function AS26WPRegistration() {
       return;
     }
 
-    const payload = {
-      event_name: "M7 WP", // Hardcoded lang muna
-      fullName: form.fullName.trim(),
-      region: form.region,
-      venue: form.venue.trim(),
-      eventDate: form.eventDate,
-      email: form.email.trim(),
-      mlbbId: form.mlbbId.trim(),
-      mlbbServer: form.mlbbServer.trim(),
-      attendanceMode: form.attendanceMode,
-      consent: agreed,
-    };
+    const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/13IJf4quFa2cItIJbYAA4FA79ARL7N3iOzTBpWdRhUng/formResponse";
+
+    const formBody = new FormData();
+    formBody.append("entry.94934484", form.fullName.trim());
+    formBody.append("entry.109216951", form.region);
+    formBody.append("entry.968488150", form.venue.trim());
+    formBody.append("entry.1190514999", form.attendanceMode);
+    formBody.append("entry.683873208", form.eventDate);
+    formBody.append("entry.915902139", form.email.trim());
+    formBody.append("entry.244636744", form.mlbbId.trim());
+    formBody.append("entry.373582216", form.mlbbServer.trim());
+    formBody.append("entry.152146406", agreed ? "I agree to the Terms and Conditions" : "No");
 
     try {
       setSubmitting(true);
 
-      const response = await axios.post(route('event.registration.store'), payload);
+      await fetch(GOOGLE_FORM_ACTION_URL, {
+        method: "POST",
+        body: formBody,
+        mode: "no-cors",
+      });
 
-      if (response.data.success) {
-        setShowModal(true);
-        setForm({
-          fullName: "",
-          region: "",
-          venue: "",
-          eventDate: "",
-          email: "",
-          mlbbId: "",
-          mlbbServer: "",
-        });
-        setAgreed(false);
-      }
-    } catch (err) {
-      console.error(err);
-      if (err.response && err.response.status === 422) {
-        setSubmissionMessage(err.response.data.message || "You have already registered for this event on this date.");
-      } else {
-        setSubmissionMessage("Submission failed. Please try again later.");
-      }
+      setShowModal(true);
+      setForm({
+        fullName: "",
+        region: "",
+        venue: "",
+        eventDate: "",
+        email: "",
+        mlbbId: "",
+        mlbbServer: "",
+        attendanceMode: "",
+      });
+      setAgreed(false);
+    } catch (error) {
+      console.error("Error submitting to Google Form:", error);
+      setSubmissionMessage("Submission failed. Please try again later.");
     } finally {
       setSubmitting(false);
     }
