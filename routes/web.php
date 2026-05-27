@@ -1452,6 +1452,10 @@ Route::get('/M7WPRegistration', function () {
 Route::get('/AS26Registration', [\App\Http\Controllers\AS26RegistrationController::class, 'index'])->name('as26.registration');
 Route::get('/AS26Registration/Schools', [\App\Http\Controllers\AS26RegistrationController::class, 'schools'])->name('as26.schools');
 Route::get('/AS26Registration/Schools/search', [\App\Http\Controllers\AS26RegistrationController::class, 'searchSchools'])->name('as26.schools.search');
+Route::get('/AS26Registration/Dates', [\App\Http\Controllers\AS26RegistrationController::class, 'dates'])->name('as26.dates');
+Route::post('/AS26Registration/Dates', [\App\Http\Controllers\AS26RegistrationController::class, 'addDate'])->name('as26.dates.add');
+Route::put('/AS26Registration/Dates', [\App\Http\Controllers\AS26RegistrationController::class, 'updateDate'])->name('as26.dates.update');
+Route::delete('/AS26Registration/Dates', [\App\Http\Controllers\AS26RegistrationController::class, 'deleteDate'])->name('as26.dates.delete');
 Route::post('/AS26Registration/Schools', [\App\Http\Controllers\AS26RegistrationController::class, 'addSchool'])->name('as26.schools.add');
 Route::put('/AS26Registration/Schools', [\App\Http\Controllers\AS26RegistrationController::class, 'updateSchool'])->name('as26.schools.update');
 Route::delete('/AS26Registration/Schools', [\App\Http\Controllers\AS26RegistrationController::class, 'deleteSchool'])->name('as26.schools.delete');

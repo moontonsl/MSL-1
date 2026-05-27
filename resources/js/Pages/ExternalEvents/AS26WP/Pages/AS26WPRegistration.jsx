@@ -56,10 +56,10 @@ const regionsDataDefault = {
   },
 };
 
-const eventDatesData = [
-  { value: "2026-01-23", label: "January 23, 2026 (Registration Closed)", disabled: true },
-  { value: "2026-01-24", label: "January 24, 2026 (Registration Closed)", disabled: true },
-  { value: "2026-01-25", label: "January 25, 2026" },
+const eventDatesDefault = [
+  { value: "2026-01-23", label: "January 23, 2026", disabled: true },
+  { value: "2026-01-24", label: "January 24, 2026", disabled: true },
+  { value: "2026-01-25", label: "January 25, 2026", disabled: false },
 ];
 
 const LOGO_SRC = "/images/All Star/logo-%E4%B8%BB%E9%A2%98%E8%89%B2.png";
@@ -85,8 +85,9 @@ const fieldChevronClass = "text-cyan-100";
 const fieldInputClass =
   "bg-transparent w-full outline-none text-white placeholder:text-white/60";
 
-export default function AS26WPRegistration({ regionsData: regionsDataProp }) {
+export default function AS26WPRegistration({ regionsData: regionsDataProp, eventDates: eventDatesProp }) {
   const regionsData = regionsDataProp || regionsDataDefault;
+  const eventDatesData = eventDatesProp || eventDatesDefault;
   const [form, setForm] = useState({
     fullName: "",
     region: "",
@@ -429,7 +430,7 @@ export default function AS26WPRegistration({ regionsData: regionsDataProp }) {
 
                   {eventDatesData.map((date) => (
                     <option key={date.value} value={date.value} className="text-black" disabled={date.disabled}>
-                      {date.label}
+                      {date.label}{date.disabled ? " (Registration Closed)" : ""}
                     </option>
                   ))}
                 </select>
