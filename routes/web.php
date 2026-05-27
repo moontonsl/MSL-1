@@ -82,6 +82,11 @@ Route::get('/AS26Emote', function () {
 
 // Backwards-compatible redirect
 Route::redirect('/BTS26JE', '/AS26Emote', 301);
+// AS Seapop DANCE CHALLENGE UGC (AS26Dance)
+Route::get('/AS26Dance', function () {
+    return Inertia::render('ExternalEvents/AS26Dance/Pages/AS26Dance');
+})->name('as26dance');
+
 // MSL Network Awards
 Route::get('/MSLNetworkAwards', function () {
     return Inertia::render('Awards/NetworkAwards');
@@ -313,7 +318,7 @@ Route::get('/team-check', function (\Illuminate\Http\Request $request) {
             ->where('results_submitted', false)
             ->whereDate('end_date', '>=', now());
     })->where('player_id', $userId)
-        ->where('status', 'accepted')
+        ->whereIn('status', ['accepted', 'pending'])
         ->latest() // Important: Get the most recent team membership
         ->first();
 
@@ -1134,7 +1139,13 @@ Route::post('/join-by-code', function (\Illuminate\Http\Request $request) {
         ->count();
 
     if ($currentMembersCount >= 5) {
-        return response()->json(['message' => 'This team is already full.'], 403);
+        $isAlreadyMember = \App\Models\CampusTournamentTeamMember::where('team_id', $team->id)
+            ->where('player_id', $user->id)
+            ->exists();
+            
+        if (!$isAlreadyMember) {
+            return response()->json(['message' => 'This team is already full.'], 403);
+        }
     }
 
     // Add or update member status

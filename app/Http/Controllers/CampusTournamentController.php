@@ -738,6 +738,7 @@ class CampusTournamentController extends Controller
         // Find the team where this user is a member
         // Prioritize teams in active tournaments (results not submitted) and recent teams
         $teamMember = \App\Models\CampusTournamentTeamMember::where('player_id', $user->id)
+            ->whereIn('status', ['accepted', 'pending'])
             ->whereHas('team.tournament', function($query) {
                 $query->where('status', 'approved')
                      // Prefer active tournaments first, so we don't show old ones
@@ -1390,32 +1391,31 @@ class CampusTournamentController extends Controller
             // 1. Mark as locked
             $tournament->update(['registration_locked' => true]);
 
-            // 2. Collect members from assembling SOLO teams and delete incomplete teams
+            // 2. Collect members from all 'assembling' teams (priority: solo)
             $assemblingTeams = $tournament->teams;
-            $allMembers = [];
-            foreach ($assemblingTeams as $team) {
-                // Only collect players from 'solo' type teams for shuffling
-                if ($team->type === 'solo') {
-                    foreach ($team->members as $member) {
-                        $allMembers[] = [
-                            'player_id' => $member->player_id,
-                            'lane_role' => $member->lane_role
-                        ];
-                    }
+            
+            // Sort teams by member count (Descending) to prioritize larger groups staying together
+            $sortedTeams = $assemblingTeams->filter(fn($t) => $t->type === 'solo')
+                ->sortByDesc(fn($t) => $t->members->count());
+
+            $playerPool = [];
+            foreach ($sortedTeams as $team) {
+                foreach ($team->members as $member) {
+                    $playerPool[] = $member->player_id;
                 }
-                
-                // All assembling teams are deleted to clear the way for fused teams
-                // type=team teams that were incomplete simply lose their spot
+            }
+
+            // 3. Delete all assembling teams (both solo and incomplete premade)
+            // type=team teams that were incomplete simply lose their spot and aren't fused
+            foreach ($assemblingTeams as $team) {
                 $team->members()->delete();
                 $team->delete();
             }
 
-            // 3. Shuffle solo members for random grouping
-            shuffle($allMembers);
-
-            // 4. Form teams of 5 from the solo pool
-            $chunks = array_chunk($allMembers, 5);
+            // 4. Form teams of 5 from the pool (already sorted to keep groups together)
+            $chunks = array_chunk($playerPool, 5);
             $fusedCount = 0;
+            $standardRoles = ['Jungler', 'Roam', 'Gold Laner', 'Exp Laner', 'Mid Laner'];
 
             foreach ($chunks as $index => $chunk) {
                 $teamName = "Fused Team " . ($index + 1) . " - " . date('md');
@@ -1423,17 +1423,21 @@ class CampusTournamentController extends Controller
                 $newTeam = \App\Models\CampusTournamentTeam::create([
                     'tournament_id' => $tournament->id,
                     'team_name' => $teamName,
-                    'captain_id' => $chunk[0]['player_id'],
+                    'captain_id' => $chunk[0], // First player in chunk is captain
                     'status' => count($chunk) >= 5 ? 'registered' : 'assembling',
                     'type' => 'solo'
                 ]);
 
-                foreach ($chunk as $cIndex => $memberData) {
+                // Randomly assign roles for this team
+                $teamRoles = $standardRoles;
+                shuffle($teamRoles);
+
+                foreach ($chunk as $cIndex => $playerId) {
                     \App\Models\CampusTournamentTeamMember::create([
                         'team_id' => $newTeam->id,
-                        'player_id' => $memberData['player_id'],
+                        'player_id' => $playerId,
                         'role' => $cIndex === 0 ? 'captain' : 'member',
-                        'lane_role' => $memberData['lane_role'],
+                        'lane_role' => $teamRoles[$cIndex] ?? 'Member', // Assign a random role
                         'status' => 'accepted'
                     ]);
                 }
