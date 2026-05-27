@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Head, router } from "@inertiajs/react";
 import MainLayout from "@/Layouts/MainLayout.jsx";
 import { Plus, Pencil, Trash2, Check, X } from "lucide-react";
+import { Combobox, ComboboxInput, ComboboxOption, ComboboxOptions } from "@headlessui/react";
 
 const REGIONS = ["Luzon", "Visayas", "Mindanao"];
 const MODES = ["Online", "Onsite"];
@@ -19,6 +20,23 @@ export default function AS26WPSchools({ regionsData }) {
 
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [processing, setProcessing] = useState(false);
+
+  const [schoolOptions, setSchoolOptions] = useState([]);
+  const [schoolQuery, setSchoolQuery] = useState("");
+  const [loadingSchools, setLoadingSchools] = useState(false);
+  const debounceRef = useRef(null);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setLoadingSchools(true);
+      fetch(route("as26.schools.search") + `?island=${encodeURIComponent(addForm.region)}&q=${encodeURIComponent(schoolQuery)}`)
+        .then((r) => r.json())
+        .then((data) => setSchoolOptions(data))
+        .catch(() => setSchoolOptions([]))
+        .finally(() => setLoadingSchools(false));
+    }, 300);
+  }, [schoolQuery, addForm.region]);
 
   const [filterRegion, setFilterRegion] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
@@ -159,7 +177,11 @@ export default function AS26WPSchools({ regionsData }) {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <select
                 value={addForm.region}
-                onChange={(e) => setAddForm((p) => ({ ...p, region: e.target.value }))}
+                onChange={(e) => {
+                    setAddForm((p) => ({ ...p, region: e.target.value, name: "" }));
+                    setSchoolQuery("");
+                    setSchoolOptions([]);
+                  }}
                 className="bg-white/10 border rounded-xl px-3 py-2 text-white appearance-none outline-none"
                 style={{ borderColor: SECONDARY_LIGHT + "60" }}
               >
@@ -179,14 +201,52 @@ export default function AS26WPSchools({ regionsData }) {
                 ))}
               </select>
 
-              <input
-                type="text"
-                value={addForm.name}
-                onChange={(e) => { setAddForm((p) => ({ ...p, name: e.target.value })); setAddErrors({}); }}
-                placeholder="School / venue name"
-                className="bg-white/10 border rounded-xl px-3 py-2 text-white placeholder:text-white/40 outline-none"
-                style={{ borderColor: SECONDARY_LIGHT + "60" }}
-              />
+              <div className="relative">
+                <Combobox
+                  value={addForm.name}
+                  onChange={(val) => {
+                    setAddForm((p) => ({ ...p, name: val }));
+                    setAddErrors({});
+                  }}
+                  onClose={() => setSchoolQuery("")}
+                >
+                  <ComboboxInput
+                    className="w-full bg-white/10 border rounded-xl px-3 py-2 text-white placeholder:text-white/40 outline-none"
+                    style={{ borderColor: SECONDARY_LIGHT + "60" }}
+                    placeholder={loadingSchools ? "Loading..." : "Search school name"}
+                    displayValue={(val) => val}
+                    onChange={(e) => {
+                      setSchoolQuery(e.target.value);
+                      setAddForm((p) => ({ ...p, name: e.target.value }));
+                      setAddErrors({});
+                    }}
+                  />
+                  <ComboboxOptions
+                    anchor="bottom"
+                    className="w-[var(--input-width)] bg-[#0A2635] border rounded-xl mt-1 overflow-y-auto z-[100] shadow-xl empty:invisible"
+                    style={{ maxHeight: "180px" }}
+                    style={{ borderColor: PRIMARY }}
+                  >
+                    {loadingSchools ? (
+                      <div className="py-2 px-4 text-white/40 text-sm">Searching...</div>
+                    ) : schoolOptions.length === 0 ? (
+                      <div className="py-2 px-4 text-white/40 text-sm italic">No schools found.</div>
+                    ) : (
+                      schoolOptions.map((name) => (
+                        <ComboboxOption
+                          key={name}
+                          value={name}
+                          className={({ focus }) =>
+                            `cursor-pointer select-none py-2 px-4 text-sm ${focus ? "bg-teal-500 text-black" : "text-white"}`
+                          }
+                        >
+                          {name}
+                        </ComboboxOption>
+                      ))
+                    )}
+                  </ComboboxOptions>
+                </Combobox>
+              </div>
             </div>
 
             {addErrors.name && (

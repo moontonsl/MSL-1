@@ -87,6 +87,24 @@ class AS26RegistrationController extends Controller
         ]);
     }
 
+    public function searchSchools(Request $request)
+    {
+        $island = $request->get('island', '');
+        $query  = $request->get('q', '');
+
+        $schools = \App\Models\School::whereHas('region.island', function ($q) use ($island) {
+                $q->where('name', $island);
+            })
+            ->when($query, function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%");
+            })
+            ->orderByRaw("CASE WHEN name LIKE ? THEN 0 ELSE 1 END, name", [$query . '%'])
+            ->limit(8)
+            ->pluck('name');
+
+        return response()->json($schools);
+    }
+
     public function addSchool(Request $request)
     {
         $request->validate([
