@@ -5,7 +5,7 @@ import { User, Mail, MapPin, Calendar, Globe, Hash, ChevronDown } from "lucide-r
 import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headlessui/react'
 import { Check, ChevronsUpDown } from "lucide-react";
 
-const regionsData = {
+const regionsDataDefault = {
   Luzon: {
     Online: [
       "Philippine Normal University Manila",
@@ -85,7 +85,8 @@ const fieldChevronClass = "text-cyan-100";
 const fieldInputClass =
   "bg-transparent w-full outline-none text-white placeholder:text-white/60";
 
-export default function AS26WPRegistration() {
+export default function AS26WPRegistration({ regionsData: regionsDataProp }) {
+  const regionsData = regionsDataProp || regionsDataDefault;
   const [form, setForm] = useState({
     fullName: "",
     region: "",

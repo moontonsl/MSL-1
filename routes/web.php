@@ -1448,10 +1448,12 @@ Route::get('/M7WPRegistration', function () {
     return Inertia::render('M7/M7WFRegistration');
 })->name('M7WFRegistration');
 
-// All Star watch party registration
-Route::get('/AS26Registration', function () {
-    return Inertia::render('ExternalEvents/AS26WP/Pages/AS26WPRegistration');
-})->name('as26.registration');
+// All Star 2026 Registration
+Route::get('/AS26Registration', [\App\Http\Controllers\AS26RegistrationController::class, 'index'])->name('as26.registration');
+Route::get('/AS26Registration/Schools', [\App\Http\Controllers\AS26RegistrationController::class, 'schools'])->name('as26.schools');
+Route::post('/AS26Registration/Schools', [\App\Http\Controllers\AS26RegistrationController::class, 'addSchool'])->name('as26.schools.add');
+Route::put('/AS26Registration/Schools', [\App\Http\Controllers\AS26RegistrationController::class, 'updateSchool'])->name('as26.schools.update');
+Route::delete('/AS26Registration/Schools', [\App\Http\Controllers\AS26RegistrationController::class, 'deleteSchool'])->name('as26.schools.delete');
 
 //GM26 PAGE ROUTES
 Route::get('/GM26', function () {
