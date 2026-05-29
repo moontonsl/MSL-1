@@ -67,10 +67,9 @@ class LockExpiredTournaments extends Command
             // 1. Mark as locked
             $tournament->update(['registration_locked' => true]);
 
-            // 2. Collect members from all 'assembling' teams (priority: solo)
+            // 2. Collect solo player pool BEFORE archiving (prioritise larger groups staying together)
             $assemblingTeams = $tournament->teams;
-            
-            // Sort teams by member count (Descending) to prioritize larger groups staying together
+
             $sortedTeams = $assemblingTeams->filter(fn($t) => $t->type === 'solo')
                 ->sortByDesc(fn($t) => $t->members->count());
 
@@ -81,11 +80,10 @@ class LockExpiredTournaments extends Command
                 }
             }
 
-            // 3. Delete all assembling teams (both solo and incomplete premade)
-            // type=team teams that were incomplete simply lose their spot and aren't fused
+            // 3. Archive all assembling teams instead of deleting them.
+            //    They will be restored to 'assembling' if the tournament is extended.
             foreach ($assemblingTeams as $team) {
-                $team->members()->delete();
-                $team->delete();
+                $team->update(['status' => 'archived']);
             }
 
             // 4. Form teams of 5 from the pool (already sorted to keep groups together)
