@@ -96,7 +96,7 @@ export default function RosterManager({ tournament }) {
       // Index-based slots (standard for Teams and All view)
       const indexSlots = [0, 1, 2, 3, 4].map((idx) => {
         const player = players[idx];
-        const accepted = team.status === 'registered' || player?.pivot?.status === 'accepted' || player?.status === 'accepted';
+        const accepted = team.status === 'registered' || player?.pivot?.status === 'accepted' || player?.status === 'accepted' || !!player?.accepted;
         return {
           role: player?.lane_role || 'Member',
           player,
@@ -113,7 +113,7 @@ export default function RosterManager({ tournament }) {
         const byRole = new Map(players.filter(p => p?.lane_role).map(p => [p.lane_role, p]));
         slots = SOLO_ROLES.map((role) => {
           const player = byRole.get(role);
-          const accepted = team.status === 'registered' || player?.pivot?.status === 'accepted' || player?.status === 'accepted';
+          const accepted = team.status === 'registered' || player?.pivot?.status === 'accepted' || player?.status === 'accepted' || !!player?.accepted;
           return {
             role,
             player,

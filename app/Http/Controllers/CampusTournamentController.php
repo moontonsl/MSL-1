@@ -333,12 +333,18 @@ class CampusTournamentController extends Controller
             return response()->json(['error' => 'Access denied to this tournament'], 403);
         }
         
-        // Update the end_date (overwrite existing)
+        // Update the end_date and unlock registration
         $tournament->update([
             'end_date' => $request->end_date,
-            'registration_locked' => false, // Unlock if extended
+            'registration_locked' => false,
         ]);
-        
+
+        // Restore any teams that were archived during the previous lock
+        // so players can continue assembling their rosters
+        \App\Models\CampusTournamentTeam::where('tournament_id', $tournament->id)
+            ->where('status', 'archived')
+            ->update(['status' => 'assembling']);
+
         return response()->json([
             'success' => true,
             'message' => 'Tournament registration extended successfully',
@@ -367,13 +373,23 @@ class CampusTournamentController extends Controller
         }
         
         // Update all "approved" tournaments that are not yet "completed" (results submitted)
-        $affectedRows = CampusTournament::where('status', 'approved')
+        $affectedTournaments = CampusTournament::where('status', 'approved')
             ->where('results_submitted', false)
+            ->get();
+
+        $affectedRows = $affectedTournaments->count();
+
+        CampusTournament::whereIn('id', $affectedTournaments->pluck('id'))
             ->update([
                 'end_date' => $request->end_date,
-                'registration_locked' => false, // Unlock if extended
+                'registration_locked' => false,
             ]);
-            
+
+        // Restore archived teams for all affected tournaments
+        \App\Models\CampusTournamentTeam::whereIn('tournament_id', $affectedTournaments->pluck('id'))
+            ->where('status', 'archived')
+            ->update(['status' => 'assembling']);
+
         return response()->json([
             'success' => true,
             'message' => "Successfully updated {$affectedRows} tournament(s) end date.",
@@ -1391,10 +1407,9 @@ class CampusTournamentController extends Controller
             // 1. Mark as locked
             $tournament->update(['registration_locked' => true]);
 
-            // 2. Collect members from all 'assembling' teams (priority: solo)
+            // 2. Collect solo player pool BEFORE archiving (prioritise larger groups)
             $assemblingTeams = $tournament->teams;
-            
-            // Sort teams by member count (Descending) to prioritize larger groups staying together
+
             $sortedTeams = $assemblingTeams->filter(fn($t) => $t->type === 'solo')
                 ->sortByDesc(fn($t) => $t->members->count());
 
@@ -1405,25 +1420,24 @@ class CampusTournamentController extends Controller
                 }
             }
 
-            // 3. Delete all assembling teams (both solo and incomplete premade)
-            // type=team teams that were incomplete simply lose their spot and aren't fused
+            // 3. Archive all assembling teams instead of deleting them.
+            //    They will be restored to 'assembling' if the tournament is extended.
             foreach ($assemblingTeams as $team) {
-                $team->members()->delete();
-                $team->delete();
+                $team->update(['status' => 'archived']);
             }
 
-            // 4. Form teams of 5 from the pool (already sorted to keep groups together)
+            // 4. Form teams of 5 from the solo pool (already sorted to keep groups together)
             $chunks = array_chunk($playerPool, 5);
             $fusedCount = 0;
             $standardRoles = ['Jungler', 'Roam', 'Gold Laner', 'Exp Laner', 'Mid Laner'];
 
             foreach ($chunks as $index => $chunk) {
                 $teamName = "Fused Team " . ($index + 1) . " - " . date('md');
-                
+
                 $newTeam = \App\Models\CampusTournamentTeam::create([
                     'tournament_id' => $tournament->id,
                     'team_name' => $teamName,
-                    'captain_id' => $chunk[0], // First player in chunk is captain
+                    'captain_id' => $chunk[0],
                     'status' => count($chunk) >= 5 ? 'registered' : 'assembling',
                     'type' => 'solo'
                 ]);
@@ -1437,15 +1451,12 @@ class CampusTournamentController extends Controller
                         'team_id' => $newTeam->id,
                         'player_id' => $playerId,
                         'role' => $cIndex === 0 ? 'captain' : 'member',
-                        'lane_role' => $teamRoles[$cIndex] ?? 'Member', // Assign a random role
+                        'lane_role' => $teamRoles[$cIndex] ?? 'Member',
                         'status' => 'accepted'
                     ]);
                 }
                 $fusedCount++;
             }
-
-            // 5. Delete old assembling teams
-            \App\Models\CampusTournamentTeam::whereIn('id', $assemblingTeams->pluck('id'))->delete();
 
             \DB::commit();
             return response()->json([
