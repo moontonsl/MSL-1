@@ -74,6 +74,19 @@ Route::get('/about', function () {
 Route::get('/AS26CT', function () {
     return Inertia::render('ExternalEvents/AS26CT/Pages/AS26CT');
 })->name('as26ct');
+
+// Jejemon Emote: PH BACK TO SCHOOL EVENT (AS26Emote)
+Route::get('/AS26Emote', function () {
+    return Inertia::render('ExternalEvents/BTS26JE/Pages/BTS26JE');
+})->name('as26emote');
+
+// Backwards-compatible redirect
+Route::redirect('/BTS26JE', '/AS26Emote', 301);
+// AS Seapop DANCE CHALLENGE UGC (AS26Dance)
+Route::get('/AS26Dance', function () {
+    return Inertia::render('ExternalEvents/AS26Dance/Pages/AS26Dance');
+})->name('as26dance');
+
 // MSL Network Awards
 Route::get('/MSLNetworkAwards', function () {
     return Inertia::render('Awards/NetworkAwards');
@@ -230,6 +243,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/api/solo/create', [\App\Http\Controllers\CampusTournamentController::class, 'createSoloTeam'])->name('campus.solo.create');
     Route::post('/api/solo/join', [\App\Http\Controllers\CampusTournamentController::class, 'joinSoloTeam'])->name('campus.solo.join');
     Route::post('/api/solo/leave', [\App\Http\Controllers\CampusTournamentController::class, 'leaveSoloTeam'])->name('campus.solo.leave');
+    Route::post('/campus-tournaments/{id}/lock-registration', [\App\Http\Controllers\CampusTournamentController::class, 'lockRegistration'])->name('campus.tournaments.lock-registration');
 
     // Team Invite Routes
     // Team Invite Routes - MOVED OUTSIDE AUTH
@@ -304,7 +318,7 @@ Route::get('/team-check', function (\Illuminate\Http\Request $request) {
             ->where('results_submitted', false)
             ->whereDate('end_date', '>=', now());
     })->where('player_id', $userId)
-        ->where('status', 'accepted')
+        ->whereIn('status', ['accepted', 'pending'])
         ->latest() // Important: Get the most recent team membership
         ->first();
 
@@ -1125,7 +1139,13 @@ Route::post('/join-by-code', function (\Illuminate\Http\Request $request) {
         ->count();
 
     if ($currentMembersCount >= 5) {
-        return response()->json(['message' => 'This team is already full.'], 403);
+        $isAlreadyMember = \App\Models\CampusTournamentTeamMember::where('team_id', $team->id)
+            ->where('player_id', $user->id)
+            ->exists();
+            
+        if (!$isAlreadyMember) {
+            return response()->json(['message' => 'This team is already full.'], 403);
+        }
     }
 
     // Add or update member status
@@ -1427,6 +1447,18 @@ Route::get('/FFFreedomWall', function () {
 Route::get('/M7WPRegistration', function () {
     return Inertia::render('M7/M7WFRegistration');
 })->name('M7WFRegistration');
+
+// All Star 2026 Registration
+Route::get('/AS26Registration', [\App\Http\Controllers\AS26RegistrationController::class, 'index'])->name('as26.registration');
+Route::get('/AS26Registration/Schools', [\App\Http\Controllers\AS26RegistrationController::class, 'schools'])->name('as26.schools');
+Route::get('/AS26Registration/Schools/search', [\App\Http\Controllers\AS26RegistrationController::class, 'searchSchools'])->name('as26.schools.search');
+Route::get('/AS26Registration/Dates', [\App\Http\Controllers\AS26RegistrationController::class, 'dates'])->name('as26.dates');
+Route::post('/AS26Registration/Dates', [\App\Http\Controllers\AS26RegistrationController::class, 'addDate'])->name('as26.dates.add');
+Route::put('/AS26Registration/Dates', [\App\Http\Controllers\AS26RegistrationController::class, 'updateDate'])->name('as26.dates.update');
+Route::delete('/AS26Registration/Dates', [\App\Http\Controllers\AS26RegistrationController::class, 'deleteDate'])->name('as26.dates.delete');
+Route::post('/AS26Registration/Schools', [\App\Http\Controllers\AS26RegistrationController::class, 'addSchool'])->name('as26.schools.add');
+Route::put('/AS26Registration/Schools', [\App\Http\Controllers\AS26RegistrationController::class, 'updateSchool'])->name('as26.schools.update');
+Route::delete('/AS26Registration/Schools', [\App\Http\Controllers\AS26RegistrationController::class, 'deleteSchool'])->name('as26.schools.delete');
 
 //GM26 PAGE ROUTES
 Route::get('/GM26', function () {

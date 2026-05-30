@@ -22,11 +22,11 @@ export default function MatchManager({
     <div>
       <div className="hidden md:grid [grid-template-columns:minmax(160px,1.3fr)_repeat(5,minmax(100px,1fr))_minmax(120px,1fr)] gap-3 px-6 md:px-10 py-2 text-white/70 text-xs md:text-sm border-b border-white/10 font-montserrat">
         <div className="self-center">Team name</div>
-        <div className="text-center">Player 1</div>
-        <div className="text-center">Player 2</div>
-        <div className="text-center">Player 3</div>
-        <div className="text-center">Player 4</div>
-        <div className="text-center">Player 5</div>
+        <div className="text-left">Player 1</div>
+        <div className="text-left">Player 2</div>
+        <div className="text-left">Player 3</div>
+        <div className="text-left">Player 4</div>
+        <div className="text-left">Player 5</div>
         <div className="grid place-items-center">Status</div>
       </div>
 
