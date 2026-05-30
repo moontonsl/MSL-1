@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MSL Account Verification Code</title>
+    <title>Password Reset Request</title>
     <style>
         body {
             margin: 0;
@@ -30,6 +30,23 @@
             padding-top: 30px;
             line-height: 1.8;
         }
+        .btn-table {
+            margin: 30px 0;
+            width: 100%;
+        }
+        .btn-link {
+            display: inline-block;
+            background-color: #0f172a;
+            color: #ffffff !important;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 6px;
+            font-family: Arial, sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
         
         /* Mobile overrides */
         @media only screen and (max-width: 600px) {
@@ -39,14 +56,14 @@
             .card-body {
                 padding: 30px 20px !important;
             }
-            .code-text {
-                font-size: 32px !important;
-                letter-spacing: 4px !important;
-            }
         }
     </style>
 </head>
 <body>
+
+    @php
+        $name = $user->name ?? $user->username;
+    @endphp
 
     <table width="100%" border="0" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; min-height: 100vh;">
         <tr>
@@ -66,37 +83,39 @@
                                             <tr>
                                                 <td>
                                                     <h1 style="font-size: 18px; font-weight: bold; color: #000000; margin: 0 0 5px 0; text-transform: uppercase; font-family: Arial, sans-serif;">Moonton Student Leaders Philippines</h1>
-                                                    <h2 style="font-size: 15px; color: #333333; margin: 0; font-weight: normal; font-family: Arial, sans-serif;">Verification Code</h2>
+                                                    <h2 style="font-size: 15px; color: #333333; margin: 0; font-weight: normal; font-family: Arial, sans-serif;">Password Reset</h2>
                                                 </td>
                                             </tr>
                                         </table>
                                         
                                         <!-- Content -->
                                         <div style="font-size: 14px; color: #333333; text-align: left; font-family: Arial, sans-serif;">
-                                            <p style="margin: 0 0 20px 0;">Hi {{ $name }},</p>
+                                            <p style="margin: 0 0 20px 0;">Hello {{ $name }},</p>
                                             
-                                            <p style="margin: 0 0 20px 0;">We received a request to verify your identity for the MSL Philippines Portal. Please enter the following code to continue:</p>
+                                            <p style="margin: 0 0 20px 0;">You are receiving this email because we received a request to reset the password for your MSL account. To choose a new password, please click the button or link below:</p>
                                             
-                                            <!-- Verification Code block -->
-                                            <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin: 35px 0; text-align: center;">
+                                            <!-- Reset Button block -->
+                                            <table class="btn-table" border="0" cellpadding="0" cellspacing="0">
                                                 <tr>
-                                                    <td>
-                                                        <div class="code-text" style="font-size: 38px; font-weight: bold; color: #000000; letter-spacing: 6px; margin: 0 0 8px 0; font-family: Arial, sans-serif;">{{ $code }}</div>
-                                                        <p style="font-size: 13px; color: #666666; margin: 0; font-family: Arial, sans-serif;">Don't share this code with anyone.</p>
+                                                    <td align="center">
+                                                        <a href="{{ $url }}" class="btn-link" target="_blank">Reset Password</a>
                                                     </td>
                                                 </tr>
                                             </table>
                                             
-                                            <!-- Keep your account safe -->
-                                            <div style="font-size: 14px; font-weight: bold; color: #000000; margin: 30px 0 10px 0;">Keep your account safe</div>
-                                            <p style="margin: 0 0 20px 0;">
-                                                Please do not share this code with anyone. If someone asks for it, even someone claiming to work for MSL Philippines, do not provide it. They may be attempting to use your credentials on your behalf.
+                                            <!-- Troubleshooting -->
+                                            <p style="margin: 20px 0; font-size: 13px; color: #555555; word-break: break-all;">
+                                                <strong>Troubleshooting:</strong> If you are having trouble clicking the "Reset Password" button, copy and paste the following URL into your web browser: <a href="{{ $url }}" target="_blank" style="color: #0284c7; text-decoration: none;">{{ $url }}</a>
                                             </p>
                                             
-                                            <!-- Didn't request this code? -->
-                                            <div style="font-size: 14px; font-weight: bold; color: #000000; margin: 30px 0 10px 0;">Didn't request this code?</div>
-                                            <p style="margin: 0 0 20px 0;">
-                                                If you are not currently trying to access the portal, someone else may have entered your information by mistake. As long as you keep this code private, no action is required.
+                                            <!-- Important Notice -->
+                                            <p style="margin: 20px 0;">
+                                                <strong>Important Notice:</strong> For security purposes, this password reset link will expire in 60 minutes.
+                                            </p>
+                                            
+                                            <!-- Didn't request this change? -->
+                                            <p style="margin: 20px 0;">
+                                                <strong>Didn't request this change?</strong> If you did not request a password reset, no further action is required. Your current password will remain the same, and your account is secure.
                                             </p>
                                             
                                             <!-- Sign-off -->

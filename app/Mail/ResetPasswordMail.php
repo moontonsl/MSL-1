@@ -3,28 +3,26 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use App\Models\User;
 
-class TeamInviteMail extends Mailable
+class ResetPasswordMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     public $user;
-    public $team;
-    public $captain;
+    public $url;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($user, $team, $captain)
+    public function __construct(User $user, $url)
     {
         $this->user = $user;
-        $this->team = $team;
-        $this->captain = $captain;
+        $this->url = $url;
     }
 
     /**
@@ -33,7 +31,7 @@ class TeamInviteMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'MSL Monthly Tournament Team Invitation',
+            subject: 'MSL Account: Password Reset Request',
         );
     }
 
@@ -43,7 +41,11 @@ class TeamInviteMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.team-invite',
+            view: 'emails.reset-password',
+            with: [
+                'user' => $this->user,
+                'url' => $this->url,
+            ],
         );
     }
 

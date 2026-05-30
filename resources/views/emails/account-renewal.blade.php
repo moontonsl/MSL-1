@@ -6,115 +6,135 @@
     <title>Account Renewal Required</title>
     <style>
         body {
+            margin: 0;
+            padding: 0;
             font-family: Arial, sans-serif;
+            background-color: #f8fafc;
+            color: #333333;
             line-height: 1.6;
-            color: #333;
+            -webkit-font-smoothing: antialiased;
+        }
+        table {
+            border-collapse: collapse;
+        }
+        .email-container {
+            width: 100%;
             max-width: 600px;
             margin: 0 auto;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        .container {
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e0e0e0;
-        }
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
-        .title {
-            color: #e74c3c;
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
-        .content {
-            margin-bottom: 30px;
-        }
-        .highlight {
-            background-color: #fff3cd;
-            border: 1px solid #ffeaa7;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px 0;
-        }
-        .button {
-            display: inline-block;
-            background-color: #3498db;
-            color: white;
-            padding: 12px 24px;
-            text-decoration: none;
-            border-radius: 5px;
-            margin: 20px 0;
+            padding: 40px 20px;
         }
         .footer {
             text-align: center;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-            color: #666;
-            font-size: 14px;
+            font-size: 12px;
+            color: #666666;
+            padding-top: 30px;
+            line-height: 1.8;
         }
-        .warning {
-            color: #e74c3c;
-            font-weight: bold;
+        
+        /* Mobile overrides */
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                padding: 20px 10px !important;
+            }
+            .card-body {
+                padding: 30px 20px !important;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="logo">MSL Team</div>
-            <div class="title">Account Renewal Required</div>
-        </div>
 
-        <div class="content">
-            <p>Dear <strong>{{ $user->name }} {{ $user->surname }}</strong>,</p>
+    <table width="100%" border="0" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; min-height: 100vh;">
+        <tr>
+            <td align="center" valign="top">
+                
+                <table class="email-container" width="100%" border="0" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td>
+                            
+                            <!-- Main Content Card Box -->
+                            <table width="100%" border="0" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
+                                <tr>
+                                    <td class="card-body" style="padding: 40px 35px;">
+                                        
+                                        <!-- Header -->
+                                        <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 30px; border-bottom: 1px solid #f1f5f9; padding-bottom: 30px; text-align: center;">
+                                            <tr>
+                                                <td>
+                                                    <h1 style="font-size: 18px; font-weight: bold; color: #000000; margin: 0 0 5px 0; text-transform: uppercase; font-family: Arial, sans-serif;">Moonton Student Leaders Philippines</h1>
+                                                    <h2 style="font-size: 15px; color: #333333; margin: 0; font-weight: normal; font-family: Arial, sans-serif;">Account Renewal Required</h2>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <!-- Content -->
+                                        <div style="font-size: 14px; color: #333333; text-align: left; font-family: Arial, sans-serif;">
+                                            <p style="margin: 0 0 20px 0;">Dear {{ $user->name }} {{ $user->surname }},</p>
+                                            
+                                            <p style="margin: 0 0 20px 0;">Your MSL Account requires renewal. To maintain your active status, you need to resubmit your current proof of enrollment for verification.</p>
+                                            
+                                            <!-- Account Details -->
+                                            <div style="font-size: 14px; font-weight: bold; color: #000000; margin: 25px 0 10px 0;">Account Details:</div>
+                                            <ul style="margin: 0 0 25px 0; padding-left: 20px;">
+                                                <li style="margin-bottom: 8px;"><strong>Username:</strong> {{ $user->username }}</li>
+                                                <li style="margin-bottom: 8px;"><strong>Email:</strong> {{ $user->email }}</li>
+                                                <li style="margin-bottom: 8px;"><strong>Current Status:</strong> Renewal Status (Resubmit Proof of Enrolment)</li>
+                                            </ul>
+                                            
+                                            <!-- What you need to do -->
+                                            <div style="font-size: 14px; font-weight: bold; color: #000000; margin: 25px 0 10px 0;">What you need to do:</div>
+                                            <ul style="margin: 0 0 25px 0; padding-left: 20px;">
+                                                <li style="margin-bottom: 8px;">Log in using your credentials at www.moontonslph.org.</li>
+                                                <li style="margin-bottom: 8px;">Upload your current Certificate of Enrollment or Approved Registration Form. Screenshots from your online school portal are acceptable. The document must clearly show your Name, Course, School, Year Level, and the current Semester.</li>
+                                                <li style="margin-bottom: 8px;">If you choose to upload a School ID instead, ensure your Name, School, and validation sticker for the current semester are clearly visible.</li>
+                                                <li style="margin-bottom: 8px;">Wait for your Student Leader or Regional Admin to review and verify your submission.</li>
+                                            </ul>
+                                            
+                                            <!-- Disclaimers -->
+                                            <p style="margin: 20px 0; color: #333333;">
+                                                <strong style="color: #ff3b30;">Important:</strong> Your account is currently in a restricted renewal status. You must complete this verification process to regain full access to all platform features.
+                                            </p>
+                                            
+                                            <p style="margin: 20px 0;">
+                                                If you no longer wish to maintain your MSL Account, you can log in and select "Delete Account" in your profile settings.
+                                            </p>
+                                            
+                                            <p style="margin: 20px 0 35px 0;">
+                                                Thank you for your attention to this matter.
+                                            </p>
+                                            
+                                            <!-- Sign-off -->
+                                            <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                                                <tr>
+                                                    <td>
+                                                        <p style="margin: 0 0 15px 0;">Regards,</p>
+                                                        <p style="margin: 0; font-weight: bold; color: #000000;">The Web Team</p>
+                                                        <p style="margin: 0;">MSL Philippines</p>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                        
+                                    </td>
+                                </tr>
+                            </table> <!-- End Card -->
+                            
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer outside the Card -->
+                    <tr>
+                        <td class="footer">
+                            <p style="margin: 0 0 5px 0; font-family: Arial, sans-serif;">This is an automated message. Please do not reply to this email.</p>
+                            <p style="margin: 0; font-family: Arial, sans-serif;">&copy; {{ date('Y') }} MSL Philippines. All rights reserved.</p>
+                        </td>
+                    </tr>
+                    
+                </table>
+                
+            </td>
+        </tr>
+    </table>
 
-            <p>Your MSL account has been marked for renewal. This means your account status has been reset and requires re-verification.</p>
-
-            <div class="highlight">
-                <p><strong>What you need to do:</strong></p>
-                <ul>
-                    <li>Log in to your MSL account</li>
-                    <li>Go to the upload page where you can update both your year level and upload your proof of enrollment</li>
-                    <li>Select your current year level from the dropdown</li>
-                    <li>Upload your proof of enrollment documents again (previous documents have been cleared)</li>
-                    <li>Wait for verification from your Student Leader or Regional Admin</li>
-                </ul>
-            </div>
-
-            <p><span class="warning">Important:</span> Your account is currently in "New" status and you will need to go through the verification process again to regain access to all platform features.</p>
-
-            <p><strong>Account Details:</strong></p>
-            <ul>
-                <li><strong>Username:</strong> {{ $user->username }}</li>
-                <li><strong>Email:</strong> {{ $user->email }}</li>
-                <li><strong>Current Status:</strong> New (Pending Verification)</li>
-            </ul>
-
-            <p>If you have any questions or need assistance, please contact your Student Leader or Regional Admin.</p>
-
-            <p>Thank you for your cooperation.</p>
-
-            <p>Best regards,<br>
-            <strong>MSL Team</strong></p>
-        </div>
-
-        <div class="footer">
-            <p>This is an automated message. Please do not reply to this email.</p>
-            <p>&copy; {{ date('Y') }} MSL Team. All rights reserved.</p>
-        </div>
-    </div>
 </body>
-</html> 
+</html>

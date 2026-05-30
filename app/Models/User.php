@@ -187,7 +187,22 @@ class User extends Authenticatable
             ->whereIn('name', $regionNames)
             ->pluck('id')
             ->toArray();
-            
         return $regionIds;
+    }
+
+    /**
+     * Send the password reset notification.
+     *
+     * @param  string  $token
+     * @return void
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $url = url(route('password.reset', [
+            'token' => $token,
+            'email' => $this->getEmailForPasswordReset(),
+        ], false));
+
+        \Illuminate\Support\Facades\Mail::to($this->email)->send(new \App\Mail\ResetPasswordMail($this, $url));
     }
 }
