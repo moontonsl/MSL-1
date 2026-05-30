@@ -73,9 +73,9 @@
                                         
                                         <!-- Content -->
                                         <div style="font-size: 14px; color: #333333; text-align: left; font-family: Arial, sans-serif;">
-                                            <p style="margin: 0 0 20px 0;">Hi {{ $user->name ?? $user->username }},</p>
+                                            <p style="margin: 0 0 20px 0;">Hi {{ $user->name ?? $user->username }}</p>
                                             
-                                            <p style="margin: 0 0 20px 0;">We received a request to change the email address associated with your MSL Account to <strong>{{ $newEmail }}</strong></p>
+                                            <p style="margin: 0 0 20px 0;">We received a request to change the email address associated with your MSL Account to {{ $newEmail }}</p>
                                             
                                             <!-- Verification Code block -->
                                             <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin: 35px 0; text-align: center;">

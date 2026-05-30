@@ -84,7 +84,7 @@ class PasswordResetLinkController extends Controller
         }
         $username = $user->username;
         $email = $user->email;
-        $subject = 'Your username has been recovered';
+        $subject = 'MSL Account: Username Recovery Request';
         $body = 'Your username is: ' . $username;
         Mail::to($email)->send(new \App\Mail\UsernameRecovery($username, $email, $subject, $body));
         return back()->with('status', 'Please check your email for your username.');
