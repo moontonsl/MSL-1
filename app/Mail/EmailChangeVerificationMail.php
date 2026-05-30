@@ -33,7 +33,7 @@ class EmailChangeVerificationMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Verify Your New Email Address - MSL',
+            subject: 'MSL Account Verification Code',
         );
     }
 
