@@ -5,7 +5,7 @@ import Modal from '@/Components/Modal.jsx';
 import Toast from '@/Components/Toast.jsx';
 import SecurePdfViewer from '@/Components/SecurePdfViewer';
 
-const TableComponent = ({ stateFilter, searchQuery, schoolFilter, courseFilter, user }) => {
+const TableComponent = ({ stateFilter, searchQuery, schoolFilter, courseFilter, user, onCountsRefresh }) => {
     const [users, setUsers] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -316,6 +316,10 @@ const TableComponent = ({ stateFilter, searchQuery, schoolFilter, courseFilter, 
                     method = 'PATCH';
                     body = { reason: payload };
                     break;
+                case 'unblock':
+                    url = `/api/sladmin/users/${userId}/unblock`;
+                    method = 'PATCH';
+                    break;
                 case 'renew':
                     url = `/api/sladmin/users/${userId}/renew`;
                     method = 'PATCH';
@@ -422,11 +426,13 @@ const TableComponent = ({ stateFilter, searchQuery, schoolFilter, courseFilter, 
             setSelectedUser(null);
             setBlockReason('');
             fetchUsers(currentPage);
+            if (onCountsRefresh) onCountsRefresh();
 
             //success toast
             const actionMessages = {
                 'verify': 'User verified successfully',
                 'block': 'User blocked successfully',
+                'unblock': 'User unblocked successfully',
                 'renew': data.message || 'User renewed successfully',
                 'delete': 'User deleted successfully',
                 'promote': data.message || 'User promoted to Student Leader successfully',
@@ -855,14 +861,26 @@ const TableComponent = ({ stateFilter, searchQuery, schoolFilter, courseFilter, 
                                         )}
 
                                         {/* Blocked Reason */}
-                                        {selectedUser.state === 'Blocked' && selectedUser.blocked_reason && (
+                                        {selectedUser.state === 'Blocked' && (
                                             <div className="md:col-span-2">
                                                 <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                                                        <span className="font-semibold text-red-400 text-sm uppercase tracking-wider">Blocked Reason</span>
+                                                    <div className="flex items-center justify-between gap-2 mb-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                                                            <span className="font-semibold text-red-400 text-sm uppercase tracking-wider">Blocked</span>
+                                                            {selectedUser.blocker_name && (
+                                                                <span className="text-xs text-red-400/70">by {selectedUser.blocker_name} {selectedUser.blocker_surname}</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="text-xs text-red-400/70">
+                                                            {selectedUser.blocked_at
+                                                                ? `${new Date(selectedUser.blocked_at).toLocaleDateString()} at ${new Date(selectedUser.blocked_at).toLocaleTimeString()}`
+                                                                : 'Date not recorded'}
+                                                        </div>
                                                     </div>
-                                                    <div className="text-red-300">{selectedUser.blocked_reason}</div>
+                                                    {selectedUser.blocked_reason && (
+                                                        <div className="text-red-300">{selectedUser.blocked_reason}</div>
+                                                    )}
                                                 </div>
                                             </div>
                                         )}
@@ -943,17 +961,27 @@ const TableComponent = ({ stateFilter, searchQuery, schoolFilter, courseFilter, 
                                                 )}
 
                                                 {stateFilter !== 'StudentLeaders' && stateFilter !== 'RegionalAdmins' && (
-                                                    <button
-                                                        className="px-6 py-3 bg-red-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
-                                                        onClick={() => {
-                                                            setShowBlockModal(true);
-                                                            setBlockReason('');
-                                                            setError('');
-                                                        }}
-                                                        disabled={actionLoading}
-                                                    >
-                                                        Block User
-                                                    </button>
+                                                    stateFilter === 'Blocked' ? (
+                                                        <button
+                                                            className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
+                                                            onClick={() => handleAction('unblock', selectedUser.id)}
+                                                            disabled={actionLoading}
+                                                        >
+                                                            {actionLoading ? 'Processing...' : 'Unblock User'}
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            className="px-6 py-3 bg-red-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
+                                                            onClick={() => {
+                                                                setShowBlockModal(true);
+                                                                setBlockReason('');
+                                                                setError('');
+                                                            }}
+                                                            disabled={actionLoading}
+                                                        >
+                                                            Block User
+                                                        </button>
+                                                    )
                                                 )}
 
                                                 {user?.role === 'Regional Admin' && (stateFilter === 'Verified' || stateFilter === 'MasterList') && (

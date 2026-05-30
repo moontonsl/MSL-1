@@ -450,6 +450,8 @@ Route::middleware(['auth', 'verified'])->get('/api/users/{id}', function ($id) {
         'users.year_level',
         'users.state',
         'users.blocked_reason',
+        'users.blocked_at',
+        'users.blocked_by',
         'users.verified_by',
         'users.verified_date',
         'users.proofOfEnrollment',
@@ -462,10 +464,13 @@ Route::middleware(['auth', 'verified'])->get('/api/users/{id}', function ($id) {
         'ml_users.win_rate',
         'ml_users.favorite_heroes',
         'verifiers.name as verifier_name',
-        'verifiers.surname as verifier_surname'
+        'verifiers.surname as verifier_surname',
+        'blockers.name as blocker_name',
+        'blockers.surname as blocker_surname'
     )
         ->leftJoin('ml_users', 'users.ml_id', '=', 'ml_users.ml_id')
         ->leftJoin('users as verifiers', 'users.verified_by', '=', 'verifiers.id')
+        ->leftJoin('users as blockers', 'users.blocked_by', '=', 'blockers.id')
         ->where('users.id', $id)
         ->first();
 
@@ -1882,6 +1887,8 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
         'users.year_level',
         'users.state',
         'users.blocked_reason',
+        'users.blocked_at',
+        'users.blocked_by',
         'users.verified_by',
         'users.verified_date',
         'users.proofOfEnrollment',
@@ -1895,10 +1902,13 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
         'ml_users.favorite_heroes',
         'ml_users.ign as ml_ign',
         'verifiers.name as verifier_name',
-        'verifiers.surname as verifier_surname'
+        'verifiers.surname as verifier_surname',
+        'blockers.name as blocker_name',
+        'blockers.surname as blocker_surname'
     )
         ->leftJoin('ml_users', 'users.ml_id', '=', 'ml_users.ml_id')
-        ->leftJoin('users as verifiers', 'users.verified_by', '=', 'verifiers.id');
+        ->leftJoin('users as verifiers', 'users.verified_by', '=', 'verifiers.id')
+        ->leftJoin('users as blockers', 'users.blocked_by', '=', 'blockers.id');
 
     // Apply role-based filtering - SL is always restricted to their university
     if ($user->role === 'SL') {
@@ -2098,10 +2108,47 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         $targetUser->update([
             'state' => 'Blocked',
-            'blocked_reason' => $request->reason
+            'blocked_reason' => $request->reason,
+            'blocked_at' => now(),
+            'blocked_by' => $user->id,
         ]);
 
         return response()->json(['success' => true, 'message' => 'User blocked successfully']);
+    });
+
+    Route::patch('/api/sladmin/users/{userId}/unblock', function ($userId) {
+        $user = Auth::user();
+        if ($user->role !== 'SL' && $user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Access denied.'], 403);
+        }
+
+        $query = \App\Models\User::where('id', $userId)->where('state', 'Blocked');
+
+        if ($user->role === 'SL') {
+            $query->where('university', $user->university);
+        } elseif ($user->role === 'Regional Admin') {
+            $assignedRegionIds = $user->getAssignedRegionIds();
+            if (!empty($assignedRegionIds)) {
+                $query->whereIn('region', $assignedRegionIds);
+            } else {
+                $query->where('region', $user->region);
+            }
+        }
+
+        $targetUser = $query->first();
+
+        if (!$targetUser) {
+            return response()->json(['error' => 'User not found, not blocked, or access denied.'], 404);
+        }
+
+        $targetUser->update([
+            'state' => 'Verified',
+            'blocked_reason' => null,
+            'blocked_at' => null,
+            'blocked_by' => null,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'User unblocked successfully']);
     });
 
     Route::delete('/api/sladmin/users/{userId}', function ($userId) {

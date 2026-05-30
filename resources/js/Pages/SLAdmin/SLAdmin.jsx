@@ -15,18 +15,23 @@ const SLAdmin = () => {
     const [courseFilter, setCourseFilter] = useState('');
     const [dynCounts, setDynCounts] = useState(null);
 
+    const refreshCounts = async (search = '') => {
+        try {
+            const url = search.trim()
+                ? `/api/sladmin/counts?search=${encodeURIComponent(search.trim())}`
+                : '/api/sladmin/counts';
+            const res = await fetch(url);
+            const data = await res.json();
+            setDynCounts(data);
+        } catch (e) {}
+    };
+
     useEffect(() => {
         if (!searchQuery || !searchQuery.trim()) {
-            setDynCounts(null);
+            refreshCounts();
             return;
         }
-        const timer = setTimeout(async () => {
-            try {
-                const res = await fetch(`/api/sladmin/counts?search=${encodeURIComponent(searchQuery.trim())}`);
-                const data = await res.json();
-                setDynCounts(data);
-            } catch (e) {}
-        }, 300);
+        const timer = setTimeout(() => refreshCounts(searchQuery), 300);
         return () => clearTimeout(timer);
     }, [searchQuery]);
 
@@ -248,7 +253,7 @@ const SLAdmin = () => {
 
                     {/* Table Component */}
                     <div className="bg-neutral-800/50 backdrop-blur-sm border border-neutral-700/50 rounded-xl overflow-hidden">
-                        <TableComponent stateFilter={selectedTab} searchQuery={searchQuery} schoolFilter={schoolFilter} courseFilter={courseFilter} user={user} />
+                        <TableComponent stateFilter={selectedTab} searchQuery={searchQuery} schoolFilter={schoolFilter} courseFilter={courseFilter} user={user} onCountsRefresh={() => refreshCounts(searchQuery)} />
                     </div>
                 </div>
             </div>

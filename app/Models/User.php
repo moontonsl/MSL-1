@@ -51,6 +51,8 @@ class User extends Authenticatable
         'role',
         'state',
         'blocked_reason',
+        'blocked_at',
+        'blocked_by',
         'verified_by',
         'verified_date',
         'squad_name_last_changed',
