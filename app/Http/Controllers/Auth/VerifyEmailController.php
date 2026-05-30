@@ -39,9 +39,9 @@ class VerifyEmailController extends Controller
             $code = rand(100000, 999999);
             Cache::put('verification_code_' . $request->email, $code, now()->addMinutes(10));
     
-            Mail::raw("Your verification code is: $code", function($message) use ($request) {
+            Mail::send('emails.verification-code', ['code' => $code], function($message) use ($request) {
                 $message->to($request->email)
-                        ->subject('Your Verification Code');
+                        ->subject('MSL Account Verification Code');
             });
     
             return response()->json(['message' => 'Verification code sent!', 'code' => $code]);
