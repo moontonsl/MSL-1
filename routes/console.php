@@ -29,11 +29,11 @@ Schedule::command('promotions:revert-expired')
     ->withoutOverlapping()
     ->runInBackground();
 
-Schedule::command('users:deactivate-expired-renewals')
-    ->daily()
-    ->at('01:00')
-    ->withoutOverlapping()
-    ->runInBackground();
+// Schedule::command('users:deactivate-expired-renewals')
+//     ->daily()
+//     ->at('01:00')
+//     ->withoutOverlapping()
+//     ->runInBackground();
 
 Schedule::command('users:delete-expired-proofs')
     ->daily()
