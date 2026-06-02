@@ -38,7 +38,7 @@ const SLAdmin = () => {
     const tabCounts = dynCounts ?? { verified, inactive, new: newUsers, renewed, blocked };
 
     const baseTabOptions = [
-        { label: 'Pending Approval', value: 'New', icon: Users, count: tabCounts.new },
+        { label: 'New Accounts', value: 'New', icon: Users, count: tabCounts.new },
         { label: 'Renewal Required', value: 'Renew', icon: RefreshCw, count: tabCounts.renewed },
         { label: 'Verified', value: 'Verified', icon: UserCheck, count: tabCounts.verified },
         { label: 'Inactive', value: 'Inactive', icon: UserMinus, count: tabCounts.inactive },

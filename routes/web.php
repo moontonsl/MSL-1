@@ -2142,7 +2142,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         }
 
         $targetUser->update([
-            'state' => 'Verified',
+            'state' => 'Renew',
             'blocked_reason' => null,
             'blocked_at' => null,
             'blocked_by' => null,

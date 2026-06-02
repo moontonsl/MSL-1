@@ -13,7 +13,7 @@ function debounce(func, delay) {
     };
 }
 
-const AccountModificationModal = ({ isOpen, onClose }) => {
+const AccountModificationModal = ({ isOpen, onClose, prefillUser = null }) => {
     const [username, setUsername] = useState("");
     const [selectedUser, setSelectedUser] = useState(null);
     const [userSearchResults, setUserSearchResults] = useState([]);
@@ -177,6 +177,14 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
         }
     }, [isOpen, modificationType]);
 
+    // Pre-fill user when opened from profile
+    useEffect(() => {
+        if (isOpen && prefillUser) {
+            setSelectedUser(prefillUser);
+            setUsername(`${prefillUser.name} ${prefillUser.surname} (${prefillUser.username})`);
+        }
+    }, [isOpen, prefillUser]);
+
     if (!isOpen) return null;
 
     const resetForm = () => {
@@ -247,18 +255,37 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
 
     const handleModificationTypeChange = (type) => {
         setModificationType(type);
-
-        // Reset all values including username search
-        setUsername("");
-        setSelectedUser(null);
-        setUserSearchResults([]);
-        setShowSearchResults(false);
-        setWrongFirstName("");
-        setWrongLastName("");
         setCorrectFirstName("");
         setCorrectLastName("");
-        setWrongValue("");
         setCorrectValue("");
+        setUserSearchResults([]);
+        setShowSearchResults(false);
+
+        const userToKeep = prefillUser || selectedUser;
+        if (userToKeep && prefillUser) {
+            setSelectedUser(userToKeep);
+            setUsername(`${userToKeep.name} ${userToKeep.surname} (${userToKeep.username})`);
+            if (type === "Full Name") {
+                setWrongFirstName(userToKeep.name);
+                setWrongLastName(userToKeep.surname);
+            } else if (type === "School") {
+                setWrongValue(userToKeep.university || "");
+            } else if (type === "Course") {
+                setWrongValue(userToKeep.course || "");
+            } else if (type === "Student ID") {
+                setWrongValue(userToKeep.studentId || "");
+            } else {
+                setWrongFirstName("");
+                setWrongLastName("");
+                setWrongValue("");
+            }
+        } else {
+            setUsername("");
+            setSelectedUser(null);
+            setWrongFirstName("");
+            setWrongLastName("");
+            setWrongValue("");
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -399,9 +426,9 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
         }
     };
 
-    return (
+    return createPortal(
         <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999]"
             onClick={handleBackdropClick}
         >
             <div
@@ -850,7 +877,8 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
                 onClose={() => setShowMSLModal(false)}
                 {...modalData}
             />
-        </div>
+        </div>,
+        document.body
     );
 };
 

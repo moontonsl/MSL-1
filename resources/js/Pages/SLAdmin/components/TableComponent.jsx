@@ -4,6 +4,7 @@ import avatar from '../assets/42ca9ea53c9f0acd1d273d2864b58719215b59f4.png';
 import Modal from '@/Components/Modal.jsx';
 import Toast from '@/Components/Toast.jsx';
 import SecurePdfViewer from '@/Components/SecurePdfViewer';
+import AccountModificationModal from '@/Pages/ApprovalPages/AccountModificationModal.jsx';
 
 const TableComponent = ({ stateFilter, searchQuery, schoolFilter, courseFilter, user, onCountsRefresh }) => {
     const [users, setUsers] = useState([]);
@@ -30,6 +31,7 @@ const TableComponent = ({ stateFilter, searchQuery, schoolFilter, courseFilter, 
     const [promoteRole, setPromoteRole] = useState('');
     const [promoteDurationType, setPromoteDurationType] = useState('permanent');
     const [promoteDays, setPromoteDays] = useState(1);
+    const [showModificationModal, setShowModificationModal] = useState(false);
     const ITEMS_PER_PAGE = 20;
     const abortControllerRef = useRef(null);
 
@@ -176,9 +178,12 @@ const TableComponent = ({ stateFilter, searchQuery, schoolFilter, courseFilter, 
 
     useEffect(() => {
         if (showModal && selectedUser) {
-            // Modal opened with selected user
+            const updatedUser = users.find(u => u.id === selectedUser.id);
+            if (updatedUser) {
+                setSelectedUser(updatedUser);
+            }
         }
-    }, [showModal, selectedUser]);
+    }, [users]);
 
     //Prevent modal close
     useEffect(() => {
@@ -214,6 +219,7 @@ const TableComponent = ({ stateFilter, searchQuery, schoolFilter, courseFilter, 
     const openModal = (user) => {
         setSelectedUser(user);
         setShowModal(true);
+        fetchUsers(currentPage);
     };
     const closeModal = () => {
         setShowModal(false);
@@ -949,6 +955,18 @@ const TableComponent = ({ stateFilter, searchQuery, schoolFilter, courseFilter, 
                                             {/* Right Side Actions */}
                                             <div className="flex flex-col sm:flex-row gap-3">
 
+                                                {stateFilter === 'Verified' && stateFilter !== 'StudentLeaders' && stateFilter !== 'RegionalAdmins' && (
+                                                    <button
+                                                        className="px-6 py-3 bg-[#facc15] hover:bg-[#e6b800] text-black rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
+                                                        onClick={() => {
+                                                            setShowModal(false);
+                                                            setShowModificationModal(true);
+                                                        }}
+                                                        disabled={actionLoading}
+                                                    >
+                                                        Modify
+                                                    </button>
+                                                )}
 
                                                 {(stateFilter === 'Verified' || stateFilter === 'Renew' || stateFilter === 'New') && stateFilter !== 'StudentLeaders' && stateFilter !== 'RegionalAdmins' && (
                                                     <button
@@ -1430,6 +1448,12 @@ const TableComponent = ({ stateFilter, searchQuery, schoolFilter, courseFilter, 
                 isVisible={toast.show}
                 onClose={hideToast}
                 duration={4000}
+            />
+
+            <AccountModificationModal
+                isOpen={showModificationModal}
+                onClose={() => setShowModificationModal(false)}
+                prefillUser={selectedUser}
             />
         </>
     );
