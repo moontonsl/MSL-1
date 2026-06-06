@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Facebook } from 'lucide-react';
 import avatar from '../assets/42ca9ea53c9f0acd1d273d2864b58719215b59f4.png';
 import Modal from '@/Components/Modal.jsx';
 import Toast from '@/Components/Toast.jsx';
 import SecurePdfViewer from '@/Components/SecurePdfViewer';
+import AccountModificationModal from '@/Pages/ApprovalPages/AccountModificationModal.jsx';
 
-const TableComponent = ({ stateFilter, searchQuery, user }) => {
+const TableComponent = ({ stateFilter, searchQuery, schoolFilter, courseFilter, user, onCountsRefresh }) => {
     const [users, setUsers] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -31,7 +31,9 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
     const [promoteRole, setPromoteRole] = useState('');
     const [promoteDurationType, setPromoteDurationType] = useState('permanent');
     const [promoteDays, setPromoteDays] = useState(1);
+    const [showModificationModal, setShowModificationModal] = useState(false);
     const ITEMS_PER_PAGE = 20;
+    const abortControllerRef = useRef(null);
 
     const getRemainingDays = (expiryDate) => {
         if (!expiryDate) return null;
@@ -43,6 +45,11 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
     };
 
     const fetchUsers = async (page = 1, retryCount = 0) => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        abortControllerRef.current = new AbortController();
+        const { signal } = abortControllerRef.current;
         setLoading(true);
         try {
             let url = `/api/sladmin/users?page=${page}&per_page=${ITEMS_PER_PAGE}`;
@@ -52,8 +59,14 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             if (searchQuery && searchQuery.trim()) {
                 url += `&search=${encodeURIComponent(searchQuery.trim())}`;
             }
+            if (schoolFilter && schoolFilter.trim()) {
+                url += `&university=${encodeURIComponent(schoolFilter.trim())}`;
+            }
+            if (courseFilter && courseFilter.trim()) {
+                url += `&course=${encodeURIComponent(courseFilter.trim())}`;
+            }
 
-            const response = await fetch(url);
+            const response = await fetch(url, { signal });
 
             // Check response status first
             if (!response.ok) {
@@ -102,6 +115,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             setTotalUsers(data.total || 0);
 
         } catch (error) {
+            if (error.name === 'AbortError') return;
             // Retry logic for temporary server issues
             if (retryCount < 2 && (
                 error.message.includes('Server error: 500') ||
@@ -139,14 +153,23 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
     };
 
     useEffect(() => {
+        const timer = setTimeout(() => {
+            if (currentPage !== 1) {
+                setCurrentPage(1);
+            } else {
+                fetchUsers(1);
+            }
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchQuery, schoolFilter, courseFilter]);
 
+    useEffect(() => {
         if (currentPage !== 1) {
             setCurrentPage(1);
         } else {
             fetchUsers(1);
         }
-
-    }, [searchQuery, stateFilter]);
+    }, [stateFilter]);
 
     useEffect(() => {
         fetchUsers(currentPage);
@@ -155,9 +178,12 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
 
     useEffect(() => {
         if (showModal && selectedUser) {
-            // Modal opened with selected user
+            const updatedUser = users.find(u => u.id === selectedUser.id);
+            if (updatedUser) {
+                setSelectedUser(updatedUser);
+            }
         }
-    }, [showModal, selectedUser]);
+    }, [users]);
 
     //Prevent modal close
     useEffect(() => {
@@ -193,6 +219,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
     const openModal = (user) => {
         setSelectedUser(user);
         setShowModal(true);
+        fetchUsers(currentPage);
     };
     const closeModal = () => {
         setShowModal(false);
@@ -294,6 +321,10 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                     url = `/api/sladmin/users/${userId}/block`;
                     method = 'PATCH';
                     body = { reason: payload };
+                    break;
+                case 'unblock':
+                    url = `/api/sladmin/users/${userId}/unblock`;
+                    method = 'PATCH';
                     break;
                 case 'renew':
                     url = `/api/sladmin/users/${userId}/renew`;
@@ -401,11 +432,13 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
             setSelectedUser(null);
             setBlockReason('');
             fetchUsers(currentPage);
+            if (onCountsRefresh) onCountsRefresh();
 
             //success toast
             const actionMessages = {
                 'verify': 'User verified successfully',
                 'block': 'User blocked successfully',
+                'unblock': 'User unblocked successfully',
                 'renew': data.message || 'User renewed successfully',
                 'delete': 'User deleted successfully',
                 'promote': data.message || 'User promoted to Student Leader successfully',
@@ -505,7 +538,7 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                             <tr><td colSpan={6} className="text-center py-8">Loading...</td></tr>
                         ) : users.length === 0 ? (
                             <tr><td colSpan={6} className="text-center py-8">No users found.</td></tr>
-                        ) : users.map((item, index) => (
+                        ) : users.map((item) => (
                             <tr key={item.id} className="hover:bg-[#2f2f2f] transition-colors">
                                 <td className="flex items-center gap-3 px-4 py-3">
                                     <div className="bg-gradient-to-tr from-[#D4AF37] to-[#FFFACD] p-[2px] rounded-full">
@@ -834,14 +867,26 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                         )}
 
                                         {/* Blocked Reason */}
-                                        {selectedUser.state === 'Blocked' && selectedUser.blocked_reason && (
+                                        {selectedUser.state === 'Blocked' && (
                                             <div className="md:col-span-2">
                                                 <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                                                        <span className="font-semibold text-red-400 text-sm uppercase tracking-wider">Blocked Reason</span>
+                                                    <div className="flex items-center justify-between gap-2 mb-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                                                            <span className="font-semibold text-red-400 text-sm uppercase tracking-wider">Blocked</span>
+                                                            {selectedUser.blocker_name && (
+                                                                <span className="text-xs text-red-400/70">by {selectedUser.blocker_name} {selectedUser.blocker_surname}</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="text-xs text-red-400/70">
+                                                            {selectedUser.blocked_at
+                                                                ? `${new Date(selectedUser.blocked_at).toLocaleDateString()} at ${new Date(selectedUser.blocked_at).toLocaleTimeString()}`
+                                                                : 'Date not recorded'}
+                                                        </div>
                                                     </div>
-                                                    <div className="text-red-300">{selectedUser.blocked_reason}</div>
+                                                    {selectedUser.blocked_reason && (
+                                                        <div className="text-red-300">{selectedUser.blocked_reason}</div>
+                                                    )}
                                                 </div>
                                             </div>
                                         )}
@@ -910,6 +955,18 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                             {/* Right Side Actions */}
                                             <div className="flex flex-col sm:flex-row gap-3">
 
+                                                {stateFilter === 'Verified' && stateFilter !== 'StudentLeaders' && stateFilter !== 'RegionalAdmins' && (
+                                                    <button
+                                                        className="px-6 py-3 bg-[#facc15] hover:bg-[#e6b800] text-black rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
+                                                        onClick={() => {
+                                                            setShowModal(false);
+                                                            setShowModificationModal(true);
+                                                        }}
+                                                        disabled={actionLoading}
+                                                    >
+                                                        Modify
+                                                    </button>
+                                                )}
 
                                                 {(stateFilter === 'Verified' || stateFilter === 'Renew' || stateFilter === 'New') && stateFilter !== 'StudentLeaders' && stateFilter !== 'RegionalAdmins' && (
                                                     <button
@@ -922,17 +979,27 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                                                 )}
 
                                                 {stateFilter !== 'StudentLeaders' && stateFilter !== 'RegionalAdmins' && (
-                                                    <button
-                                                        className="px-6 py-3 bg-red-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
-                                                        onClick={() => {
-                                                            setShowBlockModal(true);
-                                                            setBlockReason('');
-                                                            setError('');
-                                                        }}
-                                                        disabled={actionLoading}
-                                                    >
-                                                        Block User
-                                                    </button>
+                                                    stateFilter === 'Blocked' ? (
+                                                        <button
+                                                            className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
+                                                            onClick={() => handleAction('unblock', selectedUser.id)}
+                                                            disabled={actionLoading}
+                                                        >
+                                                            {actionLoading ? 'Processing...' : 'Unblock User'}
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            className="px-6 py-3 bg-red-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
+                                                            onClick={() => {
+                                                                setShowBlockModal(true);
+                                                                setBlockReason('');
+                                                                setError('');
+                                                            }}
+                                                            disabled={actionLoading}
+                                                        >
+                                                            Block User
+                                                        </button>
+                                                    )
                                                 )}
 
                                                 {user?.role === 'Regional Admin' && (stateFilter === 'Verified' || stateFilter === 'MasterList') && (
@@ -1381,6 +1448,12 @@ const TableComponent = ({ stateFilter, searchQuery, user }) => {
                 isVisible={toast.show}
                 onClose={hideToast}
                 duration={4000}
+            />
+
+            <AccountModificationModal
+                isOpen={showModificationModal}
+                onClose={() => setShowModificationModal(false)}
+                prefillUser={selectedUser}
             />
         </>
     );

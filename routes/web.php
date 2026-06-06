@@ -371,12 +371,11 @@ Route::middleware(['auth', 'verified'])->get('/api/users/search', function (\Ill
     }
     */
 
-    // Search in username, name, surname, email
+    // Search in username, name, surname
     $query->where(function ($q) use ($search) {
         $q->where('username', 'like', '%' . $search . '%')
             ->orWhere('name', 'like', '%' . $search . '%')
-            ->orWhere('surname', 'like', '%' . $search . '%')
-            ->orWhere('email', 'like', '%' . $search . '%');
+            ->orWhere('surname', 'like', '%' . $search . '%');
     });
 
     $users = $query->limit($limit)->get();
@@ -458,6 +457,8 @@ Route::middleware(['auth', 'verified'])->get('/api/users/{id}', function ($id) {
         'users.year_level',
         'users.state',
         'users.blocked_reason',
+        'users.blocked_at',
+        'users.blocked_by',
         'users.verified_by',
         'users.verified_date',
         'users.proofOfEnrollment',
@@ -470,10 +471,13 @@ Route::middleware(['auth', 'verified'])->get('/api/users/{id}', function ($id) {
         'ml_users.win_rate',
         'ml_users.favorite_heroes',
         'verifiers.name as verifier_name',
-        'verifiers.surname as verifier_surname'
+        'verifiers.surname as verifier_surname',
+        'blockers.name as blocker_name',
+        'blockers.surname as blocker_surname'
     )
         ->leftJoin('ml_users', 'users.ml_id', '=', 'ml_users.ml_id')
         ->leftJoin('users as verifiers', 'users.verified_by', '=', 'verifiers.id')
+        ->leftJoin('users as blockers', 'users.blocked_by', '=', 'blockers.id')
         ->where('users.id', $id)
         ->first();
 
@@ -1296,10 +1300,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
             }
         }
 
-        $verified = (clone $query)->where('state', 'Verified')->count();
-        $new = (clone $query)->where('state', 'New')->count();
-        $renewed = (clone $query)->where('state', 'Renew')->count();
-        $blocked = (clone $query)->where('state', 'Blocked')->count();
+        $adminRoles = ['SL', 'Admin', 'Super Admin', 'Regional Admin'];
+        $verified = (clone $query)->where('state', 'Verified')->whereNotIn('role', $adminRoles)->count();
+        $new = (clone $query)->where('state', 'New')->whereNotIn('role', $adminRoles)->count();
+        $renewed = (clone $query)->where('state', 'Renew')->whereNotIn('role', $adminRoles)->count();
+        $blocked = (clone $query)->where('state', 'Blocked')->whereNotIn('role', $adminRoles)->count();
+        $inactive = (clone $query)->where('state', 'Inactive')->whereNotIn('role', $adminRoles)->count();
 
         $studentLeaders = 0;
         if ($user->role === 'Regional Admin') {
@@ -1319,14 +1325,37 @@ Route::middleware(['auth', 'verified'])->group(function () {
             $regionalAdmins = User::where('role', 'Regional Admin')->count();
         }
 
+        $universities = (clone $query)
+            ->whereNotIn('role', $adminRoles)
+            ->whereNotNull('university')
+            ->where('university', '!=', '')
+            ->distinct()
+            ->orderBy('university')
+            ->pluck('university')
+            ->values()
+            ->toArray() ?? [];
+
+        $courses = (clone $query)
+            ->whereNotIn('role', $adminRoles)
+            ->whereNotNull('course')
+            ->where('course', '!=', '')
+            ->distinct()
+            ->orderBy('course')
+            ->pluck('course')
+            ->values()
+            ->toArray() ?? [];
+
         return Inertia::render('SLAdmin/SLAdmin', [
             'user' => $user,
             'verified' => $verified,
+            'inactive' => $inactive,
             'new' => $new,
             'renewed' => $renewed,
             'blocked' => $blocked,
             'studentLeaders' => $studentLeaders,
-            'regionalAdmins' => $regionalAdmins
+            'regionalAdmins' => $regionalAdmins,
+            'universities' => $universities,
+            'courses' => $courses,
         ]);
     })->name('sl-admin');
 });
@@ -1877,6 +1906,8 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
         'users.year_level',
         'users.state',
         'users.blocked_reason',
+        'users.blocked_at',
+        'users.blocked_by',
         'users.verified_by',
         'users.verified_date',
         'users.proofOfEnrollment',
@@ -1890,16 +1921,19 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
         'ml_users.favorite_heroes',
         'ml_users.ign as ml_ign',
         'verifiers.name as verifier_name',
-        'verifiers.surname as verifier_surname'
+        'verifiers.surname as verifier_surname',
+        'blockers.name as blocker_name',
+        'blockers.surname as blocker_surname'
     )
         ->leftJoin('ml_users', 'users.ml_id', '=', 'ml_users.ml_id')
-        ->leftJoin('users as verifiers', 'users.verified_by', '=', 'verifiers.id');
+        ->leftJoin('users as verifiers', 'users.verified_by', '=', 'verifiers.id')
+        ->leftJoin('users as blockers', 'users.blocked_by', '=', 'blockers.id');
 
-    // Apply role-based filtering - Bypassed if searching to allow finding "wrong school" students
-    if (!$request->has('search') || empty($request->query('search'))) {
-        if ($user->role === 'SL') {
-            $query->where('users.university', $user->university);
-        } elseif ($user->role === 'Regional Admin') {
+    // Apply role-based filtering - SL is always restricted to their university
+    if ($user->role === 'SL') {
+        $query->where('users.university', $user->university);
+    } elseif ($user->role === 'Regional Admin') {
+        if (!$request->has('search') || empty($request->query('search'))) {
             $assignedRegionIds = $user->getAssignedRegionIds();
             if (!empty($assignedRegionIds)) {
                 $query->whereIn('users.region', $assignedRegionIds);
@@ -1930,8 +1964,7 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
             ->where('users.role', '!=', 'Super Admin')
             ->where('users.role', '!=', 'Regional Admin');
 
-        // Apply state filtering only if not searching
-        if ($request->has('state') && (!$request->has('search') || empty($request->query('search')))) {
+        if ($request->has('state')) {
             $query->where('users.state', $request->query('state'));
         }
     }
@@ -1939,10 +1972,11 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
     // Add search functionality
     if ($request->has('search') && !empty($request->query('search'))) {
         $searchTerm = $request->query('search');
-        $query->where(function ($q) use ($searchTerm) {
+        $usernameSearch = ltrim($searchTerm, '@');
+        $query->where(function ($q) use ($searchTerm, $usernameSearch) {
             $q->where('users.name', 'like', '%' . $searchTerm . '%')
                 ->orWhere('users.surname', 'like', '%' . $searchTerm . '%')
-                ->orWhere('users.username', 'like', '%' . $searchTerm . '%')
+                ->orWhere('users.username', 'like', '%' . $usernameSearch . '%')
                 ->orWhere('users.ml_id', 'like', '%' . $searchTerm . '%')
                 ->orWhere('users.ml_server', 'like', '%' . $searchTerm . '%')
                 ->orWhere('users.university', 'like', '%' . $searchTerm . '%')
@@ -1951,8 +1985,70 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
         });
     }
 
+    if ($request->has('university') && !empty($request->query('university'))) {
+        $query->where('users.university', $request->query('university'));
+    }
+    if ($request->has('course') && !empty($request->query('course'))) {
+        $query->where('users.course', $request->query('course'));
+    }
+
     $users = $query->orderByDesc('users.created_at')->paginate($perPage);
     return response()->json($users);
+});
+
+Route::middleware(['auth', 'verified'])->get('/api/sladmin/counts', function (\Illuminate\Http\Request $request) {
+    $user = Auth::user();
+    if ($user->role !== 'SL' && $user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+        return response()->json(['error' => 'Access denied.'], 403);
+    }
+
+    $query = \App\Models\User::from('users')
+        ->leftJoin('ml_users', 'users.ml_id', '=', 'ml_users.ml_id')
+        ->where('users.status', 'active');
+
+    if ($user->role === 'SL') {
+        $query->where('users.university', $user->university);
+    } elseif ($user->role === 'Regional Admin') {
+        $assignedRegionIds = $user->getAssignedRegionIds();
+        if (!empty($assignedRegionIds)) {
+            $query->whereIn('users.region', $assignedRegionIds);
+        } else {
+            $query->where('users.region', $user->region);
+        }
+    }
+
+    $adminRoles = ['SL', 'Admin', 'Super Admin', 'Regional Admin'];
+    $query->whereNotIn('users.role', $adminRoles);
+
+    if ($request->has('search') && !empty($request->query('search'))) {
+        $searchTerm = $request->query('search');
+        $usernameSearch = ltrim($searchTerm, '@');
+        $query->where(function ($q) use ($searchTerm, $usernameSearch) {
+            $q->where('users.name', 'like', '%' . $searchTerm . '%')
+                ->orWhere('users.surname', 'like', '%' . $searchTerm . '%')
+                ->orWhere('users.username', 'like', '%' . $usernameSearch . '%')
+                ->orWhere('users.ml_id', 'like', '%' . $searchTerm . '%')
+                ->orWhere('users.ml_server', 'like', '%' . $searchTerm . '%')
+                ->orWhere('users.university', 'like', '%' . $searchTerm . '%')
+                ->orWhere('users.year_level', 'like', '%' . $searchTerm . '%')
+                ->orWhere('ml_users.ign', 'like', '%' . $searchTerm . '%');
+        });
+    }
+
+    if ($request->has('university') && !empty($request->query('university'))) {
+        $query->where('users.university', $request->query('university'));
+    }
+    if ($request->has('course') && !empty($request->query('course'))) {
+        $query->where('users.course', $request->query('course'));
+    }
+
+    return response()->json([
+        'verified' => (clone $query)->where('users.state', 'Verified')->count(),
+        'new'      => (clone $query)->where('users.state', 'New')->count(),
+        'renewed'  => (clone $query)->where('users.state', 'Renew')->count(),
+        'blocked'  => (clone $query)->where('users.state', 'Blocked')->count(),
+        'inactive' => (clone $query)->where('users.state', 'Inactive')->count(),
+    ]);
 });
 
 // API endpoints for SLAdmin and Regional Admin to update user state
@@ -2031,10 +2127,47 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         $targetUser->update([
             'state' => 'Blocked',
-            'blocked_reason' => $request->reason
+            'blocked_reason' => $request->reason,
+            'blocked_at' => now(),
+            'blocked_by' => $user->id,
         ]);
 
         return response()->json(['success' => true, 'message' => 'User blocked successfully']);
+    });
+
+    Route::patch('/api/sladmin/users/{userId}/unblock', function ($userId) {
+        $user = Auth::user();
+        if ($user->role !== 'SL' && $user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
+            return response()->json(['error' => 'Access denied.'], 403);
+        }
+
+        $query = \App\Models\User::where('id', $userId)->where('state', 'Blocked');
+
+        if ($user->role === 'SL') {
+            $query->where('university', $user->university);
+        } elseif ($user->role === 'Regional Admin') {
+            $assignedRegionIds = $user->getAssignedRegionIds();
+            if (!empty($assignedRegionIds)) {
+                $query->whereIn('region', $assignedRegionIds);
+            } else {
+                $query->where('region', $user->region);
+            }
+        }
+
+        $targetUser = $query->first();
+
+        if (!$targetUser) {
+            return response()->json(['error' => 'User not found, not blocked, or access denied.'], 404);
+        }
+
+        $targetUser->update([
+            'state' => 'Renew',
+            'blocked_reason' => null,
+            'blocked_at' => null,
+            'blocked_by' => null,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'User unblocked successfully']);
     });
 
     Route::delete('/api/sladmin/users/{userId}', function ($userId) {

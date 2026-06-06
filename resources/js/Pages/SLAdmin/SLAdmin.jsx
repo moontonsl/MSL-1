@@ -1,22 +1,48 @@
 import styles from "./SLAdmin.module.scss";
-import {BadgeCheck, ArrowDownAZ, Funnel, Search, Users, UserCheck, UserX, RefreshCw, Crown, ShieldUser} from 'lucide-react';
+import {BadgeCheck, ArrowDownAZ, Funnel, Search, Users, UserCheck, UserX, UserMinus, RefreshCw, Crown, ShieldUser} from 'lucide-react';
 
 import profilePic from "./assets/42ca9ea53c9f0acd1d273d2864b58719215b59f4.png"
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
 import TableComponent from "@/Pages/SLAdmin/components/TableComponent.jsx";
 import { Head, usePage } from '@inertiajs/react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const SLAdmin = () => {
-    const { user, verified, new: newUsers, renewed, blocked, studentLeaders, regionalAdmins } = usePage().props;
+    const { user, verified, inactive, new: newUsers, renewed, blocked, studentLeaders, regionalAdmins } = usePage().props;
     const [selectedTab, setSelectedTab] = useState('New');
     const [searchQuery, setSearchQuery] = useState('');
-    
+    const [schoolFilter, setSchoolFilter] = useState('');
+    const [courseFilter, setCourseFilter] = useState('');
+    const [dynCounts, setDynCounts] = useState(null);
+
+    const refreshCounts = async (search = '') => {
+        try {
+            const url = search.trim()
+                ? `/api/sladmin/counts?search=${encodeURIComponent(search.trim())}`
+                : '/api/sladmin/counts';
+            const res = await fetch(url);
+            const data = await res.json();
+            setDynCounts(data);
+        } catch (e) {}
+    };
+
+    useEffect(() => {
+        if (!searchQuery || !searchQuery.trim()) {
+            refreshCounts();
+            return;
+        }
+        const timer = setTimeout(() => refreshCounts(searchQuery), 300);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    const tabCounts = dynCounts ?? { verified, inactive, new: newUsers, renewed, blocked };
+
     const baseTabOptions = [
-        { label: 'Pending Approval', value: 'New', icon: Users, count: newUsers },
-        { label: 'Renewal Required', value: 'Renew', icon: RefreshCw, count: renewed },
-        { label: 'Master List', value: 'Verified', icon: UserCheck, count: verified },
-        { label: 'Blocked', value: 'Blocked', icon: UserX, count: blocked },
+        { label: 'New Accounts', value: 'New', icon: Users, count: tabCounts.new },
+        { label: 'Renewal Required', value: 'Renew', icon: RefreshCw, count: tabCounts.renewed },
+        { label: 'Verified', value: 'Verified', icon: UserCheck, count: tabCounts.verified },
+        { label: 'Inactive', value: 'Inactive', icon: UserMinus, count: tabCounts.inactive },
+        { label: 'Blocked', value: 'Blocked', icon: UserX, count: tabCounts.blocked },
     ];
     
     // Add Student Leader tab for Regional Admin and Super Admin
@@ -116,33 +142,39 @@ const SLAdmin = () => {
 
                     {/* Statistics Grid */}
                     <div className={`grid gap-4 mb-8 ${
-                        user.role === 'Regional Admin' ? 'grid-cols-2 lg:grid-cols-5' : 
-                        user.role === 'Super Admin' ? 'grid-cols-2 lg:grid-cols-6' : 
-                        'grid-cols-2 lg:grid-cols-4'
+                        user.role === 'Regional Admin' ? 'grid-cols-2 lg:grid-cols-6' :
+                        user.role === 'Super Admin' ? 'grid-cols-2 lg:grid-cols-7' :
+                        'grid-cols-2 lg:grid-cols-5'
                     }`}>
-                        <StatCard 
-                            icon={UserCheck} 
-                            label="Verified" 
-                            value={verified} 
-                            color="text-green-400" 
+                        <StatCard
+                            icon={UserCheck}
+                            label="Verified"
+                            value={tabCounts.verified}
+                            color="text-green-400"
                         />
-                        <StatCard 
-                            icon={Users} 
-                            label="New" 
-                            value={newUsers} 
-                            color="text-blue-400" 
+                        <StatCard
+                            icon={Users}
+                            label="New"
+                            value={tabCounts.new}
+                            color="text-blue-400"
                         />
-                        <StatCard 
-                            icon={RefreshCw} 
-                            label="Renewal" 
-                            value={renewed} 
-                            color="text-yellow-400" 
+                        <StatCard
+                            icon={RefreshCw}
+                            label="Renewal"
+                            value={tabCounts.renewed}
+                            color="text-yellow-400"
                         />
-                        <StatCard 
-                            icon={UserX} 
-                            label="Blocked" 
-                            value={blocked} 
-                            color="text-red-400" 
+                        <StatCard
+                            icon={UserMinus}
+                            label="Inactive"
+                            value={tabCounts.inactive}
+                            color="text-gray-400"
+                        />
+                        <StatCard
+                            icon={UserX}
+                            label="Blocked"
+                            value={tabCounts.blocked}
+                            color="text-red-400"
                         />
                         {(user.role === 'Regional Admin' || user.role === 'Super Admin') && (
                             <StatCard 
@@ -183,7 +215,7 @@ const SLAdmin = () => {
                                             <Icon className="w-4 h-4" />
                                             <span className="hidden sm:inline">{tab.label}</span>
                                             <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
-                                            {tab.count && (
+                                            {tab.count != null && (
                                                 <span className="bg-neutral-600/50 text-xs px-2 py-1 rounded-full">
                                                     {tab.count.toLocaleString()}
                                                 </span>
@@ -203,23 +235,25 @@ const SLAdmin = () => {
                                 </button>
                             </div>
 
-                            {/* Search */}
-                            <div className="relative w-full lg:w-80">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-4 h-4" />
-                                <input
-                                    className="w-full bg-neutral-700/50 border border-neutral-600/50 rounded-lg pl-10 pr-4 py-2 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                                    type="text"
-                                    placeholder="Search students..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
+                            {/* Search + Filters */}
+                            <div className="flex flex-col gap-2 w-full lg:w-80">
+                                <div className="relative w-full">
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-4 h-4" />
+                                    <input
+                                        className="w-full bg-neutral-700/50 border border-neutral-600/50 rounded-lg pl-10 pr-4 py-2 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                                        type="text"
+                                        placeholder="Search students..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Table Component */}
                     <div className="bg-neutral-800/50 backdrop-blur-sm border border-neutral-700/50 rounded-xl overflow-hidden">
-                        <TableComponent stateFilter={selectedTab} searchQuery={searchQuery} user={user} />
+                        <TableComponent stateFilter={selectedTab} searchQuery={searchQuery} schoolFilter={schoolFilter} courseFilter={courseFilter} user={user} onCountsRefresh={() => refreshCounts(searchQuery)} />
                     </div>
                 </div>
             </div>
