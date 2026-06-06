@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { AlertTriangle, Search, X } from "lucide-react";
+import { createPortal } from "react-dom";
+import { AlertTriangle, Search, X, ChevronDown } from "lucide-react";
 import { router } from "@inertiajs/react";
 import MSLModal from "@/Components/MSLModal.jsx";
 
@@ -12,7 +13,7 @@ function debounce(func, delay) {
     };
 }
 
-const AccountModificationModal = ({ isOpen, onClose }) => {
+const AccountModificationModal = ({ isOpen, onClose, prefillUser = null }) => {
     const [username, setUsername] = useState("");
     const [selectedUser, setSelectedUser] = useState(null);
     const [userSearchResults, setUserSearchResults] = useState([]);
@@ -29,10 +30,20 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
 
     // School and Course dropdown states
     const [filteredSchools, setFilteredSchools] = useState([]);
-    const [filteredCourses, setFilteredCourses] = useState([]);
     const [showSchoolDropdown, setShowSchoolDropdown] = useState(false);
-    const [showCourseDropdown, setShowCourseDropdown] = useState(false);
     const [activeSchoolField, setActiveSchoolField] = useState(null); // 'wrong' or 'correct'
+    const [correctSchoolSearch, setCorrectSchoolSearch] = useState("");
+    const [showCorrectSchoolPanel, setShowCorrectSchoolPanel] = useState(false);
+    const [correctSchoolResults, setCorrectSchoolResults] = useState([]);
+    const [correctSchoolDropdownPos, setCorrectSchoolDropdownPos] = useState({ top: 0, left: 0, width: 0 });
+    const correctSchoolRef = useRef(null);
+    const correctSchoolButtonRef = useRef(null);
+    const [correctCourseSearch, setCorrectCourseSearch] = useState("");
+    const [showCorrectCoursePanel, setShowCorrectCoursePanel] = useState(false);
+    const [correctCourseResults, setCorrectCourseResults] = useState([]);
+    const [correctCourseDropdownPos, setCorrectCourseDropdownPos] = useState({ top: 0, left: 0, width: 0 });
+    const correctCourseRef = useRef(null);
+    const correctCourseButtonRef = useRef(null);
     const [showMSLModal, setShowMSLModal] = useState(false);
     const [modalData, setModalData] = useState({});
 
@@ -57,22 +68,54 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
         }, 300), []
     );
 
-    const debouncedCourseSearch = useMemo(() =>
+
+    const debouncedCorrectSchoolSearch = useMemo(() =>
         debounce(async (value) => {
-            if (courseCache.current[value]) {
-                setFilteredCourses(courseCache.current[value]);
+            if (schoolCache.current[`correct_${value}`]) {
+                setCorrectSchoolResults(schoolCache.current[`correct_${value}`]);
+                return;
+            }
+            try {
+                const response = await fetch(`/schools/search?query=${encodeURIComponent(value)}`);
+                const schools = await response.json();
+                schoolCache.current[`correct_${value}`] = schools;
+                setCorrectSchoolResults(schools);
+            } catch (error) {
+                setCorrectSchoolResults([]);
+            }
+        }, 300), []
+    );
+
+    const debouncedCorrectCourseSearch = useMemo(() =>
+        debounce(async (value) => {
+            if (courseCache.current[`correct_${value}`]) {
+                setCorrectCourseResults(courseCache.current[`correct_${value}`]);
                 return;
             }
             try {
                 const response = await fetch(`/api/courses/search?query=${encodeURIComponent(value)}`);
                 const courses = await response.json();
-                courseCache.current[value] = courses;
-                setFilteredCourses(courses);
+                courseCache.current[`correct_${value}`] = courses;
+                setCorrectCourseResults(courses);
             } catch (error) {
-                // Error fetching courses
+                setCorrectCourseResults([]);
             }
         }, 300), []
     );
+
+    // Close correct school panel on outside click
+    useEffect(() => {
+        const handler = (e) => {
+            if (correctSchoolRef.current && !correctSchoolRef.current.contains(e.target)) {
+                setShowCorrectSchoolPanel(false);
+            }
+            if (correctCourseRef.current && !correctCourseRef.current.contains(e.target)) {
+                setShowCorrectCoursePanel(false);
+            }
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, []);
 
     // Search users when username changes (only if modification type is selected)
     useEffect(() => {
@@ -123,12 +166,24 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
     useEffect(() => {
         if (isOpen) {
             setShowSchoolDropdown(false);
-            setShowCourseDropdown(false);
             setActiveSchoolField(null);
             setFilteredSchools([]);
-            setFilteredCourses([]);
+            setShowCorrectSchoolPanel(false);
+            setCorrectSchoolSearch("");
+            setCorrectSchoolResults([]);
+            setShowCorrectCoursePanel(false);
+            setCorrectCourseSearch("");
+            setCorrectCourseResults([]);
         }
     }, [isOpen, modificationType]);
+
+    // Pre-fill user when opened from profile
+    useEffect(() => {
+        if (isOpen && prefillUser) {
+            setSelectedUser(prefillUser);
+            setUsername(`${prefillUser.name} ${prefillUser.surname} (${prefillUser.username})`);
+        }
+    }, [isOpen, prefillUser]);
 
     if (!isOpen) return null;
 
@@ -144,6 +199,12 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
         setCorrectLastName("");
         setWrongValue("");
         setCorrectValue("");
+        setCorrectSchoolSearch("");
+        setShowCorrectSchoolPanel(false);
+        setCorrectSchoolResults([]);
+        setCorrectCourseSearch("");
+        setShowCorrectCoursePanel(false);
+        setCorrectCourseResults([]);
     };
 
     // School and Course handlers
@@ -151,21 +212,6 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
         const value = e.target.value;
         setWrongValue(value);
         setActiveSchoolField('wrong');
-
-        if (value.trim() === "") {
-            setFilteredSchools([]);
-            setShowSchoolDropdown(false);
-            return;
-        }
-
-        setShowSchoolDropdown(true);
-        debouncedSchoolSearch(value);
-    };
-
-    const handleCorrectSchoolChange = (e) => {
-        const value = e.target.value;
-        setCorrectValue(value);
-        setActiveSchoolField('correct');
 
         if (value.trim() === "") {
             setFilteredSchools([]);
@@ -188,25 +234,6 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
         setActiveSchoolField(null);
     };
 
-    const handleCourseChange = (e) => {
-        const value = e.target.value;
-        setCorrectValue(value);
-
-        if (value.trim() === "") {
-            setFilteredCourses([]);
-            setShowCourseDropdown(false);
-            return;
-        }
-
-        setShowCourseDropdown(true);
-        debouncedCourseSearch(value);
-    };
-
-    const handleCourseSelect = (course) => {
-        setCorrectValue(course.program);
-        setFilteredCourses([]);
-        setShowCourseDropdown(false);
-    };
 
     const handleUserSelect = (user) => {
         setSelectedUser(user);
@@ -228,18 +255,37 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
 
     const handleModificationTypeChange = (type) => {
         setModificationType(type);
-
-        // Reset all values including username search
-        setUsername("");
-        setSelectedUser(null);
-        setUserSearchResults([]);
-        setShowSearchResults(false);
-        setWrongFirstName("");
-        setWrongLastName("");
         setCorrectFirstName("");
         setCorrectLastName("");
-        setWrongValue("");
         setCorrectValue("");
+        setUserSearchResults([]);
+        setShowSearchResults(false);
+
+        const userToKeep = prefillUser || selectedUser;
+        if (userToKeep && prefillUser) {
+            setSelectedUser(userToKeep);
+            setUsername(`${userToKeep.name} ${userToKeep.surname} (${userToKeep.username})`);
+            if (type === "Full Name") {
+                setWrongFirstName(userToKeep.name);
+                setWrongLastName(userToKeep.surname);
+            } else if (type === "School") {
+                setWrongValue(userToKeep.university || "");
+            } else if (type === "Course") {
+                setWrongValue(userToKeep.course || "");
+            } else if (type === "Student ID") {
+                setWrongValue(userToKeep.studentId || "");
+            } else {
+                setWrongFirstName("");
+                setWrongLastName("");
+                setWrongValue("");
+            }
+        } else {
+            setUsername("");
+            setSelectedUser(null);
+            setWrongFirstName("");
+            setWrongLastName("");
+            setWrongValue("");
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -380,9 +426,9 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
         }
     };
 
-    return (
+    return createPortal(
         <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999]"
             onClick={handleBackdropClick}
         >
             <div
@@ -449,7 +495,7 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
                                 disabled={!modificationType}
                                 className={`w-full px-3 py-2 bg-[rgba(10,10,10,0.8)] border border-[#242424] rounded-md text-white placeholder-gray-500 focus:outline-none focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15] ${!modificationType ? 'opacity-50 cursor-not-allowed' : ''
                                     }`}
-                                placeholder={modificationType ? "Search by username, name, or email..." : "Please select modification type first..."}
+                                placeholder={modificationType ? "Search by username or name..." : "Please select modification type first..."}
                                 required
                             />
                             <Search className={`absolute right-3 top-2.5 w-4 h-4 ${!modificationType ? 'text-gray-600' : 'text-gray-400'}`} />
@@ -591,55 +637,213 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
                                     </div>
                                 )}
                             </div>
-                            <div className="relative">
+                            <div className="relative" ref={modificationType === "School" ? correctSchoolRef : null}>
                                 <label className="block text-gray-300 mb-1">Correct {modificationType}</label>
-                                <input
-                                    type="text"
-                                    value={correctValue}
-                                    onChange={modificationType === "Course" ? handleCourseChange : modificationType === "School" ? handleCorrectSchoolChange : (e) => setCorrectValue(e.target.value)}
-                                    className="w-full px-3 py-2 bg-[rgba(10,10,10,0.8)] border border-[#242424] rounded-md text-white placeholder-gray-500 focus:outline-none focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15]"
-                                    placeholder={`Enter correct ${modificationType.toLowerCase()}`}
-                                    required
-                                />
-                                {modificationType === "School" && showSchoolDropdown && activeSchoolField === 'correct' && correctValue.trim() !== "" && (
-                                    <div className="absolute z-10 w-full mt-1 bg-[rgba(15,15,15,0.95)] border border-[#FACC15]/30 rounded-lg shadow-2xl max-h-48 overflow-y-auto backdrop-blur-sm msl-scrollbar">
-                                        {filteredSchools.length > 0 ? (
-                                            filteredSchools.map((school) => (
-                                                <button
-                                                    key={school.id}
-                                                    type="button"
-                                                    onClick={() => handleSchoolSelect(school)}
-                                                    className="w-full px-3 py-2 text-left text-white hover:bg-[rgba(250,204,21,0.1)] transition-colors border-b border-[rgba(250,204,21,0.1)] last:border-b-0"
-                                                >
-                                                    <div className="font-medium text-sm">{school.name}</div>
-                                                </button>
-                                            ))
-                                        ) : (
-                                            <div className="p-3 text-center text-gray-400 text-sm">
-                                                No schools found
+
+                                {/* Searchable dropdown for School */}
+                                {modificationType === "School" ? (
+                                    <>
+                                        <button
+                                            ref={correctSchoolButtonRef}
+                                            type="button"
+                                            onClick={() => {
+                                                const rect = correctSchoolButtonRef.current?.getBoundingClientRect();
+                                                if (rect) {
+                                                    setCorrectSchoolDropdownPos({
+                                                        top: rect.bottom + window.scrollY + 4,
+                                                        left: rect.left + window.scrollX,
+                                                        width: rect.width,
+                                                    });
+                                                }
+                                                setShowCorrectSchoolPanel(prev => !prev);
+                                                setCorrectSchoolSearch("");
+                                                setCorrectSchoolResults([]);
+                                            }}
+                                            style={{ fontSize: "1rem", lineHeight: "1.5rem" }}
+                                            className="w-full flex items-center justify-between px-3 py-2 bg-[rgba(10,10,10,0.8)] border border-[#242424] rounded-md text-white text-left focus:outline-none focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15]"
+                                        >
+                                            <span className={correctValue ? "text-white" : "text-gray-500"}>
+                                                {correctValue || "Select correct school"}
+                                            </span>
+                                            <div className="flex items-center gap-1">
+                                                {correctValue && (
+                                                    <span
+                                                        onClick={(e) => { e.stopPropagation(); setCorrectValue(""); }}
+                                                        className="text-gray-400 hover:text-white p-0.5 rounded"
+                                                    >
+                                                        <X className="w-3 h-3" />
+                                                    </span>
+                                                )}
+                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${showCorrectSchoolPanel ? "rotate-180" : ""}`} />
                                             </div>
+                                        </button>
+
+                                        {showCorrectSchoolPanel && createPortal(
+                                            <div
+                                                ref={correctSchoolRef}
+                                                style={{
+                                                    position: "absolute",
+                                                    top: correctSchoolDropdownPos.top,
+                                                    left: correctSchoolDropdownPos.left,
+                                                    width: correctSchoolDropdownPos.width,
+                                                    zIndex: 9999,
+                                                }}
+                                                className="bg-[rgba(15,15,15,0.98)] border border-[#FACC15]/30 rounded-lg shadow-2xl backdrop-blur-sm"
+                                            >
+                                                <div className="p-2 border-b border-[#FACC15]/20">
+                                                    <div className="relative">
+                                                        <input
+                                                            type="text"
+                                                            autoFocus
+                                                            value={correctSchoolSearch}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                setCorrectSchoolSearch(val);
+                                                                if (val.trim()) {
+                                                                    debouncedCorrectSchoolSearch(val);
+                                                                } else {
+                                                                    setCorrectSchoolResults([]);
+                                                                }
+                                                            }}
+                                                            placeholder="Search school..."
+                                                            className="w-full px-3 py-1.5 bg-[rgba(10,10,10,0.8)] border border-[#242424] rounded text-white placeholder-gray-500 focus:outline-none focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15]"
+                                                        />
+                                                        <Search className="absolute right-2.5 top-2 w-3.5 h-3.5 text-gray-500" />
+                                                    </div>
+                                                </div>
+                                                <div className="max-h-48 overflow-y-auto msl-scrollbar">
+                                                    {correctSchoolResults.length > 0 ? (
+                                                        correctSchoolResults.map((school) => (
+                                                            <button
+                                                                key={school.id}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setCorrectValue(school.name);
+                                                                    setShowCorrectSchoolPanel(false);
+                                                                    setCorrectSchoolSearch("");
+                                                                    setCorrectSchoolResults([]);
+                                                                }}
+                                                                className="w-full px-3 py-2 text-left text-white hover:bg-[rgba(250,204,21,0.1)] transition-colors border-b border-[rgba(250,204,21,0.05)] last:border-b-0"
+                                                            >
+                                                                {school.name}
+                                                            </button>
+                                                        ))
+                                                    ) : (
+                                                        <div className="p-3 text-center text-gray-400">
+                                                            {correctSchoolSearch.trim() ? "No schools found" : "Type to search schools"}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>,
+                                            document.body
                                         )}
-                                    </div>
-                                )}
-                                {modificationType === "Course" && showCourseDropdown && (
-                                    <div className="absolute z-10 w-full mt-1 bg-[rgba(15,15,15,0.95)] border border-[#FACC15]/30 rounded-lg shadow-2xl max-h-48 overflow-y-auto backdrop-blur-sm msl-scrollbar">
-                                        {filteredCourses.length > 0 ? (
-                                            filteredCourses.map((course) => (
-                                                <button
-                                                    key={course.id}
-                                                    type="button"
-                                                    onClick={() => handleCourseSelect(course)}
-                                                    className="w-full px-3 py-2 text-left text-white hover:bg-[rgba(250,204,21,0.1)] transition-colors border-b border-[rgba(250,204,21,0.1)] last:border-b-0"
-                                                >
-                                                    <div className="font-medium text-sm">{course.program}</div>
-                                                </button>
-                                            ))
-                                        ) : (
-                                            <div className="p-3 text-center text-gray-400 text-sm">
-                                                No courses found
+                                    </>
+                                ) : modificationType === "Course" ? (
+                                    <>
+                                        <button
+                                            ref={correctCourseButtonRef}
+                                            type="button"
+                                            onClick={() => {
+                                                const rect = correctCourseButtonRef.current?.getBoundingClientRect();
+                                                if (rect) {
+                                                    setCorrectCourseDropdownPos({
+                                                        top: rect.bottom + window.scrollY + 4,
+                                                        left: rect.left + window.scrollX,
+                                                        width: rect.width,
+                                                    });
+                                                }
+                                                setShowCorrectCoursePanel(prev => !prev);
+                                                setCorrectCourseSearch("");
+                                                setCorrectCourseResults([]);
+                                            }}
+                                            style={{ fontSize: "1rem", lineHeight: "1.5rem" }}
+                                            className="w-full flex items-center justify-between px-3 py-2 bg-[rgba(10,10,10,0.8)] border border-[#242424] rounded-md text-white text-left focus:outline-none focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15]"
+                                        >
+                                            <span className={correctValue ? "text-white" : "text-gray-500"}>
+                                                {correctValue || "Select correct course"}
+                                            </span>
+                                            <div className="flex items-center gap-1">
+                                                {correctValue && (
+                                                    <span
+                                                        onClick={(e) => { e.stopPropagation(); setCorrectValue(""); }}
+                                                        className="text-gray-400 hover:text-white p-0.5 rounded"
+                                                    >
+                                                        <X className="w-3 h-3" />
+                                                    </span>
+                                                )}
+                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${showCorrectCoursePanel ? "rotate-180" : ""}`} />
                                             </div>
+                                        </button>
+
+                                        {showCorrectCoursePanel && createPortal(
+                                            <div
+                                                ref={correctCourseRef}
+                                                style={{
+                                                    position: "absolute",
+                                                    top: correctCourseDropdownPos.top,
+                                                    left: correctCourseDropdownPos.left,
+                                                    width: correctCourseDropdownPos.width,
+                                                    zIndex: 9999,
+                                                }}
+                                                className="bg-[rgba(15,15,15,0.98)] border border-[#FACC15]/30 rounded-lg shadow-2xl backdrop-blur-sm"
+                                            >
+                                                <div className="p-2 border-b border-[#FACC15]/20">
+                                                    <div className="relative">
+                                                        <input
+                                                            type="text"
+                                                            autoFocus
+                                                            value={correctCourseSearch}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                setCorrectCourseSearch(val);
+                                                                if (val.trim()) {
+                                                                    debouncedCorrectCourseSearch(val);
+                                                                } else {
+                                                                    setCorrectCourseResults([]);
+                                                                }
+                                                            }}
+                                                            placeholder="Search course..."
+                                                            className="w-full px-3 py-1.5 bg-[rgba(10,10,10,0.8)] border border-[#242424] rounded text-white placeholder-gray-500 focus:outline-none focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15]"
+                                                        />
+                                                        <Search className="absolute right-2.5 top-2 w-3.5 h-3.5 text-gray-500" />
+                                                    </div>
+                                                </div>
+                                                <div className="max-h-48 overflow-y-auto msl-scrollbar">
+                                                    {correctCourseResults.length > 0 ? (
+                                                        correctCourseResults.map((course) => (
+                                                            <button
+                                                                key={course.id}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setCorrectValue(course.program);
+                                                                    setShowCorrectCoursePanel(false);
+                                                                    setCorrectCourseSearch("");
+                                                                    setCorrectCourseResults([]);
+                                                                }}
+                                                                className="w-full px-3 py-2 text-left text-white hover:bg-[rgba(250,204,21,0.1)] transition-colors border-b border-[rgba(250,204,21,0.05)] last:border-b-0"
+                                                            >
+                                                                {course.program}
+                                                            </button>
+                                                        ))
+                                                    ) : (
+                                                        <div className="p-3 text-center text-gray-400">
+                                                            {correctCourseSearch.trim() ? "No courses found" : "Type to search courses"}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>,
+                                            document.body
                                         )}
-                                    </div>
+                                    </>
+                                ) : (
+                                    <input
+                                        type="text"
+                                        value={correctValue}
+                                        onChange={(e) => setCorrectValue(e.target.value)}
+                                        className="w-full px-3 py-2 bg-[rgba(10,10,10,0.8)] border border-[#242424] rounded-md text-white placeholder-gray-500 focus:outline-none focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15]"
+                                        placeholder={`Enter correct ${modificationType.toLowerCase()}`}
+                                        required
+                                    />
                                 )}
                             </div>
                         </div>
@@ -673,7 +877,8 @@ const AccountModificationModal = ({ isOpen, onClose }) => {
                 onClose={() => setShowMSLModal(false)}
                 {...modalData}
             />
-        </div>
+        </div>,
+        document.body
     );
 };
 
