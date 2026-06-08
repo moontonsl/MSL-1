@@ -58,19 +58,25 @@ const SLAdmin = () => {
         ];
     }
 
-    const StatCard = ({ icon: Icon, label, value, color }) => (
-        <div className="bg-gradient-to-br from-neutral-800/50 to-neutral-900/50 backdrop-blur-sm border border-neutral-700/50 rounded-xl p-4 hover:border-neutral-600/50 transition-all duration-300 group">
-            <div className="flex items-center justify-between mb-3">
-                <div className={`p-2 rounded-lg ${color} bg-opacity-20`}>
-                    <Icon className={`w-5 h-5 ${color}`} />
+    const StatCard = ({ icon: Icon, label, value, color }) => {
+        const displayValue = value && value.toString().replace(/,/g, '').length >= 8 ? '...' : (value?.toLocaleString() || '0');
+
+        return (
+            <div className="flex-1 min-w-[140px] bg-gradient-to-br from-neutral-800/50 to-neutral-900/50 backdrop-blur-sm border border-neutral-700/50 rounded-xl p-3 sm:p-4 hover:border-neutral-600/50 transition-all duration-300 group">
+                <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                        <div className={`p-2 rounded-lg ${color} bg-opacity-20`}>
+                            <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${color}`} />
+                        </div>
+                        <span className="text-xs text-neutral-400 font-medium text-right">{label}</span>
+                    </div>
+                    <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-white group-hover:scale-105 transition-all duration-300 whitespace-nowrap overflow-hidden text-ellipsis" title={value?.toLocaleString()}>
+                        {displayValue}
+                    </div>
                 </div>
-                <span className="text-xs text-neutral-400 font-medium">{label}</span>
             </div>
-            <div className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-white group-hover:scale-105 transition-transform duration-300">
-                {value?.toLocaleString() || '0'}
-            </div>
-        </div>
-    );
+        );
+    };
 
     return (
         <AuthenticatedLayout>
@@ -140,12 +146,8 @@ const SLAdmin = () => {
                         </div>
                     </div>
 
-                    {/* Statistics Grid */}
-                    <div className={`grid gap-4 mb-8 ${
-                        user.role === 'Regional Admin' ? 'grid-cols-2 lg:grid-cols-6' :
-                        user.role === 'Super Admin' ? 'grid-cols-2 lg:grid-cols-7' :
-                        'grid-cols-2 lg:grid-cols-5'
-                    }`}>
+                    {/* Statistics Cards - Proportional Width */}
+                    <div className="w-full flex flex-wrap gap-1 sm:gap-2 mb-8 items-center justify-between">
                         <StatCard
                             icon={UserCheck}
                             label="Verified"
