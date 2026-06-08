@@ -909,11 +909,11 @@ const TableComponent = ({ stateFilter, searchQuery, schoolFilter, courseFilter, 
 
                                     {/* Action Buttons */}
                                     <div className="mt-8 pt-6 border-t border-gray-700/50">
-                                        <div className="flex flex-col sm:flex-row gap-3 justify-between items-stretch sm:items-center">
+                                        <div className="flex flex-wrap gap-2 sm:gap-3">
                                             {/* Left Side Actions */}
-                                            <div className="flex flex-col sm:flex-row gap-3">
+                                            <div className="contents">
                                                 <button
-                                                    className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none ${selectedUser.proofOfEnrollment
+                                                    className={`px-2 sm:px-4 md:px-6 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base transition-all duration-200 whitespace-nowrap ${selectedUser.proofOfEnrollment
                                                         ? 'bg-blue-600 hover:bg-blue-700 text-white'
                                                         : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                                                         }`}
@@ -933,7 +933,7 @@ const TableComponent = ({ stateFilter, searchQuery, schoolFilter, courseFilter, 
 
                                                 {(stateFilter === 'New' || stateFilter === 'Renew') && stateFilter !== 'StudentLeaders' && stateFilter !== 'RegionalAdmins' && (
                                                     <button
-                                                        className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none ${!selectedUser.proofOfEnrollment
+                                                        className={`px-2 sm:px-4 md:px-6 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base transition-all duration-200 whitespace-nowrap ${!selectedUser.proofOfEnrollment
                                                             ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
                                                             : 'bg-green-600 hover:bg-green-700 text-white'
                                                             }`}
@@ -953,11 +953,11 @@ const TableComponent = ({ stateFilter, searchQuery, schoolFilter, courseFilter, 
                                             </div>
 
                                             {/* Right Side Actions */}
-                                            <div className="flex flex-col sm:flex-row gap-3">
+                                            <div className="contents">
 
                                                 {stateFilter === 'Verified' && stateFilter !== 'StudentLeaders' && stateFilter !== 'RegionalAdmins' && (
                                                     <button
-                                                        className="px-6 py-3 bg-[#facc15] hover:bg-[#e6b800] text-black rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
+                                                        className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 text-sm sm:text-base bg-[#facc15] hover:bg-[#e6b800] text-black rounded-lg font-medium transition-all duration-200 whitespace-nowrap disabled:opacity-50"
                                                         onClick={() => {
                                                             setShowModal(false);
                                                             setShowModificationModal(true);
@@ -970,7 +970,7 @@ const TableComponent = ({ stateFilter, searchQuery, schoolFilter, courseFilter, 
 
                                                 {(stateFilter === 'Verified' || stateFilter === 'Renew' || stateFilter === 'New') && stateFilter !== 'StudentLeaders' && stateFilter !== 'RegionalAdmins' && (
                                                     <button
-                                                        className="px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
+                                                        className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 text-sm sm:text-base bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-all duration-200 whitespace-nowrap disabled:opacity-50"
                                                         onClick={() => handleAction('renew', selectedUser.id)}
                                                         disabled={actionLoading}
                                                     >
@@ -981,7 +981,7 @@ const TableComponent = ({ stateFilter, searchQuery, schoolFilter, courseFilter, 
                                                 {stateFilter !== 'StudentLeaders' && stateFilter !== 'RegionalAdmins' && (
                                                     stateFilter === 'Blocked' ? (
                                                         <button
-                                                            className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
+                                                            className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 text-sm sm:text-base bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all duration-200 whitespace-nowrap disabled:opacity-50"
                                                             onClick={() => handleAction('unblock', selectedUser.id)}
                                                             disabled={actionLoading}
                                                         >
@@ -989,7 +989,7 @@ const TableComponent = ({ stateFilter, searchQuery, schoolFilter, courseFilter, 
                                                         </button>
                                                     ) : (
                                                         <button
-                                                            className="px-6 py-3 bg-red-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
+                                                            className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 text-sm sm:text-base bg-red-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-all duration-200 whitespace-nowrap disabled:opacity-50"
                                                             onClick={() => {
                                                                 setShowBlockModal(true);
                                                                 setBlockReason('');
@@ -1004,7 +1004,7 @@ const TableComponent = ({ stateFilter, searchQuery, schoolFilter, courseFilter, 
 
                                                 {user?.role === 'Regional Admin' && (stateFilter === 'Verified' || stateFilter === 'MasterList') && (
                                                     <button
-                                                        className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
+                                                        className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 text-sm sm:text-base bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-all duration-200 whitespace-nowrap disabled:opacity-50"
                                                         onClick={() => {
                                                             setPromoteRole('Student Leader');
                                                             setShowPromoteModal(true);
