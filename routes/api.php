@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DatabaseMonitoringController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
@@ -9,6 +10,8 @@ use Illuminate\Support\Facades\Auth;
 Route::get('/test', function () {
     return response()->json(['message' => 'API is working']);
 });
+
+Route::get('/database-monitoring', [DatabaseMonitoringController::class, 'index']);
 
 // API endpoints for managing user regions (Admin only)
 Route::middleware(['web'])->group(function () {
