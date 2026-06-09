@@ -93,7 +93,7 @@ class DatabaseMonitoringController extends Controller
             $counted        += $count;
         }
 
-        $total            = User::whereNotNull('year_level')->count();
+        $total            = User::count();
         $result['Others'] = max(0, $total - $counted);
         $result['total']  = $total;
 
