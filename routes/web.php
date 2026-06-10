@@ -75,13 +75,13 @@ Route::get('/AS26CT', function () {
     return Inertia::render('ExternalEvents/AS26CT/Pages/AS26CT');
 })->name('as26ct');
 
-// Jejemon Emote: PH BACK TO SCHOOL EVENT (AS26Emote)
-Route::get('/AS26Emote', function () {
+// Jejemon vs Young Stunna Picture Challenge (AS26PC)
+Route::get('/AS26PC', function () {
     return Inertia::render('ExternalEvents/BTS26JE/Pages/BTS26JE');
-})->name('as26emote');
+})->name('as26pc');
 
-// Backwards-compatible redirect
-Route::redirect('/BTS26JE', '/AS26Emote', 301);
+Route::redirect('/AS26Emote', '/AS26PC', 301);
+Route::redirect('/BTS26JE', '/AS26PC', 301);
 // AS Seapop DANCE CHALLENGE UGC (AS26Dance)
 Route::get('/AS26Dance', function () {
     return Inertia::render('ExternalEvents/AS26Dance/Pages/AS26Dance');
