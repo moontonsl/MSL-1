@@ -5,9 +5,14 @@ import MLLogin from '@/Pages/MLLoginApi/MLLogin';
 import axios from 'axios';
 import { Globe, Hash, Link2, School, User } from 'lucide-react';
 
-const LOGO_SRC = "/images/All Star/logo-%E4%B8%BB%E9%A2%98%E8%89%B2.png";
-const PRIMARY = "#db2777"; // Pink-600
-const SECONDARY_LIGHT = "#fce7f3"; // Pink-50
+const LOGO_SRC = "/images/All Star/PNG.png";
+const PRIMARY = "#FACC15"; // Logo yellow
+const SECONDARY_LIGHT = "#5EEAD4"; // Teal accent
+const ACCENT_ICON = "#9D174D"; // Burgundy-pink for form icons
+const DEEP = "#2D0A1E"; // Logo outline burgundy
+const EVENT_TITLE = "Jejemon vs Young Stunna Picture Challenge";
+const PRIMARY_HASHTAGS = ['#MLBBALLSTAR', '#MLBBJejemonvsYoungStunna', '#MSLASPictureChallenge'];
+const SIDE_HASHTAGS = ['#MLBBJejemon', '#MLBBYoungStunna'];
 
 const isValidUrl = (value) => {
   try {
@@ -20,7 +25,7 @@ const isValidUrl = (value) => {
 
 const Tooltip = ({ text }) => (
   <div className="relative group ml-auto">
-    <span className="text-pink-200 cursor-pointer font-bold text-sm">?</span>
+    <span className="text-yellow-200 cursor-pointer font-bold text-sm">?</span>
     <div
       className="absolute right-0 top-1/2 -translate-y-1/2 hidden group-hover:block bg-white text-black text-xs px-3 py-2 rounded-xl shadow-lg w-48 sm:w-56 z-50 border"
       style={{ borderColor: PRIMARY }}
@@ -67,6 +72,41 @@ function MechanicCard({ num, title, body }) {
   );
 }
 
+function GuidelinesSection({ title, children }) {
+  return (
+    <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 sm:p-5 mb-4">
+      <h3 className="font-black text-gray-900 text-sm sm:text-base uppercase tracking-wide mb-3">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+function HashtagBlock() {
+  return (
+    <div
+      className="rounded-2xl p-4 shadow-inner border flex flex-col items-center w-full"
+      style={{ backgroundColor: `${DEEP}E6`, borderColor: `${PRIMARY}66` }}
+    >
+      <h3 className="text-[10px] font-bold uppercase tracking-widest text-yellow-300/90 mb-3 text-center">
+        Required Hashtags
+      </h3>
+      <div className="flex flex-wrap justify-center gap-x-2 gap-y-1.5 font-mono text-xs sm:text-sm font-bold text-yellow-300 text-center w-full">
+        {PRIMARY_HASHTAGS.map((tag) => (
+          <span key={tag}>{tag}</span>
+        ))}
+      </div>
+      <div className="mt-3 w-full flex flex-col items-center text-center">
+        <p className="text-[10px] sm:text-xs text-teal-200/90">Also include one side hashtag:</p>
+        <p className="mt-1.5 font-mono text-[10px] sm:text-xs font-bold text-yellow-300 leading-relaxed">
+          {SIDE_HASHTAGS[0]}
+          <span className="text-teal-200/70 font-sans font-normal mx-1.5">or</span>
+          {SIDE_HASHTAGS[1]}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function FormInput({
   icon,
   label,
@@ -100,7 +140,7 @@ function FormInput({
         }`}
         style={{ borderColor: verified ? undefined : SECONDARY_LIGHT }}
       >
-        <div className={`${verified ? 'text-green-500' : ''} shrink-0`} style={{ color: verified ? undefined : PRIMARY }}>
+        <div className={`${verified ? 'text-green-500' : ''} shrink-0`} style={{ color: verified ? undefined : ACCENT_ICON }}>
           {icon}
         </div>
 
@@ -150,7 +190,7 @@ function SuccessModal({ isOpen, onClose, primaryHex }) {
       <div
         className="bg-[#151515] rounded-[12px] border-[3px] border-white/5 px-6 py-12 md:px-[50px] md:py-[80px] w-[95%] max-w-[650px] shadow-[0_4px_80px_0_rgba(219,39,119,0.25)] flex flex-col items-center text-center"
         style={{
-          boxShadow: `0 4px 80px 0 ${primaryHex}40`,
+          boxShadow: `0 4px 80px 0 ${primaryHex}66`,
         }}
       >
         <h2 className="text-3xl md:text-[28px] font-bold text-white mb-7 tracking-wide">
@@ -164,7 +204,7 @@ function SuccessModal({ isOpen, onClose, primaryHex }) {
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 text-black font-bold font-sans py-4 rounded-xl hover:brightness-110 active:scale-[0.98] transition-all text-lg"
+            className="flex-1 text-[#2D0A1E] font-bold font-sans py-4 rounded-xl hover:brightness-110 active:scale-[0.98] transition-all text-lg"
             style={{ backgroundColor: primaryHex }}
           >
             Close
@@ -319,13 +359,13 @@ export default function BTS26JE() {
 
   return (
     <MainLayout>
-      <Head title="Jejemon Emote: PH Back to School" />
+      <Head title={`${EVENT_TITLE} - MLBB All Star`} />
 
-      <div className="w-full min-h-screen text-white bg-gradient-to-b from-[#1e1b4b] via-[#4c1d95] to-[#be185d] font-sans pb-20 relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 opacity-55">
-          <div className="absolute -top-24 -left-24 w-[520px] h-[520px] rounded-full bg-pink-400/10 blur-3xl" />
-          <div className="absolute top-[15%] -right-28 w-[560px] h-[560px] rounded-full bg-purple-400/10 blur-3xl" />
-          <div className="absolute bottom-[-160px] left-[20%] w-[640px] h-[640px] rounded-full bg-fuchsia-300/10 blur-3xl" />
+      <div className="w-full min-h-screen text-white bg-gradient-to-b from-[#050208] via-[#2D0A1E] to-[#0f0618] font-sans pb-20 relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 opacity-60">
+          <div className="absolute -top-24 -left-24 w-[520px] h-[520px] rounded-full bg-yellow-400/10 blur-3xl" />
+          <div className="absolute top-[15%] -right-28 w-[560px] h-[560px] rounded-full bg-teal-400/15 blur-3xl" />
+          <div className="absolute bottom-[-160px] left-[20%] w-[640px] h-[640px] rounded-full bg-pink-500/10 blur-3xl" />
           <div
             className="absolute inset-0 opacity-20"
             style={{
@@ -340,26 +380,23 @@ export default function BTS26JE() {
         <div className="relative z-10 max-w-6xl mx-auto px-4">
           <img
             src={LOGO_SRC}
-            alt="All Star Logo"
-            className="w-[80%] sm:w-full max-w-xs sm:max-w-md mx-auto drop-shadow-[0_0_30px_rgba(219,39,119,0.5)] pt-8 sm:pt-16 mb-4 sm:mb-8"
+            alt={EVENT_TITLE}
+            className="w-full max-w-lg sm:max-w-2xl mx-auto drop-shadow-[0_0_40px_rgba(250,204,21,0.3)] pt-8 sm:pt-12 mb-4 sm:mb-6"
           />
-
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-center text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-purple-400 mb-6 uppercase tracking-wider leading-tight">
-            Jejemon Emote: PH Back to School
-          </h1>
         </div>
 
         {/* Submission Form */}
         <div className="relative z-10 px-4">
           <div
-            className="w-[95%] sm:w-full max-w-3xl mx-auto mt-8 sm:mt-16 bg-[#db2777]/25 backdrop-blur-xl border border-[#db2777] rounded-2xl sm:rounded-3xl p-5 sm:p-10 shadow-2xl relative z-10"
+            className="w-[95%] sm:w-full max-w-3xl mx-auto mt-4 sm:mt-8 backdrop-blur-xl border rounded-2xl sm:rounded-3xl p-5 sm:p-10 shadow-2xl relative z-10"
+            style={{ backgroundColor: `${DEEP}B3`, borderColor: `${PRIMARY}4D` }}
             id="submission-form"
           >
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="text-center mb-2 flex flex-col items-center">
-                <h2 className="text-lg sm:text-xl font-bold mb-2">Jejemon Emote Submission</h2>
+                <h2 className="text-lg sm:text-xl font-bold mb-2">Picture Challenge Submission</h2>
                 <p className="text-[#fce7f3] text-xs sm:text-sm text-center">
-                  Please fill out the submission details below for the MLBB Back to School event.
+                  Submit your post link and in-game information at /AS26PC after uploading on social media.
                 </p>
               </div>
 
@@ -432,21 +469,14 @@ export default function BTS26JE() {
                 icon={<Link2 size={20} />}
                 label="Post Link"
                 name="postLink"
-                placeholder="https://facebook.com/your-post"
+                placeholder="https://tiktok.com/... or facebook.com/... or instagram.com/..."
                 value={form.postLink}
                 onChange={handleChange}
                 tooltip="Paste the link to your post."
                 error={errors.postLink}
               />
 
-              <div className="rounded-2xl p-4 text-white text-center shadow-inner" style={{ backgroundColor: PRIMARY }}>
-                <h3 className="text-[10px] font-bold uppercase tracking-widest opacity-90 mb-2">
-                  Required Hashtags
-                </h3>
-                <p className="font-mono text-xs sm:text-sm font-bold break-words leading-relaxed">
-                  #JejemonEmote #PHBackToSchool #MSLPhilippines #MLBB
-                </p>
-              </div>
+              <HashtagBlock />
 
               <div className="border p-4 rounded-2xl bg-white" style={{ borderColor: SECONDARY_LIGHT }}>
                 <label className="flex items-start gap-3 text-black">
@@ -466,7 +496,7 @@ export default function BTS26JE() {
                       type="button"
                       onClick={() => setShowMechanics(true)}
                       className="font-bold underline"
-                      style={{ color: PRIMARY }}
+                      style={{ color: ACCENT_ICON }}
                     >
                       View Mechanics
                     </button>
@@ -495,7 +525,7 @@ export default function BTS26JE() {
                       type="button"
                       onClick={() => setShowTerms(true)}
                       className="font-bold underline"
-                      style={{ color: PRIMARY }}
+                      style={{ color: ACCENT_ICON }}
                     >
                       View Terms
                     </button>
@@ -509,10 +539,10 @@ export default function BTS26JE() {
               <button
                 type="submit"
                 disabled={isSubmitting || !mlbbUid}
-                className={`w-full py-4 rounded-2xl font-bold text-lg text-white transition-all duration-200 ${
+                className={`w-full py-4 rounded-2xl font-bold text-lg transition-all duration-200 ${
                   isSubmitting || !mlbbUid
                     ? "bg-white/20 text-white/50 cursor-not-allowed"
-                    : "bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 shadow-lg hover:shadow-pink-500/40 hover:-translate-y-1 active:scale-[0.98] active:translate-y-0"
+                    : "bg-gradient-to-r from-[#FACC15] to-[#F59E0B] text-[#2D0A1E] shadow-lg hover:shadow-yellow-500/40 hover:-translate-y-1 active:scale-[0.98] active:translate-y-0"
                 }`}
               >
                 {isSubmitting ? 'Submitting...' : 'Submit Entry'}
@@ -569,49 +599,72 @@ export default function BTS26JE() {
           <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-[10000]">
             <div className="w-[95%] sm:w-full max-w-2xl overflow-hidden rounded-2xl sm:rounded-3xl bg-white text-black shadow-2xl flex flex-col max-h-[90vh] sm:max-h-[85vh]">
               <div className="px-6 py-6 bg-white border-b border-gray-100 flex flex-col items-center text-center relative">
-                <div className="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-2" style={{ backgroundColor: `${PRIMARY}14`, color: PRIMARY }}>
+                <div className="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-2" style={{ backgroundColor: `${PRIMARY}22`, color: DEEP }}>
                   Event Guidelines
                 </div>
                 <h2 className="text-xl sm:text-2xl font-black text-gray-900 leading-tight">
-                  How to Join #JejemonEmote
+                  {EVENT_TITLE}
                 </h2>
-                <p className="w-full text-gray-500 text-xs sm:text-sm mt-2 px-4">
-                  Follow these steps to qualify for the PH Back to School event
-                </p>
               </div>
 
               <div className="overflow-y-auto p-4 sm:p-6 flex-1">
+                <GuidelinesSection title="I. Objectives">
+                  <ul className="list-disc pl-5 space-y-2 text-xs sm:text-sm text-gray-600 leading-relaxed">
+                    <li>Showcase the creativity of students and community members.</li>
+                    <li>Participate in the All Star Campaign of Mobile Legends: Bang Bang.</li>
+                    <li>Gather outstanding outputs for posting on official pages.</li>
+                  </ul>
+                </GuidelinesSection>
+
+                <h3 className="font-black text-gray-900 text-sm sm:text-base uppercase tracking-wide mb-3">
+                  II. Mechanics
+                </h3>
                 <div className="grid gap-4 mb-4">
                   <MechanicCard
                     num="1"
-                    title="The Jejemon Vibe"
-                    body="Capture a photo inspired by the nostalgic Filipino youth subculture, 'Jejemon.' Think of iconic elements like the classic 45° selfie angle and school uniform aesthetics."
+                    title="Capture Your Entry"
+                    body="Capture a photo inspired by 2010s &quot;Jeje&quot; culture (classic 45° selfie angle, school uniform aesthetics, side bangs, and playful Jejemon-style text) or today&apos;s Gen Z &quot;Young Stunna&quot; aesthetic (sunglasses with silver accessories, or hybeast fashion) while playing MLBB. Creativity is highly encouraged — bring back the vibe in your own unique way."
                   />
                   <MechanicCard
                     num="2"
-                    title="Jejemon Text"
-                    body="Add playful Jejemon-style text (e.g., 'oK@y kH@ L@nG?!') to your photo. Creativity is highly encouraged!"
+                    title="Editing Rules"
+                    body="You may use filters. However, AI-generated entries are strictly prohibited."
                   />
                   <MechanicCard
                     num="3"
-                    title="Editing Rules"
-                    body="You may use filters or any editing software to enhance your entry. However, AI-generated entries are strictly prohibited."
+                    title="Upload on Social Media"
+                    body="Upload your entry as a poster on TikTok, Facebook, or Instagram using the official hashtags below, plus #MLBBJejemon (Jejemon side) or #MLBBYoungStunna (Young Stunna side)."
                   />
                   <MechanicCard
                     num="4"
-                    title="Upload Socials"
-                    body="Upload your entry as a poster on TikTok, Facebook, or Instagram using the official hashtags."
-                  />
-                  <MechanicCard
-                    num="5"
-                    title="Submit Entry"
-                    body="Finally, submit your post link in the form below, along with your verified in-game information."
+                    title="Submit Your Entry"
+                    body="Finally, submit your post link at /AS26PC, along with your in-game information."
                   />
                 </div>
 
-                <div className="rounded-2xl p-4 text-white text-center shadow-inner mt-4" style={{ backgroundColor: PRIMARY }}>
-                  <h3 className="text-[10px] font-bold uppercase tracking-widest opacity-80 mb-2">Required Hashtags</h3>
-                  <p className="font-mono text-xs sm:text-sm font-bold break-words leading-relaxed">#JejemonEmote #PHBackToSchool #MSLPhilippines #MLBB</p>
+                <GuidelinesSection title="III. Criteria">
+                  <ul className="space-y-2 text-xs sm:text-sm text-gray-600 leading-relaxed">
+                    <li className="flex justify-between gap-4">
+                      <span>Creativity and Originality</span>
+                      <span className="font-bold text-gray-900 shrink-0">30%</span>
+                    </li>
+                    <li className="flex justify-between gap-4">
+                      <span>Relevance to Theme</span>
+                      <span className="font-bold text-gray-900 shrink-0">30%</span>
+                    </li>
+                    <li className="flex justify-between gap-4">
+                      <span>Social Media Engagement</span>
+                      <span className="font-bold text-gray-900 shrink-0">20%</span>
+                    </li>
+                    <li className="flex justify-between gap-4">
+                      <span>Artistic Quality &amp; Presentation</span>
+                      <span className="font-bold text-gray-900 shrink-0">20%</span>
+                    </li>
+                  </ul>
+                </GuidelinesSection>
+
+                <div className="mt-4">
+                  <HashtagBlock />
                 </div>
               </div>
 
