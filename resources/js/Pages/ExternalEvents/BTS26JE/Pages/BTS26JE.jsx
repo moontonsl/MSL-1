@@ -2,7 +2,6 @@ import React, { useRef, useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout.jsx';
 import MLLogin from '@/Pages/MLLoginApi/MLLogin';
-import axios from 'axios';
 import { Globe, Hash, Link2, School, User } from 'lucide-react';
 
 const LOGO_SRC = "/images/All Star/PNG.png";
@@ -337,18 +336,26 @@ export default function BTS26JE() {
 
     setIsSubmitting(true);
 
+    const GOOGLE_FORM_ACTION_URL = 'https://docs.google.com/forms/d/1jChNDT2EcJivWkq7bYGB1ZcHn4OjfAnryhkXQxgzDas/formResponse';
+
+    const formBody = new FormData();
+    formBody.append('entry.2101844537', form.name);
+    formBody.append('entry.1073433', form.school);
+    formBody.append('entry.820217909', String(mlbbUid));
+    formBody.append('entry.981688386', String(mlbbServer));
+    formBody.append('entry.2019044726', form.facebookProfileLink);
+    formBody.append('entry.20435328', form.postLink);
+    formBody.append('entry.2138848412', agreedMechanics ? 'I agree with the game mechanics' : '');
+    formBody.append('entry.553940021', agreed ? 'I agree to the terms and conditions' : '');
+
     try {
-      const response = await axios.post('/bts-jejemon/submit', {
-        ...form,
-        uid: String(mlbbUid),
-        server: String(mlbbServer),
+      await fetch(GOOGLE_FORM_ACTION_URL, {
+        method: 'POST',
+        body: formBody,
+        mode: 'no-cors',
       });
 
-      if (response?.data?.success) {
-        setShowModal(true);
-      } else {
-        alert(response?.data?.message || 'Something went wrong.');
-      }
+      setShowModal(true);
     } catch (error) {
       console.error('Error submitting:', error);
       alert('An error occurred while submitting. Please try again.');
