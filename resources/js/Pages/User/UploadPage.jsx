@@ -134,9 +134,11 @@ const UploadPage = () => {
         if (fileInput) fileInput.value = '';
     };
 
+    const isInactive = user.status === 'inactive';
+
     return (
         <UserStateLayout>
-            <Head title="Upload Proof of Enrollment" />
+            <Head title={isInactive ? "Reactivate Account" : "Upload Proof of Enrollment"} />
 
             <div className="min-h-screen bg-gradient-to-br from-black via-[#1a1a1a] to-[#000] flex items-center justify-center p-4">
                 <div className="max-w-2xl w-full">
@@ -147,10 +149,12 @@ const UploadPage = () => {
                                 <img src="/MSL_LOGO.png" alt="MSL Logo" className="h-20 w-20" />
                             </div>
                             <h1 className="text-3xl font-bold text-white mb-2 mt-6">
-                                Account Renewal Required
+                                {isInactive ? 'Account Inactive' : 'Account Renewal Required'}
                             </h1>
                             <p className="text-gray-300 text-lg">
-                                Please upload your proof of enrollment and update your year level to continue
+                                {isInactive 
+                                    ? 'Please upload your proof of enrollment and update your year level to reactivate your account'
+                                    : 'Please upload your proof of enrollment and update your year level to continue'}
                             </p>
                         </div>
 
@@ -160,11 +164,12 @@ const UploadPage = () => {
                                 <AlertCircle className="w-6 h-6 text-red-400 mt-1 flex-shrink-0" />
                                 <div>
                                     <h3 className="text-lg font-semibold text-red-400 mb-2">
-                                        Action Required
+                                        {isInactive ? 'Account Inactive' : 'Action Required'}
                                     </h3>
                                     <p className="text-gray-300 leading-relaxed">
-                                        Your account has been marked for renewal. To regain access to the MSL platform,
-                                        please upload a current proof of enrollment document and update your year level.
+                                        {isInactive 
+                                            ? 'Your account has been marked as inactive. To reactivate your account and regain access to the MSL platform, please upload a current proof of enrollment document and update your year level for admin verification.'
+                                            : 'Your account has been marked for renewal. To regain access to the MSL platform, please upload a current proof of enrollment document and update your year level.'}
                                     </p>
                                 </div>
                             </div>
@@ -197,7 +202,7 @@ const UploadPage = () => {
                                 <div>
                                     <p className="text-gray-400 text-sm">Current Status</p>
                                     <span className="inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium bg-red-500/20 text-red-400 border border-red-500/30">
-                                        Renewal Required
+                                        {isInactive ? 'Inactive' : 'Renewal Required'}
                                     </span>
                                 </div>
                             </div>
