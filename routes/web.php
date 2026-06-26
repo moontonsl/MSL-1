@@ -1287,7 +1287,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         if ($user->role !== 'SL' && $user->role !== 'Regional Admin' && $user->role !== 'Super Admin') {
             return redirect()->route('dashboard')->with('error', 'Access denied. Only Student Leaders, Regional Admins, and Super Admins can access this page.');
         }
-        $query = User::query()->where('status', 'active');
+        $query = User::query();
 
         if ($user->role === 'SL') {
             $query->where('university', $user->university);
@@ -1301,11 +1301,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         }
 
         $adminRoles = ['SL', 'Admin', 'Super Admin', 'Regional Admin'];
-        $verified = (clone $query)->where('state', 'Verified')->whereNotIn('role', $adminRoles)->count();
+        $verified = (clone $query)->where('state', 'Verified')->where('status', 'active')->whereNotIn('role', $adminRoles)->count();
         $new = (clone $query)->where('state', 'New')->whereNotIn('role', $adminRoles)->count();
-        $renewed = (clone $query)->where('state', 'Renew')->whereNotIn('role', $adminRoles)->count();
-        $blocked = (clone $query)->where('state', 'Blocked')->whereNotIn('role', $adminRoles)->count();
-        $inactive = (clone $query)->where('state', 'Inactive')->whereNotIn('role', $adminRoles)->count();
+        $renewed = (clone $query)->where('state', 'Renew')->where('status', 'active')->whereNotIn('role', $adminRoles)->count();
+        $blocked = (clone $query)->where('state', 'Blocked')->where('status', 'active')->whereNotIn('role', $adminRoles)->count();
+        $inactive = (clone $query)->where('status', 'inactive')->where('state', '!=', 'New')->whereNotIn('role', $adminRoles)->count();
 
         $studentLeaders = 0;
         if ($user->role === 'Regional Admin') {
@@ -1887,7 +1887,7 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
         return response()->json(['error' => 'Access denied. Only Student Leaders, Regional Admins, and Super Admins can access this resource.'], 403);
     }
     $perPage = $request->query('per_page', 20);
-    $query = \App\Models\User::where('users.status', 'active')->select(
+    $query = \App\Models\User::select(
         'users.id',
         'users.name',
         'users.surname',
@@ -1950,13 +1950,15 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
         // Show only Student Leaders (SL role) for Regional Admin and Super Admin
         // Regional Admin can only see SLs from their assigned regions (already filtered above)
         // Super Admin can see all SLs (no additional filtering needed)
-        $query->where('users.role', 'SL');
+        $query->where('users.role', 'SL')
+              ->where('users.status', 'active');
     } elseif ($request->has('state') && $request->query('state') === 'RegionalAdmins') {
         // Show only Regional Admins for Super Admin
         if ($user->role !== 'Super Admin') {
             return response()->json(['error' => 'Access denied. Only Super Admins can view Regional Admins.'], 403);
         }
-        $query->where('users.role', 'Regional Admin');
+        $query->where('users.role', 'Regional Admin')
+              ->where('users.status', 'active');
     } else {
         // Regular filtering - exclude admin roles
         $query->where('users.role', '!=', 'SL')
@@ -1965,7 +1967,18 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/users', function (\Il
             ->where('users.role', '!=', 'Regional Admin');
 
         if ($request->has('state')) {
-            $query->where('users.state', $request->query('state'));
+            $state = $request->query('state');
+            if ($state === 'Inactive') {
+                $query->where('users.status', 'inactive')
+                      ->where('users.state', '!=', 'New');
+            } elseif ($state === 'New') {
+                $query->where('users.state', 'New');
+            } else {
+                $query->where('users.state', $state)
+                      ->where('users.status', 'active');
+            }
+        } else {
+            $query->where('users.status', 'active');
         }
     }
 
@@ -2003,8 +2016,7 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/counts', function (\I
     }
 
     $query = \App\Models\User::from('users')
-        ->leftJoin('ml_users', 'users.ml_id', '=', 'ml_users.ml_id')
-        ->where('users.status', 'active');
+        ->leftJoin('ml_users', 'users.ml_id', '=', 'ml_users.ml_id');
 
     if ($user->role === 'SL') {
         $query->where('users.university', $user->university);
@@ -2043,11 +2055,11 @@ Route::middleware(['auth', 'verified'])->get('/api/sladmin/counts', function (\I
     }
 
     return response()->json([
-        'verified' => (clone $query)->where('users.state', 'Verified')->count(),
+        'verified' => (clone $query)->where('users.state', 'Verified')->where('users.status', 'active')->count(),
         'new'      => (clone $query)->where('users.state', 'New')->count(),
-        'renewed'  => (clone $query)->where('users.state', 'Renew')->count(),
-        'blocked'  => (clone $query)->where('users.state', 'Blocked')->count(),
-        'inactive' => (clone $query)->where('users.state', 'Inactive')->count(),
+        'renewed'  => (clone $query)->where('users.state', 'Renew')->where('users.status', 'active')->count(),
+        'blocked'  => (clone $query)->where('users.state', 'Blocked')->where('users.status', 'active')->count(),
+        'inactive' => (clone $query)->where('users.status', 'inactive')->where('users.state', '!=', 'New')->count(),
     ]);
 });
 
@@ -2087,6 +2099,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         $targetUser->update([
             'state' => 'Verified',
+            'status' => 'active', // Reactivate the account when verified
             'verified_by' => $user->id,
             'verified_date' => now()
         ]);

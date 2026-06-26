@@ -35,6 +35,28 @@ class CheckUserState
                 'user.attachment.show', // Allow viewing own attachment
             ];
             
+            // If the user's status is inactive, restrict access accordingly
+            if ($user->status === 'inactive') {
+                if ($user->state === 'New') {
+                    // Inactive users who submitted docs can only access waiting page
+                    $allowedRoutes[] = 'user.waiting';
+                    $currentRoute = $request->route() ? $request->route()->getName() : 'unknown';
+                    if (!$request->routeIs($allowedRoutes)) {
+                        \Log::info('Inactive user (New state) redirected to waiting. Route: ' . $currentRoute . ', User: ' . $user->name);
+                        return redirect()->route('user.waiting');
+                    }
+                } else {
+                    // Otherwise, inactive users must go to the upload page to submit docs
+                    $allowedRoutes[] = 'user.upload';
+                    $currentRoute = $request->route() ? $request->route()->getName() : 'unknown';
+                    if (!$request->routeIs($allowedRoutes)) {
+                        \Log::info('Inactive user redirected to upload. Route: ' . $currentRoute . ', User: ' . $user->name);
+                        return redirect()->route('user.upload');
+                    }
+                }
+                return $next($request);
+            }
+            
             // Check user state and restrict access accordingly
             switch ($user->state) {
                 case 'New':
