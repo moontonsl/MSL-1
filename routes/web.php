@@ -2476,8 +2476,8 @@ Route::prefix('faulty-username')->name('faulty-username.')->group(function () {
     Route::get('/stats', [\App\Http\Controllers\FaultyUsernameController::class, 'getStats'])->name('stats');
 });
 
-// Admin Faulty Username Management Routes (with auth protection)
-Route::middleware(['auth', 'admin'])->prefix('admin/faulty-username')->name('admin.faulty-username.')->group(function () {
+// Admin Faulty Username Management Routes
+Route::prefix('admin/faulty-username')->name('admin.faulty-username.')->group(function () {
     Route::get('/', [\App\Http\Controllers\FaultyUsernameController::class, 'index'])->name('index');
     Route::post('/send-email/{userId}', [\App\Http\Controllers\FaultyUsernameController::class, 'sendEmailToUser'])->name('send-email');
     Route::post('/send-selected', [\App\Http\Controllers\FaultyUsernameController::class, 'sendEmailToSelected'])->name('send-selected');

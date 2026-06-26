@@ -17,7 +17,7 @@ const Step4AccountCredentials = ({
   const [timer, setTimer] = useState(0);
   const timerRef = useRef(null);
 
-  const validateUsername = (username) => /^[A-Za-z0-9]{1,15}$/.test(username);
+  const validateUsername = (username) => /^[A-Za-z0-9._-]{1,15}$/.test(username);
 
   const handleUsernameChange = (e) => {
     const value = e.target.value;
@@ -25,7 +25,7 @@ const Step4AccountCredentials = ({
       handleInputChange(e);
       setErrorMessage && setErrorMessage("");
     } else {
-      setErrorMessage && setErrorMessage("⚠️ Username can contain letters and numbers only (max 15).");
+      setErrorMessage && setErrorMessage("⚠️ Username can only contain letters, numbers, dot (.), underscore (_), or dash (-).");
     }
   };
 

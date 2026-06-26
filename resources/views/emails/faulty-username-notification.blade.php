@@ -25,8 +25,8 @@
         }
         .button {
             display: inline-block;
-            background-color: #dc3545;
-            color: white;
+            background-color: #f0b429;
+            color: #0a0a0a;
             padding: 12px 24px;
             text-decoration: none;
             border-radius: 5px;
@@ -70,9 +70,12 @@
 
             <div class="rules">
                 <ul>
-                    <li>No spaces are allowed in usernames</li>
-                    <li>Usernames must not exceed 15 characters</li>
-                    <li>Usernames must be at least 4 characters long</li>
+                    <li>Must be between 5 and 15 characters</li>
+                    <li>Must start with a letter (a–z, A–Z) or a digit 1–9 (not 0)</li>
+                    <li>Must end with a letter or digit</li>
+                    <li>Only letters, numbers, and at most one dot (.), underscore (_), or dash (-) are allowed</li>
+                    <li>No spaces allowed</li>
+                    <li>Must be unique</li>
                 </ul>
             </div>
 

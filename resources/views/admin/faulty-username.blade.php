@@ -81,9 +81,22 @@
         }
         
         .email-status {
-            font-size: 0.8rem;
-            margin-top: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.3rem;
         }
+        .email-sent-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.72rem;
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+            border-radius: 4px;
+            padding: 2px 6px;
+            white-space: nowrap;
+        }
+        .email-sent-badge i { font-size: 0.7rem; }
         
         .search-highlight {
             background-color: #fff3cd;
@@ -296,7 +309,14 @@
                                     </td>
                                     <td>
                                         <div>{{ $user->email }}</div>
-                                        <div class="email-status" id="email-status-{{ $user->id }}"></div>
+                                        <div class="email-status" id="email-status-{{ $user->id }}">
+                                            @if($user->email_sent_at)
+                                                <span class="email-sent-badge">
+                                                    <i class="fas fa-check-circle"></i>
+                                                    Sent {{ $user->email_sent_at->format('M d, Y H:i') }}
+                                                </span>
+                                            @endif
+                                        </div>
                                     </td>
                                     <td>
                                         <div class="username-cell">
@@ -504,7 +524,7 @@
                 
                 if (data.success) {
                     showSuccessToast(data.message);
-                    updateEmailStatus(userId, 'Email sent successfully', 'success');
+                    markEmailSent(userId, data.sent_at);
                 } else {
                     showErrorToast(data.message || 'Unknown error occurred');
                     updateEmailStatus(userId, 'Failed to send email', 'error');
@@ -549,8 +569,9 @@
                 
                 if (data.success) {
                     showSuccessToast(data.message);
+                    const now = new Date().toISOString();
                     selectedUsers.forEach(userId => {
-                        updateEmailStatus(userId, 'Queued for sending', 'info');
+                        markEmailSent(userId, now);
                     });
                 } else {
                     showErrorToast(data.message);
@@ -590,10 +611,10 @@
                 
                 if (data.success) {
                     showSuccessToast(data.message);
-                    // Mark all visible users as queued
+                    const now = new Date().toISOString();
                     document.querySelectorAll('[id^="email-status-"]').forEach(element => {
                         const userId = element.id.replace('email-status-', '');
-                        updateEmailStatus(userId, 'Queued for sending', 'info');
+                        markEmailSent(userId, now);
                     });
                 } else {
                     showErrorToast(data.message);
@@ -625,6 +646,16 @@
             document.getElementById('errorToastBody').textContent = message;
             const toast = new bootstrap.Toast(document.getElementById('errorToast'));
             toast.show();
+        }
+
+        function markEmailSent(userId, isoString) {
+            const statusElement = document.getElementById(`email-status-${userId}`);
+            if (statusElement) {
+                const d = new Date(isoString);
+                const formatted = d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+                    + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                statusElement.innerHTML = `<span class="email-sent-badge"><i class="fas fa-check-circle"></i> Sent ${formatted}</span>`;
+            }
         }
 
         function updateEmailStatus(userId, message, type) {

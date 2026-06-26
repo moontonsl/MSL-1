@@ -88,10 +88,6 @@ Route::middleware(['auth:admin', 'admin'])->group(function () {
 
     // Faulty Username Management
     Route::get('/admin/faulty-username', [\App\Http\Controllers\FaultyUsernameController::class, 'index'])->name('admin.faulty-username');
-    Route::post('/faulty-username/send-email/{user}', [\App\Http\Controllers\FaultyUsernameController::class, 'sendEmailToUser']);
-    Route::post('/faulty-username/send-selected', [\App\Http\Controllers\FaultyUsernameController::class, 'sendEmailToSelected']);
-    Route::post('/faulty-username/send-all', [\App\Http\Controllers\FaultyUsernameController::class, 'sendEmailToAll']);
-    Route::get('/faulty-username/stats', [\App\Http\Controllers\FaultyUsernameController::class, 'getStats']);
 
     // SL Management
     Route::get('/admin/sl-management', [AdminController::class, 'slManagement'])->name('admin.sl-management');
