@@ -1008,7 +1008,7 @@ const RegionalAdmin = () => {
                               <div className="flex justify-end">
                                 <button
                                   type="button"
-                                  onClick={() => setViewing(req)}
+                                  onClick={() => { window.scrollTo({ top: 0, behavior: 'instant' }); setViewing(req); }}
                                   className="bg-white/10 hover:bg-white/20 text-white font-montserrat text-[11px] font-semibold rounded-lg px-3 py-1.5"
                                 >
                                   View
@@ -1116,7 +1116,7 @@ const RegionalAdmin = () => {
                                       <div className="flex items-center justify-end gap-2">
                                         <button
                                           type="button"
-                                          onClick={() => { setViewingTeamsTournament(item); setViewingTeamsTab('teams'); }}
+                                          onClick={() => { window.scrollTo({ top: 0, behavior: 'instant' }); setViewingTeamsTournament(item); setViewingTeamsTab('teams'); }}
                                           className="px-4 py-1.5 rounded-lg border border-white/20 bg-neutral-800/40 hover:bg-neutral-700/50 text-white/90 text-xs font-montserrat transition-colors"
                                         >
                                           View
@@ -1598,7 +1598,7 @@ const RegionalAdmin = () => {
 
       {/* View Modal (Requests) */}
       {viewing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4">
           <div className="absolute inset-0 bg-black/60" onClick={() => setViewing(null)} />
           <div className="relative z-10 w-[92%] max-w-md rounded-2xl border border-white/10 bg-gradient-to-br from-neutral-800/90 to-neutral-900/90 p-5 text-white shadow-2xl">
             <div className="flex items-start justify-between gap-4">
@@ -1645,7 +1645,7 @@ const RegionalAdmin = () => {
 
       {/* View Modal (Ongoing Teams) */}
       {viewingTeamsTournament && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4 overflow-y-auto">
           <div className="absolute inset-0 bg-black/60" onClick={() => setViewingTeamsTournament(null)} />
 
           <div className="relative z-10 w-full max-w-[1400px] rounded-2xl border border-white/10 bg-gradient-to-br from-neutral-800/90 to-neutral-900/90 p-5 md:p-6 text-white shadow-2xl">

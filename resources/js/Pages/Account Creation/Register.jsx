@@ -88,7 +88,7 @@ const Register = () => {
           if (errors.email) {
             setErrorMessage(`⚠️ Email: Email has already been taken.`);
           } else if (errors.username) {
-            setErrorMessage(`⚠️ Username: Username has already been taken.`);
+            setErrorMessage(`⚠️ Username: ${errors.username}`);
           } else if (errors.userId) {
             setErrorMessage(`⚠️ ML Account: The ML Account has already been taken.`);
           } else {
@@ -149,10 +149,23 @@ const Register = () => {
           setErrorMessage("⚠️ Please fill in all the required fields.");
           return false;
         }
-        // Username validation (5-15 chars, alphanumeric, no spaces/special chars, first char not 0)
-        const usernameRegex = /^[a-zA-Z1-9][a-zA-Z0-9]{4,14}$/;
-        if (!usernameRegex.test(username)) {
-          setErrorMessage("⚠️ Username must be 5–15 characters, alphanumeric only, no spaces/special characters, and cannot start with 0.");
+        // jabu Username rules:
+        // - 5–15 chars, start with letter or 1-9 (not 0), end with letter or digit (0 allowed)
+        // - Only letters, digits, dot, underscore, dash allowed
+        // - At most one special char (. _ -) total across the whole username
+        const usernameCharsRegex = /^(?!.*[._-].*[._-])[a-zA-Z1-9][a-zA-Z0-9._-]{3,13}[a-zA-Z0-9]$/;
+        if (!usernameCharsRegex.test(username)) {
+          if (/^[^a-zA-Z1-9]/.test(username)) {
+            setErrorMessage("⚠️ Username must start with a letter or number 1–9 (not 0 or a special character).");
+          } else if (/[._-]$/.test(username)) {
+            setErrorMessage("⚠️ Username cannot end with a dot, underscore, or dash.");
+          } else if ((username.match(/[._-]/g) || []).length > 1) {
+            setErrorMessage("⚠️ Username can only contain one special character (. _ -) in total.");
+          } else if (/[^a-zA-Z0-9._-]/.test(username)) {
+            setErrorMessage("⚠️ Username can only contain letters, numbers, dot (.), underscore (_), or dash (-).");
+          } else {
+            setErrorMessage("⚠️ Username must be 5–15 characters. Start with a letter or 1–9, end with a letter or digit, and use at most one dot, underscore, or dash.");
+          }
           return false;
         }
         if (password.length < 8) {

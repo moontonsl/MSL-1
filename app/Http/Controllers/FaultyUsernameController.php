@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Jobs\SendFaultyUsernameEmails;
 use App\Mail\FaultyUsernameMail;
+use App\Models\FaultyUsernameEmail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -36,10 +37,19 @@ class FaultyUsernameController extends Controller
         
         $faultyUsers = $query->paginate($perPage);
 
-        // Add issue type to each user
-        $faultyUsers->getCollection()->transform(function ($user) {
+        // Collect user IDs on this page and load their latest email sent timestamps
+        $pageUserIds = $faultyUsers->getCollection()->pluck('id')->toArray();
+        $emailSentMap = FaultyUsernameEmail::whereIn('user_id', $pageUserIds)
+            ->orderBy('sent_at', 'desc')
+            ->get()
+            ->groupBy('user_id')
+            ->map(fn($records) => $records->first()->sent_at);
+
+        // Add issue type and email sent timestamp to each user
+        $faultyUsers->getCollection()->transform(function ($user) use ($emailSentMap) {
             $user->issue_type = $this->determineIssueType($user);
             $user->username_length = strlen($user->username ?? '');
+            $user->email_sent_at = $emailSentMap->get($user->id);
             return $user;
         });
 
@@ -60,10 +70,14 @@ class FaultyUsernameController extends Controller
             
             if ($issueType) {
                 Mail::to($user->email)->send(new FaultyUsernameMail($user, $issueType));
-                
+
+                $sentAt = now();
+                FaultyUsernameEmail::create(['user_id' => $user->id, 'sent_at' => $sentAt]);
+
                 return response()->json([
                     'success' => true,
-                    'message' => "Email sent successfully to {$user->name} ({$user->email})"
+                    'message' => "Email sent successfully to {$user->name} ({$user->email})",
+                    'sent_at' => $sentAt->toISOString(),
                 ]);
             }
             
@@ -105,6 +119,7 @@ class FaultyUsernameController extends Controller
                         $issueType = $this->determineIssueType($user);
                         if ($issueType) {
                             Mail::to($user->email)->send(new FaultyUsernameMail($user, $issueType));
+                            FaultyUsernameEmail::create(['user_id' => $user->id, 'sent_at' => now()]);
                             $successCount++;
                         }
                     }
@@ -112,12 +127,12 @@ class FaultyUsernameController extends Controller
                     $errorCount++;
                 }
             }
-            
+
             $message = "Sent emails to {$successCount} users.";
             if ($errorCount > 0) {
                 $message .= " {$errorCount} failed.";
             }
-            
+
             return response()->json([
                 'success' => true,
                 'message' => $message
@@ -159,6 +174,7 @@ class FaultyUsernameController extends Controller
                         $issueType = $this->determineIssueType($user);
                         if ($issueType) {
                             Mail::to($user->email)->send(new FaultyUsernameMail($user, $issueType));
+                            FaultyUsernameEmail::create(['user_id' => $user->id, 'sent_at' => now()]);
                             $successCount++;
                         }
                     }
@@ -166,12 +182,12 @@ class FaultyUsernameController extends Controller
                     $errorCount++;
                 }
             }
-            
+
             $message = "Sent emails to {$successCount} users.";
             if ($errorCount > 0) {
                 $message .= " {$errorCount} failed.";
             }
-            
+
             return response()->json([
                 'success' => true,
                 'message' => $message
@@ -205,7 +221,7 @@ class FaultyUsernameController extends Controller
             case 'short':
                 return $query->where(function ($q) {
                     $q->whereNotNull('username')
-                      ->where(DB::raw('CHAR_LENGTH(username)'), '<=', 3);
+                      ->where(DB::raw('CHAR_LENGTH(username)'), '<', 5);
                 });
 
             case 'spaces':
@@ -227,15 +243,42 @@ class FaultyUsernameController extends Controller
                       ->orWhere(DB::raw('TRIM(username)'), '');
                 });
 
+            case 'invalid_start':
+                return $query->where(function ($q) {
+                    $q->whereNotNull('username')
+                      ->whereRaw("username REGEXP '^[0._-]'");
+                });
+
+            case 'invalid_end':
+                return $query->where(function ($q) {
+                    $q->whereNotNull('username')
+                      ->whereRaw("username REGEXP '[._-]$'");
+                });
+
+            case 'multiple_special':
+                return $query->where(function ($q) {
+                    $q->whereNotNull('username')
+                      ->whereRaw("username REGEXP '[._-].*[._-]'");
+                });
+
+            case 'invalid_chars':
+                return $query->where(function ($q) {
+                    $q->whereNotNull('username')
+                      ->whereRaw("username REGEXP '[^a-zA-Z0-9._-]'");
+                });
+
             case 'all':
             default:
                 return $query->where(function ($q) {
                     $q->whereNull('username')
                       ->orWhere('username', '')
                       ->orWhere(DB::raw('TRIM(username)'), '')
-                      ->orWhere(DB::raw('CHAR_LENGTH(username)'), '<=', 3)
-                      ->orWhere('username', 'LIKE', '% %')
-                      ->orWhere(DB::raw('CHAR_LENGTH(username)'), '>', 15);
+                      ->orWhere(DB::raw('CHAR_LENGTH(username)'), '<', 5)
+                      ->orWhere(DB::raw('CHAR_LENGTH(username)'), '>', 15)
+                      ->orWhereRaw("username REGEXP '^[0._-]'")
+                      ->orWhereRaw("username REGEXP '[._-]$'")
+                      ->orWhereRaw("username REGEXP '[._-].*[._-]'")
+                      ->orWhereRaw("username REGEXP '[^a-zA-Z0-9._-]'");
                 });
         }
     }
@@ -251,16 +294,32 @@ class FaultyUsernameController extends Controller
             return 'Empty/NULL username';
         }
 
-        if (strlen($username) <= 3) {
-            return 'Too short (≤3 chars)';
+        if (strlen($username) < 5) {
+            return 'Too short (<5 chars)';
+        }
+
+        if (strlen($username) > 15) {
+            return 'Too long (>15 chars)';
         }
 
         if (strpos($username, ' ') !== false) {
             return 'Contains spaces';
         }
 
-        if (strlen($username) > 15) {
-            return 'Too long (>15 chars)';
+        if (preg_match('/^[0._-]/', $username)) {
+            return 'Invalid start (cannot start with 0, dot, underscore, or dash)';
+        }
+
+        if (preg_match('/[._-]$/', $username)) {
+            return 'Invalid end (cannot end with dot, underscore, or dash)';
+        }
+
+        if (preg_match('/[._-].*[._-]/', $username)) {
+            return 'Multiple special characters (only one . _ - allowed total)';
+        }
+
+        if (preg_match('/[^a-zA-Z0-9._-]/', $username)) {
+            return 'Invalid characters (only letters, numbers, dot, underscore, dash allowed)';
         }
 
         return null;
@@ -276,14 +335,16 @@ class FaultyUsernameController extends Controller
             'short_count' => 0,
             'spaces_count' => 0,
             'long_count' => 0,
+            'invalid_start_count' => 0,
+            'invalid_end_count' => 0,
+            'multiple_special_count' => 0,
+            'invalid_chars_count' => 0,
             'total_faulty' => 0,
             'total_users' => 0,
         ];
 
-        // Get total users count
         $stats['total_users'] = User::count();
 
-        // Count each type of issue
         $stats['empty_count'] = User::where(function ($query) {
             $query->whereNull('username')
                   ->orWhere('username', '')
@@ -291,7 +352,7 @@ class FaultyUsernameController extends Controller
         })->count();
 
         $stats['short_count'] = User::whereNotNull('username')
-                                   ->where(DB::raw('CHAR_LENGTH(username)'), '<=', 3)
+                                   ->where(DB::raw('CHAR_LENGTH(username)'), '<', 5)
                                    ->count();
 
         $stats['spaces_count'] = User::whereNotNull('username')
@@ -302,14 +363,32 @@ class FaultyUsernameController extends Controller
                                   ->where(DB::raw('CHAR_LENGTH(username)'), '>', 15)
                                   ->count();
 
-        // Calculate total faulty
+        $stats['invalid_start_count'] = User::whereNotNull('username')
+                                           ->whereRaw("username REGEXP '^[0._-]'")
+                                           ->count();
+
+        $stats['invalid_end_count'] = User::whereNotNull('username')
+                                         ->whereRaw("username REGEXP '[._-]$'")
+                                         ->count();
+
+        $stats['multiple_special_count'] = User::whereNotNull('username')
+                                              ->whereRaw("username REGEXP '[._-].*[._-]'")
+                                              ->count();
+
+        $stats['invalid_chars_count'] = User::whereNotNull('username')
+                                           ->whereRaw("username REGEXP '[^a-zA-Z0-9._-]'")
+                                           ->count();
+
         $stats['total_faulty'] = User::where(function ($query) {
             $query->whereNull('username')
                   ->orWhere('username', '')
                   ->orWhere(DB::raw('TRIM(username)'), '')
-                  ->orWhere(DB::raw('CHAR_LENGTH(username)'), '<=', 3)
-                  ->orWhere('username', 'LIKE', '% %')
-                  ->orWhere(DB::raw('CHAR_LENGTH(username)'), '>', 15);
+                  ->orWhere(DB::raw('CHAR_LENGTH(username)'), '<', 5)
+                  ->orWhere(DB::raw('CHAR_LENGTH(username)'), '>', 15)
+                  ->orWhereRaw("username REGEXP '^[0._-]'")
+                  ->orWhereRaw("username REGEXP '[._-]$'")
+                  ->orWhereRaw("username REGEXP '[._-].*[._-]'")
+                  ->orWhereRaw("username REGEXP '[^a-zA-Z0-9._-]'");
         })->count();
 
         return $stats;
@@ -336,14 +415,14 @@ class FaultyUsernameController extends Controller
             'username' => [
                 'required',
                 'string',
-                'min:4',
+                'min:5',
                 'max:15',
                 'unique:users,username,' . $user->id,
-                'regex:/^\S*$/', // No spaces
+                'regex:/^(?!.*[._\-].*[._\-])[a-zA-Z1-9][a-zA-Z0-9._\-]{3,13}[a-zA-Z0-9]$/',
             ],
         ], [
-            'username.regex' => 'The username must not contain spaces.',
-            'username.min' => 'The username must be at least 4 characters.',
+            'username.regex' => 'Username must be 5–15 characters, start with a letter or 1–9, end with a letter or digit, and contain at most one dot, underscore, or dash.',
+            'username.min' => 'The username must be at least 5 characters.',
             'username.max' => 'The username must not be greater than 15 characters.',
         ]);
 

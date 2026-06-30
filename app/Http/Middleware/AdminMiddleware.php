@@ -10,10 +10,20 @@ class AdminMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        if (!Auth::guard('admin')->check()) {
-            return redirect()->route('admin.login')->with('error', 'Please login to access the admin area.');
+        // Accept dedicated AdminUser accounts
+        if (Auth::guard('admin')->check()) {
+            return $next($request);
         }
 
-        return $next($request);
+        // Also accept regular users with Super Admin or Admin roles
+        if (Auth::guard('web')->check() && in_array(Auth::guard('web')->user()->role, ['Super Admin', 'Admin'])) {
+            return $next($request);
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json(['error' => 'Unauthorized.'], 401);
+        }
+
+        return redirect()->route('admin.login')->with('error', 'Please login to access the admin area.');
     }
 }
