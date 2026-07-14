@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { FaNewspaper, FaCalendar, FaUsers, FaTachometerAlt, FaSignOutAlt, FaBed, FaBook, FaConciergeBell, FaCog, FaTh, FaEllipsisH, FaImages, FaGamepad, FaUserGraduate, FaUserShield, FaCamera, FaTrophy } from 'react-icons/fa';
+import { FaNewspaper, FaCalendar, FaUsers, FaTachometerAlt, FaSignOutAlt, FaBed, FaBook, FaConciergeBell, FaCog, FaTh, FaEllipsisH, FaImages, FaGamepad, FaUserGraduate, FaUserShield, FaCamera, FaTrophy, FaLink } from 'react-icons/fa';
 
 export default function AdminLayout({ children }) {
     const { auth } = usePage().props;
@@ -19,6 +19,7 @@ export default function AdminLayout({ children }) {
         { name: 'MCC Season Management', href: route('admin.mcc-seasons.index'), routeName: 'admin.mcc-seasons.index', icon: FaTrophy },
         { name: 'Event Calendar', href: route('admin.events'), routeName: 'admin.events', icon: FaCalendar },
         { name: 'Footer Management', href: route('admin.footer'), routeName: 'admin.footer', icon: FaCog },
+        { name: 'Share Link', href: route('admin.share-links.index'), routeName: 'admin.share-links.index', icon: FaLink },
         { name: 'Oppo Settings', href: route('admin.oppo-settings.index'), routeName: 'admin.oppo-settings.index', icon: FaCog },
         { name: 'Violation Reports', href: route('admin.violation-reports.index'), routeName: 'admin.violation-reports.index', icon: FaUserShield },
         { name: 'Settings', href: route('admin.settings'), routeName: 'admin.settings', icon: FaCog },

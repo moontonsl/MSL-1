@@ -4,6 +4,9 @@
 require __DIR__ . '/admin.php';
 require __DIR__ . '/auth.php';
 
+// Public Short Link Redirect Route
+Route::get('/s/{code}', [\App\Http\Controllers\ShortLinkController::class, 'redirect'])->name('short-link.redirect');
+
 
 
 use App\Http\Controllers\AdminController;

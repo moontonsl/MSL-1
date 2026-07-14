@@ -83,6 +83,12 @@ Route::middleware(['auth:admin', 'admin'])->group(function () {
     Route::get('/admin/footer', [\App\Http\Controllers\Admin\FooterController::class, 'index'])->name('admin.footer');
     Route::post('/admin/footer', [\App\Http\Controllers\Admin\FooterController::class, 'update'])->name('admin.footer.update');
 
+    // Share Link Management
+    Route::get('/admin/share-links', [\App\Http\Controllers\Admin\ShortLinkController::class, 'index'])->name('admin.share-links.index');
+    Route::post('/admin/share-links', [\App\Http\Controllers\Admin\ShortLinkController::class, 'store'])->name('admin.share-links.store');
+    Route::put('/admin/share-links/{shortLink}', [\App\Http\Controllers\Admin\ShortLinkController::class, 'update'])->name('admin.share-links.update');
+    Route::delete('/admin/share-links/{shortLink}', [\App\Http\Controllers\Admin\ShortLinkController::class, 'destroy'])->name('admin.share-links.destroy');
+
     // Duplicate Username Check
     Route::get('/admin/duplicate-usernames/check', [\App\Http\Controllers\Admin\DuplicateUsernameController::class, 'checkDuplicates'])->name('admin.duplicate-usernames.check');
 
