@@ -198,12 +198,12 @@ const Step2EducationDetails = ({
             </label>
             <select id="yearLevel" name="yearLevel" value={formData.yearLevel} onChange={handleAnyInputChange} onBlur={handleAnyInputBlur} className="input-field-register year-level-select" required >
               <option value="" disabled>Select Year Level</option>
-              <option value="Grade 11 SHS">Grade 11 SHS</option>
-              <option value="Grade 12 SHS">Grade 12 SHS</option>
-              <option value="Freshmen (1st Yr)">Freshmen (1st Yr)</option>
-              <option value="Sophomore (2nd Yr)">Sophomore (2nd Yr)</option>
-              <option value="Junior (3rd Yr)">Junior (3rd Yr)</option>
-              <option value="Senior (4th Yr Up)">Senior (4th Yr Up)</option>
+              <option value="Grade 11">Grade 11</option>
+              <option value="Grade 12">Grade 12</option>
+              <option value="Freshmen">Freshmen</option>
+              <option value="Sophomore">Sophomore</option>
+              <option value="Junior">Junior</option>
+              <option value="Senior">Senior</option>
               <option value="Alumni">Alumni</option>
               <option value="Masters">Masters</option>
               <option value="Doctorate">Doctorate</option>
