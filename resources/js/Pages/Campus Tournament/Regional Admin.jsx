@@ -1874,9 +1874,25 @@ const RegionalAdmin = () => {
                         </svg>
                       </div>
                       <div className="flex flex-col min-w-0">
-                        <div className="font-montserrat text-sm leading-tight text-white/90">
+                        {player?.facebook_link ? (
+                            <a
+                              href={player.facebook_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-montserrat text-sm leading-tight text-white/90 truncate hover:text-blue-400 transition-colors"
+                              title="View Facebook Profile"
+                            >
+                              {player.name}
+                            </a>
+                          ) : (
+                            <div className="font-montserrat text-sm leading-tight text-white/90">
+                              {player.name}
+                            </div>
+                          )}
+                        {/* <div className="font-montserrat text-sm leading-tight text-white/90">
+                        
                           {player.name}
-                        </div>
+                        </div> */}
                         <div className="font-montserrat text-xs leading-tight text-white/60 truncate max-w-[10ch]">
                           {player?.ign || '—'}
                         </div>
