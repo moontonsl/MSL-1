@@ -34,6 +34,22 @@
             text-align: center;
             font-weight: bold;
         }
+        .deadline-alert {
+            background-color: #dc3545;
+            border: 2px solid #b02a37;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+            color: #ffffff;
+            text-align: center;
+        }
+        .deadline-alert .deadline-date {
+            display: block;
+            font-size: 22px;
+            font-weight: bold;
+            margin: 10px 0;
+            letter-spacing: 0.5px;
+        }
         .warning {
             background-color: #fff3cd;
             border: 1px solid #ffeaa7;
@@ -81,12 +97,19 @@
 
             <p>To update your username, please click the link below:</p>
             
+            <div class="deadline-alert">
+                <p><strong>⏰ URGENT — ACTION REQUIRED</strong></p>
+                <p>Your MSL account will be <strong>permanently deleted</strong> if you do not update your username by:</p>
+                <span class="deadline-date">July 31, 2026</span>
+                <p style="margin-bottom: 0;">Please update your username as soon as possible to avoid losing access to your account.</p>
+            </div>
+
             <p style="text-align: center;">
                 <a href="{{ \Illuminate\Support\Facades\URL::temporarySignedRoute('username.update.form', now()->addDays(30), ['user' => $user->id]) }}" class="button">Update Username</a>
             </p>
 
             <div class="warning">
-                <p><strong>⚠️ Please note:</strong> Failure to update your username will result in the deletion of your MSL account.</p>
+                <p><strong>⚠️ Please note:</strong> Accounts with non-compliant usernames that are not updated by <strong>July 31, 2026</strong> will be permanently deleted.</p>
                 <p>If you have already updated your username and completed verification, kindly disregard this message.</p>
             </div>
 
