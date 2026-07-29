@@ -187,6 +187,7 @@ export default function EditProfileModal({ user, onClose, onSave }) {
                   headers: {
                     'Accept': 'application/json',
                   },
+                  credentials: 'same-origin',
                 });
                 const checkData = await checkResponse.json();
                 
@@ -211,6 +212,7 @@ export default function EditProfileModal({ user, onClose, onSave }) {
                     'X-CSRF-TOKEN': csrfToken,
                     'Accept': 'application/json',
                   },
+                  credentials: 'same-origin',
                   body: JSON.stringify({
                     email: formData.email, // Include email to pass validation
                     ml_id: extractedMlId,
@@ -468,6 +470,7 @@ export default function EditProfileModal({ user, onClose, onSave }) {
           'X-CSRF-TOKEN': csrfToken,
           'Accept': 'application/json',
         },
+        credentials: 'same-origin',
         body: JSON.stringify({
           email: email,
           user_id: user.id
@@ -575,6 +578,7 @@ export default function EditProfileModal({ user, onClose, onSave }) {
           'X-CSRF-TOKEN': csrfToken,
           'Accept': 'application/json',
         },
+        credentials: 'same-origin',
         body: JSON.stringify({
           email: formData.email,
           user_id: user.id
@@ -616,6 +620,7 @@ export default function EditProfileModal({ user, onClose, onSave }) {
           'X-CSRF-TOKEN': csrfToken,
           'Accept': 'application/json',
         },
+        credentials: 'same-origin',
         body: JSON.stringify({
           verification_code: verificationCode,
           user_id: user.id
@@ -714,6 +719,7 @@ export default function EditProfileModal({ user, onClose, onSave }) {
           'X-CSRF-TOKEN': csrfToken,
           'Accept': 'application/json',
         },
+        credentials: 'same-origin',
         body: JSON.stringify(formData),
       });
 
