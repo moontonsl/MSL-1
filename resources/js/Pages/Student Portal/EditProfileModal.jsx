@@ -461,36 +461,29 @@ export default function EditProfileModal({ user, onClose, onSave }) {
 
     setEmailValidation({ checking: true, isValid: true, message: 'Checking email...' });
 
-    try {
-      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-      const response = await fetch('/api/validate-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': csrfToken,
-          'Accept': 'application/json',
-        },
-        credentials: 'same-origin',
-        body: JSON.stringify({
-          email: email,
-          user_id: user.id
-        }),
-      });
-
-      const data = await response.json();
-      
-      setEmailValidation({
-        checking: false,
-        isValid: data.available,
-        message: data.message
-      });
-    } catch (err) {
-      setEmailValidation({
-        checking: false,
-        isValid: true, // Assume valid if check fails
-        message: 'Could not verify email'
-      });
-    }
+    // Using router.post for validation to ensure CSRF token is handled correctly
+    router.post('/api/validate-email', {
+      email: email,
+      user_id: user.id
+    }, {
+      preserveState: true,
+      preserveScroll: true,
+      onSuccess: (page) => {
+        const data = page.props.flash?.validation || {};
+        setEmailValidation({
+          checking: false,
+          isValid: data.available ?? true,
+          message: data.message ?? ''
+        });
+      },
+      onError: () => {
+        setEmailValidation({
+          checking: false,
+          isValid: true,
+          message: 'Could not verify email'
+        });
+      }
+    });
   }, [user.email, user.id]);
 
   // Debounce email validation
@@ -569,37 +562,22 @@ export default function EditProfileModal({ user, onClose, onSave }) {
     setIsSendingCode(true);
     setError(null);
 
-    try {
-      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-      const response = await fetch('/api/send-email-verification-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': csrfToken,
-          'Accept': 'application/json',
-        },
-        credentials: 'same-origin',
-        body: JSON.stringify({
-          email: formData.email,
-          user_id: user.id
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
+    router.post('/api/send-email-verification-code', {
+      email: formData.email,
+      user_id: user.id
+    }, {
+      onSuccess: () => {
         setEmailVerificationSent(true);
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
-      } else {
-        setError(data.message || 'Failed to send verification code');
+      },
+      onError: (errors) => {
+        setError(Object.values(errors)[0] || 'Failed to send verification code');
+      },
+      onFinish: () => {
+        setIsSendingCode(false);
       }
-    } catch (err) {
-      console.error('Send code error:', err);
-      setError('Network error. Please try again.');
-    } finally {
-      setIsSendingCode(false);
-    }
+    });
   };
 
   const handleVerifyCode = async () => {
@@ -611,56 +589,40 @@ export default function EditProfileModal({ user, onClose, onSave }) {
     setIsVerifyingCode(true);
     setError(null);
 
-    try {
-      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-      const response = await fetch('/api/verify-email-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': csrfToken,
-          'Accept': 'application/json',
-        },
-        credentials: 'same-origin',
-        body: JSON.stringify({
-          verification_code: verificationCode,
-          user_id: user.id
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Email verification successful - update the user data and clear verification state
+    router.post('/api/verify-email-code', {
+      verification_code: verificationCode,
+      user_id: user.id
+    }, {
+      onSuccess: (page) => {
         setEmailVerificationSent(false);
         setVerificationCode('');
         setEmailVerified(true);
         
-        // Update the form data with the new email
-        setFormData(prev => ({
-          ...prev,
-          email: data.user.email
-        }));
-        
-        // Update the user data in parent component
-        if (onSave) {
-          onSave(data.user);
+        const updatedUser = page.props.auth?.user;
+        if (updatedUser) {
+          setFormData(prev => ({
+            ...prev,
+            email: updatedUser.email
+          }));
+          
+          if (onSave) {
+            onSave(updatedUser);
+          }
         }
         
-        // Show success message briefly
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
-      } else {
-        setError(data.message || 'Invalid verification code');
+      },
+      onError: (errors) => {
+        setError(Object.values(errors)[0] || 'Invalid verification code');
+      },
+      onFinish: () => {
+        setIsVerifyingCode(false);
       }
-    } catch (err) {
-      console.error('Code verification error:', err);
-      setError('Network error. Please try again.');
-    } finally {
-      setIsVerifyingCode(false);
-    }
+    });
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     // Check if email validation is still in progress
     if (emailValidation.checking) {
       setError('Please wait for email validation to complete');
@@ -705,51 +667,25 @@ export default function EditProfileModal({ user, onClose, onSave }) {
     setIsLoading(true);
     setError(null);
 
-    try {
-      // Get CSRF token
-      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-      if (!csrfToken) {
-        throw new Error('CSRF token not found');
-      }
-
-      const response = await fetch('/profile', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': csrfToken,
-          'Accept': 'application/json',
-        },
-        credentials: 'same-origin',
-        body: JSON.stringify(formData),
-      });
-
-      // Check if response is ok
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Server error' }));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
+    router.patch('/profile', formData, {
+      onSuccess: (page) => {
         setSuccess(true);
-        // Call the onSave callback with updated user data
         if (onSave) {
-          onSave(data.user);
+          onSave(page.props.auth?.user || formData);
         }
-        // Close modal after a short delay to show success message
         setTimeout(() => {
           onClose();
         }, 1500);
-      } else {
-        setError(data.message || 'Failed to update profile');
-      }
-    } catch (err) {
-      console.error('Profile update error:', err);
-      setError(err.message || 'Network error. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+      },
+      onError: (errors) => {
+        setError(Object.values(errors)[0] || 'Failed to update profile');
+      },
+      onFinish: () => {
+        setIsLoading(false);
+      },
+      preserveState: true,
+      preserveScroll: true,
+    });
   };
 
   const handleDeleteAccount = () => {
@@ -761,7 +697,7 @@ export default function EditProfileModal({ user, onClose, onSave }) {
     setTimeout(() => passwordInputRef.current?.focus(), 100);
   };
 
-  const confirmDeleteAccount = async () => {
+  const confirmDeleteAccount = () => {
     if (!deletePassword.trim()) {
       setDeleteError('Password is required');
       passwordInputRef.current?.focus();
@@ -770,52 +706,28 @@ export default function EditProfileModal({ user, onClose, onSave }) {
 
     setDeleteError('');
 
-    // Get CSRF token
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    if (!csrfToken) {
-      setDeleteError('CSRF token not found. Please refresh the page and try again.');
-      return;
-    }
-
-    try {
-      const response = await fetch('/profile', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': csrfToken,
-          'X-Requested-With': 'XMLHttpRequest',
-          'Accept': 'application/json',
-        },
-        credentials: 'same-origin',
-        body: JSON.stringify({ password: deletePassword }),
-      });
-
-      const responseData = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(responseData.error || responseData.message || `Server error (${response.status})`);
+    router.delete('/profile', {
+      data: { password: deletePassword },
+      onSuccess: (page) => {
+        setShowDeleteModal(false);
+        setDeleteSuccess(true);
+        setDeleteMessage(page.props.flash?.message || 'Account deleted successfully');
+        setShowSuccessModal(true);
+        
+        setTimeout(() => {
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.href = '/login';
+        }, 2000);
+      },
+      onError: (errors) => {
+        const errorMsg = Object.values(errors)[0] || 'Failed to delete account. Please check your password and try again.';
+        setShowDeleteModal(false);
+        setDeleteSuccess(false);
+        setDeleteMessage(errorMsg);
+        setShowSuccessModal(true);
       }
-      
-      // Close delete modal and show success modal
-      setShowDeleteModal(false);
-      setDeleteSuccess(true);
-      setDeleteMessage(responseData.message || 'Account deleted successfully');
-      setShowSuccessModal(true);
-      
-      // Redirect after showing success message
-      setTimeout(() => {
-        localStorage.clear();
-        sessionStorage.clear();
-        window.location.href = '/login';
-      }, 2000);
-    } catch (error) {
-      console.error('Delete account error:', error);
-      // Show error in success modal
-      setShowDeleteModal(false);
-      setDeleteSuccess(false);
-      setDeleteMessage(error.message || 'Failed to delete account. Please check your password and try again.');
-      setShowSuccessModal(true);
-    }
+    });
   };
 
   const closeDeleteModal = () => {
