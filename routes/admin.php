@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
+use App\Http\Controllers\Admin\AdminAccountController;
+use App\Http\Controllers\Admin\AdminPermissionController;
 use Illuminate\Support\Facades\Route;
 
 // Admin Authentication Routes
@@ -32,6 +34,16 @@ Route::middleware(['auth:admin', 'admin'])->group(function () {
 
     // Dashboard
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+
+    // Super Admin Routes (Only admin@msl.com)
+    Route::middleware(['admin.permission:super_admin'])->group(function () {
+        Route::get('/admin/accounts', [AdminAccountController::class, 'index'])->name('admin.accounts.index');
+        Route::post('/admin/accounts', [AdminAccountController::class, 'store'])->name('admin.accounts.store');
+        Route::delete('/admin/accounts/{id}', [AdminAccountController::class, 'destroy'])->name('admin.accounts.destroy');
+
+        Route::get('/admin/permissions', [AdminPermissionController::class, 'index'])->name('admin.permissions.index');
+        Route::put('/admin/permissions/{id}', [AdminPermissionController::class, 'update'])->name('admin.permissions.update');
+    });
 
     // User Management
     Route::get('/admin/users/pending', [AdminController::class, 'pendingUsers'])->name('admin.users.pending');

@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { FaNewspaper, FaCalendar, FaUsers, FaTachometerAlt, FaSignOutAlt, FaBed, FaBook, FaConciergeBell, FaCog, FaTh, FaEllipsisH, FaImages, FaGamepad, FaUserGraduate, FaUserShield, FaCamera, FaTrophy, FaLink } from 'react-icons/fa';
+import { Toaster } from 'react-hot-toast';
+import { FaNewspaper, FaCalendar, FaUsers, FaTachometerAlt, FaSignOutAlt, FaBed, FaBook, FaConciergeBell, FaCog, FaTh, FaEllipsisH, FaImages, FaGamepad, FaUserGraduate, FaUserShield, FaCamera, FaTrophy, FaLink, FaUserPlus, FaLock } from 'react-icons/fa';
 
 export default function AdminLayout({ children }) {
     const { auth } = usePage().props;
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [dropdownOpen, setDropdownOpen] = useState(false);
 
-    const navigation = [
+    const isSuperAdmin = auth?.user?.email === 'admin@msl.com';
+    const userPermissions = Array.isArray(auth?.user?.permissions) ? auth.user.permissions : [];
+
+    const allNavigation = [
         { name: 'Dashboard', href: route('admin.dashboard'), routeName: 'admin.dashboard', icon: FaTh },
         { name: 'Account Management', href: route('admin.users.pending'), routeName: 'admin.users.pending', icon: FaUsers },
         { name: 'SL Management', href: route('admin.sl-management'), routeName: 'admin.sl-management', icon: FaUserGraduate },
@@ -23,12 +27,23 @@ export default function AdminLayout({ children }) {
         { name: 'Oppo Settings', href: route('admin.oppo-settings.index'), routeName: 'admin.oppo-settings.index', icon: FaCog },
         { name: 'Violation Reports', href: route('admin.violation-reports.index'), routeName: 'admin.violation-reports.index', icon: FaUserShield },
         { name: 'Settings', href: route('admin.settings'), routeName: 'admin.settings', icon: FaCog },
+        { name: 'Admin Accounts', href: route('admin.accounts.index'), routeName: 'admin.accounts.index', icon: FaUserPlus, superAdminOnly: true },
+        { name: 'Permissions', href: route('admin.permissions.index'), routeName: 'admin.permissions.index', icon: FaLock, superAdminOnly: true },
     ];
+
+    const navigation = allNavigation.filter((item) => {
+        if (isSuperAdmin) return true;
+        if (item.superAdminOnly) return false;
+        // Dashboard is accessible by default for all logged in admins
+        if (item.routeName === 'admin.dashboard') return true;
+        return userPermissions.includes(item.routeName);
+    });
 
     const activeNav = navigation.find(item => route().current(item.routeName));
 
     return (
         <div className="min-h-screen flex bg-[var(--background-color)] relative">
+            <Toaster position="top-right" />
             {/* Mobile sidebar overlay */}
             {sidebarOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 z-30 md:hidden" onClick={() => setSidebarOpen(false)}></div>

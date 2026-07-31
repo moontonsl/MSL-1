@@ -62,7 +62,7 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => \Illuminate\Support\Facades\Auth::guard('admin')->user() ?? $request->user(),
             ],
             'footer' => $footerData,
         ];

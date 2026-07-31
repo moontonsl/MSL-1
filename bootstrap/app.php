@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register admin middleware alias
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'admin.permission' => \App\Http\Middleware\CheckAdminPermission::class,
         ]);
         
         // Exclude Codashop and public team routes from CSRF protection
