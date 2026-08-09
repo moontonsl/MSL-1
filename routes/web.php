@@ -21,6 +21,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Artisan;
 use Inertia\Inertia;
 //jabu
 use Illuminate\Support\Facades\DB;
@@ -85,6 +86,49 @@ Route::get('/AS26PC', function () {
 
 Route::redirect('/AS26Emote', '/AS26PC', 301);
 Route::redirect('/BTS26JE', '/AS26PC', 301);
+
+// Public, password-protected manual trigger for expired renewal deactivation.
+Route::get('/manual/deactivate-expired-renewals', function () {
+    return view('admin/manual-deactivate-expired-renewals');
+})->name('manual.deactivate-expired-renewals');
+
+Route::post('/manual/deactivate-expired-renewals', function (Request $request) {
+    if (!hash_equals('adminsecret', (string) $request->input('password'))) {
+        return back()->withErrors(['password' => 'Incorrect password.']);
+    }
+
+    $eligibleQuery = User::where('state', 'Renew')
+        ->where('role', 'user')
+        ->where('status', 'active')
+        ->whereNotNull('renew_date')
+        ->where('renew_date', '<=', now()->subMonths(6));
+
+    $eligibleBeforeRun = (clone $eligibleQuery)->count();
+    $blockedSkipped = User::where('state', 'Blocked')
+        ->where('status', 'active')
+        ->whereNotNull('renew_date')
+        ->where('renew_date', '<=', now()->subMonths(6))
+        ->count();
+    $adminSkipped = User::whereIn('role', ['SL', 'Admin', 'Super Admin', 'Regional Admin'])
+        ->where('state', 'Renew')
+        ->where('status', 'active')
+        ->whereNotNull('renew_date')
+        ->where('renew_date', '<=', now()->subMonths(6))
+        ->count();
+
+    Artisan::call('users:deactivate-expired-renewals');
+    $output = Artisan::output();
+    preg_match('/Successfully deactivated (\d+) expired renew users\./', $output, $matches);
+
+    return back()->with('result', [
+        'deactivated' => (int) ($matches[1] ?? 0),
+        'eligible_before_run' => $eligibleBeforeRun,
+        'blocked_skipped' => $blockedSkipped,
+        'admin_skipped' => $adminSkipped,
+        'output' => trim($output),
+    ]);
+})->middleware('throttle:5,1')->name('manual.deactivate-expired-renewals.run');
+
 // AS Seapop DANCE CHALLENGE UGC (AS26Dance)
 Route::get('/AS26Dance', function () {
     return Inertia::render('ExternalEvents/AS26Dance/Pages/AS26Dance');
@@ -2603,5 +2647,4 @@ Route::get('/{canonical}', function ($canonical) {
     // If no event found, return 404
     abort(404, 'Event not found');
 })->where('canonical', '^[a-zA-Z0-9\-_]+$'); // Only match alphanumeric, hyphens, underscores
-
 

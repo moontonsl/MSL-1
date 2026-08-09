@@ -27,9 +27,12 @@ class DeactivateExpiredRenewals extends Command
      */
     public function handle()
     {
-        // Find users in 'Renew' state where the renew_date is older than 6 months
+        // Only deactivate regular student accounts in 'Renew' state whose renewal expired.
+        // Admin and blocked accounts are intentionally excluded.
         $expiredUsers = User::where('state', 'Renew')
+            ->where('role', 'user')
             ->where('status', 'active') // Only target currently active users
+            ->where('state', '!=', 'Blocked')
             ->whereNotNull('renew_date')
             ->where('renew_date', '<=', Carbon::now()->subMonths(6))
             ->get();
