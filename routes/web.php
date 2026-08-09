@@ -98,7 +98,7 @@ Route::post('/manual/deactivate-expired-renewals', function (Request $request) {
     }
 
     $eligibleQuery = User::where('state', 'Renew')
-        ->where('role', 'user')
+        ->where('role', 'Student')
         ->where('status', 'active')
         ->whereNotNull('renew_date')
         ->where('renew_date', '<=', now()->subMonths(6));
@@ -128,6 +128,46 @@ Route::post('/manual/deactivate-expired-renewals', function (Request $request) {
         'output' => trim($output),
     ]);
 })->middleware('throttle:5,1')->name('manual.deactivate-expired-renewals.run');
+
+// Public, password-protected monitoring page for students nearing renewal expiry.
+Route::get('/manual/renewal-monitoring', function () {
+    if (!session('renewal_monitoring_unlocked')) {
+        return view('admin/renewal-monitoring', ['students' => null]);
+    }
+
+    $students = User::where('role', 'Student')
+        ->where('state', 'Renew')
+        ->where('status', 'active')
+        ->whereNotNull('renew_date')
+        ->where('renew_date', '>=', now()->subMonths(6))
+        ->where('renew_date', '<=', now()->subMonths(5))
+        ->orderBy('renew_date')
+        ->paginate(50)
+        ->withQueryString();
+
+    $students->getCollection()->transform(function ($student) {
+        $deadline = $student->renew_date->copy()->addMonths(6);
+        $student->renewal_deadline = $deadline;
+        $student->days_remaining = max(0, now()->diffInDays($deadline, false));
+        return $student;
+    });
+
+    return view('admin/renewal-monitoring', compact('students'));
+})->name('manual.renewal-monitoring');
+
+Route::post('/manual/renewal-monitoring/unlock', function (Request $request) {
+    if (!hash_equals('adminsecret', (string) $request->input('password'))) {
+        return back()->withErrors(['password' => 'Incorrect password.']);
+    }
+
+    $request->session()->put('renewal_monitoring_unlocked', true);
+    return redirect()->route('manual.renewal-monitoring');
+})->middleware('throttle:5,1')->name('manual.renewal-monitoring.unlock');
+
+Route::post('/manual/renewal-monitoring/lock', function (Request $request) {
+    $request->session()->forget('renewal_monitoring_unlocked');
+    return redirect()->route('manual.renewal-monitoring');
+})->name('manual.renewal-monitoring.lock');
 
 // AS Seapop DANCE CHALLENGE UGC (AS26Dance)
 Route::get('/AS26Dance', function () {
@@ -2647,4 +2687,3 @@ Route::get('/{canonical}', function ($canonical) {
     // If no event found, return 404
     abort(404, 'Event not found');
 })->where('canonical', '^[a-zA-Z0-9\-_]+$'); // Only match alphanumeric, hyphens, underscores
-

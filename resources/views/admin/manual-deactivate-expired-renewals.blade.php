@@ -22,7 +22,7 @@
         <h1>Manual Renewal Deactivation</h1>
         <div class="warning">
             This will run <code>users:deactivate-expired-renewals</code>.<br>
-            It will deactivate only regular student accounts (<code>role = user</code>) in Renew status for more than 6 months.<br>
+            It will deactivate only Student accounts (<code>role = Student</code>) in Renew status for more than 6 months.<br>
             Blocked and administrator accounts will not be changed.
         </div>
 
