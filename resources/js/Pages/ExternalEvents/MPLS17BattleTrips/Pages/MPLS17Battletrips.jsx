@@ -1,13 +1,12 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import MLLogin from "@/Pages/MLLoginApi/MLLogin";
 import { Head } from "@inertiajs/react";
 import { Helmet } from "react-helmet";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutEventsBTS17.jsx";
-
 import BG from "../Assets/Images/BTMPLS17-BG.png";
 import Logo from "../Assets/Images/BTLogo.png";
 
-import { User, Mail, School, Hash, Globe, Phone, Calendar } from "lucide-react";
+import { User, Mail, School, Hash, Globe, Phone, Calendar, Check } from "lucide-react";
 
 /* ================= TOOLTIP ================= */
 
@@ -23,42 +22,62 @@ const Tooltip = ({ text }) => (
 
 /* ================= MAIN COMPONENT ================= */
 
-export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
-    const COMMUNITIES = ["Moonton Student Leader", "Community Heroes"];
-    const SCHEDULE_DATES = [
-        "May 27 (Day 1)",
-        "May 28 (Day 2)",
-        "May 29 (Day 3)",
-        "May 30 (LB Finals)",
-        "May 31 (Grand Finals)",
+export default function MPLS18Battletrips({ topics }) {
+    const COMMUNITY_OPTIONS = [
+        { value: "MSL", label: "MSL" },
+        { value: "CH", label: "CH" },
     ];
+    const REGION_OPTIONS = [
+        { value: "NCR", label: "NCR – National Capital Region" },
+        { value: "CAR", label: "CAR – Cordillera Administrative Region" },
+        { value: "Region I", label: "Region I – Ilocos Region" },
+        { value: "Region II", label: "Region II – Cagayan Valley" },
+        { value: "Region III", label: "Region III – Central Luzon" },
+        { value: "Region IV-A", label: "Region IV-A – CALABARZON" },
+        { value: "Region IV-B", label: "Region IV-B – MIMAROPA" },
+        { value: "Region V", label: "Region V – Bicol Region" },
+        { value: "Region VI", label: "Region VI – Western Visayas" },
+        { value: "Region VII", label: "Region VII – Central Visayas" },
+        { value: "Region VIII", label: "Region VIII – Eastern Visayas" },
+        { value: "Region IX", label: "Region IX – Zamboanga Peninsula" },
+        { value: "Region X", label: "Region X – Northern Mindanao" },
+        { value: "Region XI", label: "Region XI – Davao Region" },
+        { value: "Region XII", label: "Region XII – SOCCSKSARGEN" },
+        { value: "Region XIII", label: "Region XIII – Caraga" },
+        { value: "BARMM", label: "BARMM – Bangsamoro Autonomous Region in Muslim Mindanao" },
+    ];
+    const topicOptions = topics || [];
 
-        const initialForm = {
-            answer: "",
-            name: "",
-            birthdate: "",
-            region: "",
-            contact: "",
-            facebook: "",
-            email: "",
-            validId: "",
-            scheduleDate1: "",
-            scheduleDate2: "",
-            scheduleDate3: "",
-            community: "Moonton Student Leader",
-            smartSubscriber: "",
-            likeMPLPage: "",
-            likeMSLPage: "",
-            likeCHPage: "",
-            joinMPLGroup: "",
-        };
+    const initialForm = {
+        name: "",
+        birthdate: "",
+        regionDropdown: "",
+        region: "",
+        contact: "",
+        facebook: "",
+        email: "",
+        validId: "",
+        community: "MSL",
+        smartSubscriber: "",
+        academicTrack: "",
+        selectedTopic: "",
+        topicInterest: "",
+        agreedAccuracy: false,
+        agreedPrivacy: false,
+        likeMPLPage: "",
+        likeMSLPage: "",
+        likeCHPage: "",
+        joinMPLGroup: "",
+    };
 
         const [form, setForm] = useState(initialForm);
 
         const [errors, setErrors] = useState({});
-        const [agreed, setAgreed] = useState(false);
-        const [showTerms, setShowTerms] = useState(false);
+        const [showTerms, setShowTerms] = useState(null);
         const [showModal, setShowModal] = useState(false);
+        const [hoveredTopic, setHoveredTopic] = useState(null);
+        const [topicDropdownOpen, setTopicDropdownOpen] = useState(false);
+        const topicDropdownRef = useRef(null);
 
         // TEMP: bypass MLBB verification for frontend testing
         const [showVerifyModal, setShowVerifyModal] = useState(true);
@@ -93,13 +112,13 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
         const validate = () => {
             let e = {};
 
-            if (!form.answer.trim()) e.answer = "Please enter your answer.";
             if (!form.name.trim()) e.name = "Name is required.";
 
             if (!form.birthdate) e.birthdate = "Birthdate is required.";
             else if (!is16Plus(form.birthdate))
                 e.birthdate = "You must be at least 16 years old.";
 
+            if (!form.regionDropdown) e.regionDropdown = "Please select your region.";
             if (!form.region.trim()) e.region = "Region / School is required.";
 
             const phoneRegex = /^09\d{9}$/;
@@ -119,14 +138,15 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
                 e.email = "Please enter a valid email address.";
             
             if (!form.validId.trim()) e.validId = "Google Drive link required.";
-            if (!form.scheduleDate1) e.scheduleDate1 = "Please select your first schedule choice.";
-            if (!form.scheduleDate2) e.scheduleDate2 = "Please select your second schedule choice.";
-            if (!form.scheduleDate3) e.scheduleDate3 = "Please select your third schedule choice.";
             if (!mlbbId) e.mlbbId = "MLBB UID verification required.";
             if (!mlbbServer) e.mlbbServer = "MLBB Server verification required.";
             if (!form.community) e.community = "Please select a community.";
-            if (!agreed) e.consent = "Please agree to the Data Privacy Consent.";
             if (!form.smartSubscriber) e.smartSubscriber = "Please select Yes or No.";
+            if (!form.academicTrack.trim()) e.academicTrack = "Please enter your academic track or degree program.";
+            if (!form.selectedTopic) e.selectedTopic = "Please select a topic of interest.";
+            if (!form.topicInterest.trim()) e.topicInterest = "Please explain why this topic interests you.";
+            if (!form.agreedAccuracy) e.agreedAccuracy = "Please certify that your information is accurate and truthful.";
+            if (!form.agreedPrivacy) e.agreedPrivacy = "Please acknowledge data privacy consent.";
 
             if (form.likeMPLPage !== "Yes")
                 e.likeMPLPage = "Please follow the page before selecting Yes.";
@@ -148,9 +168,9 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
         /* ================= HANDLERS ================= */
 
         const handleChange = (e) => {
-            const { name, value } = e.target;
+            const { name, value, type, checked } = e.target;
 
-            let v = value;
+            let v = type === 'checkbox' ? checked : value;
 
             if (name === "contact") {
                 v = value.replace(/\D/g, "").slice(0, 11);
@@ -198,14 +218,6 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
             setForm((prev) => {
                 const next = { ...prev, [name]: v };
 
-                if (name === "scheduleDate1") {
-                    if (next.scheduleDate2 === v) next.scheduleDate2 = "";
-                    if (next.scheduleDate3 === v || !next.scheduleDate2) next.scheduleDate3 = "";
-                }
-
-                if (name === "scheduleDate2") {
-                    if (next.scheduleDate3 === v) next.scheduleDate3 = "";
-                }
 
                 return next;
             });
@@ -220,30 +232,30 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
 
                 setIsSubmitting(true);
 
-                const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/175DKq9yO06Z2Pw5qeLI9-6wjbyg8npvavssjWhg8H6Y/formResponse";
+                const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/1OKWoaaGNcKeq-HxiV5UM8e6ilhDo84dkp4LlRThdg7s/formResponse";
                 
                 const formBody = new FormData();
-                formBody.append("entry.1345442810", regionTitle || "ALL REGIONS");
-                formBody.append("entry.1954274932", `Q: ${miniGameQuestion || "Which MPL PH Team has won the most championships?"} | A: ${form.answer}`);
-                formBody.append("entry.913757275", form.name);
-                formBody.append("entry.267578799", form.birthdate);
-                formBody.append("entry.381276010", form.region);
-                formBody.append("entry.1873824738", form.contact);
-                formBody.append("entry.1871396629", form.facebook);
-                formBody.append("entry.96358973", form.email);
-                formBody.append("entry.1332239123", mlbbId);
-                formBody.append("entry.1258292429", mlbbServer);
-                formBody.append("entry.611813938", form.validId);
-                formBody.append("entry.582747042", form.scheduleDate1);
-                formBody.append("entry.911343438", form.scheduleDate2);
-                formBody.append("entry.1584841062", form.scheduleDate3);
-                formBody.append("entry.617516356", form.community);
-                formBody.append("entry.1885783994", form.likeMPLPage);
-                formBody.append("entry.165580188", form.likeMSLPage);
-                formBody.append("entry.22777953", form.likeCHPage);
-                formBody.append("entry.890072815", form.joinMPLGroup);
-                formBody.append("entry.2111417879", form.smartSubscriber);
-                formBody.append("entry.71135010", agreed ? "I agree to the Data Privacy Consent" : "No");
+                formBody.append("entry.729291285", form.name);
+                formBody.append("entry.402538445", form.birthdate);
+                formBody.append("entry.1939203588", form.regionDropdown);
+                formBody.append("entry.262902066", form.region);
+                formBody.append("entry.1495590749", form.contact);
+                formBody.append("entry.752780621", form.facebook);
+                formBody.append("entry.1827884672", form.email);
+                formBody.append("entry.620958207", mlbbId);
+                formBody.append("entry.847940885", mlbbServer);
+                formBody.append("entry.223095383", form.validId);
+                formBody.append("entry.73129402", form.community);
+                formBody.append("entry.707751425", form.likeMPLPage);
+                formBody.append("entry.1668597456", form.likeMSLPage);
+                formBody.append("entry.2025817146", form.likeCHPage);
+                formBody.append("entry.1715367664", form.joinMPLGroup);
+                formBody.append("entry.1573792121", form.smartSubscriber);
+                formBody.append("entry.1133001918", form.academicTrack);
+                formBody.append("entry.136116163", form.selectedTopic);
+                formBody.append("entry.1783674452", form.topicInterest);
+                formBody.append("entry.1422588371", form.agreedAccuracy ? "Yes" : "No");
+                formBody.append("entry.1808873271", form.agreedPrivacy ? "Yes" : "No");
 
                 try {
                     await fetch(GOOGLE_FORM_ACTION_URL, {
@@ -261,40 +273,7 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
                 }
             };
 
-        const handleSendCode = () => {
-            if (cooldown > 0) return;
-
-            // call backend API here later
-            console.log("Send verification code");
-
-            setCooldown(60);
-
-            const timer = setInterval(() => {
-                setCooldown((prev) => {
-                if (prev <= 1) {
-                    clearInterval(timer);
-                    return 0;
-                }
-                return prev - 1;
-                });
-            }, 1000);
-        };
-
-        const handleVerifyCode = async () => {
-            // backend verification will happen here
-            console.log("Verifying code:", verificationCode);
-
-            // simulate success
-            setIgn("SampleIGN");
-                setVerified(true);
-
-            setErrors((prev) => ({
-            ...prev,
-            ign: ""
-            }))
-        };
-
-        const handleLoginInfo = (info) => {
+            const handleLoginInfo = (info) => {
             console.log("MLBB Login Info:", info);
             
             // Moonton API usually returns { code: 0, data: { uid, server_id, ... } }
@@ -337,53 +316,54 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
 
     return (
         <>
-            <Head title="MPL17 Battle Trips" />
+            <Head title="MPLS18 Battle Trips" />
             <Helmet>
-                <title>MPLS17 Battle Trips</title>
+                <title>MPLS18 Battle Trips</title>
             </Helmet>
 
             <AuthenticatedLayout>
                 <div className="relative z-50 min-h-screen flex flex-col items-center justify-center text-white p-4 pt-5 sm:pt-5 font-['Montserrat'] bg-cover bg-top bg-no-repeat" style={{ backgroundImage: `url(${BG})`, backgroundAttachment: "fixed" }}>
-                <img src={Logo} alt="Battle Trips Logo" className="w-64 sm:w-80 mb-4" />
+                    <img src={Logo} alt="Battle Trips Logo" className="w-64 sm:w-80 mb-4" />
 
-                <div className="text-black text-center max-w-2xl mt-4 mb-6 text-[11px] md:text-lg font-medium leading-tight md:leading-normal [text-shadow:_0_0_6px_#fff,_0_0_12px_rgba(255,255,255,.85)]">
-
-                    The MPL Battle Trips is an 8-week event where fans of MLBB from
-                    around the Philippines will be given a chance to visit the MPL PH
-                    venue and enjoy the MLBB Events.
-
-                </div>
-
-                <div className="text-black text-center mb-4 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-widest [text-shadow:_0_0_6px_#fff,_0_0_12px_rgba(255,255,255,.85)] uppercase">
-                    {regionTitle || "ALL REGIONS"}
-                </div>
-
-                {/* FORM CARD */}
-                <div className="p-4 sm:p-6 md:p-8 w-full max-w-3xl rounded-xl border border-solid border-[#e59639] shadow-xl bg-white text-black">
-                    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-
-                    {/* QUESTION */}
-                    <div className="text-center mb-4">
-                        <h2 className="text-base sm:text-lg md:text-xl font-bold mb-2 whitespace-nowrap">
-                        MPL Battle Trips Mini Game
-                        </h2>
-
-                        <div className="border border-solid border-[#e59639] p-4 rounded-lg bg-gray-50">
-                        {miniGameQuestion || "Which MPL PH Team has won the most championships?"}
-                        </div>
+                    <div className="text-black text-center max-w-2xl mt-4 mb-6 text-[12px] sm:text-base md:text-lg font-medium leading-tight [text-shadow:_0_0_6px_#fff,_0_0_12px_rgba(255,255,255,.85)]">
+                        The MPL Battle Trips is an 8-week event where fans of MLBB from the Philippines will be given a chance to visit the MPL PH venue and enjoy the MLBB events.
                     </div>
 
-                    {/* Answer the Question */}
-                    <FormInput icon={<Hash />} label="Answer the Question" name="answer" placeholder="Type your answer here" value={form.answer} onChange={handleChange} error={errors.answer} />
-                    
+                    <div className="text-black text-center mb-4 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-widest [text-shadow:_0_0_6px_#fff,_0_0_12px_rgba(255,255,255,.85)] uppercase">
+                        Submission Form
+                    </div>
+
+                    {/* FORM CARD */}
+                    <div className="p-4 sm:p-6 md:p-8 w-full max-w-3xl rounded-xl border border-solid border-[#e59639] shadow-xl bg-white text-black">
+                    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+
                     {/* Full Name */}
                     <FormInput icon={<User />} label="Full Name" name="name" placeholder="Enter your full name" value={form.name} onChange={handleChange} error={errors.name} />
 
                     {/* Birthdate */}
                     <FormInput icon={<Calendar />} type="date" label="Birthdate" name="birthdate" value={form.birthdate} onChange={handleChange} error={errors.birthdate} />
 
-                    {/* Region / Area / School */}
-                    <FormInput icon={<School />} label="Region / Area / School" name="region" placeholder="Enter your region or school" value={form.region} onChange={handleChange} error={errors.region} />
+                    {/* Region */}
+                    <div className="space-y-2">
+                        <label className="font-semibold block">Region</label>
+                        <select
+                            name="regionDropdown"
+                            value={form.regionDropdown}
+                            onChange={handleChange}
+                            className="w-full border border-[#e59639] px-4 py-3 rounded-md bg-white text-black"
+                        >
+                            <option disabled value="">Select a region</option>
+                            {REGION_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+                        {errors.regionDropdown && <p className="text-red-500 text-sm mt-2">{errors.regionDropdown}</p>}
+                    </div>
+
+                    {/* Area / School */}
+                    <FormInput icon={<School />} label="Area / School" name="region" placeholder="Enter your region, area, or school" value={form.region} onChange={handleChange} error={errors.region} />
 
                     {/* Contact Number */}
                     <FormInput icon={<Phone />} label="Contact Number" name="contact" placeholder="09XXXXXXXXX" inputMode="numeric" pattern="[0-9]*" value={form.contact} onChange={handleChange} error={errors.contact} />
@@ -394,47 +374,31 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
                     {/* Valid Email Address */}
                     <FormInput icon={<Mail />} label="Valid Email Address" name="email" placeholder="example@email.com" value={form.email} onChange={handleChange} tooltip="Use an active email address" error={errors.email} />
 
+                    {/* Valid ID */}
+                    <FormInput icon={<Globe />} label="Valid ID" name="validId" placeholder="Paste your Google Drive link to a valid ID" value={form.validId} onChange={handleChange} tooltip="Provide a shareable Google Drive link to your valid ID" error={errors.validId} />
+
                     {/* MLBB ACCOUNT (AUTO VERIFIED) */}
                     <FormInput verified={verified} icon={<Hash />} label="MLBB UID" name="mlbbId" value={mlbbId} disabled={true} error={errors.mlbbId} />
 
                     <FormInput verified={verified} icon={<Globe />} label="MLBB Server" name="mlbbServer" value={mlbbServer} disabled={true} error={errors.mlbbServer} />
-                
-                    {/* VALID ID */}
-                    <FormInput icon={<Globe />} label="Valid ID (Google Drive Link)" name="validId" placeholder="Paste Google Drive link here" value={form.validId} onChange={handleChange} tooltip="Set sharing to Anyone with the link" error={errors.validId} />
 
-                    {/* SCHEDULE DATE */}
-                    <div className="grid gap-4">
-                        {[
-                            { name: 'scheduleDate1', label: 'Select Schedule Date (First Choice)', disabled: false, excluded: [] },
-                            { name: 'scheduleDate2', label: 'Select Schedule Date (Second Choice)', disabled: !form.scheduleDate1, excluded: [form.scheduleDate1] },
-                            { name: 'scheduleDate3', label: 'Select Schedule Date (Third Choice)', disabled: !form.scheduleDate2, excluded: [form.scheduleDate1, form.scheduleDate2] },
-                        ].map((field) => (
-                            <div key={field.name}>
-                                <label className="font-semibold mb-1 block">
-                                    {field.label}
-                                </label>
-
-                                <select
-                                    name={field.name}
-                                    value={form[field.name]}
-                                    onChange={handleChange}
-                                    disabled={field.disabled}
-                                    className={`w-full border border-[#e59639] px-4 py-3 rounded-md text-black ${field.disabled ? "bg-gray-100 cursor-not-allowed opacity-70" : "bg-white"}`}
-                                >
-                                    <option disabled value="">{field.label}</option>
-                                    {SCHEDULE_DATES.filter((date) => !field.excluded.includes(date)).map((date) => (
-                                        <option key={date} value={date}>{date}</option>
-                                    ))}
-                                </select>
-                                {errors[field.name] && (
-                                    <p className="text-red-500 text-sm mt-2">{errors[field.name]}</p>
-                                )}
-                            </div>
-                        ))}
+                    <div className="border border-solid border-[#e59639] p-4 rounded-lg bg-gray-50">
+                        <label className="font-semibold block mb-2">Community</label>
+                        <select
+                            name="community"
+                            value={form.community}
+                            onChange={handleChange}
+                            className="w-full border border-[#e59639] px-4 py-3 rounded-md bg-white text-black"
+                        >
+                            <option disabled value="">Select a community</option>
+                            {COMMUNITY_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+                        {errors.community && <p className="text-red-500 text-sm mt-2">{errors.community}</p>}
                     </div>
-
-                    {/* Hidden input for pre-fixed community value */}
-                    <input type="hidden" name="community" value={form.community} />
 
                     {/* MPL SOCIAL REQUIREMENTS */}
                     <YesNoQuestion label="Have you already followed the MPL Page?" name="likeMPLPage" value={form.likeMPLPage} onChange={handleChange} error={errors.likeMPLPage} />
@@ -469,33 +433,117 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
                         )}
                     </div>
 
+                    {/* ACADEMIC TRACK */}
+                    <FormInput icon={<School />} label="Current Academic Track / Degree Program (e.g., BS Information Technology)" name="academicTrack" placeholder="Enter your academic track or degree program" value={form.academicTrack} onChange={handleChange} error={errors.academicTrack} />
+
+                    {/* SELECTED TOPIC OF INTEREST */}
+                    <div className="space-y-2 relative" ref={topicDropdownRef}>
+                        <label className="font-semibold block">Selected Topic of Interest</label>
+                        <button
+                            type="button"
+                            onClick={() => setTopicDropdownOpen((prev) => !prev)}
+                            className="w-full border border-[#e59639] px-4 py-3 rounded-md bg-white text-black flex items-center justify-between"
+                        >
+                            <span>{form.selectedTopic ? topicOptions.find((topic) => topic.name === form.selectedTopic)?.name : 'Choose your topic of interest'}</span>
+                            <span className="text-gray-500">▾</span>
+                        </button>
+                        {topicDropdownOpen && (
+                            <div className="absolute left-0 right-0 mt-1 max-h-60 overflow-auto rounded-xl border border-gray-200 bg-white shadow-xl z-10">
+                                {topicOptions.map((topic) => {
+                                    const disabled = topic.status !== 'OPEN';
+                                    return (
+                                        <button
+                                            key={topic.name}
+                                            type="button"
+                                            disabled={disabled}
+                                            onClick={() => {
+                                                if (disabled) return;
+                                                setForm((prev) => ({ ...prev, selectedTopic: topic.name }));
+                                                setErrors((prev) => ({ ...prev, selectedTopic: '' }));
+                                                setTopicDropdownOpen(false);
+                                            }}
+                                            className={`w-full text-left px-4 py-3 flex items-center gap-2 ${disabled ? 'cursor-not-allowed bg-gray-50 text-gray-400' : 'cursor-pointer hover:bg-gray-100 text-black'}`}
+                                        >
+                                            <p
+                                                className={
+                                                    topic.status === 'OPEN' ? 'text-green-600 font-semibold' :
+                                                    topic.status === 'FULL' ? 'text-red-600 font-semibold' :
+                                                    'text-gray-500 font-semibold'
+                                                }
+                                            >
+                                                {topic.status}
+                                            </p>
+                                            <p>{topic.name}</p>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+                        {errors.selectedTopic && <p className="text-red-500 text-sm mt-2">{errors.selectedTopic}</p>}
+                        <p className="text-gray-500 text-sm">
+                            {form.selectedTopic
+                                ? topicOptions.find((topic) => topic.name === form.selectedTopic)?.description
+                                : 'Select a topic to see its description.'}
+                        </p>
+                    </div>
+
+                    {/* TOPIC INTEREST */}
+                    <div>
+                        <label className="font-semibold mb-1 block">Why does this topic interest you? (Paragraph)</label>
+                        <textarea
+                            name="topicInterest"
+                            value={form.topicInterest}
+                            onChange={handleChange}
+                            rows={5}
+                            placeholder="Tell us why this topic interests you"
+                            className="w-full border border-[#e59639] rounded-xl px-4 py-3 bg-white text-black outline-none resize-vertical"
+                        />
+                        {errors.topicInterest && <p className="text-red-500 text-sm mt-2">{errors.topicInterest}</p>}
+                    </div>
+
 {/* DATA PRIVACY */}
-<div className="border p-4 rounded-lg bg-gray-200">
-    <label className="flex items-start gap-3 cursor-pointer">
+<div className="border p-4 rounded-lg bg-gray-200 space-y-4">
+    <div className="flex items-start gap-3">
         <input
             type="checkbox"
-            checked={agreed}
-            onChange={() => {
-                setShowTerms(true);
-                setErrors((prev) => ({ ...prev, consent: "" }));
-            }}
-            className="mt-1 w-4 h-4 appearance-none border-2 border-black rounded bg-white checked:bg-[#e59639] checked:border-[#e59639] checked:after:content-['✓'] checked:after:text-white checked:after:text-[10px] checked:after:font-bold checked:after:flex checked:after:justify-center checked:after:items-center focus:outline-none focus:ring-2 focus:ring-[#e59639]/50 transition-all"
+            name="agreedAccuracy"
+            checked={form.agreedAccuracy}
+            onChange={handleChange}
+            className="mt-1 w-4 h-4 rounded border-2 border-black bg-white checked:bg-[#e59639] checked:border-[#e59639] focus:outline-none focus:ring-2 focus:ring-[#e59639]/50"
         />
-        <span>
-            By clicking this box, I agree to the Data Privacy Consent.
-            <button
+        <div className="flex-1 text-sm">
+            I certify that the information I have provided is accurate and truthful, and I acknowledge that my selection is based on my stated field of interest, the topic I have described, and slot availability.
+        </div>
+        <button
             type="button"
-            className="underline ml-1"
-            onClick={() => setShowTerms(true)}
-            >
-            View Terms
-            </button>
-        </span>
-    </label>
+            className="text-[#e59639] underline text-sm"
+            onClick={() => setShowTerms('accuracy')}
+        >
+            View details
+        </button>
+    </div>
+    {errors.agreedAccuracy && <p className="text-red-500 text-sm">{errors.agreedAccuracy}</p>}
 
-    {errors.consent && (
-    <p className="text-red-500 text-sm">{errors.consent}</p>
-    )}
+    <div className="flex items-start gap-3">
+        <input
+            type="checkbox"
+            name="agreedPrivacy"
+            checked={form.agreedPrivacy}
+            onChange={handleChange}
+            className="mt-1 w-4 h-4 rounded border-2 border-black bg-white checked:bg-[#e59639] checked:border-[#e59639] focus:outline-none focus:ring-2 focus:ring-[#e59639]/50"
+        />
+        <div className="flex-1 text-sm">
+            By ticking this box, I hereby grant my free, prior, and informed consent to MSL, CH, and MPL Philippines to collect, store, and process my personal data solely for the purpose of registration, coordination, and documentation of this event.
+        </div>
+        <button
+            type="button"
+            className="text-[#e59639] underline text-sm"
+            onClick={() => setShowTerms('privacy')}
+        >
+            View details
+        </button>
+    </div>
+    {errors.agreedPrivacy && <p className="text-red-500 text-sm">{errors.agreedPrivacy}</p>}
 </div>
 
                      {/* SUBMIT */}
@@ -507,10 +555,10 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
                         {isSubmitting && (
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                         )}
-                        {isSubmitting ? "Submitting..." : "Submit Answer"}
+                        {isSubmitting ? "Submitting..." : "Submit Entry"}
                     </button>
-            </form>
-        </div>
+                    </form>
+                </div>
                 </div>
             </AuthenticatedLayout>
 
@@ -519,42 +567,43 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
             <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[9999]">
                 <div className="bg-white p-6 rounded-2xl max-w-lg w-full text-black shadow-xl border-2" style={{ borderColor: "#e59639" }}>
                     <h2 className="text-lg font-bold mb-3">
-                        Data Privacy Consent
+                        {showTerms === 'accuracy' ? 'Accuracy Certification Details' : 'Data Privacy Consent Details'}
                     </h2>
 
                     <div className="text-sm text-gray-700 space-y-3 max-h-[250px] overflow-y-auto pr-2">
-                        <p>
-                            By clicking this box, I hereby grant my free, prior, and informed consent
-                            to MSL, CH, and MPL Philippines to collect, store, and process my personal data.
-                        </p>
-                        <p>
-                            The information provided will only be used for event registration,
-                            participant verification, and coordination related to this activity.
-                        </p>
-                        <p>
-                            I understand that my personal data will be handled in accordance with
-                            the Data Privacy Act of 2012 and the organization’s privacy policy.
-                        </p>
+                        {showTerms === 'accuracy' ? (
+                            <>
+                                <p>
+                                    I certify that the information I have provided is accurate and truthful.
+                                </p>
+                                <p>
+                                    I acknowledge that my selection is based on my stated field of interest, the topic I have described, and slot availability.
+                                </p>
+                                <p>
+                                    This information will be used for verification and selection purposes related to this event.
+                                </p>
+                            </>
+                        ) : (
+                            <>
+                                <p>
+                                    By ticking this box, I hereby grant my free, prior, and informed consent to MSL, CH, and MPL Philippines to collect, store, and process my personal data.
+                                </p>
+                                <p>
+                                    My personal data will be used solely for registration, coordination, and documentation of this event.
+                                </p>
+                                <p>
+                                    I understand this will be handled in accordance with the Data Privacy Act of 2012 and the company’s Privacy Policy.
+                                </p>
+                            </>
+                        )}
                     </div>
 
                     <div className="flex justify-end gap-3 mt-6">
                         <button
-
-                            onClick={() => setShowTerms(false)}
+                            onClick={() => setShowTerms(null)}
                             className="px-4 py-2 rounded-lg border border-gray-300"
                         >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={() => {
-                            setAgreed(true);
-                            setShowTerms(false);
-                            setErrors((prev) => ({ ...prev, consent: "" }));
-                            }}
-                            className="px-6 py-2 rounded-lg font-bold text-white"
-                            style={{ backgroundColor: "#e59639" }}
-                        >
-                            I Agree
+                            Close
                         </button>
                     </div>
                 </div>
@@ -571,12 +620,11 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
                 <div className="text-5xl mb-3">🎉</div>
 
                 <h2 className="text-xl font-bold mb-2">
-                Submission Successful!
+                Submission Received!
                 </h2>
 
                 <p className="text-gray-600 text-sm mb-6">
-                Thank you for joining the MPL Battle Trips Mini Game.  
-                Our team will verify your details soon.
+                Thank you for your entry. If chosen, we will send a confirmation of your participation to your registered email address. Additionally, our team may reach out to you via your provided Facebook profile or contact number for further coordination.
                 </p>
 
                 <button
@@ -585,7 +633,6 @@ export default function MPL17Battletrips({ regionTitle, miniGameQuestion }) {
 
                     // reset form
                     setForm(initialForm);
-                    setAgreed(false);
 
                     // reset MLBB verification
                     setMlbbId("");
