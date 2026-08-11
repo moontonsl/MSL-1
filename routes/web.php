@@ -1508,10 +1508,12 @@ Route::get('/GM26/Network', function () {
 })->name('GM26Network');
 
 
-//MPLS17 BATTLE TRIPS PAGE ROUTES
-Route::get('/MPLS17Battletrips', [\App\Http\Controllers\MPLS17BattletripsController::class, 'index'])->name('MPLS17Battletrips');
-Route::get('/MPLS17Battletrips/update', [\App\Http\Controllers\MPLS17BattletripsController::class, 'update'])->name('MPLS17Battletrips.update');
-Route::post('/MPLS17Battletrips/update', [\App\Http\Controllers\MPLS17BattletripsController::class, 'store'])->name('MPLS17Battletrips.store');
+//MPLS18 BATTLE TRIPS PAGE ROUTES
+Route::redirect('/MPLS17Battletrips', '/MPLS18Battletrips');
+Route::redirect('/MPLS17Battletrips/update', '/MPLS18Battletrips/update');
+Route::get('/MPLS18Battletrips', [\App\Http\Controllers\MPLS17BattletripsController::class, 'index'])->name('MPLS18Battletrips');
+Route::get('/MPLS18Battletrips/update', [\App\Http\Controllers\MPLS17BattletripsController::class, 'update'])->name('MPLS18Battletrips.update');
+Route::post('/MPLS18Battletrips/update', [\App\Http\Controllers\MPLS17BattletripsController::class, 'store'])->name('MPLS18Battletrips.store');
 
 //GetGetAw PAGE ROUTES
 Route::get('/GetGetAw', function () {
