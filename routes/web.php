@@ -2187,8 +2187,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         }
 
         $targetUser->update([
-            'state' => 'Verified',
-            'status' => 'active', // Reactivate the account when verified
+            'state' => 'New',
+            'status' => 'active', // Activate the account after requirements are verified
             'verified_by' => $user->id,
             'verified_date' => now()
         ]);
