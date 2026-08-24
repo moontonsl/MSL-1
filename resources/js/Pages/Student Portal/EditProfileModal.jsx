@@ -18,6 +18,7 @@ export default function EditProfileModal({ user, onClose, onSave }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [profileUpdateResult, setProfileUpdateResult] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
@@ -204,57 +205,49 @@ export default function EditProfileModal({ user, onClose, onSave }) {
               // Auto-save MLBB account changes to backend
               setMlLoginMessage('Saving MLBB account changes...');
               try {
-                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-                const response = await fetch('/profile', {
-                  method: 'PATCH',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json',
-                  },
-                  credentials: 'same-origin',
-                  body: JSON.stringify({
-                    email: formData.email, // Include email to pass validation
-                    ml_id: extractedMlId,
-                    ml_server: extractedServer,
-                    ml_ign: ignFromInfo,
-                  }),
-                });
-
-                const data = await response.json();
-                
-                if (data.success) {
-                setMlLoginMessage('✅ MLBB account updated successfully!');
-                setSuccess(true);
-                
-                // Update parent component if onSave callback exists
-                if (onSave && data.user) {
-                  onSave(data.user);
-                }
-                
-                // Update form data with the new values
-                setFormData(prev => ({
-                  ...prev,
+                const payload = {
+                  email: formData.email,
                   ml_id: extractedMlId,
                   ml_server: extractedServer,
                   ml_ign: ignFromInfo,
-                }));
-                
-                // Reload after a delay to get fresh user data
-                setTimeout(() => {
-                  router.reload({ only: ['user'] });
-                  setTimeout(() => setSuccess(false), 2000);
-                }, 1000);
-              } else {
-                setMlLoginMessage('Failed to save changes: ' + (data.message || 'Unknown error'));
-                setError(data.message || 'Failed to save MLBB account changes');
+                };
+
+                router.patch(route('profile.update'), payload, {
+                  preserveState: true,
+                  preserveScroll: true,
+                  onSuccess: (page) => {
+                    const updatedUser = page.props.auth?.user || payload;
+                    setMlLoginMessage('✅ MLBB account updated successfully!');
+                    setSuccess(true);
+
+                    if (onSave && updatedUser) {
+                      onSave(updatedUser);
+                    }
+
+                    setFormData(prev => ({
+                      ...prev,
+                      ml_id: extractedMlId,
+                      ml_server: extractedServer,
+                      ml_ign: ignFromInfo,
+                    }));
+
+                    setTimeout(() => {
+                      router.reload({ only: ['user'], preserveScroll: true, preserveState: true });
+                      setTimeout(() => setSuccess(false), 2000);
+                    }, 1000);
+                  },
+                  onError: (errors) => {
+                    const firstError = Object.values(errors)[0] || 'Failed to save MLBB account changes';
+                    setMlLoginMessage('Failed to save changes: ' + firstError);
+                    setError(firstError);
+                  },
+                });
+              } catch (saveErr) {
+                console.error('Save error:', saveErr);
+                setMlLoginMessage('Failed to save changes. Please try saving manually.');
+                setError('Failed to save MLBB account changes');
               }
-            } catch (saveErr) {
-              console.error('Save error:', saveErr);
-              setMlLoginMessage('Failed to save changes. Please try saving manually.');
-              setError('Failed to save MLBB account changes');
-            }
-          };
+            };
           
           checkMlIdBeforeSave();
           } catch (e) {
@@ -452,7 +445,6 @@ export default function EditProfileModal({ user, onClose, onSave }) {
       return;
     }
 
-    // Basic email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setEmailValidation({ checking: false, isValid: false, message: 'Invalid email format' });
@@ -461,10 +453,9 @@ export default function EditProfileModal({ user, onClose, onSave }) {
 
     setEmailValidation({ checking: true, isValid: true, message: 'Checking email...' });
 
-    // Using router.post for validation to ensure CSRF token is handled correctly
-    router.post('/api/validate-email', {
-      email: email,
-      user_id: user.id
+    router.post(route('profile.email.validate'), {
+      email,
+      user_id: user.id,
     }, {
       preserveState: true,
       preserveScroll: true,
@@ -562,17 +553,26 @@ export default function EditProfileModal({ user, onClose, onSave }) {
     setIsSendingCode(true);
     setError(null);
 
-    router.post('/api/send-email-verification-code', {
+    router.post(route('profile.email.send-code'), {
       email: formData.email,
-      user_id: user.id
+      user_id: user.id,
     }, {
-      onSuccess: () => {
-        setEmailVerificationSent(true);
-        setSuccess(true);
-        setTimeout(() => setSuccess(false), 3000);
+      preserveState: true,
+      preserveScroll: true,
+      onSuccess: (page) => {
+        const data = page.props.flash?.emailVerificationResult || {};
+        if (data.success) {
+          setEmailVerificationSent(true);
+          setSuccess(true);
+          setTimeout(() => setSuccess(false), 3000);
+          return;
+        }
+
+        setError(data.message || 'Failed to send verification code');
       },
       onError: (errors) => {
-        setError(Object.values(errors)[0] || 'Failed to send verification code');
+        const firstError = Object.values(errors)[0] || 'Failed to send verification code';
+        setError(firstError);
       },
       onFinish: () => {
         setIsSendingCode(false);
@@ -589,32 +589,41 @@ export default function EditProfileModal({ user, onClose, onSave }) {
     setIsVerifyingCode(true);
     setError(null);
 
-    router.post('/api/verify-email-code', {
+    router.post(route('profile.email.verify-code'), {
       verification_code: verificationCode,
-      user_id: user.id
+      user_id: user.id,
     }, {
+      preserveState: true,
+      preserveScroll: true,
       onSuccess: (page) => {
+        const data = page.props.flash?.emailVerificationResult || {};
+        if (!data.success) {
+          setError(data.message || 'Invalid verification code');
+          return;
+        }
+
         setEmailVerificationSent(false);
         setVerificationCode('');
         setEmailVerified(true);
-        
-        const updatedUser = page.props.auth?.user;
+
+        const updatedUser = data.user;
         if (updatedUser) {
           setFormData(prev => ({
             ...prev,
             email: updatedUser.email
           }));
-          
+
           if (onSave) {
             onSave(updatedUser);
           }
         }
-        
+
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
       },
       onError: (errors) => {
-        setError(Object.values(errors)[0] || 'Invalid verification code');
+        const firstError = Object.values(errors)[0] || 'Invalid verification code';
+        setError(firstError);
       },
       onFinish: () => {
         setIsVerifyingCode(false);
@@ -667,18 +676,25 @@ export default function EditProfileModal({ user, onClose, onSave }) {
     setIsLoading(true);
     setError(null);
 
-    router.patch('/profile', formData, {
+    router.patch(route('profile.update'), formData, {
       onSuccess: (page) => {
         setSuccess(true);
+        setProfileUpdateResult({
+          success: true,
+          message: page.props.flash?.profileUpdate?.message || 'Profile updated successfully.',
+        });
+        const updatedUser = page.props.user || page.props.auth?.user || formData;
         if (onSave) {
-          onSave(page.props.auth?.user || formData);
+          onSave(updatedUser);
         }
-        setTimeout(() => {
-          onClose();
-        }, 1500);
       },
       onError: (errors) => {
-        setError(Object.values(errors)[0] || 'Failed to update profile');
+        const message = Object.values(errors)[0] || 'Failed to update profile';
+        setError(message);
+        setProfileUpdateResult({
+          success: false,
+          message,
+        });
       },
       onFinish: () => {
         setIsLoading(false);
@@ -686,6 +702,13 @@ export default function EditProfileModal({ user, onClose, onSave }) {
       preserveState: true,
       preserveScroll: true,
     });
+  };
+
+  const closeProfileUpdateResult = () => {
+    setProfileUpdateResult(null);
+    if (profileUpdateResult?.success) {
+      onClose();
+    }
   };
 
   const handleDeleteAccount = () => {
@@ -1235,6 +1258,41 @@ export default function EditProfileModal({ user, onClose, onSave }) {
       )}
 
       {/* Success/Error Modal */}
+      {profileUpdateResult && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[70]"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              closeProfileUpdateResult();
+            }
+          }}
+        >
+          <div className={`bg-gray-900 rounded-lg p-6 max-w-md mx-4 border shadow-xl ${profileUpdateResult.success ? 'border-green-500' : 'border-red-500'}`}>
+            <div className="flex items-center mb-4">
+              <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center mr-3 border ${profileUpdateResult.success ? 'bg-green-900/40 border-green-500' : 'bg-red-900/40 border-red-500'}`}>
+                {profileUpdateResult.success ? (
+                  <div className="w-6 h-6 text-green-400 text-2xl font-bold">✓</div>
+                ) : (
+                  <AlertTriangle className="w-6 h-6 text-red-400" />
+                )}
+              </div>
+              <h3 className={`text-lg font-semibold ${profileUpdateResult.success ? 'text-green-400' : 'text-red-400'}`}>
+                {profileUpdateResult.success ? 'Profile Updated Successfully' : 'Profile Update Failed'}
+              </h3>
+            </div>
+            <p className="mb-6 text-gray-300">{profileUpdateResult.message}</p>
+            <div className="flex justify-center">
+              <button
+                onClick={closeProfileUpdateResult}
+                className={`px-6 py-2 rounded-md border ${profileUpdateResult.success ? 'text-black bg-green-400 border-green-400' : 'text-white bg-red-600 border-red-500'}`}
+              >
+                {profileUpdateResult.success ? 'Okay' : 'Close'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showSuccessModal && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]"

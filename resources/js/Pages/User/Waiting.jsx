@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import UserStateLayout from "@/Layouts/UserStateLayout.jsx";
 import { Clock, CheckCircle, AlertCircle, AlertTriangle, Trash2 } from 'lucide-react';
 
@@ -29,33 +29,23 @@ const Waiting = () => {
         setShowDeleteModal(false);
         setShowSuccessModal(true);
         
-        fetch('/profile', {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                'Accept': 'application/json',
+        router.delete(route('profile.destroy'), {
+            data: { password: deletePassword },
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                setTimeout(() => {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    window.location.href = '/login';
+                }, 2000);
             },
-            body: JSON.stringify({ password: deletePassword }),
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            setTimeout(() => {
-                localStorage.clear();
-                sessionStorage.clear();
-                window.location.href = '/login';
-            }, 2000);
-        })
-        .catch(error => {
-            console.error("Delete account error:", error);
-            setShowSuccessModal(false);
-            setShowDeleteModal(true);
-            setDeleteError('Failed to delete account. Please try again.');
+            onError: (errors) => {
+                console.error('Delete account error:', errors);
+                setShowSuccessModal(false);
+                setShowDeleteModal(true);
+                setDeleteError(Object.values(errors)[0] || 'Failed to delete account. Please try again.');
+            },
         });
     };
 

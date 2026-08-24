@@ -31,9 +31,169 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
+    public function validateEmail(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'user_id' => 'nullable|integer',
+        ]);
+
+        $email = $request->input('email');
+        $userId = $request->input('user_id');
+
+        $query = User::where('email', $email);
+        if ($userId) {
+            $query->where('id', '!=', $userId);
+        }
+
+        $existingUser = $query->first();
+        $payload = [
+            'exists' => (bool) $existingUser,
+            'available' => !$existingUser,
+            'message' => $existingUser ? 'Email is already taken' : 'Email is available',
+        ];
+
+        if ($request->header('X-Inertia')) {
+            return back()->with('validation', $payload);
+        }
+
+        return response()->json($payload);
+    }
+
+    public function sendEmailVerificationCode(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'user_id' => 'required|integer',
+        ]);
+
+        $user = User::find($request->input('user_id'));
+        if (!$user) {
+            $payload = ['success' => false, 'message' => 'User not found'];
+            if ($request->header('X-Inertia')) {
+                return back()->with('emailVerificationResult', $payload);
+            }
+            return response()->json($payload, 404);
+        }
+
+        $newEmail = $request->input('email');
+        if ($newEmail === $user->email) {
+            $payload = ['success' => false, 'message' => 'New email must be different from current email'];
+            if ($request->header('X-Inertia')) {
+                return back()->with('emailVerificationResult', $payload);
+            }
+            return response()->json($payload, 400);
+        }
+
+        $existingUser = User::where('email', $newEmail)->where('id', '!=', $user->id)->first();
+        if ($existingUser) {
+            $payload = ['success' => false, 'message' => 'Email is already taken by another user'];
+            if ($request->header('X-Inertia')) {
+                return back()->with('emailVerificationResult', $payload);
+            }
+            return response()->json($payload, 400);
+        }
+
+        $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $user->email_verification_code = $newEmail . '|' . $verificationCode;
+        $user->email_verification_code_expires_at = now()->addMinutes(10);
+        $user->save();
+
+        try {
+            Mail::to($newEmail)->send(new EmailChangeVerificationMail($user, $verificationCode, $newEmail));
+
+            $payload = [
+                'success' => true,
+                'message' => 'Verification code sent to your new email address',
+                'expires_at' => $user->email_verification_code_expires_at,
+            ];
+
+            if ($request->header('X-Inertia')) {
+                return back()->with('emailVerificationResult', $payload);
+            }
+
+            return response()->json($payload);
+        } catch (\Exception $e) {
+            $user->email_verification_code = null;
+            $user->email_verification_code_expires_at = null;
+            $user->save();
+
+            $payload = ['success' => false, 'message' => 'Failed to send verification email. Please try again.'];
+            if ($request->header('X-Inertia')) {
+                return back()->with('emailVerificationResult', $payload);
+            }
+
+            return response()->json($payload, 500);
+        }
+    }
+
+    public function verifyEmailCode(Request $request)
+    {
+        $request->validate([
+            'verification_code' => 'required|string|size:6',
+            'user_id' => 'required|integer',
+        ]);
+
+        $user = User::find($request->input('user_id'));
+        if (!$user) {
+            $payload = ['success' => false, 'message' => 'User not found'];
+            if ($request->header('X-Inertia')) {
+                return back()->with('emailVerificationResult', $payload);
+            }
+            return response()->json($payload, 404);
+        }
+
+        if (!$user->email_verification_code || $user->email_verification_code_expires_at < now()) {
+            $payload = ['success' => false, 'message' => 'Verification code has expired'];
+            if ($request->header('X-Inertia')) {
+                return back()->with('emailVerificationResult', $payload);
+            }
+            return response()->json($payload, 400);
+        }
+
+        $storedData = explode('|', $user->email_verification_code);
+        if (count($storedData) !== 2) {
+            $payload = ['success' => false, 'message' => 'Invalid verification data'];
+            if ($request->header('X-Inertia')) {
+                return back()->with('emailVerificationResult', $payload);
+            }
+            return response()->json($payload, 400);
+        }
+
+        $storedEmail = $storedData[0];
+        $storedCode = $storedData[1];
+
+        if ($storedCode !== $request->input('verification_code')) {
+            $payload = ['success' => false, 'message' => 'Invalid verification code'];
+            if ($request->header('X-Inertia')) {
+                return back()->with('emailVerificationResult', $payload);
+            }
+            return response()->json($payload, 400);
+        }
+
+        $user->email = $storedEmail;
+        $user->email_verified_at = now();
+        $user->email_verification_code = null;
+        $user->email_verification_code_expires_at = null;
+        $user->save();
+
+        $payload = [
+            'success' => true,
+            'message' => 'Email verified and updated successfully',
+            'user' => $user->fresh(),
+        ];
+
+        if ($request->header('X-Inertia')) {
+            return back()->with('emailVerificationResult', $payload);
+        }
+
+        return response()->json($payload);
+    }
+
     public function update(ProfileUpdateRequest $request)
     {
         try {
+            $isInertiaRequest = $request->header('X-Inertia') !== null;
             $user = $request->user();
             $validatedData = $request->validated();
             $emailChanged = false;
@@ -43,7 +203,7 @@ class ProfileController extends Controller
             if (isset($validatedData['email']) && $validatedData['email'] !== $user->email) {
                 // Don't allow email changes without verification
                 if (!$user->email_verification_code) {
-                    if ($request->wantsJson() || $request->ajax()) {
+                    if (!$isInertiaRequest && ($request->wantsJson() || $request->ajax())) {
                         return response()->json([
                             'success' => false,
                             'message' => 'Please send a verification code first before changing your email'
@@ -54,7 +214,7 @@ class ProfileController extends Controller
                 
                 // Check if verification code exists and is not expired
                 if ($user->email_verification_code_expires_at < now()) {
-                    if ($request->wantsJson() || $request->ajax()) {
+                    if (!$isInertiaRequest && ($request->wantsJson() || $request->ajax())) {
                         return response()->json([
                             'success' => false,
                             'message' => 'Verification code has expired. Please send a new code.'
@@ -66,7 +226,7 @@ class ProfileController extends Controller
                 // Parse the stored data to get the new email
                 $storedData = explode('|', $user->email_verification_code);
                 if (count($storedData) !== 2 || $storedData[0] !== $validatedData['email']) {
-                    if ($request->wantsJson() || $request->ajax()) {
+                    if (!$isInertiaRequest && ($request->wantsJson() || $request->ajax())) {
                         return response()->json([
                             'success' => false,
                             'message' => 'Email does not match the verification code. Please send a new code.'
@@ -96,7 +256,7 @@ class ProfileController extends Controller
                         $daysLeft = now()->diffInDays($nextChangeDate, false);
                         $message = "Squad name can be changed again in {$daysLeft} day" . ($daysLeft !== 1 ? 's' : '');
                         
-                        if ($request->wantsJson() || $request->ajax()) {
+                        if (!$isInertiaRequest && ($request->wantsJson() || $request->ajax())) {
                             return response()->json([
                                 'success' => false,
                                 'message' => $message
@@ -117,7 +277,7 @@ class ProfileController extends Controller
                         $daysLeft = now()->diffInDays($nextChangeDate, false);
                         $message = "Year level can be changed again in {$daysLeft} day" . ($daysLeft !== 1 ? 's' : '');
                         
-                        if ($request->wantsJson() || $request->ajax()) {
+                        if (!$isInertiaRequest && ($request->wantsJson() || $request->ajax())) {
                             return response()->json([
                                 'success' => false,
                                 'message' => $message
@@ -138,7 +298,7 @@ class ProfileController extends Controller
             if (isset($validatedData['ml_id']) && $validatedData['ml_id'] !== $user->ml_id) {
                 if (is_ml_id_used($validatedData['ml_id'], $user->id)) {
                     $message = 'This ML ID is already registered with another account.';
-                    if ($request->wantsJson() || $request->ajax()) {
+                    if (!$isInertiaRequest && ($request->wantsJson() || $request->ajax())) {
                         return response()->json([
                             'success' => false,
                             'message' => $message
@@ -154,7 +314,7 @@ class ProfileController extends Controller
                 if (now() < $nextChangeDate) {
                     $daysLeft = now()->diffInDays($nextChangeDate, false);
                     $message = "MLBB account can be changed again in {$daysLeft} day" . ($daysLeft !== 1 ? 's' : '');
-                    if ($request->wantsJson() || $request->ajax()) {
+                    if (!$isInertiaRequest && ($request->wantsJson() || $request->ajax())) {
                         return response()->json([
                             'success' => false,
                             'message' => $message
@@ -188,8 +348,8 @@ class ProfileController extends Controller
             $user->fill($validatedData);
             $user->save();
 
-            // Return JSON response for AJAX requests
-            if ($request->wantsJson() || $request->ajax()) {
+            // Inertia requests must receive a redirect, not a plain JSON response.
+            if (!$isInertiaRequest && ($request->wantsJson() || $request->ajax())) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Profile updated successfully',
@@ -197,15 +357,18 @@ class ProfileController extends Controller
                 ]);
             }
 
-            // Return redirect for regular form submissions
-            return Redirect::route('profile.edit');
+            // Return to the page where the student portal profile editor is used.
+            return Redirect::route('SLStudent')->with('profileUpdate', [
+                'success' => true,
+                'message' => 'Profile updated successfully',
+            ]);
         } catch (\Exception $e) {
             \Log::error('Profile update error', [
                 'user_id' => $request->user()?->id,
                 'error' => $e->getMessage()
             ]);
 
-            if ($request->wantsJson() || $request->ajax()) {
+            if (!$isInertiaRequest && ($request->wantsJson() || $request->ajax())) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to update profile',
