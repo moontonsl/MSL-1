@@ -5,7 +5,7 @@ import {BadgeCheck, ArrowDownAZ, Funnel, Search, Users, UserCheck, UserX, Refres
 import profilePic from "./assets/42ca9ea53c9f0acd1d273d2864b58719215b59f4.png"
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayoutSLStudent.jsx";
 import TableComponent from "@/Pages/SLAdmin/components/TableComponent.jsx";
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
 import React, { useState, useEffect } from 'react';
 import EditProfileModal from "./EditProfileModal.jsx"; 
 import rankPIC from "./assets/MythicIcon.png";
@@ -273,10 +273,6 @@ const SLStudent = () => {
                 onClose={() => setShowEditProfileModal(false)}
                 onSave={(updatedUser) => {
                     setSelectedUser(updatedUser);
-                    // Also update the user from page props if available
-                    if (updatedUser) {
-                        // The router.reload will handle the full refresh
-                    }
                 }}
                 />
             )}

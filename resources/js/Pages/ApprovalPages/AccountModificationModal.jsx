@@ -320,7 +320,7 @@ const AccountModificationModal = ({ isOpen, onClose, prefillUser = null }) => {
         setIsSubmitting(true);
 
         try {
-            let wrongValue, correctValue;
+            let submittedWrongValue, submittedCorrectValue;
 
             if (modificationType === "Full Name") {
                 if (!correctFirstName || !correctLastName) {
@@ -335,8 +335,8 @@ const AccountModificationModal = ({ isOpen, onClose, prefillUser = null }) => {
                     setShowMSLModal(true);
                     return;
                 }
-                wrongValue = `${wrongFirstName} ${wrongLastName}`;
-                correctValue = `${correctFirstName} ${correctLastName}`;
+                submittedWrongValue = `${wrongFirstName} ${wrongLastName}`;
+                submittedCorrectValue = `${correctFirstName} ${correctLastName}`;
             } else {
                 // Get the current values from the form inputs instead of state
                 const wrongInput = document.querySelector('input[placeholder*="wrong"]');
@@ -358,8 +358,8 @@ const AccountModificationModal = ({ isOpen, onClose, prefillUser = null }) => {
                 }
 
                 // Use the current input values for submission
-                wrongValue = currentWrongValue;
-                correctValue = currentCorrectValue;
+                submittedWrongValue = currentWrongValue;
+                submittedCorrectValue = currentCorrectValue;
             }
 
             const response = await fetch('/api/modification-requests', {
@@ -371,8 +371,8 @@ const AccountModificationModal = ({ isOpen, onClose, prefillUser = null }) => {
                 body: JSON.stringify({
                     user_id: selectedUser.id,
                     modification_type: modificationType,
-                    wrong_value: wrongValue,
-                    correct_value: correctValue,
+                    wrong_value: submittedWrongValue,
+                    correct_value: submittedCorrectValue,
                 }),
             });
 

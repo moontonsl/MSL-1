@@ -1,5 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { X, Search, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
+
+function debounce(func, delay) {
+    let timer;
+    return (...args) => {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => func(...args), delay);
+    };
+}
 
 export default function AdminModificationModal({ isOpen, onClose, onSuccess }) {
     const [step, setStep] = useState(1);
@@ -17,6 +25,25 @@ export default function AdminModificationModal({ isOpen, onClose, onSuccess }) {
     const [correctLastName, setCorrectLastName] = useState('');
     const [wrongValue, setWrongValue] = useState('');
     const [correctValue, setCorrectValue] = useState('');
+    const [schoolResults, setSchoolResults] = useState([]);
+    const [showSchoolResults, setShowSchoolResults] = useState(false);
+    const schoolCache = useRef({});
+
+    const debouncedSchoolSearch = useMemo(() => debounce(async (value) => {
+        if (schoolCache.current[value]) {
+            setSchoolResults(schoolCache.current[value]);
+            return;
+        }
+
+        try {
+            const response = await fetch(`/schools/search?query=${encodeURIComponent(value)}`);
+            const schools = await response.json();
+            schoolCache.current[value] = schools;
+            setSchoolResults(schools);
+        } catch (error) {
+            setSchoolResults([]);
+        }
+    }, 300), []);
 
     useEffect(() => {
         if (isOpen && step === 1) {
@@ -114,6 +141,8 @@ export default function AdminModificationModal({ isOpen, onClose, onSuccess }) {
         setSuccessMessage(null);
         setModificationType('School');
         setCorrectValue('');
+        setSchoolResults([]);
+        setShowSchoolResults(false);
         setWrongValue('');
         setWrongFirstName('');
         setWrongLastName('');
@@ -129,10 +158,10 @@ export default function AdminModificationModal({ isOpen, onClose, onSuccess }) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4" onClick={(e) => e.target === e.currentTarget && handleClose()}>
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center px-4" onClick={(e) => e.target === e.currentTarget && handleClose()}>
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-10" />
 
-            <div className="relative z-20 w-full max-w-lg bg-[rgba(10,10,10,0.85)] border border-[#242424] rounded-2xl shadow-2xl backdrop-blur-[10px] overflow-hidden font-montserrat">
+            <div className="relative z-20 w-full max-w-lg bg-[rgba(10,10,10,0.85)] border border-[#242424] rounded-2xl shadow-2xl backdrop-blur-[10px] overflow-visible font-montserrat">
                 {/* Header */}
                 <div className="flex items-center p-6 pb-2">
                     <div className="flex-shrink-0 w-10 h-10 bg-[rgba(10,10,10,0.8)] rounded-full flex items-center justify-center mr-3 border border-[#facc15]">
@@ -310,16 +339,54 @@ export default function AdminModificationModal({ isOpen, onClose, onSuccess }) {
                                                     className="w-full px-3 py-2 bg-black/20 border border-[#242424] rounded-md text-white/50 text-sm cursor-not-allowed"
                                                 />
                                             </div>
-                                            <div>
+                                            <div className="relative">
                                                 <label className="block text-gray-300 mb-1 text-xs uppercase font-bold">Correct {modificationType}</label>
                                                 <input
                                                     type="text"
                                                     value={correctValue}
-                                                    onChange={(e) => setCorrectValue(e.target.value)}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value;
+                                                        setCorrectValue(value);
+                                                        setShowSchoolResults(value.trim() !== '');
+                                                        if (modificationType === 'School' && value.trim()) {
+                                                            debouncedSchoolSearch(value);
+                                                        } else {
+                                                            setSchoolResults([]);
+                                                        }
+                                                    }}
+                                                    onFocus={() => {
+                                                        if (modificationType === 'School' && correctValue.trim()) {
+                                                            setShowSchoolResults(true);
+                                                        }
+                                                    }}
                                                     className="w-full px-3 py-2 bg-[rgba(10,10,10,0.8)] border border-[#242424] rounded-md text-white focus:outline-none focus:border-[#facc15] text-sm"
                                                     placeholder={`Enter correct ${modificationType.toLowerCase()}`}
                                                     required
                                                 />
+                                                {modificationType === 'School' && showSchoolResults && (
+                                                    <div className="absolute z-30 w-full mt-1 bg-[rgba(15,15,15,0.98)] border border-[#FACC15]/30 rounded-lg shadow-2xl max-h-48 overflow-y-auto backdrop-blur-sm">
+                                                        {schoolResults.length > 0 ? (
+                                                            schoolResults.slice(0, 10).map((school) => (
+                                                                <button
+                                                                    key={school.id}
+                                                                    type="button"
+                                                                    onMouseDown={(e) => e.preventDefault()}
+                                                                    onClick={() => {
+                                                                        setCorrectValue(school.name);
+                                                                        setShowSchoolResults(false);
+                                                                        setSchoolResults([]);
+                                                                    }}
+                                                                    className="w-full px-3 py-2 text-left text-white hover:bg-[rgba(250,204,21,0.1)] transition-colors border-b border-[rgba(250,204,21,0.05)] last:border-b-0"
+                                                                >
+                                                                    <div className="font-medium text-sm">{school.name}</div>
+                                                                    <div className="text-xs text-gray-500">{school.island} &bull; {school.region}</div>
+                                                                </button>
+                                                            ))
+                                                        ) : (
+                                                            <div className="p-3 text-center text-gray-400 text-sm">No schools found</div>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     )}
