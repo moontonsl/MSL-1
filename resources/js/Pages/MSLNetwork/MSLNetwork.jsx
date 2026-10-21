@@ -30,7 +30,7 @@ const MSLNetwork = () => {
     setSelectedRegionEmail(email);
     setEmailForm(prev => ({
       ...prev,
-      to: "msl.partnerships.ph@gmail.com",
+      to: "mslpartnerships@gmail.com",
       ccEmails: [
         "msl.network.ph@gmail.com",
         email
@@ -320,7 +320,9 @@ Message: ${emailForm.message}`;
                 APPLY NOW
               </a>
               <a
-                href="https://docs.google.com/document/d/1Nn3yrCn3qAMdxmEz9Tvo4xACrUIv1pukZ9tJVA1p7ak/edit?tab=t.0"
+                target="_blank"
+                // href="https://docs.google.com/document/d/1Nn3yrCn3qAMdxmEz9Tvo4xACrUIv1pukZ9tJVA1p7ak/edit?tab=t.0"
+                href="https://bit.ly/SponsorshipsByMSL"
                 className="px-3 py-1.5 sm:px-5 sm:py-2.5 border border-black text-black font-bold rounded-xl text-sm sm:text-base"
               >
                 LEARN MORE →
@@ -667,7 +669,7 @@ Message: ${emailForm.message}`;
                 </label>
                 <input
                   type="email"
-                  value={emailForm.to || "msl.partnerships.ph@gmail.com"}
+                  value={emailForm.to || "mslpartnerships@gmail.com"}
                   onChange={(e) => handleEmailFormChange('to', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F2C21A] focus:border-transparent text-white bg-gray-800 placeholder-gray-400"
                   placeholder="Enter email address"
