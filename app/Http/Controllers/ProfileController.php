@@ -54,7 +54,7 @@ class ProfileController extends Controller
         ];
 
         if ($request->header('X-Inertia')) {
-            return back()->with('validation', $payload);
+            return $this->flashInertiaResult('validation', $payload);
         }
 
         return response()->json($payload);
@@ -71,7 +71,7 @@ class ProfileController extends Controller
         if (!$user) {
             $payload = ['success' => false, 'message' => 'User not found'];
             if ($request->header('X-Inertia')) {
-                return back()->with('emailVerificationResult', $payload);
+                return $this->flashInertiaResult('emailVerificationResult', $payload);
             }
             return response()->json($payload, 404);
         }
@@ -80,7 +80,7 @@ class ProfileController extends Controller
         if ($newEmail === $user->email) {
             $payload = ['success' => false, 'message' => 'New email must be different from current email'];
             if ($request->header('X-Inertia')) {
-                return back()->with('emailVerificationResult', $payload);
+                return $this->flashInertiaResult('emailVerificationResult', $payload);
             }
             return response()->json($payload, 400);
         }
@@ -89,7 +89,7 @@ class ProfileController extends Controller
         if ($existingUser) {
             $payload = ['success' => false, 'message' => 'Email is already taken by another user'];
             if ($request->header('X-Inertia')) {
-                return back()->with('emailVerificationResult', $payload);
+                return $this->flashInertiaResult('emailVerificationResult', $payload);
             }
             return response()->json($payload, 400);
         }
@@ -109,7 +109,7 @@ class ProfileController extends Controller
             ];
 
             if ($request->header('X-Inertia')) {
-                return back()->with('emailVerificationResult', $payload);
+                return $this->flashInertiaResult('emailVerificationResult', $payload);
             }
 
             return response()->json($payload);
@@ -120,7 +120,7 @@ class ProfileController extends Controller
 
             $payload = ['success' => false, 'message' => 'Failed to send verification email. Please try again.'];
             if ($request->header('X-Inertia')) {
-                return back()->with('emailVerificationResult', $payload);
+                return $this->flashInertiaResult('emailVerificationResult', $payload);
             }
 
             return response()->json($payload, 500);
@@ -138,7 +138,7 @@ class ProfileController extends Controller
         if (!$user) {
             $payload = ['success' => false, 'message' => 'User not found'];
             if ($request->header('X-Inertia')) {
-                return back()->with('emailVerificationResult', $payload);
+                return $this->flashInertiaResult('emailVerificationResult', $payload);
             }
             return response()->json($payload, 404);
         }
@@ -146,7 +146,7 @@ class ProfileController extends Controller
         if (!$user->email_verification_code || $user->email_verification_code_expires_at < now()) {
             $payload = ['success' => false, 'message' => 'Verification code has expired'];
             if ($request->header('X-Inertia')) {
-                return back()->with('emailVerificationResult', $payload);
+                return $this->flashInertiaResult('emailVerificationResult', $payload);
             }
             return response()->json($payload, 400);
         }
@@ -155,7 +155,7 @@ class ProfileController extends Controller
         if (count($storedData) !== 2) {
             $payload = ['success' => false, 'message' => 'Invalid verification data'];
             if ($request->header('X-Inertia')) {
-                return back()->with('emailVerificationResult', $payload);
+                return $this->flashInertiaResult('emailVerificationResult', $payload);
             }
             return response()->json($payload, 400);
         }
@@ -166,7 +166,7 @@ class ProfileController extends Controller
         if ($storedCode !== $request->input('verification_code')) {
             $payload = ['success' => false, 'message' => 'Invalid verification code'];
             if ($request->header('X-Inertia')) {
-                return back()->with('emailVerificationResult', $payload);
+                return $this->flashInertiaResult('emailVerificationResult', $payload);
             }
             return response()->json($payload, 400);
         }
@@ -184,10 +184,17 @@ class ProfileController extends Controller
         ];
 
         if ($request->header('X-Inertia')) {
-            return back()->with('emailVerificationResult', $payload);
+            return $this->flashInertiaResult('emailVerificationResult', $payload);
         }
 
         return response()->json($payload);
+    }
+
+    private function flashInertiaResult(string $key, array $payload): RedirectResponse
+    {
+        Inertia::flash($key, $payload);
+
+        return back();
     }
 
     public function update(ProfileUpdateRequest $request)

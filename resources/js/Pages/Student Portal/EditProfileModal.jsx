@@ -453,28 +453,33 @@ export default function EditProfileModal({ user, onClose, onSave }) {
 
     setEmailValidation({ checking: true, isValid: true, message: 'Checking email...' });
 
-    router.post(route('profile.email.validate'), {
-      email,
-      user_id: user.id,
-    }, {
-      preserveState: true,
-      preserveScroll: true,
-      onSuccess: (page) => {
-        const data = page.props.flash?.validation || {};
+    const params = new URLSearchParams({ email, user_id: String(user.id) });
+    fetch(`${route('profile.email.validate')}?${params}`, {
+      headers: { Accept: 'application/json' },
+      credentials: 'same-origin',
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Email validation failed (${response.status})`);
+        }
+
+        return response.json();
+      })
+      .then((data) => {
         setEmailValidation({
           checking: false,
-          isValid: data.available ?? true,
+          isValid: data.available,
           message: data.message ?? ''
         });
-      },
-      onError: () => {
+      })
+      .catch((validationError) => {
+        console.error('Could not verify email:', validationError);
         setEmailValidation({
           checking: false,
-          isValid: true,
+          isValid: false,
           message: 'Could not verify email'
         });
-      }
-    });
+      });
   }, [user.email, user.id]);
 
   // Debounce email validation
@@ -560,7 +565,7 @@ export default function EditProfileModal({ user, onClose, onSave }) {
       preserveState: true,
       preserveScroll: true,
       onSuccess: (page) => {
-        const data = page.props.flash?.emailVerificationResult || {};
+        const data = page.flash?.emailVerificationResult || {};
         if (data.success) {
           setEmailVerificationSent(true);
           setSuccess(true);
@@ -596,7 +601,7 @@ export default function EditProfileModal({ user, onClose, onSave }) {
       preserveState: true,
       preserveScroll: true,
       onSuccess: (page) => {
-        const data = page.props.flash?.emailVerificationResult || {};
+        const data = page.flash?.emailVerificationResult || {};
         if (!data.success) {
           setError(data.message || 'Invalid verification code');
           return;
@@ -887,7 +892,7 @@ export default function EditProfileModal({ user, onClose, onSave }) {
 
             <div>
               <label className="text-sm text-gray-300">MLBB IGN</label>
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-col gap-2">
                 <input
                   disabled
                   type="text"
@@ -899,7 +904,7 @@ export default function EditProfileModal({ user, onClose, onSave }) {
                 <button
                   onClick={handleLoginClick}
                   type="button"
-                  className="px-4 py-2.5 md:py-3 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-400 transition shadow-lg disabled:opacity-50 whitespace-nowrap text-sm sm:text-base"
+                  className="w-full px-4 py-2.5 md:py-3 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-400 transition shadow-lg disabled:opacity-50 whitespace-nowrap text-sm sm:text-base"
                   disabled={isLoading || !fieldRestrictions.mlAccount.canChange}
                 >
                   Change Mlbb Account

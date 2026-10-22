@@ -7,7 +7,7 @@ import { Eye, EyeOff } from 'react-feather';
 import axios from 'axios';
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
 const Login = () => {
-    const { post, data, setData } = useForm({
+    const { post, data, setData, reset } = useForm({
     username: '',
     password: '',
     remember: false,
