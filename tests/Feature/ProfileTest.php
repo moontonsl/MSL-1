@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Facades\Mail;
 
 test('profile page is displayed', function () {
     $user = User::factory()->create();
@@ -82,4 +83,20 @@ test('correct password must be provided to delete account', function () {
         ->assertRedirect('/profile');
 
     $this->assertNotNull($user->fresh());
+});
+
+test('email change verification result is available to Inertia', function () {
+    $user = User::factory()->create();
+
+    Mail::fake();
+
+    $this->actingAs($user)
+        ->from('/profile')
+        ->withHeader('X-Inertia', 'true')
+        ->post(route('profile.email.send-code'), [
+            'email' => 'new-email@example.com',
+            'user_id' => $user->id,
+        ])
+        ->assertRedirect('/profile')
+        ->assertInertiaFlash('emailVerificationResult.success', true);
 });

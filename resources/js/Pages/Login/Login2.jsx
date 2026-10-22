@@ -6,7 +6,7 @@ import { Head } from '@inertiajs/react';
 import { Eye, EyeOff } from 'react-feather';
 import axios from 'axios';
 const Login = () => {
-  const { post, data, setData } = useForm({
+  const { post, data, setData, reset } = useForm({
     username: '',
     password: '',
     remember: false,

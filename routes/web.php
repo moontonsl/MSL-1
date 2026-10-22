@@ -1889,6 +1889,9 @@ Route::middleware(['auth', \App\Http\Middleware\CheckUserState::class])->group(f
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/profile/email/validate', [ProfileController::class, 'validateEmail'])->name('profile.email.validate');
+    Route::post('/profile/email/send-code', [ProfileController::class, 'sendEmailVerificationCode'])->name('profile.email.send-code');
+    Route::post('/profile/email/verify-code', [ProfileController::class, 'verifyEmailCode'])->name('profile.email.verify-code');
 });
 
 Route::get('/api/bracket-teams/{bracketName}', [BracketTeamController::class, 'getTeamsByBracket']);
