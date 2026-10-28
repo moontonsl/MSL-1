@@ -37,13 +37,6 @@ export const orgAwardsData = {
       "Given to an organization that made a significant positive difference within its campus community through MLBB events, partnerships, and student-led initiatives.",
     criteria: ["Campus Integration (40%)", "Inclusivity Initiatives (30%)", "Advocacy (30%)"],
   },
-  collaboration: {
-    title: "Collaboration of the Year",
-    subtitle: "Community Award",
-    description:
-      "Recognizes the best joint project or event between multiple schools or organizations. This award aims to break down tribalism and encourage regional alliances.",
-    criteria: ["Synergy (40%)", "Scale of Impact (30%)", "Sustainability (30%)"],
-  },
   'service-esports': {
     title: "Service Through Esports Award",
     subtitle: "Community Award",
