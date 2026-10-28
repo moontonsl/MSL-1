@@ -11,7 +11,6 @@ const orgAwards = [
   { id: 'best-event', title: 'Best Event of the Year', image: '/images/Awards/Org%20Award%20Buttons/best%20event.png' },
   { id: 'rising-org', title: 'Rising Organization Award', image: '/images/Awards/Org%20Award%20Buttons/rising.png' },
   { id: 'student-impact', title: 'Student Community Impact Award', image: '/images/Awards/Org%20Award%20Buttons/student%20community.png' },
-  { id: 'collaboration', title: 'Collaboration of the Year', image: '/images/Awards/Org%20Award%20Buttons/collab%20of%20the%20year.png' },
   { id: 'service-esports', title: 'Service Through Esports Award', image: '/images/Awards/Org%20Award%20Buttons/service%20thru%20esports.png' },
   { id: 'org-partner', title: 'Organization Partner of the Year', image: '/images/Awards/Org%20Award%20Buttons/org%20partner.png' },
 ];
