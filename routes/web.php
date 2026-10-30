@@ -47,15 +47,6 @@ use App\Http\Controllers\AwardNominationController;
 
 Route::post('/api/awards/nominate', [AwardNominationController::class, 'store'])->name('api.awards.nominate');
 
-Route::get('/', function () {
-    return Inertia::render('Home/Home', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-});
-
 // User Management Panel (No Auth Required) jabu usermanagement
 Route::get('/user-management', [\App\Http\Controllers\UserManagementController::class, 'index'])->name('user-management');
 Route::post('/user-management/verify', [\App\Http\Controllers\UserManagementController::class, 'verifyCode'])->name('user-management.verify');
@@ -249,6 +240,15 @@ $registerNetworkAwardsRoutes('/MSLNetworkAwards');
 
 Route::domain('awards.moontonslph.org')->group(function () use ($registerNetworkAwardsRoutes) {
     $registerNetworkAwardsRoutes('');
+});
+
+Route::get('/', function () {
+    return Inertia::render('Home/Home', [
+        'canLogin' => Route::has('login'),
+        'canRegister' => Route::has('register'),
+        'laravelVersion' => Application::VERSION,
+        'phpVersion' => PHP_VERSION,
+    ]);
 });
 
 // Backwards-compatible redirects (old path -> new path)
