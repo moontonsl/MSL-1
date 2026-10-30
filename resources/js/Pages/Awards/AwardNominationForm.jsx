@@ -1,8 +1,9 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import MainLayout from '@/Layouts/MainLayout.jsx';
 import { Head, router, usePage } from '@inertiajs/react';
-import { ChevronLeft } from 'lucide-react';
+import { Check, ChevronLeft, ChevronsUpDown } from 'lucide-react';
 import { orgAwardsData } from '@/Data/awardsData.js';
+import { networkOrganizations } from '@/Data/networkOrganizations.js';
 import axios from 'axios';
 import { Toaster, toast } from 'react-hot-toast';
 import SubmissionSuccessModal from '@/Components/SubmissionSuccessModal.jsx';
@@ -31,25 +32,6 @@ function TextField({ label, value, onChange, placeholder, type = 'text', readOnl
   );
 }
 
-function SelectField({ label, value, onChange, options }) {
-  return (
-    <label className={LABEL_CLASS}>
-      {label}
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={INPUT_CLASS}
-      >
-        {options.map((o) => (
-          <option key={o.value} value={o.value} className="bg-[#1A1A1A] text-[#FBBF24]">
-            {o.label}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
-
 export default function AwardNominationForm() {
   const {
     awardId: pageAwardId,
@@ -61,22 +43,40 @@ export default function AwardNominationForm() {
   const awardId = String(pageAwardId || '');
   const currentAward = orgAwardsData[awardId];
 
-  const orgOptions = useMemo(
-    () => [
-      { value: '', label: 'Select your organization' },
-      { value: 'msl-org', label: 'MSL Organization' },
-      { value: 'chapter-a', label: 'MSL Chapter A' },
-      { value: 'chapter-b', label: 'MSL Chapter B' },
-    ],
-    []
-  );
-
   const [fullName, setFullName] = useState(prefilledName);
   const [orgName, setOrgName] = useState('');
+  const [orgQuery, setOrgQuery] = useState('');
+  const [isOrgDropdownOpen, setIsOrgDropdownOpen] = useState(false);
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const mlLoginRef = useRef(null);
+  const orgDropdownRef = useRef(null);
+  const orgTriggerRef = useRef(null);
+  const orgSearchRef = useRef(null);
+  const filteredOrganizations = networkOrganizations.filter((organization) =>
+    `${organization.organization} ${organization.school} ${organization.region}`
+      .toLowerCase()
+      .includes(orgQuery.toLowerCase())
+  );
+  const selectedOrganization = networkOrganizations.find(
+    (organization) => organization.organization === orgName
+  );
+
+  useEffect(() => {
+    if (!isOrgDropdownOpen) return undefined;
+
+    orgSearchRef.current?.focus();
+    const handleOutsideClick = (event) => {
+      if (!orgDropdownRef.current?.contains(event.target)) {
+        setIsOrgDropdownOpen(false);
+        setOrgQuery('');
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [isOrgDropdownOpen]);
 
   useEffect(() => {
     if (isMlAuthenticated === false && mlLoginRef.current) {
@@ -203,12 +203,125 @@ export default function AwardNominationForm() {
                     readOnly={isNameReadOnly}
                   />
 
-                  <SelectField
-                    label="Nominated Organization"
-                    value={orgName}
-                    onChange={setOrgName}
-                    options={orgOptions}
-                  />
+                  <div className={LABEL_CLASS} ref={orgDropdownRef}>
+                    Nominated Organization
+                    <div className="relative mt-2">
+                      <button
+                        ref={orgTriggerRef}
+                        type="button"
+                        aria-haspopup="listbox"
+                        aria-expanded={isOrgDropdownOpen}
+                        onClick={() => {
+                          setOrgQuery('');
+                          setIsOrgDropdownOpen((open) => !open);
+                        }}
+                        className={`${INPUT_CLASS} flex min-h-[42px] items-center justify-between gap-2 text-left`}
+                      >
+                        <span className="min-w-0 flex-1">
+                          <span className={`block truncate ${orgName ? '' : 'text-[#FBBF24]/60'}`}>
+                            {orgName || 'Select your organization'}
+                          </span>
+                          {selectedOrganization && (
+                            <span className="mt-0.5 block truncate text-xs font-normal text-gray-400">
+                              {[selectedOrganization.school, selectedOrganization.region]
+                                .filter(Boolean)
+                                .join(' - ')}
+                            </span>
+                          )}
+                        </span>
+                        <ChevronsUpDown className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      </button>
+
+                      {isOrgDropdownOpen && (
+                        <div className="absolute left-0 right-0 top-full z-[100] mt-1 max-h-60 overflow-hidden rounded-lg border border-[#FBBF24] bg-[#111111] shadow-xl">
+                          <div className="sticky top-0 z-10 border-b border-[#FBBF24]/30 bg-[#111111] p-2">
+                            <input
+                              ref={orgSearchRef}
+                              type="search"
+                              value={orgQuery}
+                              onChange={(event) => setOrgQuery(event.target.value)}
+                              onKeyDown={(event) => {
+                                if (event.key === 'Enter') {
+                                  event.preventDefault();
+                                } else if (event.key === 'ArrowDown' && filteredOrganizations.length > 0) {
+                                  event.preventDefault();
+                                  orgDropdownRef.current
+                                    ?.querySelector('[data-org-option]')
+                                    ?.focus();
+                                } else if (event.key === 'Escape') {
+                                  setIsOrgDropdownOpen(false);
+                                  setOrgQuery('');
+                                  orgTriggerRef.current?.focus();
+                                }
+                              }}
+                              placeholder="Search organizations..."
+                              aria-label="Search organizations"
+                              className={`${INPUT_CLASS} py-2`}
+                            />
+                          </div>
+                          <div role="listbox" aria-label="Organizations" className="max-h-44 overflow-y-auto">
+                        {filteredOrganizations.length === 0 ? (
+                          <div className="px-4 py-2 text-sm text-gray-400">No organizations found.</div>
+                        ) : (
+                              filteredOrganizations.map((organization) => (
+                                <button
+                                  key={organization.organization}
+                                  type="button"
+                                  role="option"
+                                  aria-selected={orgName === organization.organization}
+                                  data-org-option
+                                  onClick={() => {
+                                    setOrgName(organization.organization);
+                                    setOrgQuery('');
+                                    setIsOrgDropdownOpen(false);
+                                  }}
+                                  onKeyDown={(event) => {
+                                    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                                      event.preventDefault();
+                                      const options = Array.from(
+                                        orgDropdownRef.current?.querySelectorAll('[data-org-option]') || []
+                                      );
+                                      const index = options.indexOf(event.currentTarget);
+                                      const nextIndex =
+                                        event.key === 'ArrowDown'
+                                          ? (index + 1) % options.length
+                                          : (index - 1 + options.length) % options.length;
+                                      options[nextIndex]?.focus();
+                                    } else if (event.key === 'Escape') {
+                                      setIsOrgDropdownOpen(false);
+                                      setOrgQuery('');
+                                      orgTriggerRef.current?.focus();
+                                    }
+                                  }}
+                                  className={`flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-[#FBBF24] hover:text-black focus:bg-[#FBBF24] focus:text-black focus:outline-none ${
+                                    orgName === organization.organization ? 'text-[#FBBF24]' : 'text-white'
+                                  }`}
+                                >
+                                  <span className="min-w-0 flex-1">
+                                    <span className="block truncate">{organization.organization}</span>
+                                    <span
+                                      className={`mt-0.5 block truncate text-xs font-normal ${
+                                        orgName === organization.organization
+                                          ? 'text-[#FBBF24]/70'
+                                          : 'text-gray-400'
+                                      }`}
+                                    >
+                                      {[organization.school, organization.region]
+                                        .filter(Boolean)
+                                        .join(' - ')}
+                                    </span>
+                                  </span>
+                                  {orgName === organization.organization && (
+                                    <Check className="h-4 w-4 shrink-0" aria-hidden="true" />
+                                  )}
+                                </button>
+                              ))
+                        )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
                   <label className={LABEL_CLASS}>
                     Reason for Nomination
