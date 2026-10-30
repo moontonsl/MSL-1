@@ -15,7 +15,13 @@ const INPUT_CLASS =
   'w-full bg-[#1A1A1A] border border-[#FBBF24] text-[#FBBF24] placeholder:text-[#FBBF24]/60 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-[#FBBF24] transition-all';
 
 export default function StudentAwardNominationForm() {
-  const { awardId: pageAwardId, prefilledName = '', isNameReadOnly = false, isMlAuthenticated } = usePage().props;
+  const {
+    awardId: pageAwardId,
+    awardsBasePath = '/MSLNetworkAwards',
+    prefilledName = '',
+    isNameReadOnly = false,
+    isMlAuthenticated,
+  } = usePage().props;
   const awardId = String(pageAwardId || '');
   const currentAward = studentAwardsData[awardId];
 
@@ -75,7 +81,7 @@ export default function StudentAwardNominationForm() {
           isOpen={showSuccessModal}
           onYes={() => {
             setShowSuccessModal(false);
-            router.visit('/MSLNetworkAwards');
+            router.visit(awardsBasePath || '/');
           }}
           onNo={() => {
             setFullName('');
@@ -198,4 +204,3 @@ export default function StudentAwardNominationForm() {
     </MainLayout>
   );
 }
-
