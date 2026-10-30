@@ -175,65 +175,81 @@ Route::get('/AS26Dance', function () {
 })->name('as26dance');
 
 // MSL Network Awards
-Route::get('/MSLNetworkAwards', function () {
-    return Inertia::render('Awards/NetworkAwards');
-})->name('network.awards');
+$registerNetworkAwardsRoutes = function (string $prefix) {
+    $routeNamePrefix = $prefix === '' ? 'network.awards.subdomain' : 'network.awards';
 
-Route::get('/MSLNetworkAwards/Organization', function () {
-    return Inertia::render('Awards/OrganizationAwards', [
-        'isMlAuthenticated' => session()->has('ml_user')
-    ]);
-})->name('network.awards.organization');
+    Route::get($prefix === '' ? '/' : $prefix, function () use ($prefix) {
+        return Inertia::render('Awards/NetworkAwards', [
+            'awardsBasePath' => $prefix,
+        ]);
+    })->name($routeNamePrefix);
 
-Route::get('/MSLNetworkAwards/Individual', function () {
-    return Inertia::render('Awards/IndividualAwards', [
-        'isMlAuthenticated' => session()->has('ml_user')
-    ]);
-})->name('network.awards.individual');
+    Route::get($prefix . '/Organization', function () use ($prefix) {
+        return Inertia::render('Awards/OrganizationAwards', [
+            'awardsBasePath' => $prefix,
+            'isMlAuthenticated' => session()->has('ml_user'),
+        ]);
+    })->name($routeNamePrefix . '.organization');
 
-Route::get('/MSLNetworkAwards/Nominate/{awardId}', function (string $awardId) {
-    $isMlAuthenticated = session()->has('ml_user');
-    $fullName = '';
-    $isReadOnly = false;
-    
-    if (session()->has('ml_user')) {
-        $mlUser = session('ml_user');
-        $user = \App\Models\User::where('ml_id', $mlUser->ml_id)->first();
-        if ($user) {
-            $fullName = trim($user->name . ' ' . $user->surname);
-            $isReadOnly = true;
+    Route::get($prefix . '/Individual', function () use ($prefix) {
+        return Inertia::render('Awards/IndividualAwards', [
+            'awardsBasePath' => $prefix,
+            'isMlAuthenticated' => session()->has('ml_user'),
+        ]);
+    })->name($routeNamePrefix . '.individual');
+
+    Route::get($prefix . '/Nominate/{awardId}', function (string $awardId) use ($prefix) {
+        $isMlAuthenticated = session()->has('ml_user');
+        $fullName = '';
+        $isReadOnly = false;
+
+        if ($isMlAuthenticated) {
+            $mlUser = session('ml_user');
+            $user = \App\Models\User::where('ml_id', $mlUser->ml_id)->first();
+            if ($user) {
+                $fullName = trim($user->name . ' ' . $user->surname);
+                $isReadOnly = true;
+            }
         }
-    }
 
-    return Inertia::render('Awards/AwardNominationForm', [
-        'awardId' => $awardId,
-        'prefilledName' => $fullName,
-        'isNameReadOnly' => $isReadOnly,
-        'isMlAuthenticated' => $isMlAuthenticated,
-    ]);
-})->name('network.awards.nominate');
+        return Inertia::render('Awards/AwardNominationForm', [
+            'awardId' => $awardId,
+            'awardsBasePath' => $prefix,
+            'prefilledName' => $fullName,
+            'isNameReadOnly' => $isReadOnly,
+            'isMlAuthenticated' => $isMlAuthenticated,
+        ]);
+    })->name($routeNamePrefix . '.nominate');
 
-Route::get('/MSLNetworkAwards/NominateStudent/{awardId}', function (string $awardId) {
-    $isMlAuthenticated = session()->has('ml_user');
-    $fullName = '';
-    $isReadOnly = false;
-    
-    if (session()->has('ml_user')) {
-        $mlUser = session('ml_user');
-        $user = \App\Models\User::where('ml_id', $mlUser->ml_id)->first();
-        if ($user) {
-            $fullName = trim($user->name . ' ' . $user->surname);
-            $isReadOnly = true;
+    Route::get($prefix . '/NominateStudent/{awardId}', function (string $awardId) use ($prefix) {
+        $isMlAuthenticated = session()->has('ml_user');
+        $fullName = '';
+        $isReadOnly = false;
+
+        if ($isMlAuthenticated) {
+            $mlUser = session('ml_user');
+            $user = \App\Models\User::where('ml_id', $mlUser->ml_id)->first();
+            if ($user) {
+                $fullName = trim($user->name . ' ' . $user->surname);
+                $isReadOnly = true;
+            }
         }
-    }
 
-    return Inertia::render('Awards/StudentAwardNominationForm', [
-        'awardId' => $awardId,
-        'prefilledName' => $fullName,
-        'isNameReadOnly' => $isReadOnly,
-        'isMlAuthenticated' => $isMlAuthenticated,
-    ]);
-})->name('network.awards.nominate.student');
+        return Inertia::render('Awards/StudentAwardNominationForm', [
+            'awardId' => $awardId,
+            'awardsBasePath' => $prefix,
+            'prefilledName' => $fullName,
+            'isNameReadOnly' => $isReadOnly,
+            'isMlAuthenticated' => $isMlAuthenticated,
+        ]);
+    })->name($routeNamePrefix . '.nominate.student');
+};
+
+$registerNetworkAwardsRoutes('/MSLNetworkAwards');
+
+Route::domain('awards.moontonslph.org')->group(function () use ($registerNetworkAwardsRoutes) {
+    $registerNetworkAwardsRoutes('');
+});
 
 // Backwards-compatible redirects (old path -> new path)
 Route::redirect('/NetworkAwards', '/MSLNetworkAwards', 301);

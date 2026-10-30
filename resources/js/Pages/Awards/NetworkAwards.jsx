@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import MainLayout from '@/Layouts/MainLayout.jsx';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { ChevronDown } from 'lucide-react';
 import VerificationModal from '@/Components/VerificationModal.jsx';
 import MLLoginVoting from '@/Pages/MCC/Voting/Voting Sign In/MLLoginVoting.jsx';
@@ -12,6 +12,7 @@ const INDIVIDUAL_BTN_SRC = '/images/Awards/Individual%20Button.png';
 const ORG_BTN_SRC = '/images/Awards/Organization%20Button.png';
 
 export default function NetworkAwards() {
+  const { awardsBasePath = '/MSLNetworkAwards' } = usePage().props;
   const faqs = useMemo(
     () => [
       {
@@ -88,22 +89,22 @@ export default function NetworkAwards() {
 
           <div className="w-full max-w-5xl mx-auto px-4 grid grid-cols-2 gap-4 md:gap-8 lg:gap-12 mb-16 md:mb-24">
             <a
-              href="/MSLNetworkAwards/Individual"
+              href={`${awardsBasePath}/Individual`}
               className="relative w-full rounded-2xl overflow-hidden block transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#FFC107]/50"
               onClick={(e) => {
                 e.preventDefault();
-                openVerifyThenGo('/MSLNetworkAwards/Individual');
+                openVerifyThenGo(`${awardsBasePath}/Individual`);
               }}
             >
               <img src={INDIVIDUAL_BTN_SRC} alt="Individual Awards" className="w-full h-auto object-contain" />
             </a>
 
             <a
-              href="/MSLNetworkAwards/Organization"
+              href={`${awardsBasePath}/Organization`}
               className="relative w-full rounded-2xl overflow-hidden block transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#FFC107]/50"
               onClick={(e) => {
                 e.preventDefault();
-                openVerifyThenGo('/MSLNetworkAwards/Organization');
+                openVerifyThenGo(`${awardsBasePath}/Organization`);
               }}
             >
               <img src={ORG_BTN_SRC} alt="Organization Awards" className="w-full h-auto object-contain" />
@@ -184,4 +185,3 @@ export default function NetworkAwards() {
     </MainLayout>
   );
 }
-

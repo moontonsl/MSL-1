@@ -51,7 +51,13 @@ function SelectField({ label, value, onChange, options }) {
 }
 
 export default function AwardNominationForm() {
-  const { awardId: pageAwardId, prefilledName = '', isNameReadOnly = false, isMlAuthenticated } = usePage().props;
+  const {
+    awardId: pageAwardId,
+    awardsBasePath = '/MSLNetworkAwards',
+    prefilledName = '',
+    isNameReadOnly = false,
+    isMlAuthenticated,
+  } = usePage().props;
   const awardId = String(pageAwardId || '');
   const currentAward = orgAwardsData[awardId];
 
@@ -121,7 +127,7 @@ export default function AwardNominationForm() {
           isOpen={showSuccessModal}
           onYes={() => {
             setShowSuccessModal(false);
-            router.visit('/MSLNetworkAwards');
+            router.visit(awardsBasePath || '/');
           }}
           onNo={() => {
             setFullName('');
@@ -236,4 +242,3 @@ export default function AwardNominationForm() {
     </MainLayout>
   );
 }
-
